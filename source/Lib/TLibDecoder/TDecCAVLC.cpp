@@ -495,10 +495,10 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 #if NH_3D
 Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
 {
-#if H_3D
+#if NH_3D_DLT
   UInt uiCode = 0; 
   //
-  TComDLT* pcDLT = new TComDLT;
+  TComDLT* pcDLT = pcPPS->getDLT();
   //Ed.(GT): PPSs are copied in HM16.4. This would cause that the only the DLT pointer is copied. Therefore, a deep copy of the DLT needs to be implemented. Another option would be to use a vectors for the DLT arrays in TComDLT.
 
   READ_FLAG(uiCode, "dlt_present_flag");
@@ -507,137 +507,139 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
   if ( pcDLT->getDltPresentFlag() )
   {
     READ_CODE(6, uiCode, "pps_depth_layers_minus1");
-    pcDLT->setNumDepthViews( uiCode );
-
+    pcDLT->setNumDepthViews( uiCode+1 );
+    
     READ_CODE(4, uiCode, "pps_bit_depth_for_depth_views_minus8");
     pcDLT->setDepthViewBitDepth( (uiCode+8) );
-
-    //Ed.(GT): Please remove parsing dependency from VPS here !
-    for( Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
+    
+    for( Int i = 0; i <= pcDLT->getNumDepthViews(); i++ )
     {
-      if ( i != 0 )
+      Int layerId = pcDLT->getDepthIdxToLayerId(i);
+      
+      READ_FLAG(uiCode, "dlt_flag[i]");
+      pcDLT->setUseDLTFlag(layerId, (uiCode == 1) ? true : false);
+      
+      if ( pcDLT->getUseDLTFlag( layerId ) )
       {
-        if( pcVPS->getDepthId( i ) == 1 ) 
+        Bool bDltBitMapRepFlag    = false;
+        UInt uiMaxDiff            = INT_MAX;
+        UInt uiMinDiff            = 0;
+        UInt uiCodeLength         = 0;
+        
+        READ_FLAG(uiCode, "inter_view_dlt_pred_enable_flag[ i ]");
+        
+        if( uiCode )
         {
-          READ_FLAG(uiCode, "dlt_flag[i]");
-          pcDLT->setUseDLTFlag(i, (uiCode == 1) ? true : false);
-
-          if ( pcDLT->getUseDLTFlag( i ) )
+          assert( pcDLT->getUseDLTFlag( 1 ));
+        }
+        pcDLT->setInterViewDltPredEnableFlag( layerId, (uiCode == 1) ? true : false );
+        
+        if ( pcDLT->getInterViewDltPredEnableFlag( layerId ) == false )
+        {
+          READ_FLAG(uiCode, "dlt_bit_map_rep_flag[ layerId ]");
+          bDltBitMapRepFlag = (uiCode == 1) ? true : false;
+        }
+        else
+        {
+          bDltBitMapRepFlag = false;
+        }
+        
+        UInt uiNumDepthValues = 0;
+        std::vector<Int> aiIdx2DepthValue(256);
+        
+        // Bit map
+        if ( bDltBitMapRepFlag )
+        {
+          for (UInt d=0; d<256; d++)
           {
-            Bool bDltBitMapRepFlag    = false;
-            UInt uiMaxDiff            = 0xffffffff;
-            UInt uiMinDiff            = 0;
-            UInt uiCodeLength         = 0;
-
-            READ_FLAG(uiCode, "inter_view_dlt_pred_enable_flag[ i ]"); 
-
-            if( uiCode )
+            READ_FLAG(uiCode, "dlt_bit_map_flag[ layerId ][ j ]");
+            if (uiCode == 1)
             {
-                assert( pcDLT->getUseDLTFlag( 1 ));
+              aiIdx2DepthValue[uiNumDepthValues] = d;
+              uiNumDepthValues++;
             }
-            pcDLT->setInterViewDltPredEnableFlag( i, (uiCode == 1) ? true : false );
-
-            if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )
-            {
-              READ_FLAG(uiCode, "dlt_bit_map_rep_flag[ layerId ]");
-              bDltBitMapRepFlag = (uiCode == 1) ? true : false; 
-            }
-            else
-            {
-              bDltBitMapRepFlag = false;
-            }
-            
-            UInt uiNumDepthValues = 0;
-            Int  aiIdx2DepthValue[256];
-
-            // Bit map
-            if ( bDltBitMapRepFlag )
-            {
-              for (UInt d=0; d<256; d++)
-              {
-                READ_FLAG(uiCode, "dlt_bit_map_flag[ layerId ][ j ]");
-                if (uiCode == 1)
-                {
-                  aiIdx2DepthValue[uiNumDepthValues] = d;
-                  uiNumDepthValues++;
-                }
-              }
-            }
-            // Diff Coding
-            else
-            {
-              READ_CODE(8, uiNumDepthValues, "num_depth_values_in_dlt[i]");   // num_entry
-
-              {
-                // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component. 
-
-                if (uiNumDepthValues > 1)
-                {
-                  READ_CODE(8, uiCode, "max_diff[ layerId ]"); 
-                  uiMaxDiff = uiCode;
-                }
-                else
-                {
-                  uiMaxDiff = 0;           // when there is only one value in DLT
-                }
-
-                if (uiNumDepthValues > 2)
-                {
-                  uiCodeLength = (UInt) ceil(Log2(uiMaxDiff + 1));
-                  READ_CODE(uiCodeLength, uiCode, "min_diff_minus1[ layerId ]");
-                  uiMinDiff = uiCode + 1;
-                }
-                else
-                {
-                  uiMinDiff = uiMaxDiff;   // when there are only one or two values in DLT
-                }
-
-                READ_CODE(8, uiCode, "dlt_depth_value0[layerId]");   // entry0
-                aiIdx2DepthValue[0] = uiCode;
-
-                if (uiMaxDiff == uiMinDiff)
-                {
-                  for (UInt d=1; d<uiNumDepthValues; d++)
-                  {
-                    aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + 0;
-                  }
-                }
-                else
-                {
-                  uiCodeLength = (UInt) ceil(Log2(uiMaxDiff - uiMinDiff + 1));
-                  for (UInt d=1; d<uiNumDepthValues; d++)
-                  {
-                    READ_CODE(uiCodeLength, uiCode, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");
-                    aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + uiCode;
-                  }
-                }
-
-              }
-            }
-            
-            if( pcDLT->getInterViewDltPredEnableFlag( i ) )
-            {
-              // interpret decoded values as delta DLT
-              AOF( pcVPS->getDepthId( 1 ) == 1 );
-              AOF( i > 1 );
-              // assumes ref layer id to be 1
-              Int* piRefDLT = pcDLT->idx2DepthValue( 1 );
-              UInt uiRefNum = pcDLT->getNumDepthValues( 1 );
-              pcDLT->setDeltaDLT(i, piRefDLT, uiRefNum, aiIdx2DepthValue, uiNumDepthValues);
-            }
-            else
-            {
-              // store final DLT
-              pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
-            }
-
           }
         }
+        // Diff Coding
+        else
+        {
+          READ_CODE(8, uiNumDepthValues, "num_depth_values_in_dlt[i]");   // num_entry
+          
+          {
+            // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component.
+            
+            if (uiNumDepthValues > 1)
+            {
+              READ_CODE(8, uiCode, "max_diff[ layerId ]");
+              uiMaxDiff = uiCode;
+            }
+            else
+            {
+              uiMaxDiff = 0;           // when there is only one value in DLT
+            }
+            
+            if (uiNumDepthValues > 2)
+            {
+              uiCodeLength = (UInt) gCeilLog2(uiMaxDiff + 1);
+              READ_CODE(uiCodeLength, uiCode, "min_diff_minus1[ layerId ]");
+              uiMinDiff = uiCode + 1;
+            }
+            else
+            {
+              uiMinDiff = uiMaxDiff;   // when there are only one or two values in DLT
+            }
+            
+            READ_CODE(8, uiCode, "dlt_depth_value0[layerId]");   // entry0
+            aiIdx2DepthValue[0] = uiCode;
+            
+            if (uiMaxDiff == uiMinDiff)
+            {
+              for (UInt d=1; d<uiNumDepthValues; d++)
+              {
+                aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + 0;
+              }
+            }
+            else
+            {
+              uiCodeLength = (UInt) gCeilLog2(uiMaxDiff - uiMinDiff + 1);
+              for (UInt d=1; d<uiNumDepthValues; d++)
+              {
+                READ_CODE(uiCodeLength, uiCode, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");
+                aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + uiCode;
+              }
+            }
+            
+          }
+        }
+        
+        if( pcDLT->getInterViewDltPredEnableFlag( layerId ) )
+        {
+          // interpret decoded values as delta DLT
+          AOF( layerId > 1 );
+          // assumes ref layer id to be 1
+          std::vector<Int> viRefDLT = pcDLT->idx2DepthValue( 1 );
+          UInt uiRefNum = pcDLT->getNumDepthValues( 1 );
+          pcDLT->setDeltaDLT(layerId, viRefDLT, uiRefNum, aiIdx2DepthValue, uiNumDepthValues);
+        }
+        else
+        {
+          // store final DLT
+          pcDLT->setDepthLUTs(layerId, aiIdx2DepthValue, uiNumDepthValues);
+        }
+        
+#ifdef DEBUG
+        printf("---------------------------------------------\n");
+        printf("LayerId: %d\n", layerId);
+        printf("getUseDLTFlag: %d\n", pcDLT->getUseDLTFlag(layerId));
+        printf("getInterViewDltPredEnableFlag: %d\n", pcDLT->getInterViewDltPredEnableFlag(layerId));
+        printf("getUseBitmapRep: %d\n", pcDLT->getUseBitmapRep(layerId));
+        printf("getNumDepthValues: %d\n", pcDLT->getNumDepthValues(layerId));
+        for(Int i=0; i<pcDLT->getNumDepthValues(layerId); i++)
+          printf("depthValue[%d] = %d\n", i, pcDLT->idx2DepthValue(layerId, i));
+#endif
       }
     }
   }
-
-  pcPPS->setDLT( pcDLT );
 #endif
 }
 #endif

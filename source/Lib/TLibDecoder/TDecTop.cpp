@@ -1322,6 +1322,16 @@ Void TDecTop::xDecodePPS(const std::vector<UChar> &naluData)
 #if H_3D
   // GT: Please don't add parsing dependency of SPS from VPS here again!!!
 #endif
+#if NH_3D_DLT
+  // create mapping from depth layer indexes to layer ids
+  Int j=0;
+  for( Int i=0; i<=m_parameterSetManager.getFirstVPS()->getMaxLayersMinus1(); i++ )
+  {
+    Int layerId = m_parameterSetManager.getFirstVPS()->getLayerIdInNuh(i);
+    if( m_parameterSetManager.getFirstVPS()->getDepthId(layerId) )
+      pps->getDLT()->setDepthIdxToLayerId(j++, i);
+  }
+#endif
   m_cEntropyDecoder.decodePPS( pps );
 
   m_parameterSetManager.storePPS( pps, naluData);

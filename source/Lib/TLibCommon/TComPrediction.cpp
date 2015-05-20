@@ -556,7 +556,7 @@ Void TComPrediction::predIntraLumaDmm( TComDataCU* pcCU, UInt uiAbsPartIdx, DmmI
   Pel segDC1 = 0, segDC2 = 0;
   Pel deltaDC1 = pcCU->getDmmDeltaDC( dmmType, 0, uiAbsPartIdx );
   Pel deltaDC2 = pcCU->getDmmDeltaDC( dmmType, 1, uiAbsPartIdx );
-#if H_3D_DIM_DLT
+#if NH_3D_DLT
   segDC1 = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 ) + deltaDC1 );
   segDC2 = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC2 ) + deltaDC2 );
 #else

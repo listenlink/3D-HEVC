@@ -90,8 +90,8 @@ Void TAppEncTop::xInitLibCfg()
   vps.createCamPars(m_iNumberOfViews);  
 #endif
 
-#if H_3D
-  TComDLT& dlt = m_dlt;
+#if NH_3D_DLT
+  TComDLT dlt = m_dlt;
 #endif
 
 #if NH_MV
@@ -148,7 +148,7 @@ Void TAppEncTop::xInitLibCfg()
   xSetCamPara              ( vps ); 
   m_ivPicLists.setVPS      ( &vps );
 #endif
-#if H_3D
+#if NH_3D_DLT
   xDeriveDltArray          ( vps, dlt );
 #endif
   if ( m_targetEncLayerIdList.size() == 0 )
@@ -307,8 +307,8 @@ Void TAppEncTop::xInitLibCfg()
 #endif  // NH_MV
   m_cTEncTop.setVPS(&vps);
 
-#if H_3D
-  m_cTEncTop.setDLT(&dlt);
+#if NH_3D_DLT
+  m_cTEncTop.setDLT(dlt);
 #endif
 
 #if NH_MV
@@ -1446,34 +1446,32 @@ Void TAppEncTop::printChromaFormat()
   std::cout << "\n" << std::endl;
 }
 
-#if H_3D_DIM_DLT
+#if NH_3D_DLT
 Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt)
 {
   TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
+  TComPicYuv*       pcDepthPicYuvTrueOrg = new TComPicYuv;
   // allocate original YUV buffer
-  pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+  pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, false );
+  pcDepthPicYuvTrueOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, false );
   
   TVideoIOYuv* depthVideoFile = new TVideoIOYuv;
   
-  UInt uiMaxDepthValue = ((1 << g_bitDepthY)-1);
+  UInt uiMaxDepthValue = ((1 << m_inputBitDepth[CHANNEL_TYPE_LUMA])-1);
   
-  Bool abValidDepths[256];
+  std::vector<Bool> abValidDepths(256, false);
   
-  depthVideoFile->open( m_pchInputFileList[layer], false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC );  // read  mode
+  depthVideoFile->open( m_pchInputFileList[layer], false, m_inputBitDepth, m_MSBExtendedBitDepth, m_internalBitDepth );
   
-  // initialize boolean array
-  for(Int p=0; p<=uiMaxDepthValue; p++)
-    abValidDepths[p] = false;
+  Int iHeight   = pcDepthPicYuvOrg->getHeight(COMPONENT_Y);
+  Int iWidth    = pcDepthPicYuvOrg->getWidth(COMPONENT_Y);
+  Int iStride   = pcDepthPicYuvOrg->getStride(COMPONENT_Y);
   
-  Int iHeight   = pcDepthPicYuvOrg->getHeight();
-  Int iWidth    = pcDepthPicYuvOrg->getWidth();
-  Int iStride   = pcDepthPicYuvOrg->getStride();
-  
-  Pel* pInDM    = pcDepthPicYuvOrg->getLumaAddr();
+  Pel* pInDM    = pcDepthPicYuvOrg->getAddr(COMPONENT_Y);
   
   for(Int uiFrame=0; uiFrame < uiNumFrames; uiFrame++ )
   {
-    depthVideoFile->read( pcDepthPicYuvOrg, m_aiPad );
+    depthVideoFile->read( pcDepthPicYuvOrg, pcDepthPicYuvTrueOrg, IPCOLOURSPACE_UNCHANGED, m_aiPad, m_InputChromaFormatIDC, m_bClipInputVideoToRec709Range );
     
     // check all pixel values
     for (Int i=0; i<iHeight; i++)
@@ -1493,9 +1491,11 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* v
   
   pcDepthPicYuvOrg->destroy();
   delete pcDepthPicYuvOrg;
+  pcDepthPicYuvTrueOrg->destroy();
+  delete pcDepthPicYuvTrueOrg;
   
   // convert boolean array to idx2Depth LUT
-  Int* aiIdx2DepthValue = (Int*) calloc(uiMaxDepthValue, sizeof(Int));
+  std::vector<Int> aiIdx2DepthValue(256, 0);
   Int iNumDepthValues = 0;
   for(Int p=0; p<=uiMaxDepthValue; p++)
   {
@@ -1505,7 +1505,7 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* v
     }
   }
   
-  if( uiNumFrames == 0 || numBitsForValue(iNumDepthValues) == g_bitDepthY )
+  if( uiNumFrames == 0 || gCeilLog2(iNumDepthValues) == m_inputBitDepth[CHANNEL_TYPE_LUMA] )
   {
     dlt->setUseDLTFlag(layer, false);
   }
@@ -1515,9 +1515,6 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* v
   {
     dlt->setDepthLUTs(layer, aiIdx2DepthValue, iNumDepthValues);
   }
-  
-  // free temporary memory
-  free(aiIdx2DepthValue);
 }
 #endif
 
@@ -2388,8 +2385,7 @@ Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
 #endif
 
 
-#if H_3D
-
+#if NH_3D_DLT
 Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
 {
   Int  iNumDepthViews  = 0;
@@ -2410,11 +2406,100 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
       xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod[layer], 24), &vps, &dlt);
       bDltPresentFlag = bDltPresentFlag || dlt.getUseDLTFlag(layer);
       dlt.setInterViewDltPredEnableFlag(layer, (dlt.getUseDLTFlag(layer) && (layer>1)));
+      
+      // ----------------------------- determine whether to use bit-map -----------------------------
+      Bool bDltBitMapRepFlag       = false;
+      UInt uiNumBitsNonBitMap      = 0;
+      UInt uiNumBitsBitMap         = 0;
+      
+      UInt uiMaxDiff               = 0;
+      UInt uiMinDiff               = INT_MAX;
+      UInt uiLengthMinDiff         = 0;
+      UInt uiLengthDltDiffMinusMin = 0;
+      
+      std::vector<Int> aiIdx2DepthValue_coded(256, 0);
+      UInt uiNumDepthValues_coded = 0;
+      
+      uiNumDepthValues_coded = dlt.getNumDepthValues(layer);
+      for( UInt ui = 0; ui<uiNumDepthValues_coded; ui++ )
+      {
+        aiIdx2DepthValue_coded[ui] = dlt.idx2DepthValue(layer, ui);
+      }
+      
+      if( dlt.getInterViewDltPredEnableFlag( layer ) )
+      {
+        AOF( vps.getDepthId( 1 ) == 1 );
+        AOF( layer > 1 );
+        // assumes ref layer id to be 1
+        std::vector<Int> piRefDLT = dlt.idx2DepthValue( 1 );
+        UInt uiRefNum = dlt.getNumDepthValues( 1 );
+        dlt.getDeltaDLT(layer, piRefDLT, uiRefNum, aiIdx2DepthValue_coded, uiNumDepthValues_coded);
+      }
+      
+      std::vector<UInt> puiDltDiffValues(uiNumDepthValues_coded, 0);
+      
+      for (UInt d = 1; d < uiNumDepthValues_coded; d++)
+      {
+        puiDltDiffValues[d] = aiIdx2DepthValue_coded[d] - aiIdx2DepthValue_coded[d-1];
+        
+        if ( uiMaxDiff < puiDltDiffValues[d] )
+        {
+          uiMaxDiff = puiDltDiffValues[d];
+        }
+        
+        if ( uiMinDiff > puiDltDiffValues[d] )
+        {
+          uiMinDiff = puiDltDiffValues[d];
+        }
+      }
+      
+      // counting bits
+      // diff coding branch
+      uiNumBitsNonBitMap += 8;                          // u(v) bits for num_depth_values_in_dlt[layerId] (i.e. num_entry[ layerId ])
+      
+      if ( uiNumDepthValues_coded > 1 )
+      {
+        uiNumBitsNonBitMap += 8;                        // u(v) bits for max_diff[ layerId ]
+      }
+      
+      if ( uiNumDepthValues_coded > 2 )
+      {
+        uiLengthMinDiff    = (UInt) gCeilLog2(uiMaxDiff + 1);
+        uiNumBitsNonBitMap += uiLengthMinDiff;          // u(v)  bits for min_diff[ layerId ]
+      }
+      
+      uiNumBitsNonBitMap += 8;                          // u(v) bits for dlt_depth_value0[ layerId ]
+      
+      if (uiMaxDiff > uiMinDiff)
+      {
+        uiLengthDltDiffMinusMin = (UInt) gCeilLog2(uiMaxDiff - uiMinDiff + 1);
+        uiNumBitsNonBitMap += uiLengthDltDiffMinusMin * (uiNumDepthValues_coded - 1);  // u(v) bits for dlt_depth_value_diff_minus_min[ layerId ][ j ]
+      }
+      
+      // bit map branch
+      uiNumBitsBitMap = 1 << m_inputBitDepth[CHANNEL_TYPE_LUMA];
+      
+      // determine bDltBitMapFlag
+      bDltBitMapRepFlag = (uiNumBitsBitMap > uiNumBitsNonBitMap) ? false : true;
+      
+      dlt.setUseBitmapRep(layer, bDltBitMapRepFlag);
+      
+#ifdef DEBUG
+      printf("---------------------------------------------\n");
+      printf("LayerId: %d\n", layer);
+      printf("getUseDLTFlag: %d\n", dlt.getUseDLTFlag(layer));
+      printf("getInterViewDltPredEnableFlag: %d\n", dlt.getInterViewDltPredEnableFlag(layer));
+      printf("getUseBitmapRep: %d\n", dlt.getUseBitmapRep(layer));
+      printf("getNumDepthValues: %d\n", dlt.getNumDepthValues(layer));
+      for(Int i=0; i<dlt.getNumDepthValues(layer); i++)
+        printf("depthValue[%d] = %d\n", i, dlt.idx2DepthValue(layer, i));
+#endif
     }
   }
 
   dlt.setDltPresentFlag( bDltPresentFlag );
   dlt.setNumDepthViews ( iNumDepthViews  );
+  dlt.setDepthViewBitDepth( m_inputBitDepth[CHANNEL_TYPE_LUMA] );
 }
 #endif
 //! \}

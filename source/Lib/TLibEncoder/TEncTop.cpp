@@ -986,8 +986,16 @@ Void TEncTop::xInitPPS()
 #endif
 #endif
 
-#if H_3D
-  m_cPPS.setDLT( getDLT() );
+#if NH_3D_DLT
+  // create mapping from depth layer indexes to layer ids
+  Int j=0;
+  for( Int i=0; i<=getVPS()->getMaxLayersMinus1(); i++ )
+  {
+    Int layerId = getVPS()->getLayerIdInNuh(i);
+    if( getVPS()->getDepthId(layerId) )
+      m_cDLT.setDepthIdxToLayerId(j++, i);
+  }
+  m_cPPS.setDLT( m_cDLT );
 #endif
 
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
