@@ -3849,7 +3849,7 @@ Void TComSlice::setDepthToDisparityLUTs()
   
   setupLUT = setupLUT || getViewSynthesisPredFlag( ); 
 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   setupLUT = setupLUT || getDepthRefinementFlag( );
 #endif  
 

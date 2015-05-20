@@ -489,13 +489,13 @@ public:
   Void          xDeriveRightBottomNbIdx(Int &uiLCUIdxRBNb, Int &uiPartIdxRBNb );
   Bool          xCheckSpatialNBDV (TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, IDVInfo* paMvpDvInfo,
                                    UInt uiMvpDvPos
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   , Bool bDepthRefine = false
 #endif
   );
   Bool          xGetColDisMV      ( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
   Void          getDisMvpCandNBDV ( DisInfo* pDInfo
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
    , Bool bDepthRefine = false
 #endif
    ); 
@@ -506,10 +506,10 @@ public:
 
    Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
 #endif
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT );
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
-#endif //H_3D_NBDV_REF
+#endif //NH_3D_NBDV_REF
 #endif
 #if  H_3D_FAST_TEXTURE_ENCODING
   Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);

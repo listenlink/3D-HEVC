@@ -2159,9 +2159,9 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
     
     
     Bool depthRefineFlag = false;
-#if H_3D_NBDV_REF
-    depthRefineFlag = m_pcSlice->getDepthRefinementFlag(  );
-#endif // H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
+    depthRefineFlag = m_pcSlice->getDepthRefinementFlag();
+#endif // NH_3D_NBDV_REF
     
     TComMv cDv = depthRefineFlag ? DvInfo.m_acDoNBDV : DvInfo.m_acNBDV;
     if( depthRefineFlag )
@@ -5759,11 +5759,11 @@ Bool TComDataCU::getNeighDepth ( UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDep
 #endif
 #if NH_3D_NBDV 
 //Notes from QC:
-//TBD#1: DoNBDV related contributions are just partially integrated under the marco of H_3D_NBDV_REF, remove this comment once DoNBDV and BVSP are done
+//TBD#1: DoNBDV related contributions are just partially integrated under the marco of NH_3D_NBDV_REF, remove this comment once DoNBDV and BVSP are done
 //TBD#2: set of DvMCP values need to be done as part of inter-view motion prediction process. Remove this comment once merge related integration is done
 //To be checked: Parallel Merge features for NBDV, related to DV_DERIVATION_PARALLEL_B0096 and LGE_IVMP_PARALLEL_MERGE_B0136 are not integrated. The need of these features due to the adoption of CU-based NBDV is not clear. We need confirmation on this, especially by proponents
 Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
 , Bool bDepthRefine
 #endif
 )
@@ -5786,7 +5786,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
       cIDVInfo.m_bAvailab[iList][iCurDvMcpCand] = false; 
     }
   }
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   if( !m_pcSlice->getDepthRefinementFlag( ) )
   {
     bDepthRefine = false;
@@ -5836,7 +5836,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
         pDInfo->m_acNBDV = cColMv;
         pDInfo->m_aVIdxCan  = iTargetViewIdx;
 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
         TComPic* picDepth = NULL;   
 #if H_3D_FCO_VSP_DONBDV_E0163
         picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
@@ -5858,7 +5858,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
         }
         pDInfo->m_acDoNBDV  = cColMv;
-#endif //H_3D_NBDV_REF
+#endif //NH_3D_NBDV_REF
         return;
       }
     }
@@ -5872,7 +5872,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   pcTmpCU = getPULeft(uiIdx, uiPartIdxLB, true, false);
   bCheckMcpDv = true; 
   if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_LEFT
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
     , bDepthRefine 
 #endif
     ) )
@@ -5884,7 +5884,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   {
     bCheckMcpDv = ( ( getCtuRsAddr() - pcTmpCU->getCtuRsAddr() ) == 0);
     if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_ABOVE
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
       , bDepthRefine 
 #endif
       ) )
@@ -5903,7 +5903,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           TComMv cDispVec = cIDVInfo.m_acMvCand[iList][ curPos ];
           pDInfo->m_acNBDV = cDispVec;
           pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
 #if H_3D_FCO_VSP_DONBDV_E0163
           TComPic* picDepth  = NULL;
 
@@ -5941,7 +5941,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   {
     pDInfo->m_aVIdxCan = getSlice()->getDefaultRefViewIdx();
 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
     TComPic* picDepth = NULL;
 #if H_3D_FCO_VSP_DONBDV_E0163
     picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
@@ -5967,19 +5967,19 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   }
 }
 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
 Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iBlkWidth, Int iBlkHeight, Int* aiShiftLUT )
 {
-  Int iPictureWidth  = pcBaseViewDepthPicYuv->getWidth();
-  Int iPictureHeight = pcBaseViewDepthPicYuv->getHeight();
-  
+  Int iPictureWidth  = pcBaseViewDepthPicYuv->getWidth(COMPONENT_Y);
+  Int iPictureHeight = pcBaseViewDepthPicYuv->getHeight(COMPONENT_Y);
+
   Int depthStartPosX = Clip3(0,   iPictureWidth - 1,  iBlkX + ((mv->getHor()+2)>>2));
   Int depthStartPosY = Clip3(0,   iPictureHeight - 1, iBlkY + ((mv->getVer()+2)>>2));
   Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
   Int depthEndPosY   = Clip3(0,   iPictureHeight - 1, iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
 
-  Pel* depthTL  = pcBaseViewDepthPicYuv->getLumaAddr();
-  Int depStride =  pcBaseViewDepthPicYuv->getStride();
+  Pel* depthTL  = pcBaseViewDepthPicYuv->getAddr(COMPONENT_Y);
+  Int depStride =  pcBaseViewDepthPicYuv->getStride(COMPONENT_Y);
 
   Pel  maxDepthVal = 0;
   maxDepthVal = std::max( maxDepthVal, depthTL[ (depthStartPosY) * depStride + depthStartPosX ]);      // Left Top
@@ -5994,13 +5994,14 @@ Void TComDataCU::estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDe
 {
   if (picDepth)
   {
-    UInt uiAbsPartAddrCurrCU = m_uiAbsIdxInLCU + uiPartAddr;
+    UInt uiAbsPartAddrCurrCU = m_absZIdxInCtu + uiPartAddr;
     Int iWidth, iHeight;
     getPartIndexAndSize( uiPartIdx, uiPartAddr, iWidth, iHeight ); // The modified value of uiPartAddr won't be used any more
 
     TComPicYuv* pcBaseViewDepthPicYuv = picDepth->getPicYuvRec();
-    Int iBlkX = ( getAddr() % picDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartAddrCurrCU ] ];
-    Int iBlkY = ( getAddr() / picDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartAddrCurrCU ] ];
+    const TComSPS   &sps =*(getSlice()->getSPS());
+    Int iBlkX = ( getCtuRsAddr() % picDepth->getFrameWidthInCtus() ) * sps.getMaxCUWidth()  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartAddrCurrCU ] ];
+    Int iBlkY = ( getCtuRsAddr() / picDepth->getFrameWidthInCtus() ) * sps.getMaxCUHeight() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartAddrCurrCU ] ];
 
     Int* aiShiftLUT = getSlice()->getDepthToDisparityB(refViewIdx );
 
@@ -6008,11 +6009,11 @@ Void TComDataCU::estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDe
     cMvPred->setHor( iDisp );
   }
 }
-#endif //H_3D_NBDV_REF
+#endif //NH_3D_NBDV_REF
 
 
 Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, IDVInfo* paIDVInfo, UInt uiMvpDvPos
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
 , Bool bDepthRefine 
 #endif
 )
@@ -6033,7 +6034,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
         {
           pNbDvInfo->m_acNBDV = cMvPred;
           pNbDvInfo->m_aVIdxCan = refViewIdx;
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
           TComPic* picDepth = NULL;
           assert(getSlice()->getRefPic(eRefPicList, refId)->getPOC() == getSlice()->getPOC());          
 #if H_3D_FCO_VSP_DONBDV_E0163
@@ -6208,9 +6209,9 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
   iCurrPosY  += ( ( iHeight - 1 ) >> 1 );
 
   Bool depthRefineFlag = false; 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   depthRefineFlag = m_pcSlice->getDepthRefinementFlag( ); 
-#endif // H_3D_NBDV_REF
+#endif // NH_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
   if( depthRefineFlag )
@@ -6345,9 +6346,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 #endif
 
   Bool depthRefineFlag = false; 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   depthRefineFlag = m_pcSlice->getDepthRefinementFlag( ); 
-#endif // H_3D_NBDV_REF
+#endif // NH_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
   if( depthRefineFlag )
@@ -6644,7 +6645,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
             Int ioffsetDV = (iLoopCan == 0) ? 0 : 4;
             abPdmAvailable[ iRefListId + 2 + (iLoopCan<<2) ] = true;
             paiPdmRefIdx  [ iRefListId + 2 + (iLoopCan<<2) ] = iPdmRefIdx;
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
             TComMv cMv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
 #endif
             cMv.setHor( cMv.getHor() + ioffsetDV );

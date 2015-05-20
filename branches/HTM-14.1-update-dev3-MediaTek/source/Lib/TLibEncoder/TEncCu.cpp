@@ -444,7 +444,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   DisInfo DvInfo; 
   DvInfo.m_acNBDV.setZero();
   DvInfo.m_aVIdxCan = 0;
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   DvInfo.m_acDoNBDV.setZero();
 #endif
 #endif
@@ -610,7 +610,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           else
           {
 #endif 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
             if( rpcTempCU->getSlice()->getDepthRefinementFlag() )
             {
               rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
