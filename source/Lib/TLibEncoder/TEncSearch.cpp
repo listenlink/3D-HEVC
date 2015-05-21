@@ -1052,10 +1052,12 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 );
 #if NH_3D_INTRA_SDC
           m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#if NH_3D_DMM
           if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( 0 ) ) && isDmmMode( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, 0 ) ) )
           {
             m_pcEntropyCoder->encodeDeltaDC( pcCU, 0 );
           }
+#endif
 #endif
       }
     }
@@ -1070,20 +1072,24 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
           m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
           for( UInt uiPart = 0; uiPart < 4; uiPart++ )
           {
+#if NH_3D_DMM
             if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiPart * uiQNumParts ) ) && isDmmMode( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, uiPart * uiQNumParts ) ) ) 
             {
               m_pcEntropyCoder->encodeDeltaDC( pcCU, uiPart * uiQNumParts );
             }
+#endif
 #endif
 #if NH_3D_INTRA_SDC
           if( uiAbsPartIdx == 0 )  
           {
             m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
           }
-          if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiAbsPartIdx ) ) && isDmmMode( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, uiAbsPartIdx ) ) ) 
+#if NH_3D_DMM
+          if( pcCU->getSlice()->getIsDepth() && ( pcCU->getSDCFlag( uiAbsPartIdx ) ) && isDmmMode( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, uiAbsPartIdx ) ) )
           {
             m_pcEntropyCoder->encodeDeltaDC( pcCU, uiAbsPartIdx );
           }
+#endif
 #endif
 #if H_3D
       }
@@ -2068,18 +2074,30 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
       Pel* piPredTU        = pcPredYuv->getAddr   ( COMPONENT_Y, uiAbsPartIdxTU );
       UInt uiStrideTU      = pcPredYuv->getStride ( COMPONENT_Y );
       
+      Pel* piRecIPredTU   = pcCU->getPic()->getPicYuvRec()->getAddr( COMPONENT_Y, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiAbsPartIdxTU );
+      UInt uiRecIPredStrideTU  = pcCU->getPic()->getPicYuvRec()->getStride(COMPONENT_Y);
+      
+      const Bool bUseFilter = TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiLumaPredMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
+      
       //===== init pattern for luma prediction =====
       Bool bAboveAvail = false;
       Bool bLeftAvail  = false;
       
-      if (tuRecurseWithPU.ProcessComponentSection(COMPONENT_Y))
+      initIntraPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, bUseFilter DEBUG_STRING_PASS_INTO(sTemp2) );
+      
+      predIntraAng( COMPONENT_Y, uiLumaPredMode, piOrgTU, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
+      
+      // copy for prediction of next part
+      for( UInt uiY = 0; uiY < puRect.height; uiY++ )
       {
-        initIntraPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, true DEBUG_STRING_PASS_INTO(sTemp2) );
+        for( UInt uiX = 0; uiX < puRect.width; uiX++ )
+        {
+          piPredTU      [ uiX ] = ClipBD( piPredTU[ uiX ], bitDepthY );
+          piRecIPredTU  [ uiX ] = piPredTU[ uiX ];
+        }
+        piPredTU     += uiStrideTU;
+        piRecIPredTU += uiRecIPredStrideTU;
       }
-      
-      const Bool bUseFilter = TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiLumaPredMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
-      
-      predIntraAng( COMPONENT_Y, uiLumaPredMode, piOrgTU, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter, TComPrediction::UseDPCMForFirstPassIntraEstimation(tuRecurseWithPU, uiLumaPredMode) );
       
     } while (tuRecurseWithPU.nextSection(tuRecurseCU));
 

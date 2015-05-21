@@ -1274,21 +1274,34 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       const TComRectangle &puRect = tuRecurseWithPU.getRect(COMPONENT_Y);
       const UInt uiAbsPartIdxTU = tuRecurseWithPU.GetAbsPartIdxTU();
       
-      Pel* piPredTU        = pcPredYuv->getAddr   ( COMPONENT_Y, uiAbsPartIdxTU );
-      UInt uiStrideTU      = pcPredYuv->getStride ( COMPONENT_Y );
+      Pel* piPredTU       = pcPredYuv->getAddr  ( COMPONENT_Y, uiAbsPartIdxTU );
+      UInt uiStrideTU     = pcPredYuv->getStride( COMPONENT_Y );
+      
+      Pel* piRecIPredTU   = pcCU->getPic()->getPicYuvRec()->getAddr( COMPONENT_Y, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiAbsPartIdxTU );
+      UInt uiRecIPredStrideTU  = pcCU->getPic()->getPicYuvRec()->getStride(COMPONENT_Y);
+      
+      const Bool bUseFilter = TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiLumaPredMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
       
       //===== init pattern for luma prediction =====
       Bool bAboveAvail = false;
       Bool bLeftAvail  = false;
       
-      if (tuRecurseWithPU.ProcessComponentSection(COMPONENT_Y))
+      m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, bUseFilter  DEBUG_STRING_PASS_INTO(sTemp) );
+      
+      m_pcPrediction->predIntraAng( COMPONENT_Y, uiLumaPredMode, NULL, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
+      
+      // copy for prediction of next part
+      for( UInt uiY = 0; uiY < puRect.height; uiY++ )
       {
-        m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, true DEBUG_STRING_PASS_INTO(sTemp2) );
+        for( UInt uiX = 0; uiX < puRect.width; uiX++ )
+        {
+          piPredTU      [ uiX ] = ClipBD( piPredTU[ uiX ], bitDepthY );
+          piRecIPredTU  [ uiX ] = piPredTU[ uiX ];
+        }
+        piPredTU     += uiStrideTU;
+        piRecIPredTU += uiRecIPredStrideTU;
       }
       
-      const Bool bUseFilter = TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiLumaPredMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
-      
-      m_pcPrediction->predIntraAng( COMPONENT_Y, uiLumaPredMode, NULL, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter, TComPrediction::UseDPCMForFirstPassIntraEstimation(tuRecurseWithPU, uiLumaPredMode) );
       
     } while (tuRecurseWithPU.nextSection(tuRecurseCU));
 

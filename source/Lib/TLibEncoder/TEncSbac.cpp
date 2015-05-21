@@ -2539,7 +2539,9 @@ Void TEncSbac::codeDeltaDC( TComDataCU* pcCU, UInt absPartIdx )
 
 Void TEncSbac::xCodeDeltaDC( Pel valDeltaDC, UInt uiNumSeg )
 {
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
   DTRACE_CU("delta_dc", valDeltaDC);
+#endif
   xWriteExGolombLevelDdc( UInt( abs( valDeltaDC ) - ( uiNumSeg > 1 ? 0 : 1 ) ) );
   if( valDeltaDC != 0 )
   {
@@ -2629,7 +2631,9 @@ Void TEncSbac::xCodeDmm1WedgeIdx( UInt uiTabIdx, Int iNumBit )
 Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiSymbol = pcCU->getSDCFlag( uiAbsPartIdx ) ? 1 : 0;
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
   DTRACE_CU("dc_only_flag", uiSymbol)
+#endif
   m_pcBinIf->encodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, 0 ) );
 }
 
