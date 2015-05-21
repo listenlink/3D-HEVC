@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,14 +40,14 @@
 using namespace std;
 namespace po = df::program_options_lite;
 
-int main(int argc, const char** argv)
+Int main(Int argc, const char** argv)
 {
-  bool do_help;
+  Bool do_help;
   string filename_in, filename_out;
-  unsigned int width, height;
-  unsigned int bitdepth_in, bitdepth_out;
-  unsigned int num_frames;
-  unsigned int num_frames_skip;
+  UInt width, height;
+  UInt bitdepth_in, bitdepth_out, chromaFormatRaw;
+  UInt num_frames;
+  UInt num_frames_skip;
 
   po::Options opts;
   opts.addOptions()
@@ -58,12 +58,14 @@ int main(int argc, const char** argv)
   ("SourceHeight", height, 0u, "source picture height")
   ("InputBitDepth", bitdepth_in, 8u, "bit-depth of input file")
   ("OutputBitDepth", bitdepth_out, 8u, "bit-depth of output file")
+  ("ChromaFormat", chromaFormatRaw, 420u, "chroma format. 400, 420, 422 or 444 only")
   ("NumFrames", num_frames, 0xffffffffu, "number of frames to process")
   ("FrameSkip,-fs", num_frames_skip, 0u, "Number of frames to skip at start of input YUV")
   ;
 
   po::setDefaults(opts);
   po::scanArgv(opts, argc, argv);
+
 
   if (argc == 1 || do_help)
   {
@@ -72,46 +74,75 @@ int main(int argc, const char** argv)
     return EXIT_FAILURE;
   }
 
+  ChromaFormat chromaFormatIDC=CHROMA_420;
+  switch (chromaFormatRaw)
+  {
+    case 400: chromaFormatIDC=CHROMA_400; break;
+    case 420: chromaFormatIDC=CHROMA_420; break;
+    case 422: chromaFormatIDC=CHROMA_422; break;
+    case 444: chromaFormatIDC=CHROMA_444; break;
+    default:
+      fprintf(stderr, "Bad chroma format string\n");
+      return EXIT_FAILURE;
+  }
+
   TVideoIOYuv input;
   TVideoIOYuv output;
 
-  input.open((char*)filename_in.c_str(), false, bitdepth_in, bitdepth_in, bitdepth_out, bitdepth_out);
-  output.open((char*)filename_out.c_str(), true, bitdepth_out, bitdepth_out, bitdepth_out, bitdepth_out);
+  Int inputBitDepths [MAX_NUM_CHANNEL_TYPE];
+  Int outputBitDepths[MAX_NUM_CHANNEL_TYPE];
 
-  input.skipFrames(num_frames_skip, width, height);
+  for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
+  {
+    inputBitDepths [channelTypeIndex] = bitdepth_in;
+    outputBitDepths[channelTypeIndex] = bitdepth_out;
+  }
+
+  input.open((char*)filename_in.c_str(), false, inputBitDepths, inputBitDepths, outputBitDepths);
+  output.open((char*)filename_out.c_str(), true, outputBitDepths, outputBitDepths, outputBitDepths);
+
+  input.skipFrames(num_frames_skip, width, height, chromaFormatIDC);
 
   TComPicYuv frame;
-  frame.create( width, height, 1, 1, 0 );
+  frame.create( width, height, chromaFormatIDC, width, height, 0, false);
 
-  int pad[2] = {0, 0};
+  Int pad[2] = {0, 0};
 
-  unsigned int num_frames_processed = 0;
-  while (!input.isEof()) 
+  TComPicYuv cPicYuvTrueOrg;
+  cPicYuvTrueOrg.create( width, height, chromaFormatIDC, width, height, 0, false );
+
+  UInt num_frames_processed = 0;
+  while (!input.isEof())
   {
-    if (! input.read(&frame, pad))
+    if (! input.read(&frame, &cPicYuvTrueOrg, IPCOLOURSPACE_UNCHANGED, pad))
     {
       break;
     }
 #if 0
-    Pel* img = frame.getLumaAddr();
-    for (int y = 0; y < height; y++) 
+    Pel* img = frame.getAddr(COMPONENT_Y);
+    for (Int y = 0; y < height; y++)
     {
-      for (int x = 0; x < height; x++)
+      for (Int x = 0; x < height; x++)
+      {
         img[x] = 0;
+      }
       img += frame.getStride();
     }
-    img = frame.getLumaAddr();
+    img = frame.getAddr(COMPONENT_Y);
     img[0] = 1;
 #endif
 
-    output.write(&frame);
+    output.write(&frame, IPCOLOURSPACE_UNCHANGED);
     num_frames_processed++;
     if (num_frames_processed == num_frames)
+    {
       break;
+    }
   }
 
   input.close();
   output.close();
+  cPicYuvTrueOrg.destroy();
 
   return EXIT_SUCCESS;
 }

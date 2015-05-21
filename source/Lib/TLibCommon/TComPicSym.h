@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 
 
 // Include files
+#include <deque>
 #include "CommonDef.h"
 #include "TComSlice.h"
 #include "TComDataCU.h"
@@ -56,96 +57,107 @@ class TComPPS;
 class TComTile
 {
 private:
-  UInt      m_uiTileWidth;
-  UInt      m_uiTileHeight;
-  UInt      m_uiRightEdgePosInCU;
-  UInt      m_uiBottomEdgePosInCU;
-  UInt      m_uiFirstCUAddr;
+  UInt      m_tileWidthInCtus;
+  UInt      m_tileHeightInCtus;
+  UInt      m_rightEdgePosInCtus;
+  UInt      m_bottomEdgePosInCtus;
+  UInt      m_firstCtuRsAddr;
 
-public:  
+public:
   TComTile();
   virtual ~TComTile();
 
-  Void      setTileWidth         ( UInt i )            { m_uiTileWidth = i; }
-  UInt      getTileWidth         ()                    { return m_uiTileWidth; }
-  Void      setTileHeight        ( UInt i )            { m_uiTileHeight = i; }
-  UInt      getTileHeight        ()                    { return m_uiTileHeight; }
-  Void      setRightEdgePosInCU  ( UInt i )            { m_uiRightEdgePosInCU = i; }
-  UInt      getRightEdgePosInCU  ()                    { return m_uiRightEdgePosInCU; }
-  Void      setBottomEdgePosInCU ( UInt i )            { m_uiBottomEdgePosInCU = i; }
-  UInt      getBottomEdgePosInCU ()                    { return m_uiBottomEdgePosInCU; }
-  Void      setFirstCUAddr       ( UInt i )            { m_uiFirstCUAddr = i; }
-  UInt      getFirstCUAddr       ()                    { return m_uiFirstCUAddr; }
+  Void      setTileWidthInCtus     ( UInt i )            { m_tileWidthInCtus = i; }
+  UInt      getTileWidthInCtus     () const              { return m_tileWidthInCtus; }
+  Void      setTileHeightInCtus    ( UInt i )            { m_tileHeightInCtus = i; }
+  UInt      getTileHeightInCtus    () const              { return m_tileHeightInCtus; }
+  Void      setRightEdgePosInCtus  ( UInt i )            { m_rightEdgePosInCtus = i; }
+  UInt      getRightEdgePosInCtus  () const              { return m_rightEdgePosInCtus; }
+  Void      setBottomEdgePosInCtus ( UInt i )            { m_bottomEdgePosInCtus = i; }
+  UInt      getBottomEdgePosInCtus () const              { return m_bottomEdgePosInCtus; }
+  Void      setFirstCtuRsAddr      ( UInt i )            { m_firstCtuRsAddr = i; }
+  UInt      getFirstCtuRsAddr      () const              { return m_firstCtuRsAddr; }
 };
 
 /// picture symbol class
 class TComPicSym
 {
 private:
-  UInt          m_uiWidthInCU;
-  UInt          m_uiHeightInCU;
-  
-  UInt          m_uiMaxCUWidth;
-  UInt          m_uiMaxCUHeight;
+  UInt          m_frameWidthInCtus;
+  UInt          m_frameHeightInCtus;
+
   UInt          m_uiMinCUWidth;
   UInt          m_uiMinCUHeight;
-  
-  UChar         m_uhTotalDepth;       ///< max. depth
-  UInt          m_uiNumPartitions;
-  UInt          m_uiNumPartInWidth;
-  UInt          m_uiNumPartInHeight;
-  UInt          m_uiNumCUsInFrame;
-  
-  TComSlice**   m_apcTComSlice;
-  UInt          m_uiNumAllocatedSlice;
-  TComDataCU**  m_apcTComDataCU;        ///< array of CU data
-    
-  Int           m_iNumColumnsMinus1; 
-  Int           m_iNumRowsMinus1;
-  std::vector<TComTile> m_tileParameters;
-  UInt*         m_puiCUOrderMap;       //the map of LCU raster scan address relative to LCU encoding order 
-  UInt*         m_puiTileIdxMap;       //the map of the tile index relative to LCU raster scan address 
-  UInt*         m_puiInverseCUOrderMap;
 
-  SAOBlkParam *m_saoBlkParams;
+  UChar         m_uhTotalDepth;       ///< max. depth
+  UInt          m_numPartitionsInCtu;
+  UInt          m_numPartInCtuWidth;
+  UInt          m_numPartInCtuHeight;
+  UInt          m_numCtusInFrame;
+
+  std::deque<TComSlice*> m_apSlices;
+  TComDataCU**  m_pictureCtuArray;        ///< array of CU data.
+
+  Int           m_numTileColumnsMinus1;
+  Int           m_numTileRowsMinus1;
+  std::vector<TComTile> m_tileParameters;
+  UInt*         m_ctuTsToRsAddrMap;    ///< for a given TS (Tile-Scan; coding order) address, returns the RS (Raster-Scan) address. cf CtbAddrTsToRs in specification.
+  UInt*         m_puiTileIdxMap;       ///< the map of the tile index relative to CTU raster scan address
+  UInt*         m_ctuRsToTsAddrMap;    ///< for a given RS (Raster-Scan) address, returns the TS (Tile-Scan; coding order) address. cf CtbAddrRsToTs in specification.
+
+  SAOBlkParam  *m_saoBlkParams;
+#if ADAPTIVE_QP_SELECTION
+  TCoeff*       m_pParentARLBuffer;
+#endif
+  TComSPS       m_sps;
+  TComPPS       m_pps;
+
+  Void               xInitTiles( );
+  Void               xInitCtuTsRsAddrMaps();
+  Void               setNumTileColumnsMinus1( Int i )                      { m_numTileColumnsMinus1 = i;    }
+  Void               setNumTileRowsMinus1( Int i )                         { m_numTileRowsMinus1 = i;       }
+  Void               setCtuTsToRsAddrMap( Int ctuTsAddr, Int ctuRsAddr )   { *(m_ctuTsToRsAddrMap + ctuTsAddr) = ctuRsAddr; }
+  Void               setCtuRsToTsAddrMap( Int ctuRsAddr, Int ctuTsOrder )  { *(m_ctuRsToTsAddrMap + ctuRsAddr) = ctuTsOrder; }
+
 public:
-  Void        create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
-  Void        destroy ();
+  Void               create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth );
+  Void               destroy ();
 
   TComPicSym  ();
-  TComSlice*  getSlice(UInt i)          { return  m_apcTComSlice[i];            }
-  UInt        getFrameWidthInCU()       { return m_uiWidthInCU;                 }
-  UInt        getFrameHeightInCU()      { return m_uiHeightInCU;                }
-  UInt        getMinCUWidth()           { return m_uiMinCUWidth;                }
-  UInt        getMinCUHeight()          { return m_uiMinCUHeight;               }
-  UInt        getNumberOfCUsInFrame()   { return m_uiNumCUsInFrame;  }
-  TComDataCU*&  getCU( UInt uiCUAddr )  { return m_apcTComDataCU[uiCUAddr];     }
-  
-  Void        setSlice(TComSlice* p, UInt i) { m_apcTComSlice[i] = p;           }
-  UInt        getNumAllocatedSlice()    { return m_uiNumAllocatedSlice;         }
-  Void        allocateNewSlice();
-  Void        clearSliceBuffer();
-  UInt        getNumPartition()         { return m_uiNumPartitions;             }
-  UInt        getNumPartInWidth()       { return m_uiNumPartInWidth;            }
-  UInt        getNumPartInHeight()      { return m_uiNumPartInHeight;           }
-  Void         setNumColumnsMinus1( Int i )                          { m_iNumColumnsMinus1 = i; }
-  Int          getNumColumnsMinus1()                                 { return m_iNumColumnsMinus1; }  
-  Void         setNumRowsMinus1( Int i )                             { m_iNumRowsMinus1 = i; }
-  Int          getNumRowsMinus1()                                    { return m_iNumRowsMinus1; }
-  Int          getNumTiles()                                         { return (m_iNumRowsMinus1+1)*(m_iNumColumnsMinus1+1); }
-  TComTile*    getTComTile  ( UInt tileIdx )                         { return &(m_tileParameters[tileIdx]); }
-  Void         setCUOrderMap( Int encCUOrder, Int cuAddr )           { *(m_puiCUOrderMap + encCUOrder) = cuAddr; }
-  UInt         getCUOrderMap( Int encCUOrder )                       { return *(m_puiCUOrderMap + (encCUOrder>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : encCUOrder)); }
-  UInt         getTileIdxMap( Int i )                                { return *(m_puiTileIdxMap + i); }
-  Void         setInverseCUOrderMap( Int cuAddr, Int encCUOrder )    { *(m_puiInverseCUOrderMap + cuAddr) = encCUOrder; }
-  UInt         getInverseCUOrderMap( Int cuAddr )                    { return *(m_puiInverseCUOrderMap + (cuAddr>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : cuAddr)); }
-  UInt         getPicSCUEncOrder( UInt SCUAddr );
-  UInt         getPicSCUAddr( UInt SCUEncOrder );
-  Void         initTiles(TComPPS *pps);
-  UInt         xCalculateNxtCUAddr( UInt uiCurrCUAddr );
-  SAOBlkParam* getSAOBlkParam() { return m_saoBlkParams;}
-  Void deriveLoopFilterBoundaryAvailibility(Int ctu, Bool& isLeftAvail,Bool& isRightAvail,Bool& isAboveAvail,Bool& isBelowAvail,Bool& isAboveLeftAvail,Bool& isAboveRightAvail,Bool& isBelowLeftAvail,Bool& isBelowRightAvail);
+  TComSlice*         getSlice(UInt i)                                      { return m_apSlices[i];             }
+  const TComSlice*   getSlice(UInt i) const                                { return m_apSlices[i];             }
+  UInt               getFrameWidthInCtus() const                           { return m_frameWidthInCtus;            }
+  UInt               getFrameHeightInCtus() const                          { return m_frameHeightInCtus;           }
+  UInt               getMinCUWidth() const                                 { return m_uiMinCUWidth;                }
+  UInt               getMinCUHeight() const                                { return m_uiMinCUHeight;               }
+  UInt               getNumberOfCtusInFrame() const                        { return m_numCtusInFrame;              }
+  TComDataCU*        getCtu( UInt ctuRsAddr )                              { return m_pictureCtuArray[ctuRsAddr];  }
+  const TComDataCU*  getCtu( UInt ctuRsAddr ) const                        { return m_pictureCtuArray[ctuRsAddr];  }
+  const TComSPS&     getSPS()                 const                        { return m_sps; }
+  const TComPPS&     getPPS()                 const                        { return m_pps; }
 
+  TComSlice *        swapSliceObject(TComSlice* p, UInt i)                 { p->setSPS(&m_sps); p->setPPS(&m_pps); TComSlice *pTmp=m_apSlices[i];m_apSlices[i] = p; pTmp->setSPS(0); pTmp->setPPS(0); return pTmp; }
+  UInt               getNumAllocatedSlice() const                          { return UInt(m_apSlices.size());       }
+  Void               allocateNewSlice();
+  Void               clearSliceBuffer();
+  UInt               getNumPartitionsInCtu() const                         { return m_numPartitionsInCtu;   }
+  UInt               getNumPartInCtuWidth() const                          { return m_numPartInCtuWidth;    }
+  UInt               getNumPartInCtuHeight() const                         { return m_numPartInCtuHeight;   }
+  Int                getNumTileColumnsMinus1() const                       { return m_numTileColumnsMinus1; }
+  Int                getNumTileRowsMinus1() const                          { return m_numTileRowsMinus1;    }
+  Int                getNumTiles() const                                   { return (m_numTileRowsMinus1+1)*(m_numTileColumnsMinus1+1); }
+  TComTile*          getTComTile  ( UInt tileIdx )                         { return &(m_tileParameters[tileIdx]); }
+  const TComTile*    getTComTile  ( UInt tileIdx ) const                   { return &(m_tileParameters[tileIdx]); }
+  UInt               getCtuTsToRsAddrMap( Int ctuTsAddr ) const            { return *(m_ctuTsToRsAddrMap + (ctuTsAddr>=m_numCtusInFrame ? m_numCtusInFrame : ctuTsAddr)); }
+  UInt               getTileIdxMap( Int ctuRsAddr ) const                  { return *(m_puiTileIdxMap + ctuRsAddr); }
+  UInt               getCtuRsToTsAddrMap( Int ctuRsAddr ) const            { return *(m_ctuRsToTsAddrMap + (ctuRsAddr>=m_numCtusInFrame ? m_numCtusInFrame : ctuRsAddr)); }
+  SAOBlkParam*       getSAOBlkParam()                                      { return m_saoBlkParams;}
+  const SAOBlkParam* getSAOBlkParam() const                                { return m_saoBlkParams;}
+  Void               deriveLoopFilterBoundaryAvailibility(Int ctuRsAddr,
+                                                          Bool& isLeftAvail, Bool& isRightAvail, Bool& isAboveAvail, Bool& isBelowAvail,
+                                                          Bool& isAboveLeftAvail, Bool& isAboveRightAvail, Bool& isBelowLeftAvail, Bool& isBelowRightAvail);
+protected:
+  UInt               xCalculateNextCtuRSAddr( UInt uiCurrCtuRSAddr );
 
 };// END CLASS DEFINITION TComPicSym
 
