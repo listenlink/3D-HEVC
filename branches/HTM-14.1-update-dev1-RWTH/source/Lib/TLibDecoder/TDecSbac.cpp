@@ -2408,8 +2408,9 @@ Void TDecSbac::xParseDeltaDC( Pel& rValDeltaDC, UInt uiNumSeg )
       rValDeltaDC = -rValDeltaDC;
     }
   }
-  
+#if H_MV_ENC_DEC_TRAC
   DTRACE_CU("delta_dc", rValDeltaDC);
+#endif
 }
 
 Void TDecSbac::xReadExGolombLevelDdc( UInt& ruiSymbol )
@@ -2508,7 +2509,9 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiSymbol = 0;
 
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, 0 ) );
+#if H_MV_ENC_DEC_TRAC
   DTRACE_CU("dc_only_flag", uiSymbol)
+#endif
   if( uiSymbol )
   {
     pcCU->setSDCFlagSubParts( true, uiAbsPartIdx, uiDepth );

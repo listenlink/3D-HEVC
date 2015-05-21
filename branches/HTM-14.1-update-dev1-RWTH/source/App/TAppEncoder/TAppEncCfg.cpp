@@ -1362,7 +1362,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     
   ;
 
-#if NH_MV    
+  // FJ: this should be removed as soon as Inter-SDC is fully implemented
+#if !NH_3D_INTER_SDC
+  m_interSdcFlag = false;
+#endif
+
+#if NH_MV
   // parse coding structure
   for( Int k = 0; k < MAX_NUM_LAYERS; k++ )
   {

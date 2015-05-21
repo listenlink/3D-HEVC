@@ -64,12 +64,12 @@
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define H_MV_ENC_DEC_TRAC                 0  //< CU/PU level tracking
 
 #if NH_3D
 #define NH_3D_VSO                         1
-#define NH_3D_DMM                         1   // Depth modeling modes
-#define NH_3D_DLT                         0   // Depth Lookup Table
+#define NH_3D_DMM                         0   // Depth modeling modes
+#define NH_3D_DLT                         1   // Depth Lookup Table
 #define NH_3D_INTRA_SDC                   1   // Segment-wise DC Coding method for INTRA
 #define NH_3D_ENC_DEPTH                   1   // Encoder optimizations for depth, incl.
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
