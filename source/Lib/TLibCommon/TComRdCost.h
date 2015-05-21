@@ -166,7 +166,7 @@ private:
   UInt                    m_uiCost;
 #endif
   Int                     m_iCostScale;
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool                    m_bUseMask;
 #endif
 
@@ -205,7 +205,7 @@ public:
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
   Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void    setUseMask(Bool b) { m_bUseMask = b; }
 #endif
 
@@ -301,7 +301,7 @@ private:
   static Distortion xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static Distortion xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static Distortion xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-#if H_3D_DBBP
+#if NH_3D_DBBP
   static UInt xGetMaskedSSE     ( DistParam* pcDtParam );
   static UInt xGetMaskedSAD     ( DistParam* pcDtParam );
   static UInt xGetMaskedVSD     ( DistParam* pcDtParam );

@@ -118,7 +118,7 @@ TDecSbac::TDecSbac()
 #if H_3D_DIM_SDC
 , m_cSDCFlagSCModel                  ( 1,             1,  NUM_SDC_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
 , m_cDBBPFlagSCModel             ( 1,             1,                 DBBP_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 
@@ -209,7 +209,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 #if H_3D_DIM_SDC
   m_cSDCFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_SDC_FLAG );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_cDBBPFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
@@ -258,9 +258,6 @@ Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 #endif
 #if H_3D_DIM_SDC
   m_cSDCFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
-#endif
-#if H_3D_DBBP
-  m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
 
@@ -2540,7 +2537,7 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   AOF( pcCU->getSlice()->getDepthBasedBlkPartFlag() );
@@ -2552,7 +2549,7 @@ Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   DTRACE_CU("dbbp_flag", uiSymbol)
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   AOF( ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N );
-  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - uiDepth ) << 1 ) ) >> 4;
   pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx, 0, uiDepth);
   pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx+uiPUOffset, 1, uiDepth);
 }

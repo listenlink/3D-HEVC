@@ -187,7 +187,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define SDC_NUM_RESIDUAL_CTX          1
 #define NUM_SDC_FLAG_CTX              1      ///< number of context 
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
 #define DBBP_NUM_FLAG_CTX                 1
 #endif
 // ====================================================================================================================
@@ -628,7 +628,7 @@ INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
 };
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
 {
   { CNU },

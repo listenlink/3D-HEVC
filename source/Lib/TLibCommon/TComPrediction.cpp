@@ -746,9 +746,13 @@ Bool TComPrediction::xCheckTwoSPMotion ( TComDataCU* pcCU, UInt PartAddr0, UInt 
 }
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize, TComDataCU*& pcCU)
 {
+  const TComSPS* sps = pcCU->getSlice()->getSPS();
+  UInt uiMaxCUWidth = sps->getMaxCUWidth();
+  UInt uiMaxCUHeight = sps->getMaxCUHeight();
+  
   // find virtual partitioning for this CU based on depth block
   // segmentation of texture block --> mask IDs
   Pel*  pDepthBlockStart      = pDepthPels;
@@ -756,15 +760,15 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   // first compute average of depth block for thresholding
   Int iSumDepth = 0;
   Int iSubSample = 4;
-  Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth();
-  Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight();
+  Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth(COMPONENT_Y);
+  Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight(COMPONENT_Y);
   TComMv cDv = pcCU->getSlice()->getDepthRefinementFlag(  ) ? pcCU->getDvInfo(0).m_acDoNBDV : pcCU->getDvInfo(0).m_acNBDV;
   if( pcCU->getSlice()->getDepthRefinementFlag(  ) )
   {
     cDv.setVer(0);
   }
-  Int iBlkX = ( pcCU->getAddr() % pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getHor()+2)>>2);
-  Int iBlkY = ( pcCU->getAddr() / pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getVer()+2)>>2);
+  Int iBlkX = ( pcCU->getCtuRsAddr() % pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCtus() ) * uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ pcCU->getZorderIdxInCtu() ] ]+ ((cDv.getHor()+2)>>2);
+  Int iBlkY = ( pcCU->getCtuRsAddr() / pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCtus() ) * uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ pcCU->getZorderIdxInCtu() ] ]+ ((cDv.getVer()+2)>>2);
   
   UInt t=0;
 
@@ -851,7 +855,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
     }
   }
 
-  PartSize matchedPartSize = SIZE_NONE;
+  PartSize matchedPartSize = NUMBER_OF_PART_SIZES;
 
   Int iMaxMatchSum = 0;
   for(Int p=0; p<2; p++)  // loop over partition
@@ -866,13 +870,17 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
     }
   }
 
-  AOF( matchedPartSize != SIZE_NONE );
+  AOF( matchedPartSize != NUMBER_OF_PART_SIZES );
 
   return matchedPartSize;
 }
 
 Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask, TComDataCU*& pcCU)
 {
+  const TComSPS* sps = pcCU->getSlice()->getSPS();
+  UInt uiMaxCUWidth = sps->getMaxCUWidth();
+  UInt uiMaxCUHeight = sps->getMaxCUHeight();
+  
   // segmentation of texture block --> mask IDs
   Pel*  pDepthBlockStart      = pDepthPels;
 
@@ -884,15 +892,15 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   uiMaxDepth = pDepthPels[ 0 ];
   iSumDepth  = pDepthPels[ 0 ];
   
-  Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth();
-  Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight();  
+  Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth(COMPONENT_Y);
+  Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight(COMPONENT_Y);  
   TComMv cDv = pcCU->getSlice()->getDepthRefinementFlag(  ) ? pcCU->getDvInfo(0).m_acDoNBDV : pcCU->getDvInfo(0).m_acNBDV;
   if( pcCU->getSlice()->getDepthRefinementFlag(  ) )
   {
     cDv.setVer(0);
   }
-  Int iBlkX = ( pcCU->getAddr() % pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getHor()+2)>>2);
-  Int iBlkY = ( pcCU->getAddr() / pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getVer()+2)>>2);
+  Int iBlkX = ( pcCU->getCtuRsAddr() % pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCtus() ) * uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ pcCU->getZorderIdxInCtu() ] ]+ ((cDv.getHor()+2)>>2);
+  Int iBlkY = ( pcCU->getCtuRsAddr() / pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCtus() ) * uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ pcCU->getZorderIdxInCtu() ] ]+ ((cDv.getVer()+2)>>2);
   if (iBlkX>(Int)(iPictureWidth - uiWidth))
   {
     iSumDepth += pDepthPels[ iPictureWidth - iBlkX - 1 ];
@@ -1007,12 +1015,12 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   return true;
 }
 
-Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutYuv, Bool* pMask, UInt uiWidth, UInt uiHeight, UInt uiPartAddr, UInt partSize )
+Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutYuv, Bool* pMask, UInt uiWidth, UInt uiHeight, UInt uiPartAddr, UInt partSize, Int bitDepthY )
 {
-  Pel*  piSrc[2]    = {pInYuv[0]->getLumaAddr(uiPartAddr), pInYuv[1]->getLumaAddr(uiPartAddr)};
-  UInt  uiSrcStride = pInYuv[0]->getStride();
-  Pel*  piDst       = pOutYuv->getLumaAddr(uiPartAddr);
-  UInt  uiDstStride = pOutYuv->getStride();
+  Pel*  piSrc[2]    = {pInYuv[0]->getAddr(COMPONENT_Y, uiPartAddr), pInYuv[1]->getAddr(COMPONENT_Y, uiPartAddr)};
+  UInt  uiSrcStride = pInYuv[0]->getStride(COMPONENT_Y);
+  Pel*  piDst       = pOutYuv->getAddr(COMPONENT_Y, uiPartAddr);
+  UInt  uiDstStride = pOutYuv->getStride(COMPONENT_Y);
   
   UInt  uiMaskStride= MAX_CU_SIZE;
   Pel* tmpTar = 0;
@@ -1051,7 +1059,7 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
         left   = (x==0)          ? tmpTar[y*uiWidth+x] : tmpTar[y*uiWidth+x-1];
         right  = (x==uiWidth-1)  ? tmpTar[y*uiWidth+x] : tmpTar[y*uiWidth+x+1];
         
-        piDst[x] = (l!=r) ? ClipY( Pel(( left + (tmpTar[y*uiWidth+x] << 1) + right ) >> 2 )) : tmpTar[y*uiWidth+x]; 
+        piDst[x] = (l!=r) ? ClipBD( Pel(( left + (tmpTar[y*uiWidth+x] << 1) + right ) >> 2 ), bitDepthY) : tmpTar[y*uiWidth+x];
       }
       piDst     += uiDstStride;
     }
@@ -1069,7 +1077,7 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
         top    = (y==0)          ? tmpTar[y*uiWidth+x] : tmpTar[(y-1)*uiWidth+x];
         bottom = (y==uiHeight-1) ? tmpTar[y*uiWidth+x] : tmpTar[(y+1)*uiWidth+x];
         
-        piDst[x] = (t!=b) ? ClipY( Pel(( top + (tmpTar[y*uiWidth+x] << 1) + bottom ) >> 2 )) : tmpTar[y*uiWidth+x];
+        piDst[x] = (t!=b) ? ClipBD( Pel(( top + (tmpTar[y*uiWidth+x] << 1) + bottom ) >> 2 ), bitDepthY) : tmpTar[y*uiWidth+x];
       }
       piDst     += uiDstStride;
     }
@@ -1082,12 +1090,12 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
   }
   
   // now combine chroma
-  Pel*  piSrcU[2]       = { pInYuv[0]->getCbAddr(uiPartAddr), pInYuv[1]->getCbAddr(uiPartAddr) };
-  Pel*  piSrcV[2]       = { pInYuv[0]->getCrAddr(uiPartAddr), pInYuv[1]->getCrAddr(uiPartAddr) };
-  UInt  uiSrcStrideC    = pInYuv[0]->getCStride();
-  Pel*  piDstU          = pOutYuv->getCbAddr(uiPartAddr);
-  Pel*  piDstV          = pOutYuv->getCrAddr(uiPartAddr);
-  UInt  uiDstStrideC    = pOutYuv->getCStride();
+  Pel*  piSrcU[2]       = { pInYuv[0]->getAddr(COMPONENT_Cb, uiPartAddr), pInYuv[1]->getAddr(COMPONENT_Cb, uiPartAddr) };
+  Pel*  piSrcV[2]       = { pInYuv[0]->getAddr(COMPONENT_Cr, uiPartAddr), pInYuv[1]->getAddr(COMPONENT_Cr, uiPartAddr) };
+  UInt  uiSrcStrideC    = pInYuv[0]->getStride(COMPONENT_Cb);
+  Pel*  piDstU          = pOutYuv->getAddr(COMPONENT_Cb, uiPartAddr);
+  Pel*  piDstV          = pOutYuv->getAddr(COMPONENT_Cr, uiPartAddr);
+  UInt  uiDstStrideC    = pOutYuv->getStride(COMPONENT_Cb);
   UInt  uiWidthC        = uiWidth >> 1;
   UInt  uiHeightC       = uiHeight >> 1;
   Pel  filSrcU = 0, filSrcV = 0;
@@ -1133,8 +1141,8 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
 
         if (l!=r)
         {
-          filSrcU = ClipC( Pel(( leftU + (tmpTarU[y*uiWidthC+x] << 1) + rightU ) >> 2 ));
-          filSrcV = ClipC( Pel(( leftV + (tmpTarV[y*uiWidthC+x] << 1) + rightV ) >> 2 ));
+          filSrcU = ClipBD( Pel(( leftU + (tmpTarU[y*uiWidthC+x] << 1) + rightU ) >> 2 ), bitDepthY);
+          filSrcV = ClipBD( Pel(( leftV + (tmpTarV[y*uiWidthC+x] << 1) + rightV ) >> 2 ), bitDepthY);
         }
         else
         {
@@ -1166,8 +1174,8 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
 
         if (t!=b)
         {
-          filSrcU = ClipC( Pel(( topU + (tmpTarU[y*uiWidthC+x] << 1) + bottomU ) >> 2 ));
-          filSrcV = ClipC( Pel(( topV + (tmpTarV[y*uiWidthC+x] << 1) + bottomV ) >> 2 ));
+          filSrcU = ClipBD( Pel(( topU + (tmpTarU[y*uiWidthC+x] << 1) + bottomU ) >> 2 ), bitDepthY);
+          filSrcV = ClipBD( Pel(( topV + (tmpTarV[y*uiWidthC+x] << 1) + bottomV ) >> 2 ), bitDepthY);
         }
         else
         {

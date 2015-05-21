@@ -70,6 +70,8 @@
 #define NH_3D_VSO                         1
 #define NH_3D_NBDV                        1
 #define NH_3D_NBDV_REF                    1
+
+#define NH_3D_DBBP                         1
 #endif
 
 #if H_3D
@@ -327,7 +329,7 @@
 #define IC_LOW_LATENCY_ENCODING_THRESHOLD 0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
 #endif
 ///// ***** DEPTH BASED BLOCK PARTITIONING *********
-#if H_3D_DBBP
+#if NH_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
 #define DBBP_PACK_MODE               SIZE_2NxN
 #endif

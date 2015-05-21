@@ -51,7 +51,7 @@ TDecCu::TDecCu()
   m_ppcYuvResi = NULL;
   m_ppcYuvReco = NULL;
   m_ppcCU      = NULL;
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_ppcYuvRecoDBBP = NULL;
 #endif
 }
@@ -80,7 +80,7 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaF
   m_ppcYuvResi = new TComYuv*[m_uiMaxDepth-1];
   m_ppcYuvReco = new TComYuv*[m_uiMaxDepth-1];
   m_ppcCU      = new TComDataCU*[m_uiMaxDepth-1];
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_ppcYuvRecoDBBP = new TComYuv*[m_uiMaxDepth-1];
 #endif
 
@@ -94,8 +94,8 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaF
     m_ppcYuvResi[ui] = new TComYuv;    m_ppcYuvResi[ui]->create( uiWidth, uiHeight, chromaFormatIDC );
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight, chromaFormatIDC );
     m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( chromaFormatIDC, uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1) );
-#if H_3D_DBBP
-    m_ppcYuvRecoDBBP[ui] = new TComYuv;    m_ppcYuvRecoDBBP[ui]->create( uiWidth, uiHeight );
+#if NH_3D_DBBP
+    m_ppcYuvRecoDBBP[ui] = new TComYuv;    m_ppcYuvRecoDBBP[ui]->create( uiWidth, uiHeight, chromaFormatIDC );
 #endif
 }
 
@@ -118,7 +118,7 @@ Void TDecCu::destroy()
     m_ppcYuvResi[ui]->destroy(); delete m_ppcYuvResi[ui]; m_ppcYuvResi[ui] = NULL;
     m_ppcYuvReco[ui]->destroy(); delete m_ppcYuvReco[ui]; m_ppcYuvReco[ui] = NULL;
     m_ppcCU     [ui]->destroy(); delete m_ppcCU     [ui]; m_ppcCU     [ui] = NULL;
-#if H_3D_DBBP
+#if NH_3D_DBBP
     m_ppcYuvRecoDBBP[ui]->destroy(); delete m_ppcYuvRecoDBBP[ui]; m_ppcYuvRecoDBBP[ui] = NULL;
 #endif
   }
@@ -126,7 +126,7 @@ Void TDecCu::destroy()
   delete [] m_ppcYuvResi; m_ppcYuvResi = NULL;
   delete [] m_ppcYuvReco; m_ppcYuvReco = NULL;
   delete [] m_ppcCU     ; m_ppcCU      = NULL;
-#if H_3D_DBBP
+#if NH_3D_DBBP
   delete [] m_ppcYuvRecoDBBP; m_ppcYuvRecoDBBP = NULL;
 #endif
 }
@@ -615,7 +615,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
     case MODE_INTER:
-#if H_3D_DBBP
+#if NH_3D_DBBP
     if( m_ppcCU[uiDepth]->getDBBPFlag(0) )
     {
       xReconInterDBBP( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
@@ -635,7 +635,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
 #if H_3D_INTER_SDC
       }
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
     }
 #endif
       break;
@@ -843,12 +843,14 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   AOF(!pcCU->getSlice()->getIsDepth());
   AOF(!pcCU->getSlice()->isIntra());
   PartSize ePartSize = pcCU->getPartitionSize( 0 );
+  
+  Int bitDepthY = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA);
   
   // get collocated depth block
   UInt uiDepthStride = 0;
@@ -869,7 +871,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   TComYuv* apSegPredYuv[2] = { m_ppcYuvReco[uiDepth], m_ppcYuvRecoDBBP[uiDepth] };
   
   // first, extract the two sets of motion parameters
-  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - uiDepth ) << 1 ) ) >> 4;
   for( UInt uiSegment = 0; uiSegment < 2; uiSegment++ )
   {
     UInt uiPartAddr = uiSegment*uiPUOffset;
@@ -882,10 +884,12 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       pcCU->getMvField(pcCU, uiPartAddr, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList]);
     }
     
+#if H_3D
     AOF( pcCU->getARPW(uiPartAddr) == 0 );
     AOF( pcCU->getICFlag(uiPartAddr) == false );
     AOF( pcCU->getSPIVMPFlag(uiPartAddr) == false );
     AOF( pcCU->getVSPFlag(uiPartAddr) == 0 );
+#endif
   }
   
   // do motion compensation for each segment as 2Nx2N
@@ -925,15 +929,15 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   
   // reconstruct final prediction signal by combining both segments
-  m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0), 0, ePartSize);
+  m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0), 0, ePartSize, bitDepthY);
 
   // inter recon
-  xDecodeInterTexture( pcCU, 0, uiDepth );
+  xDecodeInterTexture( pcCU, uiDepth );
   
   // clip for only non-zero cbp case
-  if  ( ( pcCU->getCbf( 0, TEXT_LUMA ) ) || ( pcCU->getCbf( 0, TEXT_CHROMA_U ) ) || ( pcCU->getCbf(0, TEXT_CHROMA_V ) ) )
+  if  ( ( pcCU->getCbf( 0, COMPONENT_Y ) ) || ( pcCU->getCbf( 0, COMPONENT_Cb ) ) || ( pcCU->getCbf(0, COMPONENT_Cr ) ) )
   {
-    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
+    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ), pcCU->getSlice()->getSPS()->getBitDepths() );
   }
   else
   {

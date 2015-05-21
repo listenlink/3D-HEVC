@@ -61,7 +61,7 @@ private:
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
   TComDataCU**        m_ppcCU;            ///< CU data array
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   TComYuv**           m_ppcYuvRecoDBBP;
 #endif
   
@@ -101,7 +101,7 @@ protected:
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void xReconInterDBBP          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   

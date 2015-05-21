@@ -141,7 +141,7 @@ TComDataCU::TComDataCU()
 #endif
 #if H_3D_INTER_SDC
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_pbDBBPFlag         = NULL;
 #endif
 
@@ -272,7 +272,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
     m_apSegmentDCOffset[1]  = (Pel*)xMalloc(Pel, uiNumPartition);
 #endif
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
     m_pbDBBPFlag         = (Bool*  )xMalloc(Bool,   uiNumPartition);
 #endif
 
@@ -492,7 +492,7 @@ Void TComDataCU::destroy()
     if ( m_apSegmentDCOffset[1] ) { xFree(m_apSegmentDCOffset[1]);  m_apSegmentDCOffset[1]  = NULL; }
 #endif    
 #endif    
-#if H_3D_DBBP
+#if NH_3D_DBBP
     if ( m_pbDBBPFlag         ) { xFree(m_pbDBBPFlag);          m_pbDBBPFlag        = NULL; }
 #endif
 
@@ -631,8 +631,8 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 #if H_3D_DIM_SDC
     m_pbSDCFlag[ui] = pcFrom->m_pbSDCFlag[ui];
 #endif
-#if H_3D_DBBP
-    m_pbDBBPFlag[ui] = pcFrom->m_pbDBBPFlag[ui];
+#if NH_3D_DBBP
+  memset( m_pbDBBPFlag , false, m_uiNumPartition * sizeof( *m_pbDBBPFlag ));
 #endif
 #if H_3D
     memset( m_bDISFlag          + firstElement, false,                    numElements * sizeof( *m_bDISFlag ) );
@@ -677,9 +677,6 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 #endif
     m_apDmmPredictor[0] = 0;
     m_apDmmPredictor[1] = 0;
-#endif
-#if H_3D_DBBP
-    memset( m_pbDBBPFlag        + firstElement, false,                    numElements * sizeof( *m_pbDBBPFlag ) );
 #endif
 
   memset( m_puhInterDir       , 0,                        m_uiNumPartition * sizeof( *m_puhInterDir ) );
@@ -839,7 +836,7 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
       m_apDmmPredictor[0] = 0;
       m_apDmmPredictor[1] = 0;
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
       m_pbDBBPFlag[ui] = false;
 #endif
   }
@@ -948,8 +945,8 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   m_apDmmPredictor[0] = 0;
   m_apDmmPredictor[1] = 0;
 #endif
-#if H_3D_DBBP
-  memset( m_pbDBBPFlag,         0, iSizeInBool  );
+#if NH_3D_DBBP
+  memset( m_pbDBBPFlag,         0, sizeof(Bool) * m_uiNumPartition  );
 #endif
 
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
@@ -1006,7 +1003,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_apSegmentDCOffset[1][ui] = pcCU->m_apSegmentDCOffset[1] [ uiPartOffset + ui ];
 #endif
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
       m_pbDBBPFlag[ui]=pcCU->m_pbDBBPFlag[uiPartOffset+ui];
 #endif
   }
@@ -1129,7 +1126,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_apSegmentDCOffset[1]    = pcCU->getSDCSegmentDCOffset(1)  + uiPart;
 #endif  
 #endif  
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_pbDBBPFlag              = pcCU->getDBBPFlag()         + uiPart;
 #endif
 
@@ -1250,7 +1247,7 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
 #if H_3D_ARP
   m_puhARPW            = pcCU->getARPW()                  + uiAbsPartIdx;
 #endif    
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_pbDBBPFlag       = pcCU->getDBBPFlag()              + uiAbsPartIdx;
 #endif
 
@@ -1336,7 +1333,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_apSegmentDCOffset[1]  + uiOffset, pcCU->getSDCSegmentDCOffset(1), sizeof( Pel ) * uiNumPartition);
 #endif
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   memcpy( m_pbDBBPFlag          + uiOffset, pcCU->getDBBPFlag(),          iSizeInBool  );
 #endif
 
@@ -1464,8 +1461,8 @@ for (UInt ch=0; ch<numValidChan; ch++)
   memcpy( rpcCU->getSDCSegmentDCOffset(1) + m_uiAbsIdxInLCU, m_apSegmentDCOffset[1], sizeof( Pel ) * m_uiNumPartition);
 #endif
 #endif
-#if H_3D_DBBP
-  memcpy( rpcCU->getDBBPFlag()          + m_uiAbsIdxInLCU, m_pbDBBPFlag,          iSizeInBool  );
+#if NH_3D_DBBP
+  memcpy( pCtu->getDBBPFlag()          + m_absZIdxInCtu, m_pbDBBPFlag,          iSizeInBool  );
 #endif
 
   memcpy( pCtu->getDepth()  + m_absZIdxInCtu, m_puhDepth,  iSizeInUchar );
@@ -1538,9 +1535,6 @@ for (UInt ch=0; ch<numValidChan; ch++)
   memcpy( rpcCU->getSDCSegmentDCOffset(0) + uiPartOffset, m_apSegmentDCOffset[0], sizeof( Pel ) * uiQNumPart);
   memcpy( rpcCU->getSDCSegmentDCOffset(1) + uiPartOffset, m_apSegmentDCOffset[1], sizeof( Pel ) * uiQNumPart);
 #endif
-#endif
-#if H_3D_DBBP
-  memcpy( rpcCU->getDBBPFlag()          + uiPartOffset, m_pbDBBPFlag,          iSizeInBool  );
 #endif
 #if H_3D_ARP
   memcpy( rpcCU->getARPW()             + uiPartOffset, m_puhARPW,             iSizeInUchar );
@@ -2111,9 +2105,13 @@ UInt TComDataCU::getCTXARPWFlag( UInt uiAbsPartIdx )
     return uiCtx;
 }
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt& uiDepthStride)
 {
+  const TComSPS* sps = getSlice()->getSPS();
+  UInt uiMaxCUWidth = sps->getMaxCUWidth();
+  UInt uiMaxCUHeight = sps->getMaxCUHeight();
+  
   // get coded and reconstructed depth view
   TComPicYuv* depthPicYuv = NULL;
   Pel* pDepthPels = NULL;
@@ -2149,13 +2147,13 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
     
     depthPicYuv   = baseDepthPic->getPicYuvRec();
     depthPicYuv->extendPicBorder();
-    uiDepthStride = depthPicYuv->getStride();
+    uiDepthStride = depthPicYuv->getStride(COMPONENT_Y);
     
-    Int iBlkX = ( getAddr() % baseDepthPic->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ getZorderIdxInCU()+uiAbsPartIdx ] ];
-    Int iBlkY = ( getAddr() / baseDepthPic->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ getZorderIdxInCU()+uiAbsPartIdx ] ];
+    Int iBlkX = ( getCtuRsAddr() % baseDepthPic->getFrameWidthInCtus() ) * uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ getZorderIdxInCtu()+uiAbsPartIdx ] ];
+    Int iBlkY = ( getCtuRsAddr() / baseDepthPic->getFrameWidthInCtus() ) * uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ getZorderIdxInCtu()+uiAbsPartIdx ] ];
     
-    Int iPictureWidth  = depthPicYuv->getWidth();
-    Int iPictureHeight = depthPicYuv->getHeight();
+    Int iPictureWidth  = depthPicYuv->getWidth(COMPONENT_Y);
+    Int iPictureHeight = depthPicYuv->getHeight(COMPONENT_Y);
     
     
     Bool depthRefineFlag = false;
@@ -2172,7 +2170,7 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
     Int depthPosX = Clip3(0,   iPictureWidth - 1,  iBlkX + ((cDv.getHor()+2)>>2));
     Int depthPosY = Clip3(0,   iPictureHeight - 1, iBlkY + ((cDv.getVer()+2)>>2));
     
-    pDepthPels = depthPicYuv->getLumaAddr() + depthPosX + depthPosY * uiDepthStride;
+    pDepthPels = depthPicYuv->getAddr(COMPONENT_Y) + depthPosX + depthPosY * uiDepthStride;
   }
 #endif
   
@@ -2184,7 +2182,7 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
 }
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TComDataCU::setDBBPFlagSubParts ( Bool bDBBPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   setSubPart( bDBBPFlag, m_pbDBBPFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
@@ -3704,7 +3702,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
   Bool bARPFlag = getARPW(uiAbsPartIdx) > 0;
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool bDBBPFlag = getDBBPFlag(uiAbsPartIdx);
   assert(bDBBPFlag == getDBBPFlag(0));  
 #endif
@@ -3742,7 +3740,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4054,7 +4052,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       {
         spiMvpFlag = true;
       }
-#if H_3D_DBBP
+#if NH_3D_DBBP
       spiMvpFlag &= !bDBBPFlag;
 #endif
 
@@ -4193,7 +4191,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D
       (nPSW + nPSH > 12) &&
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
       !bDBBPFlag &&
 #endif
       xAddVspCand( mrgCandIdx, &cDisInfo, iCount ) )
@@ -5125,7 +5123,7 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
   Int height = 0;
   UInt partAddr;
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   if( getDBBPFlag(0) )
   {
     return true;

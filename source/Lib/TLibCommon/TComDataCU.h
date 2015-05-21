@@ -64,7 +64,7 @@ class TComTU; // forward declaration
 
 static const UInt NUM_MOST_PROBABLE_MODES=3;
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 typedef struct _DBBPTmpData
 {
   TComMv      acMvd[2][2];          // for two segments and two lists
@@ -192,7 +192,7 @@ private:
   Pel           m_apDmmPredictor[2];
 #endif
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool*         m_pbDBBPFlag;        ///< array of DBBP flags
   DbbpTmpData   m_sDBBPTmpData;
 #endif
@@ -328,7 +328,7 @@ public:
   Void          setPartSizeSubParts   ( PartSize eMode, UInt uiAbsPartIdx, UInt uiDepth );
   Void          setCUTransquantBypassSubParts( Bool flag, UInt uiAbsPartIdx, UInt uiDepth );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Pel*          getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt& uiDepthStride);
 #endif
   
@@ -352,7 +352,7 @@ public:
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool*         getDBBPFlag           ()                        { return m_pbDBBPFlag;               }
   Bool          getDBBPFlag           ( UInt uiIdx )            { return m_pbDBBPFlag[uiIdx];        }
   Void          setDBBPFlag           ( UInt uiIdx, Bool b )    { m_pbDBBPFlag[uiIdx] = b;           }

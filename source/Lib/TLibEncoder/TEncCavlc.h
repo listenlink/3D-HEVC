@@ -135,7 +135,7 @@ public:
   Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( ComponentID /*component*/, UInt /*code*/ ) {printf("Not supported\n"); assert(0);}
