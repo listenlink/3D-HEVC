@@ -534,7 +534,7 @@ Void TComPrediction::predIntraLumaDmm( TComDataCU* pcCU, UInt uiAbsPartIdx, DmmI
 {
   assert( iWidth == iHeight  );
   assert( iWidth >= DMM_MIN_SIZE && iWidth <= DMM_MAX_SIZE );
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
   assert( !pcCU->getSDCFlag( uiAbsPartIdx ) );
 #endif
 
@@ -568,7 +568,7 @@ Void TComPrediction::predIntraLumaDmm( TComDataCU* pcCU, UInt uiAbsPartIdx, DmmI
   Pel* pDst = piPred;
   assignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
 #if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-#if H_3D_DIM_SDC  
+#if NH_3D_INTRA_SDC
   pcCU->setDmmPredictor(segDC1, 0);
   pcCU->setDmmPredictor(segDC2, 1);
 #endif
@@ -2388,7 +2388,7 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 #endif
 
 #if TEMP_SDC_CLEANUP // PM: consider this cleanup for SDC
-#if NH_3D_SDC
+#if NH_3D_INTRA_SDC
 Void TComPrediction::predConstantSDC( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& predDC )
 {
   Pel* pLeftTop     =  ptrSrc;
@@ -2399,7 +2399,7 @@ Void TComPrediction::predConstantSDC( Pel* ptrSrc, UInt srcStride, UInt uiSize, 
 }
 #endif
 #else // PM: should be obsolete after cleanup
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
 Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride
                                          ,UInt uiIntraMode
                                          ,Bool orgDC
@@ -2464,7 +2464,7 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
     }
   }
 }
-#endif // H_3D_DIM_SDC
+#endif // NH_3D_INTRA_SDC
 #endif
 
 #if NH_3D_DMM

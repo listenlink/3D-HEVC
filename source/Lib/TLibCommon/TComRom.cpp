@@ -542,11 +542,11 @@ Bool   g_HLSTraceEnable = false;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
 #if H_MV_ENC_DEC_TRAC
-Bool g_traceCU = false; 
+Bool g_traceCU = true;
 Bool g_tracePU = false; 
 Bool g_traceTU = false; 
-Bool g_disableNumbering = false; 
-Bool g_disableHLSTrace = false; 
+Bool g_disableNumbering = true;
+Bool g_disableHLSTrace = true;
 UInt64 g_stopAtCounter       = 937234; 
 Bool g_traceCopyBack         = false; 
 Bool g_decTraceDispDer       = false; 

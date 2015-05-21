@@ -627,16 +627,16 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
           pcDLT->setDepthLUTs(layerId, aiIdx2DepthValue, uiNumDepthValues);
         }
         
-#ifdef DEBUG
-        printf("---------------------------------------------\n");
-        printf("LayerId: %d\n", layerId);
-        printf("getUseDLTFlag: %d\n", pcDLT->getUseDLTFlag(layerId));
-        printf("getInterViewDltPredEnableFlag: %d\n", pcDLT->getInterViewDltPredEnableFlag(layerId));
-        printf("getUseBitmapRep: %d\n", pcDLT->getUseBitmapRep(layerId));
-        printf("getNumDepthValues: %d\n", pcDLT->getNumDepthValues(layerId));
-        for(Int i=0; i<pcDLT->getNumDepthValues(layerId); i++)
-          printf("depthValue[%d] = %d\n", i, pcDLT->idx2DepthValue(layerId, i));
-#endif
+//#ifdef DEBUG
+//        printf("---------------------------------------------\n");
+//        printf("LayerId: %d\n", layerId);
+//        printf("getUseDLTFlag: %d\n", pcDLT->getUseDLTFlag(layerId));
+//        printf("getInterViewDltPredEnableFlag: %d\n", pcDLT->getInterViewDltPredEnableFlag(layerId));
+//        printf("getUseBitmapRep: %d\n", pcDLT->getUseBitmapRep(layerId));
+//        printf("getNumDepthValues: %d\n", pcDLT->getNumDepthValues(layerId));
+//        for(Int i=0; i<pcDLT->getNumDepthValues(layerId); i++)
+//          printf("depthValue[%d] = %d\n", i, pcDLT->idx2DepthValue(layerId, i));
+//#endif
       }
     }
   }
@@ -3389,7 +3389,7 @@ Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   assert(0);
 }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
 Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);

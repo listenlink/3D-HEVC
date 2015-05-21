@@ -126,7 +126,7 @@ protected:
 #if H_3D
   Void xReconDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
   Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_INTER_SDC

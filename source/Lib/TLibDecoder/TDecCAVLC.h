@@ -122,10 +122,10 @@ public:
 #if H_3D_IC
   Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
   Void  parseDeltaDC        ( TComDataCU* /*pcCU*/, UInt /*absPartIdx*/, UInt /*depth*/ ) { assert(0); };
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
   Void  parseSDCFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_DBBP

@@ -161,9 +161,8 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
     decodeSDCFlag   ( pcCU, uiAbsPartIdx, uiDepth );
-    if(!pcCU->getSDCFlag(uiAbsPartIdx))
 #endif
     if (pcCU->getPic()->getChromaFormat()!=CHROMA_400)
     {
@@ -960,14 +959,12 @@ Void TDecEntropy::decodeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx 
 //! decode coefficients
 Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& isChromaQpAdjCoded )
 {
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
   if( pcCU->getSDCFlag( uiAbsPartIdx ) && pcCU->isIntra( uiAbsPartIdx) )
   {
     assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
     assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+    assert( pcCU->getCbf(uiAbsPartIdx, COMPONENT_Y) == 1 );
 }
 #endif
 #if H_3D_INTER_SDC
@@ -981,7 +978,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #if NH_3D
   if( pcCU->getSlice()->getIsDepth() )
   {
-#if H_3D_DIM_SDC || H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
     if( pcCU->getSDCFlag( uiAbsPartIdx ) )
     {
       m_pcEntropyDecoderIf->parseDeltaDC( pcCU, uiAbsPartIdx, uiDepth );
@@ -1039,7 +1036,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   xDecodeTransform( bCodeDQP, isChromaQpAdjCoded, tuRecurse, quadtreeTULog2MinSizeInCU );
 }
 
-#if H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
 Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setSDCFlagSubParts( false, uiAbsPartIdx, uiDepth );
