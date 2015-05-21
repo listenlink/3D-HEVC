@@ -83,7 +83,7 @@ public:
 #endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
   virtual Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
 #if H_3D_ARP
@@ -92,7 +92,7 @@ public:
 #if H_3D_IC
   virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
   virtual Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
 #if H_3D_DBBP
@@ -180,10 +180,10 @@ public:
 #if H_3D_IC
   Void encodeICFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
-#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
   Void encodeDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx );
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
   Void encodeSDCFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
 #if H_3D_DBBP

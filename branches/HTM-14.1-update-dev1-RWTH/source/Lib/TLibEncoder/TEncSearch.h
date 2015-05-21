@@ -355,11 +355,11 @@ const ComponentID   compID,
   Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
   Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
 #endif
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
   Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bZeroResidual, Int iSDCDeltaResi    );
 #endif
 #if TEMP_SDC_CLEANUP // PM: consider this cleanup for SDC
-#if NH_3D_SDC
+#if NH_3D_INTRA_SDC
   Void xCalcConstantSDC           ( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& valDC );
 #endif
 #endif

@@ -1596,8 +1596,8 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
-#if H_3D_DIM_SDC
-      m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
+#if NH_3D_INTRA_SDC
+      m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx );
 #endif  
 
       // Encode slice finish
@@ -1611,8 +1611,8 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D
   m_pcEntropyCoder->encodeDBBPFlag( pcCU, uiAbsPartIdx );
 #endif
-#if H_3D_DIM_SDC
-  m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
+#if NH_3D_INTRA_SDC
+  m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx );
 #endif  
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
@@ -2469,7 +2469,7 @@ Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Pa
   rpcTempCU->setCbfSubParts(0, 1, 1, 0, uiDepth);
   rpcTempCU->setDISFlagSubParts(true, 0, uiDepth);
   rpcTempCU->setLumaIntraDirSubParts (DC_IDX, 0, uiDepth);
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
   rpcTempCU->setSDCFlagSubParts( false, 0, uiDepth);
 #endif
 
@@ -2699,8 +2699,13 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
   {
     m_pcPredSearch->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], resiLuma DEBUG_STRING_PASS_INTO(sTest) );
   }
-#if H_3D_DIM_SDC
-  if( !rpcTempCU->getSDCFlag( 0 ) )
+  
+#if NH_3D_INTRA_SDC
+  if( rpcTempCU->getSDCFlag( 0 ) )
+  {
+    assert( rpcTempCU->getTransformIdx(0) == 0 );
+    assert( rpcTempCU->getCbf(0, COMPONENT_Y) == 1 );
+  }
 #endif
 
   m_pcEntropyCoder->resetBits();
@@ -2719,7 +2724,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0 );
   m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
     m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
 #endif
 
@@ -2804,7 +2809,7 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize ( rpcTempCU, 0, uiDepth, true );
   m_pcEntropyCoder->encodeIPCMInfo ( rpcTempCU, 0, true );
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
   m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
 #endif
   m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);

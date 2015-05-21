@@ -513,9 +513,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );
-#if H_3D_DIM_SDC
-    if(!pcCU->getSDCFlag(uiAbsPartIdx))
-#endif
+    
     if (pcCU->getPic()->getChromaFormat()!=CHROMA_400)
     {
       encodeIntraDirModeChroma( pcCU, uiAbsPartIdx );
@@ -712,14 +710,12 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   const Bool bDebugRQT=pcCU->getSlice()->getFinalized() && DebugOptionList::DebugRQT.getInt()!=0;
 #endif
 
-#if H_3D_DIM_SDC
+#if NH_3D_INTRA_SDC
   if( pcCU->getSDCFlag( uiAbsPartIdx ) && pcCU->isIntra( uiAbsPartIdx ) )
   {
     assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
     assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+    assert( pcCU->getCbf(uiAbsPartIdx, COMPONENT_Y) == 1 );
   }
 #endif
 #if H_3D_INTER_SDC
@@ -733,7 +729,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #if NH_3D
   if( pcCU->getSlice()->getIsDepth() )
   {
-#if H_3D_DIM_SDC || H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
     if( pcCU->getSDCFlag( uiAbsPartIdx ) )
     {
       m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx );
@@ -842,15 +838,20 @@ Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
   return count;
 }
 
-#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
 Void TEncEntropy::encodeDeltaDC  ( TComDataCU* pcCU, UInt absPartIdx )
 {
   m_pcEntropyCoderIf->codeDeltaDC( pcCU, absPartIdx );
 }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
 Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  
   if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getInterSdcFlag() ) || 
     ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getIntraSdcWedgeFlag() ) )
   {
@@ -862,12 +863,7 @@ Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
     return;
   }
 
-  assert( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
-
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
+  assert( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N );
 
   m_pcEntropyCoderIf->codeSDCFlag( pcCU, uiAbsPartIdx );
 }

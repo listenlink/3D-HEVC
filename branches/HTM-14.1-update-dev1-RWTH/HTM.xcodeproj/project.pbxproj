@@ -338,7 +338,7 @@
 		78486FDC1B0B62C70098FD5A /* ContextModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel.h; sourceTree = "<group>"; };
 		78486FDD1B0B62C70098FD5A /* ContextModel3DBuffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ContextModel3DBuffer.cpp; sourceTree = "<group>"; };
 		78486FDE1B0B62C70098FD5A /* ContextModel3DBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel3DBuffer.h; sourceTree = "<group>"; };
-		78486FDF1B0B62C70098FD5A /* ContextTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextTables.h; sourceTree = "<group>"; };
+		78486FDF1B0B62C70098FD5A /* ContextTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ContextTables.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		78486FE01B0B62C70098FD5A /* Debug.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Debug.cpp; sourceTree = "<group>"; };
 		78486FE11B0B62C70098FD5A /* Debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Debug.h; sourceTree = "<group>"; };
 		78486FE21B0B62C70098FD5A /* NAL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NAL.h; sourceTree = "<group>"; };
@@ -371,8 +371,8 @@
 		78486FFD1B0B62C70098FD5A /* TComPicYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuv.cpp; sourceTree = "<group>"; };
 		78486FFE1B0B62C70098FD5A /* TComPicYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPicYuv.h; sourceTree = "<group>"; };
 		78486FFF1B0B62C70098FD5A /* TComPicYuvMD5.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuvMD5.cpp; sourceTree = "<group>"; };
-		784870001B0B62C70098FD5A /* TComPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPrediction.cpp; sourceTree = "<group>"; };
-		784870011B0B62C70098FD5A /* TComPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPrediction.h; sourceTree = "<group>"; };
+		784870001B0B62C70098FD5A /* TComPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = TComPrediction.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		784870011B0B62C70098FD5A /* TComPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = TComPrediction.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		784870021B0B62C70098FD5A /* TComRdCost.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCost.cpp; sourceTree = "<group>"; };
 		784870031B0B62C70098FD5A /* TComRdCost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRdCost.h; sourceTree = "<group>"; };
 		784870041B0B62C70098FD5A /* TComRdCostWeightPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCostWeightPrediction.cpp; sourceTree = "<group>"; };
@@ -394,7 +394,7 @@
 		784870141B0B62C70098FD5A /* TComWeightPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComWeightPrediction.h; sourceTree = "<group>"; };
 		784870151B0B62C70098FD5A /* TComYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComYuv.cpp; sourceTree = "<group>"; };
 		784870161B0B62C70098FD5A /* TComYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComYuv.h; sourceTree = "<group>"; };
-		784870171B0B62C70098FD5A /* TypeDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TypeDef.h; sourceTree = "<group>"; };
+		784870171B0B62C70098FD5A /* TypeDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = TypeDef.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		784870191B0B62C70098FD5A /* AnnexBread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AnnexBread.cpp; sourceTree = "<group>"; };
 		7848701A1B0B62C70098FD5A /* AnnexBread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnnexBread.h; sourceTree = "<group>"; };
 		7848701B1B0B62C70098FD5A /* NALread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NALread.cpp; sourceTree = "<group>"; };
@@ -414,8 +414,8 @@
 		784870291B0B62C70098FD5A /* TDecEntropy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecEntropy.h; sourceTree = "<group>"; };
 		7848702A1B0B62C70098FD5A /* TDecGop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecGop.cpp; sourceTree = "<group>"; };
 		7848702B1B0B62C70098FD5A /* TDecGop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecGop.h; sourceTree = "<group>"; };
-		7848702C1B0B62C70098FD5A /* TDecSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSbac.cpp; sourceTree = "<group>"; };
-		7848702D1B0B62C70098FD5A /* TDecSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSbac.h; sourceTree = "<group>"; };
+		7848702C1B0B62C70098FD5A /* TDecSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = TDecSbac.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		7848702D1B0B62C70098FD5A /* TDecSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = TDecSbac.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		7848702E1B0B62C70098FD5A /* TDecSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSlice.cpp; sourceTree = "<group>"; };
 		7848702F1B0B62C70098FD5A /* TDecSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSlice.h; sourceTree = "<group>"; };
 		784870301B0B62C70098FD5A /* TDecTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecTop.cpp; sourceTree = "<group>"; };
@@ -452,10 +452,10 @@
 		784870501B0B62C70098FD5A /* TEncRateCtrl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncRateCtrl.h; sourceTree = "<group>"; };
 		784870511B0B62C70098FD5A /* TEncSampleAdaptiveOffset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSampleAdaptiveOffset.cpp; sourceTree = "<group>"; };
 		784870521B0B62C70098FD5A /* TEncSampleAdaptiveOffset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSampleAdaptiveOffset.h; sourceTree = "<group>"; };
-		784870531B0B62C70098FD5A /* TEncSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSbac.cpp; sourceTree = "<group>"; };
-		784870541B0B62C70098FD5A /* TEncSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSbac.h; sourceTree = "<group>"; };
-		784870551B0B62C70098FD5A /* TEncSearch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSearch.cpp; sourceTree = "<group>"; };
-		784870561B0B62C70098FD5A /* TEncSearch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSearch.h; sourceTree = "<group>"; };
+		784870531B0B62C70098FD5A /* TEncSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = TEncSbac.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		784870541B0B62C70098FD5A /* TEncSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = TEncSbac.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		784870551B0B62C70098FD5A /* TEncSearch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = TEncSearch.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		784870561B0B62C70098FD5A /* TEncSearch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = TEncSearch.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		784870571B0B62C70098FD5A /* TEncSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSlice.cpp; sourceTree = "<group>"; };
 		784870581B0B62C70098FD5A /* TEncSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSlice.h; sourceTree = "<group>"; };
 		784870591B0B62C70098FD5A /* TEncTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncTop.cpp; sourceTree = "<group>"; };
