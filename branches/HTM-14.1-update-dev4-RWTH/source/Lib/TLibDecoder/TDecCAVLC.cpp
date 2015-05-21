@@ -3399,7 +3399,7 @@ Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 }
 
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void TDecCavlc::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     assert(0);

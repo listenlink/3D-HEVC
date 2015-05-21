@@ -120,7 +120,7 @@ private:
   Void  parseDeltaDC         ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
   Void  parseSDCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void parseDBBPFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
@@ -239,7 +239,7 @@ private:
 #if H_3D_DIM_SDC  
   ContextModel3DBuffer m_cSDCFlagSCModel;
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   ContextModel3DBuffer m_cDBBPFlagSCModel;
 #endif
 

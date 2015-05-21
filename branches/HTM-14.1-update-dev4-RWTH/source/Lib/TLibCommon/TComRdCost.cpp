@@ -310,7 +310,7 @@ Void TComRdCost::init()
   // SAIT_VSO_EST_A0033
   m_bUseEstimatedVSD        = false; 
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_bUseMask                = false;
 #endif
 
@@ -339,7 +339,7 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
   rcDistParam.iRows    = uiBlkHeight;
   rcDistParam.DistFunc = m_afpDistortFunc[eDFunc + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   if( m_bUseMask )
   {
     if( eDFunc >= DF_SSE && eDFunc <= DF_SSE16N )
@@ -396,7 +396,7 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
     rcDistParam.DistFunc = m_afpDistortFunc[DF_SAD48];
   }
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   if( m_bUseMask )
   {
     rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
@@ -445,7 +445,7 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
     rcDistParam.DistFunc = m_afpDistortFunc[DF_HADS + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
   }
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   if( m_bUseMask )
   {
     rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
@@ -467,7 +467,7 @@ Void TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStri
   rcDP.iSubShift  = 0;
   rcDP.bitDepth   = bitDepth;
   rcDP.DistFunc   = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
-#if H_3D_DBBP
+#if NH_3D_DBBP
   if( m_bUseMask )
   {
     rcDP.DistFunc = TComRdCost::xGetMaskedSAD;
@@ -648,7 +648,7 @@ UInt TComRdCost::getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pe
 // Distortion functions
 // ====================================================================================================================
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 // --------------------------------------------------------------------------------------------------------------------
 // Masked distortion functions
 // --------------------------------------------------------------------------------------------------------------------

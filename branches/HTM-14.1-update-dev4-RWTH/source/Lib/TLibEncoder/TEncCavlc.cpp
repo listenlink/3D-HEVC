@@ -2900,7 +2900,7 @@ Void TEncCavlc::codeSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 #endif
     
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TEncCavlc::codeDBBPFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

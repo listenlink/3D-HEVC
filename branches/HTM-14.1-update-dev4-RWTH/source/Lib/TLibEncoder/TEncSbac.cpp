@@ -113,7 +113,7 @@ TEncSbac::TEncSbac()
 #if H_3D_DIM_SDC
 , m_cSDCFlagSCModel                    ( 1,             1,                       NUM_SDC_FLAG_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
 #endif                                                                                                          
-#if H_3D_DBBP                                                                                                  
+#if NH_3D_DBBP
 , m_cDBBPFlagSCModel                   ( 1,             1,                       DBBP_NUM_FLAG_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 {
@@ -193,7 +193,7 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
 #if H_3D_DIM_SDC                                 
   m_cSDCFlagSCModel.initBuffer                    ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
 #endif                                           
-#if H_3D_DBBP                                    
+#if NH_3D_DBBP
   m_cDBBPFlagSCModel.initBuffer                   ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
@@ -243,7 +243,7 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #if H_3D_DIM_SDC                                           
       curCost += m_cSDCFlagSCModel.calcCost                    ( curSliceType, qp, (UChar*)INIT_SDC_FLAG );
 #endif                                                     
-#if H_3D_DBBP                                              
+#if NH_3D_DBBP
       curCost += m_cDBBPFlagSCModel.calcCost                   ( curSliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
       curCost += m_cCUPartSizeSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
@@ -319,9 +319,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #endif
 #if H_3D_DIM_SDC
   m_cSDCFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
-#endif
-#if H_3D_DBBP
-  m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
 
@@ -2649,7 +2646,7 @@ Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
