@@ -3389,7 +3389,7 @@ Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   assert(0);
 }
 #endif
-#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
 Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);

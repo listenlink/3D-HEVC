@@ -90,10 +90,10 @@ public:
 #if H_3D_IC
   virtual Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
-#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
   virtual Void  parseDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx, UInt depth ) = 0;
 #endif
-#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   virtual Void parseSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
 #if H_3D_DBBP
@@ -182,7 +182,7 @@ public:
   Void decodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
-#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void decodeSDCFlag           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_DBBP

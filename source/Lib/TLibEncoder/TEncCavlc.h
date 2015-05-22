@@ -125,7 +125,7 @@ public:
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void  codeDeltaDC      ( TComDataCU* /*pcCU*/, UInt /*absPartIdx*/ ) { assert(0); };
 #endif
 #if H_3D_ARP
@@ -135,7 +135,7 @@ public:
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 
-#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if H_3D_DBBP

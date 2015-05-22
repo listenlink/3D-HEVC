@@ -526,7 +526,7 @@ if(!pcCU->getSlice()->isIntra())
 
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
       m_pcEntropyDecoder->decodeSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
       xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
@@ -646,7 +646,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
     {
       //xReconDIS( m_ppcCU[uiDepth], 0, uiDepth );
     }
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
     else if( m_ppcCU[uiDepth]->getSDCFlag(0) )
     {
       xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
@@ -1182,7 +1182,7 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
   }
 }
 
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
 Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
 #if TEMP_SDC_CLEANUP // PM: consider this cleanup for DMM and SDC
@@ -1230,10 +1230,12 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride( COMPONENT_Y );
 
     //===== init availability pattern =====
-#if !TEMP_SDC_CLEANUP // PM: please migrate together with below "initPattern" and remove macro
-    pcCU->getPattern()->initPattern   ( pcCU, sdcDepth, uiAbsPartIdx );
-    pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, sdcDepth, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
-#endif
+    TComTURecurse tuRecurseCU(pcCU, 0);
+    TComTURecurse tuRecurseWithPU(tuRecurseCU, false, TComTU::DONT_SPLIT);
+
+    Bool bAboveAvail = false;
+    Bool bLeftAvail  = false;
+    m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, false DEBUG_STRING_PASS_INTO(sTemp) );
 
     // get partition
     pbMask       = new Bool[ uiWidth*uiHeight ];

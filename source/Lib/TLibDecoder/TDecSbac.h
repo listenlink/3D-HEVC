@@ -106,7 +106,7 @@ private:
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange );
 #endif
-#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void  xReadExGolombLevelDdc( UInt& ruiSymbol );
   Void  xParseDeltaDC        ( Pel& rValDeltaDC, UInt uiNumSeg );
 #endif
@@ -115,10 +115,10 @@ private:
   Void  xParseDmmData        ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
   Void  xParseDmm1WedgeIdx   ( UInt& ruiTabIdx, Int iNumBit );
 #endif
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
   Void  xParseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
-#if NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void  parseSDCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_DBBP
@@ -135,7 +135,7 @@ public:
 #if H_3D
   Void parseDIS          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if NH_3D_DMM || NH_3D_INTRA_SDC || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void  parseDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
 #endif
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -228,10 +228,10 @@ private:
   ContextModel3DBuffer m_cNotDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
 #endif
-#if NH_3D_DMM || NH_3D_INTRA_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA
   ContextModel3DBuffer m_cDdcDataSCModel;
 #endif
-#if NH_3D_INTRA_SDC  
+#if NH_3D_SDC_INTRA  
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
   ContextModel3DBuffer m_cSDCResidualSCModel;
   ContextModel3DBuffer m_cSDCFlagSCModel;

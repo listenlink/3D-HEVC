@@ -2088,7 +2088,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   xCheckParameter();
   
   // FJ: this should be removed as soon as Inter-SDC is fully implemented
-#if !NH_3D_INTER_SDC
+#if !NH_3D_SDC_INTER
   m_interSdcFlag = false;
 #endif
 

@@ -185,7 +185,7 @@ private:
   Pel*          m_dmmDeltaDC[NUM_DMM][2];
   UInt*         m_dmm1WedgeTabIdx;
 #endif
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
 #if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
@@ -562,7 +562,7 @@ public:
   Void  setDmm1WedgeTabIdx            ( UInt uiIdx, UInt tabIdx )                       { m_dmm1WedgeTabIdx[uiIdx] = tabIdx; }
   Void  setDmm1WedgeTabIdxSubParts    ( UInt tabIdx, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
   Bool*         getSDCFlag          ()                        { return m_pbSDCFlag;               }
   Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
   Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiDepth );
