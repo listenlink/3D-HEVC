@@ -84,6 +84,7 @@
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
                                               // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
                                               // LGE_CHROMA_IC_J0050_J0034
+#define NH_3D_FULL_PEL_DEPTH_MAP_MV_ACC   1   // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
 
 
 #endif
