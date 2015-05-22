@@ -2782,7 +2782,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
       pcSlice->initWpScaling(sps);
     }
 
-#if H_3D_IC
+#if NH_3D_IC
     else if(    pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) 
              && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
              && getDecTop()->decProcAnnexI()
@@ -2795,7 +2795,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
 
       if ( uiCodeTmp )
       {
-        READ_FLAG ( uiCodeTmp, "ic_skip_mergeidx0" );
+        READ_FLAG ( uiCodeTmp, "slice_ic_disabled_merge_zero_idx_flag" );
         pcSlice->setIcSkipParseFlag( uiCodeTmp );
       }
     }
@@ -3381,7 +3381,7 @@ Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   assert(0);
 }
 #endif
-#if H_3D_IC
+#if NH_3D_IC
 Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);

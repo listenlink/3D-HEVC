@@ -422,9 +422,16 @@ TDecTop::TDecTop()
 TDecTop::~TDecTop()
 {
 #if ENC_DEC_TRACE
+#if H_MV_ENC_DEC_TRAC_FIX
+  if (g_hTrace != stdout && g_hTrace != NULL)
+#else
   if (g_hTrace != stdout)
+#endif
   {
     fclose( g_hTrace );
+#if H_MV_ENC_DEC_TRAC_FIX
+    g_hTrace = NULL;
+#endif
   }
 #endif
   while (!m_prefixSEINALUs.empty())

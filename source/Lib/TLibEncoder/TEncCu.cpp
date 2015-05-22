@@ -504,7 +504,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     }
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   Bool bICEnabled = rpcTempCU->getSlice()->getViewIndex() && ( rpcTempCU->getSlice()->getSliceType() == P_SLICE || rpcTempCU->getSlice()->getSliceType() == B_SLICE ) && !rpcTempCU->getSlice()->getIsDepth();
   bICEnabled = bICEnabled && rpcTempCU->getSlice()->getApplyIC();
 #endif
@@ -641,7 +641,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
-#if H_3D_IC
+#if NH_3D_IC
         for( UInt uiICId = 0; uiICId < ( bICEnabled ? 2 : 1 ); uiICId++ )
         {
           Bool bICFlag = uiICId ? true : false;
@@ -649,7 +649,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         // 2Nx2N
         if(m_pcEncCfg->getUseEarlySkipDetection())
         {
-#if H_3D_IC
+#if NH_3D_IC
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if  H_3D_FAST_TEXTURE_ENCODING
@@ -663,7 +663,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
         }
         // SKIP
-#if H_3D_IC
+#if NH_3D_IC
           rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
@@ -679,7 +679,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         if(!m_pcEncCfg->getUseEarlySkipDetection())
         {
           // 2Nx2N, NxN
-#if H_3D_IC
+#if NH_3D_IC
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if  H_3D_FAST_TEXTURE_ENCODING
@@ -708,7 +708,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
           }
         }
-#if H_3D_IC
+#if NH_3D_IC
         }
 #endif
       }
@@ -1576,7 +1576,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
 #endif
 
@@ -1619,7 +1619,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
 #endif
 
@@ -1776,7 +1776,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
     uhInterDirNeighbours[ui] = 0;
   }
   UChar uhDepth = rpcTempCU->getDepth( 0 );
-#if H_3D_IC
+#if NH_3D_IC
   Bool bICFlag = rpcTempCU->getICFlag( 0 );
 #endif
 #if NH_3D_VSO // M1  //necessary here?
@@ -1861,7 +1861,7 @@ for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
     memset( mergeCandBuffer, 0, MRG_MAX_NUM_CANDS_MEM*sizeof(Int) );
     rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
     rpcTempCU->setARPWSubParts( (UChar)nARPW , 0 , uhDepth );
-#if H_3D_IC
+#if NH_3D_IC
     rpcTempCU->setICFlagSubParts( bICFlag, 0, 0, uhDepth );
 #endif
     rpcTempCU->getDvInfo(0) = cOrigDisInfo;
@@ -1904,7 +1904,7 @@ for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
   {
     for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
     {
-#if H_3D_IC
+#if NH_3D_IC
       if( rpcTempCU->getSlice()->getApplyIC() && rpcTempCU->getSlice()->getIcSkipParseFlag() )
       {
         if( bICFlag && uiMergeCand == 0 ) 
@@ -1921,7 +1921,7 @@ for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
           DEBUG_STRING_NEW(tmpStr)
           // set MC parameters
           rpcTempCU->setPredModeSubParts( MODE_INTER, 0, uhDepth ); // interprets depth relative to CTU level
-#if H_3D_IC
+#if NH_3D_IC
           rpcTempCU->setICFlagSubParts( bICFlag, 0, 0, uhDepth );
 #endif
 #if H_3D_ARP

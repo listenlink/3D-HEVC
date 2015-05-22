@@ -141,7 +141,7 @@ public:
 #if H_3D_ARP
   Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -192,7 +192,7 @@ private:
 #if H_3D_ARP
   ContextModel3DBuffer m_cCUPUARPWSCModel;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   ContextModel3DBuffer m_cCUICFlagSCModel;
 #endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;

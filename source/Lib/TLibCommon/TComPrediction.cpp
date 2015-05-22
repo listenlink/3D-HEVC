@@ -200,7 +200,7 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
       m_pLumaRecBuffer = new Pel[ m_iLumaRecStride * m_iLumaRecStride ];
     }
   }
-#if H_3D_IC
+#if NH_3D_IC
   m_uiaShift[0] = 0;
   for( Int i = 1; i < 64; i++ )
   {
@@ -1397,27 +1397,20 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
     else
     {
 #endif
-#if H_3D_IC
-      Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getViewIndex() != pcCU->getSlice()->getViewIndex() );
-      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi
-#if H_3D_ARP
-        , false
-#endif
-        , bICFlag );
-      bICFlag = bICFlag && (iWidth > 8);
-      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi
+  for (UInt comp=COMPONENT_Y; comp<pcYuvPred->getNumberValidComponents(); comp++)
+  {
+    const ComponentID compID=ComponentID(comp);
+#if NH_3D_IC
+    Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getViewIndex() != pcCU->getSlice()->getViewIndex() ) && ( isLuma(compID) || (iWidth > 8) );
+      xPredInterBlk(compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID))
 #if H_3D_ARP
         , false
 #endif
         , bICFlag );
 #else
-
-  for (UInt comp=COMPONENT_Y; comp<pcYuvPred->getNumberValidComponents(); comp++)
-  {
-    const ComponentID compID=ComponentID(comp);
     xPredInterBlk  (compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) );
-  }
 #endif
+  }
 #if H_3D_ARP
     }
   }
@@ -1901,7 +1894,7 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 #if H_3D_ARP
     , Bool filterType
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     , Bool bICFlag
 #endif
 )
@@ -1924,7 +1917,8 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   if( cu->getSlice()->getIsDepth() )
   {
     refOffset = mv->getHor() + mv->getVer() * refStride;
-    ref       = refPic->getLumaAddr( cu->getAddr(), cu->getZorderIdxInCU() + partAddr ) + refOffset;
+    ref       = refPic->getAddr(compID, cu->getCtuRsAddr(), cu->getZorderIdxInCtu() + partAddr ) + refOffset;
+
     xFrac     = 0;
     yFrac     = 0;
   }
@@ -1937,8 +1931,8 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
   if ( yFrac == 0 )
   {
-#if H_3D_IC
-    m_if.filterHorLuma( ref, refStride, dst, dstStride, width, height, xFrac,       !bi || bICFlag
+#if NH_3D_IC
+    m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi || bICFlag, chFmt, bitDepth
 #else
     m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi, chFmt, bitDepth
 #endif
@@ -1949,8 +1943,8 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   }
   else if ( xFrac == 0 )
   {
-#if H_3D_IC
-    m_if.filterVerLuma( ref, refStride, dst, dstStride, width, height, yFrac, true, !bi || bICFlag
+#if NH_3D_IC
+    m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi || bICFlag, chFmt, bitDepth
 #else
     m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi, chFmt, bitDepth
 #endif
@@ -1971,8 +1965,8 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
     , filterType
 #endif 
 );
-#if H_3D_IC
-    m_if.filterVerLuma(tmp + (halfFilterSize-1)*tmpStride, tmpStride, dst, dstStride, width, height,              yFrac, false, !bi || bICFlag
+#if NH_3D_IC
+    m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi || bICFlag, chFmt, bitDepth
 #else
     m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt, bitDepth
 #endif
@@ -1982,34 +1976,33 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 );
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   if( bICFlag )
   {
     Int a, b, i, j;
     const Int iShift = IC_CONST_SHIFT;
+    Pel *dst2 = dst;
 
-    xGetLLSICPrediction( cu, mv, refPic, a, b, TEXT_LUMA );
+    xGetLLSICPrediction( compID, cu, mv, refPic, a, b, bitDepth );
 
-
-    for ( i = 0; i < height; i++ )
+    for ( i = 0; i < cxHeight; i++ )
     {
-      for ( j = 0; j < width; j++ )
+      for ( j = 0; j < cxWidth; j++ )
       {
-          dst[j] = Clip3( 0, ( 1 << g_bitDepthY ) - 1, ( ( a*dst[j] ) >> iShift ) + b );
+        dst[j] = Clip3( 0, ( 1 << bitDepth ) - 1, ( ( a*dst[j] ) >> iShift ) + b );
       }
       dst += dstStride;
     }
 
     if(bi)
     {
-      Pel *dst2      = dstPic->getLumaAddr( partAddr );
-      Int shift = IF_INTERNAL_PREC - g_bitDepthY;
-      for (i = 0; i < height; i++)
+      Int shift = IF_INTERNAL_PREC - bitDepth;
+      for (i = 0; i < cxHeight; i++)
       {
-        for (j = 0; j < width; j++)
+        for (j = 0; j < cxWidth; j++)
         {
-          Short val = dst2[j] << shift;
-          dst2[j] = val - (Short)IF_INTERNAL_OFFS;
+          Pel val = dst2[j] << shift;
+          dst2[j] = val - (Pel)IF_INTERNAL_OFFS;
         }
         dst2 += dstStride;
       }
@@ -2019,107 +2012,6 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
 }
 
-
-#if H_3D_ARP
-    , Bool filterType
-#endif
-#if H_3D_IC
-    , Bool bICFlag
-#endif
-#if H_3D_IC
-    m_if.filterHorChroma(refCb, refStride, dstCb,  dstStride, cxWidth, cxHeight, xFrac, !bi || bICFlag
-#else
-#endif
-#if H_3D_ARP
-    , filterType
-#endif
-#if H_3D_IC
-    m_if.filterHorChroma(refCr, refStride, dstCr,  dstStride, cxWidth, cxHeight, xFrac, !bi || bICFlag
-#else
-#endif
-#if H_3D_ARP
-    , filterType
-#endif
-#if H_3D_IC
-    m_if.filterVerChroma(refCb, refStride, dstCb, dstStride, cxWidth, cxHeight, yFrac, true, !bi || bICFlag
-#else
-#endif
-#if H_3D_ARP
-    , filterType
-#endif
-#if H_3D_IC
-    m_if.filterVerChroma(refCr, refStride, dstCr, dstStride, cxWidth, cxHeight, yFrac, true, !bi || bICFlag
-#else
-#endif
-#if H_3D_ARP
-    , filterType
-#endif
-#if H_3D_ARP
-    , filterType
-#endif  
-#if H_3D_IC
-    m_if.filterVerChroma(extY  + (halfFilterSize-1)*extStride, extStride, dstCb, dstStride, cxWidth, cxHeight  , yFrac, false, !bi || bICFlag
-#else
-#endif
-#if H_3D_ARP
-    , filterType
-#endif 
-#if H_3D_ARP
-    , filterType
-#endif 
-#if H_3D_IC
-    m_if.filterVerChroma(extY  + (halfFilterSize-1)*extStride, extStride, dstCr, dstStride, cxWidth, cxHeight  , yFrac, false, !bi || bICFlag
-#else
-#endif
-#if H_3D_ARP
-    , filterType
-#endif 
-#if H_3D_IC
-  if( bICFlag )
-  {
-    Int a, b, i, j;
-    const Int iShift = IC_CONST_SHIFT;
-
-    xGetLLSICPrediction( cu, mv, refPic, a, b, TEXT_CHROMA_U ); // Cb
-    for ( i = 0; i < cxHeight; i++ )
-    {
-      for ( j = 0; j < cxWidth; j++ )
-      {
-          dstCb[j] = Clip3(  0, ( 1 << g_bitDepthC ) - 1, ( ( a*dstCb[j] ) >> iShift ) + b );
-      }
-      dstCb += dstStride;
-    }
-    xGetLLSICPrediction( cu, mv, refPic, a, b, TEXT_CHROMA_V ); // Cr
-    for ( i = 0; i < cxHeight; i++ )
-    {
-      for ( j = 0; j < cxWidth; j++ )
-      {
-          dstCr[j] = Clip3( 0, ( 1 << g_bitDepthC ) - 1, ( ( a*dstCr[j] ) >> iShift ) + b );
-      }
-      dstCr += dstStride;
-    }
-
-    if(bi)
-    {
-      Pel* dstCb2 = dstPic->getCbAddr( partAddr );
-      Pel* dstCr2 = dstPic->getCrAddr( partAddr );
-      Int shift = IF_INTERNAL_PREC - g_bitDepthC;
-      for (i = 0; i < cxHeight; i++)
-      {
-        for (j = 0; j < cxWidth; j++)
-        {
-          Short val = dstCb2[j] << shift;
-          dstCb2[j] = val - (Short)IF_INTERNAL_OFFS;
-
-          val = dstCr2[j] << shift;
-          dstCr2[j] = val - (Short)IF_INTERNAL_OFFS;
-        }
-        dstCb2 += dstStride;
-        dstCr2 += dstStride;
-      }
-    }
-  }
-#endif
 Void TComPrediction::xWeightedAverage( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* pcYuvDst, const BitDepths &clipBitDepths
  )
 {
@@ -2264,7 +2156,7 @@ Bool TComPrediction::UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt 
           rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
           (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }
-#if H_3D_IC
+#if NH_3D_IC
 /** Function for deriving the position of first non-zero binary bit of a value
  * \param x input value
  *
@@ -2294,56 +2186,41 @@ Int GetMSB( UInt x )
 
 /** Function for deriving LM illumination compensation.
  */
-Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, TextType eType )
+Void TComPrediction::xGetLLSICPrediction( const ComponentID compID, TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, const Int bitDepth )
 {
   TComPicYuv *pRecPic = pcCU->getPic()->getPicYuvRec();
   Pel *pRec = NULL, *pRef = NULL;
   UInt uiWidth, uiHeight, uiTmpPartIdx;
-  Int iRecStride = ( eType == TEXT_LUMA ) ? pRecPic->getStride() : pRecPic->getCStride();
-  Int iRefStride = ( eType == TEXT_LUMA ) ? pRefPic->getStride() : pRefPic->getCStride();
+  Int iRecStride = pRecPic->getStride(compID);
+  Int iRefStride = pRefPic->getStride(compID);
   Int iRefOffset, iHor, iVer;
   iHor = pcCU->getSlice()->getIsDepth() ? pMv->getHor() : ( ( pMv->getHor() + 2 ) >> 2 );
   iVer = pcCU->getSlice()->getIsDepth() ? pMv->getVer() : ( ( pMv->getVer() + 2 ) >> 2 );
-  if( eType != TEXT_LUMA )
+  if( !isLuma(compID) )
   {
     iHor = pcCU->getSlice()->getIsDepth() ? ( ( pMv->getHor() + 1 ) >> 1 ) : ( ( pMv->getHor() + 4 ) >> 3 );
     iVer = pcCU->getSlice()->getIsDepth() ? ( ( pMv->getVer() + 1 ) >> 1 ) : ( ( pMv->getVer() + 4 ) >> 3 );
   }
-  uiWidth  = ( eType == TEXT_LUMA ) ? pcCU->getWidth( 0 )  : ( pcCU->getWidth( 0 )  >> 1 );
-  uiHeight = ( eType == TEXT_LUMA ) ? pcCU->getHeight( 0 ) : ( pcCU->getHeight( 0 ) >> 1 );
+  uiWidth  = pcCU->getWidth( 0 ) >> pRefPic->getComponentScaleX(compID);
+  uiHeight = pcCU->getHeight( 0 ) >> pRefPic->getComponentScaleY(compID);
 
   Int i, j, iCountShift = 0;
 
-  // LLS parameters estimation -->
-
+  // LLS parameters estimation
   Int x = 0, y = 0, xx = 0, xy = 0;
-  Int precShift = std::max(0, (( eType == TEXT_LUMA ) ? g_bitDepthY : g_bitDepthC) - 12);
+  Int precShift = std::max(0, bitDepth - 12);
 
-  if( pcCU->getPUAbove( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) )
+  UInt partAddr = 0;
+  if( pcCU->getPUAbove( uiTmpPartIdx, pcCU->getZorderIdxInCtu() ) )
   {
     iRefOffset = iHor + iVer * iRefStride - iRefStride;
-    if( eType == TEXT_LUMA )
-    {
-      pRef = pRefPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
-      pRec = pRecPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - iRecStride;
-    }
-    else if( eType == TEXT_CHROMA_U )
-    {
-      pRef = pRefPic->getCbAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
-      pRec = pRecPic->getCbAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - iRecStride;
-    }
-    else
-    {
-      assert( eType == TEXT_CHROMA_V );
-      pRef = pRefPic->getCrAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
-      pRec = pRecPic->getCrAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - iRecStride;
-    }
-
+    pRef = pRefPic->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + partAddr ) + iRefOffset;
+    pRec = pRecPic->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + partAddr ) - iRecStride;
     for( j = 0; j < uiWidth; j+=2 )
     {
       x += pRef[j];
       y += pRec[j];
-      if ( eType == TEXT_LUMA )
+      if( isLuma(compID) )
       {
         xx += (pRef[j] * pRef[j])>>precShift;
         xy += (pRef[j] * pRec[j])>>precShift;
@@ -2352,31 +2229,16 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     iCountShift += g_aucConvertToBit[ uiWidth ] + 1;
   }
 
-  if( pcCU->getPULeft( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) )
+  if( pcCU->getPULeft( uiTmpPartIdx, pcCU->getZorderIdxInCtu() ) )
   {
     iRefOffset = iHor + iVer * iRefStride - 1;
-    if( eType == TEXT_LUMA )
-    {
-      pRef = pRefPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
-      pRec = pRecPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - 1;
-    }
-    else if( eType == TEXT_CHROMA_U )
-    {
-      pRef = pRefPic->getCbAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
-      pRec = pRecPic->getCbAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - 1;
-    }
-    else
-    {
-      assert( eType == TEXT_CHROMA_V );
-      pRef = pRefPic->getCrAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
-      pRec = pRecPic->getCrAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - 1;
-    }
-
+    pRef = pRefPic->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + partAddr ) + iRefOffset;
+    pRec = pRecPic->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + partAddr ) - 1;
     for( i = 0; i < uiHeight; i+=2 )
     {
       x += pRef[0];
       y += pRec[0];
-      if ( eType == TEXT_LUMA )
+      if( isLuma(compID) )
       {
         xx += (pRef[0] * pRef[0])>>precShift;
         xy += (pRef[0] * pRec[0])>>precShift;
@@ -2394,54 +2256,46 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     return;
   }
 
-  if (  eType != TEXT_LUMA )
+  if( !isLuma(compID) )
   {
-    a = 32;
+    a = ( 1 << IC_CONST_SHIFT );
     b = (  y - x + ( 1 << ( iCountShift - 1 ) ) ) >> iCountShift;
   }
   else
   {
-  xy += xx >> IC_REG_COST_SHIFT;
-  xx += xx >> IC_REG_COST_SHIFT;
-  Int a1 = ( xy << iCountShift ) - ((y * x) >> precShift);
-  Int a2 = ( xx << iCountShift ) - ((x * x) >> precShift);
-  const Int iShift = IC_CONST_SHIFT;
-  {
+    xy += xx >> IC_REG_COST_SHIFT;
+    xx += xx >> IC_REG_COST_SHIFT;
+    Int a1 = ( xy << iCountShift ) - ((y * x) >> precShift);
+    Int a2 = ( xx << iCountShift ) - ((x * x) >> precShift);
+    const Int iShift = IC_CONST_SHIFT;
+    const Int iShiftA2 = 6;
+    const Int iAccuracyShift = 15;
+    Int iScaleShiftA2 = 0;
+    Int iScaleShiftA1 = 0;
+    Int a1s;
+    Int a2s;
+    
+    a1 = Clip3(0, 2*a2, a1);
+    iScaleShiftA2 = GetMSB( abs( a2 ) ) - iShiftA2;
+    iScaleShiftA1 = iScaleShiftA2 - IC_SHIFT_DIFF;
+    
+    if( iScaleShiftA1 < 0 )
     {
-      const Int iShiftA2 = 6;
-      const Int iAccuracyShift = 15;
-
-      Int iScaleShiftA2 = 0;
-      Int iScaleShiftA1 = 0;
-      Int a1s = a1;
-      Int a2s = a2;
-
-      a1 = Clip3(0, 2*a2, a1);
-      iScaleShiftA2 = GetMSB( abs( a2 ) ) - iShiftA2;
-      iScaleShiftA1 = iScaleShiftA2 - IC_SHIFT_DIFF;
-
-      if( iScaleShiftA1 < 0 )
-      {
-        iScaleShiftA1 = 0;
-      }
-
-      if( iScaleShiftA2 < 0 )
-      {
-        iScaleShiftA2 = 0;
-      }
-
-      Int iScaleShiftA = iScaleShiftA2 + iAccuracyShift - iShift - iScaleShiftA1;
-
-
-      a2s = a2 >> iScaleShiftA2;
-
-      a1s = a1 >> iScaleShiftA1;
-
-      a = a1s * m_uiaShift[ a2s ];
-      a = a >> iScaleShiftA;
-      b = (  y - ( ( a * x ) >> iShift ) + ( 1 << ( iCountShift - 1 ) ) ) >> iCountShift;
+      iScaleShiftA1 = 0;
     }
-  }   
+    if( iScaleShiftA2 < 0 )
+    {
+      iScaleShiftA2 = 0;
+    }
+    
+    Int iScaleShiftA = iScaleShiftA2 + iAccuracyShift - iShift - iScaleShiftA1;
+
+    a2s = a2 >> iScaleShiftA2;
+    a1s = a1 >> iScaleShiftA1;
+    
+    a = a1s * m_uiaShift[ a2s ];
+    a = a >> iScaleShiftA;
+    b = (  y - ( ( a * x ) >> iShift ) + ( 1 << ( iCountShift - 1 ) ) ) >> iCountShift;
   }
 }
 #endif

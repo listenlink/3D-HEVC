@@ -87,7 +87,7 @@ public:
 #if H_3D_ARP
   virtual Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   virtual Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
 #if H_3D_INTER_SDC
@@ -176,7 +176,7 @@ public:
 #if H_3D_ARP
   Void decodeARPW              ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void decodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_INTER_SDC

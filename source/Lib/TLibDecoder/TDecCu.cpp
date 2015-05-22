@@ -398,7 +398,7 @@ if(!pcCU->getSlice()->isIntra())
 #if H_3D_ARP
     m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 

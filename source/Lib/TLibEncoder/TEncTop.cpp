@@ -78,7 +78,7 @@ TEncTop::TEncTop()
 #if NH_MV
   m_ivPicLists = NULL;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_aICEnableCandidate = NULL;
   m_aICEnableNum = NULL;
 #endif
@@ -226,7 +226,7 @@ Void TEncTop::init(Bool isFieldCoding)
   xInitRPS(isFieldCoding);
 
   xInitPPSforTiles();
-#if H_3D_IC
+#if NH_3D_IC
   m_aICEnableCandidate = new Int[ 10 ];
   m_aICEnableNum = new Int[ 10 ];
 

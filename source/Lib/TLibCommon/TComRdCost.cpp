@@ -561,7 +561,7 @@ Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  P
   cDtParam.compIdx      = MAX_NUM_COMPONENT; // just for assert: to be sure it was set before use
   cDtParam.bitDepth     = bitDepth;
 
-#if H_3D_IC
+#if NH_3D_IC
   cDtParam.bUseIC       = false;
 #endif
 #if H_3D_INTER_SDC
@@ -689,7 +689,7 @@ UInt TComRdCost::xGetMaskedSAD( DistParam* pcDtParam )
 {
   
   AOF(!pcDtParam->bApplyWeight);
-#if H_3D_IC
+#if NH_3D_IC
   AOF(!pcDtParam->bUseIC);
 #endif
   
@@ -763,7 +763,7 @@ Distortion TComRdCost::xGetSAD( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSADic( pcDtParam );
@@ -805,7 +805,7 @@ Distortion TComRdCost::xGetSAD4( DistParam* pcDtParam )
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD4ic( pcDtParam );
@@ -850,7 +850,7 @@ Distortion TComRdCost::xGetSAD8( DistParam* pcDtParam )
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD8ic( pcDtParam );
@@ -899,7 +899,7 @@ Distortion TComRdCost::xGetSAD16( DistParam* pcDtParam )
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD16ic( pcDtParam );
@@ -955,7 +955,7 @@ Distortion TComRdCost::xGetSAD12( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD12ic( pcDtParam );
@@ -1003,7 +1003,7 @@ Distortion TComRdCost::xGetSAD12( DistParam* pcDtParam )
 
 Distortion TComRdCost::xGetSAD16N( DistParam* pcDtParam )
 {
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD16Nic( pcDtParam );
@@ -1063,7 +1063,7 @@ Distortion TComRdCost::xGetSAD32( DistParam* pcDtParam )
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD32ic( pcDtParam );
@@ -1136,7 +1136,7 @@ Distortion TComRdCost::xGetSAD24( DistParam* pcDtParam )
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD24ic( pcDtParam );
@@ -1201,7 +1201,7 @@ Distortion TComRdCost::xGetSAD64( DistParam* pcDtParam )
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
 
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD64ic( pcDtParam );
@@ -1305,7 +1305,7 @@ Distortion TComRdCost::xGetSAD48( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD48ic( pcDtParam );
@@ -1388,12 +1388,12 @@ Distortion TComRdCost::xGetSAD48( DistParam* pcDtParam )
 }
 
 
-#if H_3D_IC || H_3D_INTER_SDC
+#if NH_3D_IC || H_3D_INTER_SDC
 UInt TComRdCost::xGetSADic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
@@ -1441,7 +1441,7 @@ UInt TComRdCost::xGetSAD4ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight ) 
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
@@ -1498,7 +1498,7 @@ UInt TComRdCost::xGetSAD8ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg      = pcDtParam->pOrg;
   Pel* piCur      = pcDtParam->pCur;
@@ -1567,7 +1567,7 @@ UInt TComRdCost::xGetSAD16ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
@@ -1660,7 +1660,7 @@ UInt TComRdCost::xGetSAD12ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
@@ -1835,7 +1835,7 @@ UInt TComRdCost::xGetSAD32ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
@@ -1977,7 +1977,7 @@ UInt TComRdCost::xGetSAD24ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
@@ -2094,7 +2094,7 @@ UInt TComRdCost::xGetSAD64ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
@@ -2332,7 +2332,7 @@ UInt TComRdCost::xGetSAD48ic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
 
   Pel* piOrg   = pcDtParam->pOrg;
@@ -3327,7 +3327,7 @@ Distortion TComRdCost::xGetHADs( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetHADsw( pcDtParam );
   }
-#if H_3D_IC
+#if NH_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetHADsic( pcDtParam );
@@ -3403,12 +3403,12 @@ Distortion TComRdCost::xGetHADs( DistParam* pcDtParam )
   return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8) );
 }
 
-#if H_3D_IC || H_3D_INTER_SDC
+#if NH_3D_IC || H_3D_INTER_SDC
 UInt TComRdCost::xGetHADsic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetHADsw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetHADsw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
