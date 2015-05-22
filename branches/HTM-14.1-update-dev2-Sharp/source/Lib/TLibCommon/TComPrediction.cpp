@@ -1913,7 +1913,7 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   Int     xFrac  = mv->getHor() & ((1<<shiftHor)-1);
   Int     yFrac  = mv->getVer() & ((1<<shiftVer)-1);
 
-#if H_3D_IC
+#if NH_3D_FULL_PEL_DEPTH_MAP_MV_ACC
   if( cu->getSlice()->getIsDepth() )
   {
     refOffset = mv->getHor() + mv->getVer() * refStride;

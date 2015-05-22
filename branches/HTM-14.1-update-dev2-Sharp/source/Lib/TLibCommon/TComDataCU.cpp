@@ -5141,7 +5141,7 @@ Void TComDataCU::clipMv    (TComMv&  rcMv)
 {
   const TComSPS &sps=*(m_pcSlice->getSPS());
   Int  iMvShift = 2;
-#if H_3D_IC
+#if NH_3D_FULL_PEL_DEPTH_MAP_MV_ACC
   if( getSlice()->getIsDepth() )
     iMvShift = 0;
 #endif
