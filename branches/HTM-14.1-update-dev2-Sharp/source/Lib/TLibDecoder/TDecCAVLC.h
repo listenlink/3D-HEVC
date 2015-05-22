@@ -119,7 +119,7 @@ public:
 #if H_3D_ARP 
   Void parseARPW            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_INTER_SDC

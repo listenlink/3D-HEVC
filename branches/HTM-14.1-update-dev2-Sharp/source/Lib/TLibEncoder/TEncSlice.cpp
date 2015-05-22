@@ -225,7 +225,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
   rpcSlice->initSlice();
   rpcSlice->setPicOutputFlag( true );
   rpcSlice->setPOC( pocCurr );
-#if H_3D_IC
+#if NH_3D_IC
   rpcSlice->setApplyIC( false );
 #endif
   // depth computation based on GOP size
@@ -822,12 +822,12 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice )
   }
 #endif
 
-#if H_3D_IC
-  if ( pcEncTop->getViewIndex() && pcEncTop->getUseIC() &&
+#if NH_3D_IC
+  if ( m_pcCfg->getViewIndex() && m_pcCfg->getUseIC() &&
        !( ( pcSlice->getSliceType() == P_SLICE && pcSlice->getPPS()->getUseWP() ) || ( pcSlice->getSliceType() == B_SLICE && pcSlice->getPPS()->getWPBiPred() ) )
      )
   {
-    pcSlice ->xSetApplyIC(pcEncTop->getUseICLowLatencyEnc());
+    pcSlice ->xSetApplyIC(m_pcCfg->getUseICLowLatencyEnc());
     if ( pcSlice->getApplyIC() )
     {
       pcSlice->setIcSkipParseFlag( pcSlice->getPOC() % m_pcCfg->getIntraPeriod() != 0 );

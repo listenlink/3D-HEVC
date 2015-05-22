@@ -290,7 +290,7 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
-#if H_3D_IC
+#if NH_3D_IC
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
     m_cTEncTop.setUseICLowLatencyEnc           ( m_bUseLowLatencyICEnc );
 #endif

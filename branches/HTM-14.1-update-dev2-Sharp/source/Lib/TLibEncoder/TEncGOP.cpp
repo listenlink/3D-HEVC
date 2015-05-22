@@ -154,7 +154,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_isDepth              = pcTEncTop->getIsDepth();
 #endif
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_aICEnableCandidate   = pcTEncTop->getICEnableCandidate(); 
   m_aICEnableNum         = pcTEncTop->getICEnableNum(); 
 #endif
@@ -1489,7 +1489,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     pcSlice->setICEnableCandidate( m_aICEnableCandidate );         
     pcSlice->setICEnableNum( m_aICEnableNum );         
 #endif

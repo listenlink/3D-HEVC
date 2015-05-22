@@ -131,7 +131,7 @@ private:
   Bool                    m_isDepth;
 #endif
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Int*                    m_aICEnableCandidate; 
   Int*                    m_aICEnableNum; 
 #endif

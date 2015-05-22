@@ -339,7 +339,7 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   Pel*  piRefSrch;
 
   piRefSrch = rcStruct.piRefY + iSearchY * rcStruct.iYStride + iSearchX;
-#if H_3D_IC
+#if NH_3D_IC
   m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
 #if H_3D_INTER_SDC
@@ -850,7 +850,7 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
     cMvTest += rcMvFrac;
 
     setDistParamComp(COMPONENT_Y);
-#if H_3D_IC
+#if NH_3D_IC
     m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
 #if H_3D_INTER_SDC
@@ -3856,7 +3856,7 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
                             m_tmpYuvPred .getAddr( COMPONENT_Y, uiAbsPartIdx ), m_tmpYuvPred.getStride(COMPONENT_Y),
                             iWidth, iHeight, m_pcEncCfg->getUseHADME() && (pcCU->getCUTransquantBypass(iPartIdx) == 0) );
 
-#if H_3D_IC
+#if NH_3D_IC
   cDistParam.bUseIC = false;
 #endif
 #if H_3D_INTER_SDC
@@ -4999,7 +4999,7 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
 
   pcCU->clipMv( cMvCand );
 
-#if H_3D_IC
+#if NH_3D_IC
   Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getViewIndex() != pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getViewIndex() );
 #endif
 
@@ -5014,7 +5014,7 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
 #if H_3D_ARP
       , false
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     , bICFlag
 #endif
 
@@ -5059,7 +5059,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
   pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
 
-#if H_3D_IC
+#if NH_3D_IC
   Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getViewIndex() != pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getViewIndex() );
   pcPatternKey->setICFlag( bICFlag );
 #endif
@@ -5249,7 +5249,7 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
 
       m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
 
-#if H_3D_IC
+#if NH_3D_IC
       m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
 #if H_3D_INTER_SDC
@@ -5783,7 +5783,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
 #endif
     UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
@@ -7099,7 +7099,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt& ruiBits )
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
 #endif
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
@@ -7126,7 +7126,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt& ruiBits )
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0  );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
 #endif
 #if H_3D

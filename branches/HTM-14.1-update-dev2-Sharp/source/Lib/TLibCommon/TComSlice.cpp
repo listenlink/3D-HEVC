@@ -139,7 +139,7 @@ TComSlice::TComSlice()
 , m_pocMsbVal                     (0)
 , m_pocMsbValRequiredFlag         (false)
 #endif
-#if H_3D_IC
+#if NH_3D_IC
 , m_bApplyIC                      (false)
 , m_icSkipParseFlag               (false)
 #endif
@@ -1169,7 +1169,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 #if H_3D
   m_bApplyDIS = pSrc->m_bApplyDIS;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_bApplyIC = pSrc->m_bApplyIC;
   m_icSkipParseFlag = pSrc->m_icSkipParseFlag;
 #endif
@@ -3689,7 +3689,7 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 }
 #endif
 
-#if H_3D_IC
+#if NH_3D_IC
 // This is an encoder only function and should be moved to TEncSlice or TEncSearch!!
 Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
 {
@@ -3778,20 +3778,18 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
     if ( pcRefPicYuvOrg != NULL )
     {
       // Histogram building - luminance
-      Int iMaxPelValue = ( 1 << g_bitDepthY ); 
+      Int iMaxPelValue = ( 1 << getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) ); 
       Int *aiRefOrgHist = (Int *) xMalloc( Int,iMaxPelValue );
       Int *aiCurrHist   = (Int *) xMalloc( Int,iMaxPelValue );
       memset( aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
       memset( aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
 
-      Int iWidth   = pcCurrPicYuv->getWidth();
-      Int iHeight  = pcCurrPicYuv->getHeight();
-
-      Pel* pCurrY   = pcCurrPicYuv ->getLumaAddr();
-      Pel* pRefOrgY = pcRefPicYuvOrg  ->getLumaAddr();
-      Int iCurrStride = pcCurrPicYuv->getStride();
-      Int iRefStride = pcRefPicYuvOrg->getStride();
-
+      Int iWidth   = pcCurrPicYuv->getWidth(COMPONENT_Y);
+      Int iHeight  = pcCurrPicYuv->getHeight(COMPONENT_Y);
+      Pel* pCurrY   = pcCurrPicYuv->getAddr(COMPONENT_Y);
+      Pel* pRefOrgY = pcRefPicYuvOrg->getAddr(COMPONENT_Y);
+      Int iCurrStride = pcCurrPicYuv->getStride(COMPONENT_Y);
+      Int iRefStride = pcRefPicYuvOrg->getStride(COMPONENT_Y);
       for ( Int y = 0; y < iHeight; y++ )
       {
         for ( Int x = 0; x < iWidth; x++ )

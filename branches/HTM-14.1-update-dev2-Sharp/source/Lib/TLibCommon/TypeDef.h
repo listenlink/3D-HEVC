@@ -65,12 +65,27 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
 #define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define H_MV_ENC_DEC_TRAC_FIX             1  // by SHARP
 
 #if NH_3D
 #define NH_3D_VSO                         1
 #define NH_3D_TMVP                        1   // QC_TMVP_C0047 
                                               // Sony_M23639
                                               // H_3D_TMVP_SCALING_FIX_K0053       1   // QC/CY for K0053
+#define NH_3D_IC                          1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
+                                              // Unifying rounding offset, for IC part, JCT3V-D0135
+                                              // SHARP_ILLUCOMP_REFINE_E0046
+                                              // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
+                                              // LGE_IC_CTX_F0160 //JCT3V-F0160
+                                              // SEC_ONLY_TEXTURE_IC_F0151
+                                              // MTK_IC_FLAG_CABAC_SIMP_G0061
+                                              // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
+                                              // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
+                                              // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
+                                              // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
+                                              // LGE_CHROMA_IC_J0050_J0034
+
+
 #endif
 
 #if H_3D
@@ -321,7 +336,7 @@
 #endif
 #endif
 ///// ***** ILLUMATION COMPENSATION *********
-#if H_3D_IC
+#if NH_3D_IC
 #define IC_REG_COST_SHIFT                 7
 #define IC_CONST_SHIFT                    5
 #define IC_SHIFT_DIFF                     12

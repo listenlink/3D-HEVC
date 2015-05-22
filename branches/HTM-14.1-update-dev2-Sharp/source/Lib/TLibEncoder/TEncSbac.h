@@ -142,7 +142,7 @@ public:
 #if H_3D_ARP
   Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if H_3D_INTER_SDC
@@ -214,7 +214,7 @@ private:
 #if H_3D_ARP
   ContextModel3DBuffer m_cCUPUARPWSCModel;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   ContextModel3DBuffer m_cCUICFlagSCModel;
 #endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;

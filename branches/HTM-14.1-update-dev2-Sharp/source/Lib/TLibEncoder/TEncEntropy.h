@@ -86,7 +86,7 @@ public:
 #if H_3D_ARP
   virtual Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
 #if H_3D_INTER_SDC
@@ -175,7 +175,7 @@ public:
 #if H_3D_ARP
   Void encodeARPW         ( TComDataCU* pcCU, UInt uiAbspartIdx );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void encodeICFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
 #if H_3D_INTER_SDC

@@ -2602,7 +2602,7 @@ private:
 #if NH_3D
   std::vector<Int> m_pocsInCurrRPSs; 
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Bool       m_bApplyIC;
   Bool       m_icSkipParseFlag;
 #endif
@@ -2618,7 +2618,7 @@ private:
   Bool       m_bApplyDIS;
 #endif
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Int*       m_aICEnableCandidate;
   Int*       m_aICEnableNum;
 #endif       
@@ -2705,15 +2705,16 @@ public:
   Int                         getInCmpRefViewIdcs( Int i )             const         { return m_inCmpRefViewIdcs  [i];                               }
   Int                         getNumCurCmpLIds( )                      const         { return (Int) m_inCmpRefViewIdcs.size();                       }
   TComPic*                    getIvPic( Bool depthFlag, Int viewIndex) const         { return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ];    }
-#endif                                                                                                                                               
+#endif                                                                                                                                          
 #if H_3D                                                                                                                                             
   TComPic*                    getTexturePic       ()                                 { return  m_ivPicsCurrPoc[0][ m_viewIndex ];                    }
 #endif                                                                                                                                               
-#if H_3D_IC                                                                                                                                          
+#if NH_3D_IC
   Void                        setApplyIC( Bool b )                                   { m_bApplyIC = b;                                               }
   Bool                        getApplyIC()                                           { return m_bApplyIC;                                            }
-  Void                        xSetApplyIC();                                                                                                         
-  Void                        xSetApplyIC(Bool bUseLowLatencyICEnc);                                                                                 
+  Void                        xSetApplyIC();
+  Void                        xSetApplyIC(Bool bUseLowLatencyICEnc);
+
   Void                        setIcSkipParseFlag( Bool b )                           { m_icSkipParseFlag = b;                                        }
   Bool                        getIcSkipParseFlag()                                   { return m_icSkipParseFlag;                                     }
 #endif                                                                                                                                               
@@ -2956,7 +2957,7 @@ public:
                                                                                                                                                         
   Int*                        getDepthToDisparityB( Int refViewIdx )                 { return m_depthToDisparityB[ getVPS()->getVoiInVps( refViewIdx) ];}
   Int*                        getDepthToDisparityF( Int refViewIdx )                 { return m_depthToDisparityF[ getVPS()->getVoiInVps( refViewIdx) ];}
-#if H_3D_IC                                                                                                                                             
+#if NH_3D_IC                                                                                                                                             
   Void                        setICEnableCandidate( Int* icEnableCandidate)          { m_aICEnableCandidate = icEnableCandidate;                     }
   Void                        setICEnableNum( Int* icEnableNum)                      { m_aICEnableNum = icEnableNum;                                 }
   Void                        setICEnableCandidate( UInt layer, Int value)           { m_aICEnableCandidate[ layer ] = value;                        }

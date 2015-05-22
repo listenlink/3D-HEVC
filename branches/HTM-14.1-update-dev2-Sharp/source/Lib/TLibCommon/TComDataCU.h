@@ -178,7 +178,7 @@ private:
 #if H_3D_ARP
   UChar*        m_puhARPW;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Bool*         m_pbICFlag;           ///< array of IC flags
 #endif
 #if H_3D_DIM
@@ -535,7 +535,7 @@ public:
   Void          setARPWSubParts    ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
   Double        getARPWFactor      ( UInt uiIdx );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Bool*         getICFlag          ()                        { return m_pbICFlag;               }
   Bool          getICFlag          ( UInt uiIdx )            { return m_pbICFlag[uiIdx];        }
   Void          setICFlag          ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
@@ -703,10 +703,6 @@ public:
   Bool          isInter            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER;                                              }
   Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< returns true, if the partiton is skipped
   Bool          isBipredRestriction( UInt puIdx );
-
-#if H_3D_IC
-  Bool          isIC      ( UInt uiPartIdx );
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)

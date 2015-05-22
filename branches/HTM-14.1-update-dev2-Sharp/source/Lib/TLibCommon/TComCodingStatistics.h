@@ -91,6 +91,9 @@ enum TComCodingStatisticsType
   STATS__CABAC_EP_BIT_ALIGNMENT,
   STATS__CABAC_BITS__ALIGNED_SIGN_BIT,
   STATS__CABAC_BITS__ALIGNED_ESCAPE_BITS,
+#if NH_3D_IC
+  STATS__CABAC_BITS__3D_IC,
+#endif
   STATS__NUM_STATS
 };
 
@@ -141,6 +144,9 @@ static inline const Char* getName(TComCodingStatisticsType name)
     "CABAC_EP_BIT_ALIGNMENT",
     "CABAC_BITS__ALIGNED_SIGN_BIT",
     "CABAC_BITS__ALIGNED_ESCAPE_BITS"
+#if NH_3D_IC
+    "CABAC_BITS__3D_IC"
+#endif
   };
   assert(STATS__NUM_STATS == sizeof(statNames)/sizeof(Char *) && name < STATS__NUM_STATS);
   return statNames[name];

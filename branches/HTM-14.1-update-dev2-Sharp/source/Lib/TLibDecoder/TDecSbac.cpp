@@ -75,7 +75,7 @@ TDecSbac::TDecSbac()
 #if H_3D_ARP
 , m_cCUPUARPWSCModel          ( 1,             1,               NUM_ARPW_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if H_3D_IC
+#if NH_3D_IC
 , m_cCUICFlagSCModel          ( 1,             1,               NUM_IC_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 , m_cCUPartSizeSCModel                       ( 1,             1,                      NUM_PART_SIZE_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
@@ -166,7 +166,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 #if H_3D_ARP
   m_cCUPUARPWSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_ARPW );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_cCUICFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_PART_SIZE );
@@ -242,9 +242,6 @@ Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 #endif
 #if H_3D_ARP
   m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
-#endif
-#if H_3D_IC
-  m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
 #if H_3D_DIM
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
@@ -2444,7 +2441,7 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 #endif
 
-#if H_3D_IC
+#if NH_3D_IC
 /** parse illumination compensation flag
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -2454,7 +2451,8 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 { 
   UInt uiSymbol = 0;
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, 0 ) );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__3D_IC) );
+
 #if !H_MV_ENC_DEC_TRAC 
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tICFlag" );

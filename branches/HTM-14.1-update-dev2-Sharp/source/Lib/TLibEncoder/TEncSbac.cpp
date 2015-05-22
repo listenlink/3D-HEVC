@@ -70,7 +70,7 @@ TEncSbac::TEncSbac()
 #if H_3D_ARP
 , m_cCUPUARPWSCModel                   ( 1,             1,                      NUM_ARPW_CTX                         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif                                                                                                               
-#if H_3D_IC                                                                                                          
+#if NH_3D_IC                                                                                                          
 , m_cCUICFlagSCModel                   ( 1,             1,                      NUM_IC_FLAG_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 , m_cCUPartSizeSCModel                 ( 1,             1,                      NUM_PART_SIZE_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
@@ -150,7 +150,7 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
 #if H_3D_ARP
   m_cCUPUARPWSCModel.initBuffer                   ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_cCUICFlagSCModel.initBuffer                   ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
@@ -237,7 +237,7 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #if H_3D_ARP
       curCost += m_cCUPUARPWSCModel.calcCost                   ( curSliceType, qp, (UChar*)INIT_ARPW );
 #endif                                                     
-#if H_3D_IC                                                
+#if NH_3D_IC                                                
       curCost += m_cCUICFlagSCModel.calcCost                   ( curSliceType, qp, (UChar*)INIT_IC_FLAG );
 #endif                                                     
 #if H_3D_DIM_SDC                                           
@@ -303,9 +303,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #endif
 #if H_3D_ARP
   m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
-#endif
-#if H_3D_IC
-  m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
 #if H_3D_DIM
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
@@ -993,7 +990,7 @@ Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 #endif
 
-#if H_3D_IC
+#if NH_3D_IC
 /** code Illumination Compensation flag
  * \param pcCU
  * \param uiAbsPartIdx 
