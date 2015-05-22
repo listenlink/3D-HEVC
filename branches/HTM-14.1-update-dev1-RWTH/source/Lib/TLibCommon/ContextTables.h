@@ -176,10 +176,10 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_NOTDMM_FLAG_CTX           1       ///< number of context models for not-DMM flag
 #define NUM_DMM_MODE_CTX              1       ///< number of context models for DMM modes
 #endif
-#if NH_3D_DMM || NH_3D_INTRA_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA
 #define NUM_DDC_DATA_CTX              1       ///< number of context models for deltaDC data (DMM or SDC)
 #endif
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
 #define SDC_NUM_RESIDUAL_FLAG_CTX     1
 #define SDC_NUM_RESIDUAL_CTX          1
 #define NUM_SDC_FLAG_CTX              1      ///< number of context 
@@ -576,7 +576,7 @@ INIT_DMM_MODE[3][NUM_DMM_MODE_CTX] =
   { CNU }
 };
 #endif
-#if NH_3D_DMM || NH_3D_INTRA_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA
 static const UChar
 INIT_DDC_DATA[3][NUM_DDC_DATA_CTX] = 
 {
@@ -585,7 +585,7 @@ INIT_DDC_DATA[3][NUM_DDC_DATA_CTX] =
   { CNU }, 
 };
 #endif
-#if NH_3D_INTRA_SDC
+#if NH_3D_SDC_INTRA
 static const UChar
 INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
 {
