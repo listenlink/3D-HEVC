@@ -453,7 +453,7 @@ public:
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseCtu, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
   template<typename T>
   Void          setSubPartT           ( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 #endif
@@ -481,7 +481,9 @@ public:
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
 #if NH_3D_NBDV
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
+#if H_3D_VSP || NH_3D_DBBP
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth);
+#endif
   DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                 }
   DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];          }
 #endif

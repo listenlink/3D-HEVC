@@ -180,8 +180,6 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
     decodePUWise( pcCU, uiAbsPartIdx, uiDepth, pcSubCU );
-    
-    decodeDBBPFlag( pcCU, uiAbsPartIdx, uiDepth );
   }
 }
 
@@ -257,11 +255,11 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     uhInterDirNeighbours[ui] = 0;
   }
   Int numValidMergeCand = 0;
-  Bool hasMergedCandList = false;
+  Bool isMerged = false;
 
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
-#if H_3D
+#if NH_3D
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
 #if H_MV_ENC_DEC_TRAC
@@ -293,7 +291,10 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   }
 
   ////// Parse CUs extension syntax
-  decodeSDCFlag ( pcCU, uiAbsPartIdx, uiDepth ); 
+#if NH_3D_DBBP
+  decodeDBBPFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+  //decodeSDCFlag ( pcCU, uiAbsPartIdx, uiDepth );
 
 #if H_3D_ARP
   decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
@@ -609,7 +610,7 @@ Void TDecEntropy::decodeMvdPU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
 }
 
-#if H_3D
+#if NH_3D
 Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList )
 {
   Int iMVPIdx = -1;

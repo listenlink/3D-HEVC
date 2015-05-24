@@ -595,7 +595,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_IV_MERGE
         if( rpcTempCU->getSlice()->getVPS()->getIvMvPredFlag(rpcTempCU->getSlice()->getLayerId()) )
 #else
+#if NH_3D_DBBP
+        if( rpcTempCU->getSlice()->getDepthBasedBlkPartFlag() )
+#else
         if (0)
+#endif
 #endif
 #endif
 #endif
@@ -658,7 +662,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );//by Competition for inter_2Nx2N
 #endif
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
         }
@@ -672,7 +676,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
         rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 
@@ -689,7 +693,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 #endif
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 #if NH_3D_DBBP
@@ -697,7 +701,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             {
               xCheckRDCostInterDBBP( rpcBestCU, rpcTempCU, false );
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode  );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
             }
@@ -779,7 +783,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
 #endif
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 
@@ -798,7 +802,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N DEBUG_STRING_PASS_INTO(sDebug)  );
 #endif
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 
@@ -821,7 +825,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 
@@ -860,7 +864,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnU )
@@ -881,7 +885,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 
@@ -908,7 +912,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnU )
@@ -928,7 +932,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD DEBUG_STRING_PASS_INTO(sDebug), true );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 
@@ -956,7 +960,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_nLx2N )
@@ -976,7 +980,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
               }
@@ -996,7 +1000,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N DEBUG_STRING_PASS_INTO(sDebug), true );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_nLx2N )
@@ -1017,7 +1021,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N DEBUG_STRING_PASS_INTO(sDebug), true );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 
@@ -1033,12 +1037,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 #if H_3D_QTLPC
@@ -1048,12 +1052,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 #if H_3D_QTLPC
@@ -2543,7 +2547,6 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   AOF( uiWidth == uiHeight );
   
 #if NH_3D_DBBP
-  // Is this correct here, was under the macro SEC_DBBP_DISALLOW_8x8_I0078, however the function is related to Single Depth Mode
   if(uiWidth <= 8)
   {
     return;
