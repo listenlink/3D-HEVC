@@ -2545,7 +2545,7 @@ Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   UInt uiSymbol = 0;
   
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MERGE_INDEX) );
   DTRACE_CU("dbbp_flag", uiSymbol)
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   AOF( ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N );
