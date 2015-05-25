@@ -79,7 +79,9 @@ enum TComCodingStatisticsType
   STATS__CABAC_BITS__GT2_FLAG,
   STATS__CABAC_BITS__SIGN_BIT,
   STATS__CABAC_BITS__ESCAPE_BITS,
-
+#if NH_3D_DBBP
+  STATS__CABAC_BITS__DBBP_FLAG,
+#endif
   STATS__CABAC_BITS__SAO,
   STATS__CABAC_TRM_BITS,
   STATS__CABAC_FIXED_BITS,
@@ -130,6 +132,9 @@ static inline const Char* getName(TComCodingStatisticsType name)
     "CABAC_BITS__GT2_FLAG",
     "CABAC_BITS__SIGN_BIT",
     "CABAC_BITS__ESCAPE_BITS",
+#if NH_3D_DBBP
+    "CABAC_BITS__DBBP_FLAG",
+#endif
     "CABAC_BITS__SAO",
     "CABAC_TRM_BITS",
     "CABAC_FIXED_BITS",
