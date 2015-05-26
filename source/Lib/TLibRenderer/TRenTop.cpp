@@ -39,7 +39,7 @@
 #include <iostream>
 #include <math.h>
 #include "../TLibCommon/CommonDef.h"
-#if H_3D
+#if NH_3D
 
 
 Void TRenTop::xGetDataPointers( PelImage*& rpcInputImage, PelImage*& rpcOutputImage, PelImage*& rpcInputDepth, PelImage*& rpcOutputDepth, PelImage*& rpcFilled, Bool bRenderDepth )
@@ -113,17 +113,17 @@ Void TRenTop::xConvertInputVideo( PelImage* pcOrgInputImage, PelImage* pcConvInp
 
     if (uiPlane == 0)
     {
-      TRenFilter::sampleHorUp    ( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+      TRenFilter<REN_BIT_DEPTH>::sampleHorUp    ( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
     }
     else
     {
       if ( m_bUVUp )
       {
-        TRenFilter::sampleCUpHorUp( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+        TRenFilter<REN_BIT_DEPTH>::sampleCUpHorUp( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
       }
       else
       {
-        TRenFilter::sampleCHorUp   ( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+        TRenFilter<REN_BIT_DEPTH>::sampleCHorUp   ( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
       }
     }
   }
@@ -146,23 +146,23 @@ Void TRenTop::xConvertInputDepth( PelImage* pcOrgInputImage, PelImage* pcConvInp
   }
   AOT( iLog2SamplingFactor > 2);
 
-  TRenFilter::sampleHorUp(iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+  TRenFilter<REN_BIT_DEPTH>::sampleHorUp(iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
 
   if ( !m_bUVUp ) //GT: depth down
   {
     // Quarter Plane
     PelImagePlane* pcTempPlane = new PelImagePlane(pcOrgInputImage->getPlane(0)->getWidth(), ( pcOrgInputImage->getPlane(0)->getHeight() >> 1), REN_LUMA_MARGIN );
 
-    TRenFilter::sampleVerDown2Tap13(pcOrgInputImage->getPlane(0), pcTempPlane, PICYUV_PAD);
+    TRenFilter<REN_BIT_DEPTH>::sampleVerDown2Tap13(pcOrgInputImage->getPlane(0), pcTempPlane, PICYUV_PAD);
     pcConvPlane = pcConvInputImage->getPlane(1);
 
     if ( iLog2SamplingFactor == 0 )
     {
-      TRenFilter::sampleHorDown2Tap13(pcTempPlane, pcConvPlane, 0 );
+      TRenFilter<REN_BIT_DEPTH>::sampleHorDown2Tap13(pcTempPlane, pcConvPlane, 0 );
     }
     else
     {
-      TRenFilter::sampleHorUp    ( iLog2SamplingFactor - 1, pcTempPlane->getPlaneData(), pcTempPlane->getStride(), pcTempPlane->getWidth(), pcTempPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+      TRenFilter<REN_BIT_DEPTH>::sampleHorUp    ( iLog2SamplingFactor - 1, pcTempPlane->getPlaneData(), pcTempPlane->getStride(), pcTempPlane->getWidth(), pcTempPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
     }
     delete pcTempPlane;
   }
@@ -174,12 +174,12 @@ Void TRenTop::xConvertInputData( PelImage* pcOrgInputImage, PelImage* pcOrgInput
   if ( bMirror )
   {
     m_pcTempImage->assign( pcOrgInputImage );
-    TRenFilter::mirrorHor( m_pcTempImage );
+    TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcTempImage );
     m_pcTempImage->extendMargin();
     xConvertInputVideo(    m_pcTempImage, pcConvInputImage );
 
     m_pcTempImage->getPlane(0)->assign( pcOrgInputDepth->getPlane(0) );
-    TRenFilter::mirrorHor( m_pcTempImage->getPlane(0) );
+    TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcTempImage->getPlane(0) );
     m_pcTempImage->getPlane(0)->extendMargin();
     xConvertInputDepth( m_pcTempImage, pcConvInputDepth );
   }
@@ -208,24 +208,24 @@ Void TRenTop::xConvertOutputData( PelImage* pcOrgOutputImage, PelImage* pcConvOu
 
     if ( uiPlane == 0 )
     {
-      TRenFilter::sampleHorDown( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+      TRenFilter<REN_BIT_DEPTH>::sampleHorDown( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
     }
     else
     {
       if ( m_bUVUp )
       {
-        TRenFilter::sampleCDownHorDown( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+        TRenFilter<REN_BIT_DEPTH>::sampleCDownHorDown( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
       }
       else
       {
-        TRenFilter::sampleCHorDown    ( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+        TRenFilter<REN_BIT_DEPTH>::sampleCHorDown    ( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
       }
     }
   }
 
   if ( bMirror )
   {
-    TRenFilter::mirrorHor( pcConvOutputImage );
+    TRenFilter<REN_BIT_DEPTH>::mirrorHor( pcConvOutputImage );
   }
 
 }
@@ -252,7 +252,7 @@ Void TRenTop::setShiftLUTs( Double** ppdShiftLUTLeft, Int** ppiShiftLUTLeft, Int
 
   if ( !m_bExtrapolate )
   {
-    TRenFilter::setupZLUT( m_bBlendUseDistWeight, m_iBlendZThresPerc, iRelDistToLeft, ppiBaseShiftLUTLeft, ppiBaseShiftLUTRight, m_iBlendZThres, m_iBlendDistWeight, m_piInvZLUTLeft, m_piInvZLUTRight);
+    TRenFilter<REN_BIT_DEPTH>::setupZLUT( m_bBlendUseDistWeight, m_iBlendZThresPerc, iRelDistToLeft, ppiBaseShiftLUTLeft, ppiBaseShiftLUTRight, m_iBlendZThres, m_iBlendDistWeight, m_piInvZLUTLeft, m_piInvZLUTRight);
   }
 }
 
@@ -260,8 +260,8 @@ Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDe
 {
   AOF( m_bExtrapolate );
   AOF( bRenderFromLeft ? m_ppiShiftLUTLeft || m_ppdShiftLUTLeft : m_ppiShiftLUTRight || m_ppdShiftLUTRight );
-  AOF( m_auiInputResolution[0] == pcPicYuvVideo->getWidth ());
-  AOF( m_auiInputResolution[1] == pcPicYuvVideo->getHeight());
+  AOF( m_auiInputResolution[0] == pcPicYuvVideo->getWidth ( COMPONENT_Y ));
+  AOF( m_auiInputResolution[1] == pcPicYuvVideo->getHeight( COMPONENT_Y ));
 
   PelImage cInputImage ( pcPicYuvVideo    );
   PelImage cInputDepth ( pcPicYuvDepth    , true);
@@ -283,8 +283,8 @@ Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDe
 Void TRenTop::getUsedSamplesMap( TComPicYuv* pcPicYuvDepth, TComPicYuv* pcUsedSampleMap, Bool bRenderFromLeft )
 {
   AOF( bRenderFromLeft ? m_ppiShiftLUTLeft && m_ppdShiftLUTLeft : m_ppiShiftLUTRight && m_ppdShiftLUTRight );
-  AOF(m_auiInputResolution[0] == pcPicYuvDepth->getWidth ());
-  AOF(m_auiInputResolution[1] == pcPicYuvDepth->getHeight());
+  AOF(m_auiInputResolution[0] == pcPicYuvDepth->getWidth (COMPONENT_Y));
+  AOF(m_auiInputResolution[1] == pcPicYuvDepth->getHeight(COMPONENT_Y));
 
   PelImage cInputDepth ( pcPicYuvDepth    , true);
   PelImage cOutputImage( pcUsedSampleMap );
@@ -299,18 +299,18 @@ Void TRenTop::getUsedSamplesMap( TComPicYuv* pcPicYuvDepth, TComPicYuv* pcUsedSa
 
   if ( !bRenderFromLeft )
   {
-    TRenFilter::mirrorHor( m_pcFilled );
+    TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcFilled );
   }
 
-  TRenFilter::filledToUsedPelMap( m_pcFilled, &cOutputImage, m_iUsedPelMapMarExt );
+  TRenFilter<REN_BIT_DEPTH>::filledToUsedPelMap( m_pcFilled, &cOutputImage, m_iUsedPelMapMarExt );
 };
 
 
 Void TRenTop::interpolateView( TComPicYuv* pcPicYuvVideoLeft, TComPicYuv* pcPicYuvDepthLeft, TComPicYuv* pcPicYuvVideoRight, TComPicYuv* pcPicYuvDepthRight, TComPicYuv* pcPicYuvSynthOut, Int iBlendMode, Int iSimEnhBaseView )
 {
   assert( !m_bExtrapolate );
-  assert( m_auiInputResolution[0] == pcPicYuvVideoLeft ->getWidth () );
-  assert( m_auiInputResolution[1] == pcPicYuvVideoRight->getHeight() );
+  assert( m_auiInputResolution[0] == pcPicYuvVideoLeft ->getWidth ( COMPONENT_Y ) );
+  assert( m_auiInputResolution[1] == pcPicYuvVideoRight->getHeight( COMPONENT_Y ) );
 
   AOT( iBlendMode == 3);
   m_iBlendMode = iBlendMode;
@@ -362,9 +362,9 @@ Void TRenTop::interpolateView( TComPicYuv* pcPicYuvVideoLeft, TComPicYuv* pcPicY
   xFillHoles     ( m_pcRightOutputDepth, m_pcRightFilled,     m_pcRightOutputDepth, false);
   xCreateAlphaMap( m_pcRightFilled,      m_pcRightFilled, false );
 
-  TRenFilter::mirrorHor( m_pcRightOutputImage );
-  TRenFilter::mirrorHor( m_pcRightOutputDepth );
-  TRenFilter::mirrorHor( m_pcRightFilled      );
+  TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcRightOutputImage );
+  TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcRightOutputDepth );
+  TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcRightFilled      );
 
   xEnhSimilarity( m_pcLeftOutputImage, m_pcRightOutputImage, m_pcLeftFilled, m_pcRightFilled );
 
@@ -376,13 +376,13 @@ Void TRenTop::interpolateView( TComPicYuv* pcPicYuvVideoLeft, TComPicYuv* pcPicY
     xFillHoles           ( m_pcLeftOutputImage,  m_pcLeftFilled,       m_pcLeftOutputImage, false);
     xCreateAlphaMap      ( m_pcLeftFilled,       m_pcLeftFilled,       true );
 
-    TRenFilter::mirrorHor( m_pcRightInputImage );
+    TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcRightInputImage );
     xBackShiftPixels     ( m_pcRightInputImage,  m_pcOutputDepth,      m_pcRightOutputImage, m_pcRightFilled , true );
     xFillHoles           ( m_pcRightOutputImage, m_pcRightFilled,      m_pcRightOutputImage, true);
 
-    TRenFilter::mirrorHor( m_pcRightFilled );
+    TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcRightFilled );
     xCreateAlphaMap      ( m_pcRightFilled,      m_pcRightFilled,      true );
-    TRenFilter::mirrorHor( m_pcRightFilled );
+    TRenFilter<REN_BIT_DEPTH>::mirrorHor( m_pcRightFilled );
   }
 
   xBlend(m_pcLeftOutputImage, m_pcRightOutputImage, m_pcLeftFilled, m_pcRightFilled, m_pcLeftOutputDepth, m_pcRightOutputDepth, m_pcOutputImage);
@@ -414,7 +414,7 @@ Void TRenTop::xPreProcessDepth( PelImage* pcInImage, PelImage* pcOutImage )
   switch ( m_iPreProcMode )
   {
     case eRenPreProBinom:
-      TRenFilter::binominal(pcOutImage, pcTemp, m_iPreFilterSize);
+      TRenFilter<REN_BIT_DEPTH>::binominal(pcOutImage, pcTemp, m_iPreFilterSize);
       break;
     case eRenPreProNone:
       break;
@@ -606,7 +606,7 @@ Void TRenTop::xShiftPlanePixelsLinReal( PelImagePlane** apcInputPlanes, PelImage
     for ( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++ )
     {
       apcDiffPlane[uiCurPlane] = new IntImagePlane( iWidth, iHeight, apcInputPlanes[uiCurPlane]->getPad());
-      TRenFilter::diffHorSym(apcInputPlanes[uiCurPlane] , apcDiffPlane[uiCurPlane]);
+      TRenFilter<REN_BIT_DEPTH>::diffHorSym(apcInputPlanes[uiCurPlane] , apcDiffPlane[uiCurPlane]);
       ppiDiffPlanes[uiCurPlane] = apcDiffPlane[uiCurPlane]->getPlaneData();
     }
     iDiffStride = apcDiffPlane[0]->getStride();
@@ -658,7 +658,7 @@ Void TRenTop::xShiftPlanePixelsLinReal( PelImagePlane** apcInputPlanes, PelImage
             {
               for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
               {
-                cVal  = TRenFilter::interpCHSpline(iInterPolPos, dShiftedPos, dPrevShiftedPos, apcInputData[uiCurPlane][iPosX - 1], ppiDiffPlanes[uiCurPlane][iPosX - 1], apcInputData[uiCurPlane][iPosX], ppiDiffPlanes[uiCurPlane][iPosX] );
+                cVal  = TRenFilter<REN_BIT_DEPTH>::interpCHSpline(iInterPolPos, dShiftedPos, dPrevShiftedPos, apcInputData[uiCurPlane][iPosX - 1], ppiDiffPlanes[uiCurPlane][iPosX - 1], apcInputData[uiCurPlane][iPosX], ppiDiffPlanes[uiCurPlane][iPosX] );
                 apcOutputData[uiCurPlane][iInterPolPos]  = cVal;
               }
             }
@@ -1515,7 +1515,7 @@ Void TRenTop::xPostProcessImage(PelImage* pcInImage, PelImage* pcOutImage)
   switch ( m_iPostProcMode )
   {
   case eRenPostProMed:
-    TRenFilter::lineMedian3(pcTemp);
+    TRenFilter<REN_BIT_DEPTH>::lineMedian3(pcTemp);
     break;
   case eRenPostProNone:
     break;
@@ -1598,19 +1598,18 @@ Void TRenTop::xEnhSimilarity( PelImage* pcLeftImage, PelImage* pcRightImage, Pel
 }
 
 Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImagePlane** apcRightPlane, PelImagePlane* pcFilledLeftPlane, PelImagePlane* pcFilledRightPlane, UInt uiNumberOfPlanes )
-{
-  AOF( g_bitDepthC == g_bitDepthY ); 
+{  
   AOT( m_iSimEnhBaseView != 1 && m_iSimEnhBaseView != 2 );
   Int iWidth  = (*apcRightPlane)->getWidth ();
   Int iHeight = (*apcRightPlane)->getHeight();
 
-  Int* aiHistLeft  = new Int[ ((Int64)1 ) << g_bitDepthY ];
-  Int* aiHistRight = new Int[ ((Int64)1 ) << g_bitDepthY ];
-  Pel* aiConvLUT   = new Pel[ ((Int64)1 ) << g_bitDepthY ];
+  Int* aiHistLeft  = new Int[ ((Int64)1 ) << REN_BIT_DEPTH ];
+  Int* aiHistRight = new Int[ ((Int64)1 ) << REN_BIT_DEPTH ];
+  Pel* aiConvLUT   = new Pel[ ((Int64)1 ) << REN_BIT_DEPTH ];
 
   for (UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++ )
   {
-    for (Int iCurVal = 0 ; iCurVal < ( 1 << g_bitDepthY ); iCurVal++)
+    for (Int iCurVal = 0 ; iCurVal < ( 1 << REN_BIT_DEPTH ); iCurVal++)
     {
       aiHistLeft [iCurVal] = 0;
       aiHistRight[iCurVal] = 0;
@@ -1657,22 +1656,22 @@ Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImage
     Int iCheckSumLeft  = 0;
     Int iCheckSumRight = 0;
 
-    for (Int iCurVal = 0 ; iCurVal < ( 1 << g_bitDepthY ); iCurVal++)
+    for (Int iCurVal = 0 ; iCurVal < ( 1 << REN_BIT_DEPTH ); iCurVal++)
     {
       iCheckSumLeft  += aiHistLeft [iCurVal];
       iCheckSumRight += aiHistRight[iCurVal];
     }
 
 
-    while( iCurChangeVal < ( 1 << g_bitDepthY ) )
+    while( iCurChangeVal < ( 1 << REN_BIT_DEPTH ) )
     {
       if ( iCumSumBase == iCumSumChange )
       {
-        aiConvLUT[iCurChangeVal] = std::min( iCurBaseVal,  ( 1 << g_bitDepthY ) - 1 );
+        aiConvLUT[iCurChangeVal] = std::min( iCurBaseVal,  ( 1 << REN_BIT_DEPTH ) - 1 );
         iCurBaseVal  ++;
         iCurChangeVal++;
         iCumSumChange += aiHistChange[iCurChangeVal];
-        if (iCurBaseVal <  ( 1 << g_bitDepthY ) )
+        if (iCurBaseVal <  ( 1 << REN_BIT_DEPTH ) )
         {
           iCumSumBase   += aiHistBase  [iCurBaseVal]  ;
         }
@@ -1680,14 +1679,14 @@ Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImage
       else if ( iCumSumBase < iCumSumChange )
       {
         iCurBaseVal++;
-        if (iCurBaseVal < ( 1 << g_bitDepthY ) )
+        if (iCurBaseVal < ( 1 << REN_BIT_DEPTH ) )
         {
           iCumSumBase   += aiHistBase  [iCurBaseVal]  ;
         }
       }
       else if ( iCumSumBase > iCumSumChange)
       {
-        aiConvLUT[iCurChangeVal] = std::min(iCurBaseVal, ( 1 << g_bitDepthY )-1);
+        aiConvLUT[iCurChangeVal] = std::min(iCurBaseVal, ( 1 << REN_BIT_DEPTH )-1);
         iCurChangeVal++;
         iCumSumChange += aiHistChange  [iCurChangeVal]  ;
       }
@@ -1896,7 +1895,6 @@ Void TRenTop::xBlendPlanesAvg( PelImagePlane** apcLeftPlane, PelImagePlane** apc
 // Temporal Filter from Zhejiang University: (a little different from m16041: Temporal Improvement Method in View Synthesis)
 Void TRenTop::temporalFilterVSRS( TComPicYuv* pcPicYuvVideoCur, TComPicYuv* pcPicYuvDepthCur, TComPicYuv* pcPicYuvVideoLast, TComPicYuv* pcPicYuvDepthLast, Bool bFirstFrame )
 {
-  AOF( g_bitDepthY == g_bitDepthC ); 
   Int iSADThres  = 100 ;  //threshold of sad in 4*4 block motion detection
 
   Int iWidth  = m_auiInputResolution[0];
@@ -1905,15 +1903,15 @@ Void TRenTop::temporalFilterVSRS( TComPicYuv* pcPicYuvVideoCur, TComPicYuv* pcPi
   //internal variables
   Int* piFlagMoving =  m_aiBlkMoving + 2;
 
-  Int iVideoCurStride     = pcPicYuvVideoCur ->getStride();
-  Int iVideoLastStride    = pcPicYuvVideoLast->getStride();
-  Int iDepthCurStride     = pcPicYuvDepthCur ->getStride();
-  Int iDepthLastStride    = pcPicYuvDepthLast->getStride();
+  Int iVideoCurStride     = pcPicYuvVideoCur ->getStride( COMPONENT_Y );
+  Int iVideoLastStride    = pcPicYuvVideoLast->getStride( COMPONENT_Y );
+  Int iDepthCurStride     = pcPicYuvDepthCur ->getStride( COMPONENT_Y );
+  Int iDepthLastStride    = pcPicYuvDepthLast->getStride( COMPONENT_Y );
 
-  Pel* pcVideoCurData     = pcPicYuvVideoCur ->getLumaAddr();
-  Pel* pcVideoLastData    = pcPicYuvVideoLast->getLumaAddr();
-  Pel* pcDepthCurData     = pcPicYuvDepthCur ->getLumaAddr();
-  Pel* pcDepthLastData    = pcPicYuvDepthLast->getLumaAddr();
+  Pel* pcVideoCurData     = pcPicYuvVideoCur ->getAddr( COMPONENT_Y );
+  Pel* pcVideoLastData    = pcPicYuvVideoLast->getAddr( COMPONENT_Y );
+  Pel* pcDepthCurData     = pcPicYuvDepthCur ->getAddr( COMPONENT_Y );
+  Pel* pcDepthLastData    = pcPicYuvDepthLast->getAddr( COMPONENT_Y );
 
   Pel* pcVideoCurDataFrm  = pcVideoCurData ;
   Pel* pcVideoLastDataFrm = pcVideoLastData;
@@ -1963,7 +1961,7 @@ Void TRenTop::temporalFilterVSRS( TComPicYuv* pcPicYuvVideoCur, TComPicYuv* pcPi
             for( Int iCurPosX = 0; iCurPosX < 4; iCurPosX++)
             { //Weight: 0.75
               Int iFilt = (( (pcDepthLastDataBlk[iCurPosX] << 1 ) + pcDepthLastDataBlk[iCurPosX] + pcDepthCurDataBlk[iCurPosX] + 2 ) >> 2 );
-              assert( (iFilt >= 0) && (iFilt <  ( 1 << g_bitDepthY ) ) );
+              assert( (iFilt >= 0) && (iFilt <  ( 1 << REN_BIT_DEPTH ) ) );
               pcDepthCurDataBlk[iCurPosX] = pcDepthLastDataBlk[iCurPosX];
               pcDepthCurDataBlk[iCurPosX] = iFilt;
             }
@@ -2168,7 +2166,7 @@ Void TRenTop::init(UInt uiImageWidth,
       m_aaiSubPelShift[uiEntry] = new Int[ iNumEntries ];
     }
 
-    TRenFilter::setSubPelShiftLUT(m_iRelShiftLUTPrec, m_aaiSubPelShift, -1);
+    TRenFilter<REN_BIT_DEPTH>::setSubPelShiftLUT(m_iRelShiftLUTPrec, m_aaiSubPelShift, -1);
   }
 
   // Zheijang temporal filter
@@ -2234,5 +2232,5 @@ TRenTop::~TRenTop()
   // Zheijang temporal filter
   if(m_aiBlkMoving         != NULL ) delete[] m_aiBlkMoving;
 }
-#endif // H_3D
+#endif // NH_3D
 

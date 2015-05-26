@@ -15,7 +15,7 @@
  *  http://hevc.hhi.fraunhofer.de
  *
  *  For <b>bug reporting and known issues</b> see:
- *  http://hevc.kw.bbc.co.uk/trac/
+ *  https://hevc.hhi.fraunhofer.de/trac/hevc
  *
  * \section License
  *
@@ -24,7 +24,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
