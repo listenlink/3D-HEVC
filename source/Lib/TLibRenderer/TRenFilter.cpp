@@ -35,10 +35,11 @@
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenInterpFilter.h"
-#if H_3D
+#if NH_3D
 
 ///// COMMON /////
-Void TRenFilter::setSubPelShiftLUT( Int iLutPrec, Int** piSubPelShiftLUT, Int iShift )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::setSubPelShiftLUT( Int iLutPrec, Int** piSubPelShiftLUT, Int iShift )
 {
   //ToDo: use same rounding for left and right
   AOT( iLutPrec < 0 || iLutPrec > 2 );
@@ -58,8 +59,8 @@ Void TRenFilter::setSubPelShiftLUT( Int iLutPrec, Int** piSubPelShiftLUT, Int iS
     }
   }
 }
-
-Void TRenFilter::setupZLUT( Bool bBlendUseDistWeight, Int iBlendZThresPerc, Int iRelDistToLeft, Int** ppiBaseShiftLUTLeft, Int** ppiBaseShiftLUTRight, Int& riBlendZThres, Int& riBlendDistWeight, Int* piInvZLUTLeft, Int* piInvZLUTRight )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::setupZLUT( Bool bBlendUseDistWeight, Int iBlendZThresPerc, Int iRelDistToLeft, Int** ppiBaseShiftLUTLeft, Int** ppiBaseShiftLUTRight, Int& riBlendZThres, Int& riBlendDistWeight, Int* piInvZLUTLeft, Int* piInvZLUTRight )
 {
   AOT( iRelDistToLeft == -1 );
   riBlendDistWeight = bBlendUseDistWeight ? iRelDistToLeft :  1 << (REN_VDWEIGHT_PREC - 1);
@@ -74,7 +75,8 @@ Void TRenFilter::setupZLUT( Bool bBlendUseDistWeight, Int iBlendZThresPerc, Int 
   riBlendZThres  = ( std::max( abs(piInvZLUTLeft[0]- piInvZLUTLeft[255]), abs(piInvZLUTRight[0]- piInvZLUTRight[255]) ) * iBlendZThresPerc + 50)  / 100;
 }
 
-Void TRenFilter::filledToUsedPelMap( PelImage* pcFilledImage, PelImage* pcUsedPelsImage, Int iUsedPelMapMarExt )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::filledToUsedPelMap( PelImage* pcFilledImage, PelImage* pcUsedPelsImage, Int iUsedPelMapMarExt )
 {
   // Convert to binary map
   Int iWidth  = pcFilledImage      ->getPlane(0)->getWidth ();
@@ -155,15 +157,16 @@ Void TRenFilter::filledToUsedPelMap( PelImage* pcFilledImage, PelImage* pcUsedPe
 }
 
 /////////// Copy /////////////
-Void TRenFilter::copy(Pel* pcInputPlaneData, Int iInputStride, Int iWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::copy(const Pel* pcInputPlaneData, Int iInputStride, Int iWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
   xDistributeArray(pcInputPlaneData, iInputStride, 1, 1, iWidth, iHeight ,pcOutputPlaneData, iOutputStride, 1 , 1 );
 
 }
 
 /////////// Horizontal Mirror ///////////
-template <typename T>
-Void TRenFilter::mirrorHor( TRenImage<T> *pcImage )
+template<UInt bitDepth> template <typename T> 
+Void TRenFilter<bitDepth>::mirrorHor( TRenImage<T> *pcImage )
 {
   for (UInt uCurPlane = 0 ; uCurPlane < pcImage->getNumberOfPlanes(); uCurPlane++ )
   {
@@ -171,8 +174,8 @@ Void TRenFilter::mirrorHor( TRenImage<T> *pcImage )
   }
 }
 
-template <typename T>
-Void TRenFilter::mirrorHor( TRenImagePlane<T> *pcImagePlane )
+template<UInt bitDepth> template <typename T> 
+Void TRenFilter<bitDepth>::mirrorHor( TRenImagePlane<T> *pcImagePlane )
 {
   T* pcPlaneData = pcImagePlane->getPlaneDataOrg();
   T cTemp;
@@ -193,7 +196,8 @@ Void TRenFilter::mirrorHor( TRenImagePlane<T> *pcImagePlane )
 }
 
 /////////// Comparison ///////////
-Int64 TRenFilter::SSE   (PelImagePlane* pcInputPlane1, PelImagePlane* pcInputPlane2, Bool bLuma )
+template<UInt bitDepth>
+Int64 TRenFilter<bitDepth>::SSE   (PelImagePlane* pcInputPlane1, PelImagePlane* pcInputPlane2, Bool bLuma )
 {
   UInt uiWidth     = pcInputPlane1->getWidth();
   UInt uiHeight    = pcInputPlane1->getHeight();
@@ -207,12 +211,13 @@ Int64 TRenFilter::SSE   (PelImagePlane* pcInputPlane1, PelImagePlane* pcInputPla
   return SSE( pucImData1, (Int) uiStride1, (Int) uiWidth, (Int) uiHeight, pucImData2, (Int) uiStride2, bLuma );
 }
 
-Int64 TRenFilter::SSE( Pel* piSrc1, Int iSrcStride1, Int iWidth, Int iHeight,  Pel* piSrc2, Int iSrcStride2, Bool bLuma )
+template<UInt bitDepth>
+Int64 TRenFilter<bitDepth>::SSE( Pel* piSrc1, Int iSrcStride1, Int iWidth, Int iHeight,  Pel* piSrc2, Int iSrcStride2, Bool bLuma )
 {
   Int64 iSSE = 0;
 
 
-  Int iShift = DISTORTION_PRECISION_ADJUSTMENT( ( bLuma ? g_bitDepthY : g_bitDepthC ) - 8 ) << 1 ;
+  Int iShift = ( bitDepth  - 8 ) << 1 ;
   for(Int iPosY = 0; iPosY < iHeight; iPosY++)
   {
     for(Int iPosX = 0; iPosX < iWidth; iPosX++)
@@ -226,8 +231,8 @@ Int64 TRenFilter::SSE( Pel* piSrc1, Int iSrcStride1, Int iWidth, Int iHeight,  P
   return iSSE;
 }
 
-template <typename T>
-Bool TRenFilter::compare( TRenImage<T> *pInputImage1, TRenImage<T> *pInputImage2 )
+template<UInt bitDepth> template <typename T> 
+Bool TRenFilter<bitDepth>::compare( TRenImage<T> *pInputImage1, TRenImage<T> *pInputImage2 )
 {
   Bool bIsEqual = true;
   for (UInt uiCurPlane = 0 ; uiCurPlane < pInputImage1->getNumberOfPlanes(); uiCurPlane++ )
@@ -237,8 +242,8 @@ Bool TRenFilter::compare( TRenImage<T> *pInputImage1, TRenImage<T> *pInputImage2
   return bIsEqual;
 }
 
-template <typename T>
-Bool TRenFilter::compare   (TRenImagePlane<T>* pcInputPlane1  , TRenImagePlane<T>* pcInputPlane2   )
+template<UInt bitDepth> template <typename T> 
+Bool TRenFilter<bitDepth>::compare   (TRenImagePlane<T>* pcInputPlane1  , TRenImagePlane<T>* pcInputPlane2   )
 {
   UInt uiWidth  = pcInputPlane1->getWidth();
   UInt uiHeight = pcInputPlane1->getHeight();
@@ -264,11 +269,10 @@ Bool TRenFilter::compare   (TRenImagePlane<T>* pcInputPlane1  , TRenImagePlane<T
 }
 
 /////////// Sampling ///////////
-
-inline Void TRenFilter::sampleUp2Tap13(PelImage* pcInputImage, PelImage* pcOutputImage)
+template<UInt bitDepth>
+inline Void TRenFilter<bitDepth>::sampleUp2Tap13(PelImage* pcInputImage, PelImage* pcOutputImage)
 { // UpSampling from JSVM Software (DownConvertStatic) ???
 
-  AOF( g_bitDepthC == g_bitDepthY ); 
   UInt uiNumPlanes = pcInputImage->getNumberOfPlanes();
 
   for (UInt uiCurPlane = 0; uiCurPlane < uiNumPlanes; uiCurPlane++)
@@ -399,7 +403,7 @@ inline Void TRenFilter::sampleUp2Tap13(PelImage* pcInputImage, PelImage* pcOutpu
       for(Int i=0; i<iWidth*2; i++ )
       {
         // Scale and copy to image buffer.
-        pcOutputPlaneData[iOffset+i] = ClipY((Pel) ((piDst[i] + iAddH) / iDivH));
+        pcOutputPlaneData[iOffset+i] = ClipBD((Pel) ((piDst[i] + iAddH) / iDivH), bitDepth);
       }
     }
 
@@ -409,8 +413,8 @@ inline Void TRenFilter::sampleUp2Tap13(PelImage* pcInputImage, PelImage* pcOutpu
   }
 }
 
-
-Void TRenFilter::sampleDown2Tap13(PelImage* pcInputImage, PelImage* pcOutputImage)
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleDown2Tap13(PelImage* pcInputImage, PelImage* pcOutputImage)
 { // DownSampling from JSVM Software (DownConvertStatic) ??
 
   UInt uiNumPlanes = pcInputImage->getNumberOfPlanes();
@@ -421,10 +425,9 @@ Void TRenFilter::sampleDown2Tap13(PelImage* pcInputImage, PelImage* pcOutputImag
   }
 };
 
-Void TRenFilter::sampleDown2Tap13( Pel* pcInputPlaneData, Int iInputStride, Int iWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleDown2Tap13( Pel* pcInputPlaneData, Int iInputStride, Int iWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 { // DownSampling from JSVM Software (DownConvertStatic) ??
-  
-  AOF( g_bitDepthC == g_bitDepthY ); 
 
   Int iOffset, iPosX, iPosY, k;
   Int* piDataHorDown = new Int[(Int)(iWidth * iHeight / 2)];
@@ -548,7 +551,7 @@ Void TRenFilter::sampleDown2Tap13( Pel* pcInputPlaneData, Int iInputStride, Int 
     for( iPosY=0; iPosY<(iHeight/2); iPosY++ )
     {
       // Scale and copy back to image buffer.
-      pcOutputPlaneData[iOutputStride*iPosY+iPosX] = ClipY( ( Pel) ( (piDst[iPosY] + iAddV) / iDivV));
+      pcOutputPlaneData[iOutputStride*iPosY+iPosX] = ClipBD( ( Pel) ( (piDst[iPosY] + iAddV) / iDivV), bitDepth );
     }
   }
 
@@ -556,7 +559,8 @@ Void TRenFilter::sampleDown2Tap13( Pel* pcInputPlaneData, Int iInputStride, Int 
   delete [] piDst;
 }
 
-Void TRenFilter::sampleDown2Tap13(PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane)
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleDown2Tap13(PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane)
 { // DownSampling from JSVM Software (DownConvertStatic) ??
   Int iWidth       = pcInputPlane->getWidth();
   Int iHeight      = pcInputPlane->getHeight();
@@ -573,9 +577,9 @@ Void TRenFilter::sampleDown2Tap13(PelImagePlane* pcInputPlane, PelImagePlane* pc
   sampleDown2Tap13( pcInputPlaneData, iInputStride, iWidth, iHeight, pcOutputPlaneData, iOutputStride );
 };
 
-Void TRenFilter::sampleVerDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane, Int uiPad)
-{ 
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleVerDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane, Int uiPad)
+{   
   // DownSampling from JSVM Software (DownConvertStatic) ??
   Int iWidth       = pcInputPlane->getWidth();
   Int iHeight      = pcInputPlane->getHeight();
@@ -621,7 +625,7 @@ Void TRenFilter::sampleVerDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane
       iTmp5 = pcTmpIn[iStr6];
 
       Int iSum = iTmp4 + iTmp3 - iTmp2 + ((iTmp0 + iTmp4 + iTmp5 - iTmp2) << 1) + ( ( iTmp3 - iTmp1)  << 2) + (  iTmp5 << 3 ) + (( iTmp4 + iTmp5 ) << 4);
-      pcOutputPlaneData[ iXPos ] = (Pel) ClipY((iSum + 32) >> 6);
+      pcOutputPlaneData[ iXPos ] = (Pel) ClipBD((iSum + 32) >> 6, bitDepth);
       pcTmpIn++;
     }
     pcOutputPlaneData += iOutputStride;
@@ -629,10 +633,10 @@ Void TRenFilter::sampleVerDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane
   }
 };
 
-Void TRenFilter::sampleHorDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane, Int uiPad )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleHorDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane, Int uiPad )
 { 
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
-  // DownSampling from JSVM Software (DownConvertStatic) ??
+    // DownSampling from JSVM Software (DownConvertStatic) ??
   Int iWidth       = pcInputPlane->getWidth();
   Int iHeight      = pcInputPlane->getHeight();
 
@@ -662,7 +666,7 @@ Void TRenFilter::sampleHorDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane
       iTmp5 = pcTmpIn[6];
 
       Int iSum = iTmp4 + iTmp3 - iTmp2 + ((iTmp0 + iTmp4 + iTmp5 - iTmp2) << 1) + ( ( iTmp3 - iTmp1)  << 2) + (  iTmp5 << 3 ) + (( iTmp4 + iTmp5 ) << 4);
-      pcOutputPlaneData[ iXPos ] = (Pel) ClipY((iSum + 32) >> 6);
+      pcOutputPlaneData[ iXPos ] = (Pel) ClipBD((iSum + 32) >> 6, bitDepth);
       pcTmpIn += 2;
     }
     pcOutputPlaneData += iOutputStride;
@@ -670,7 +674,8 @@ Void TRenFilter::sampleHorDown2Tap13( PelImagePlane* pcInputPlane, PelImagePlane
   }
 };
 
-inline Pel TRenFilter::xMedian3(Pel* pcData)
+template<UInt bitDepth>
+inline Pel TRenFilter<bitDepth>::xMedian3(Pel* pcData)
 {
   Bool bGT01 = pcData[0] >  pcData[1];
   Bool bGT12 = pcData[1] >  pcData[2];
@@ -679,8 +684,8 @@ inline Pel TRenFilter::xMedian3(Pel* pcData)
   return ( (bGT01 && bGT20) || (!bGT01 && !bGT20) ) ?  pcData[0] : ( ( (bGT12 && bGT01) || (!bGT12 && !bGT01) ) ?  pcData[1] : pcData[2]) ;
 }
 
-
-Void TRenFilter::lineMedian3( PelImage* pcImage )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::lineMedian3( PelImage* pcImage )
 {
 
   PelImage* pcTemp = pcImage->create();
@@ -721,15 +726,16 @@ Void TRenFilter::lineMedian3( PelImage* pcImage )
   delete pcTemp;
 }
 
-
-Void TRenFilter::convRect( PelImage* pcImage, UInt uiSize )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::convRect( PelImage* pcImage, UInt uiSize )
 {
   DoubleImage cKernel(uiSize, uiSize,1,0);
   cKernel.getPlane(0)->assign( 1 / ( Double( uiSize )  * Double( uiSize) ));
   conv(pcImage, &cKernel);
 }
 
-Void TRenFilter::binominal( PelImage* pcInputImage, PelImage* pcOutputImage, UInt uiSize )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::binominal( PelImage* pcInputImage, PelImage* pcOutputImage, UInt uiSize )
 {
   assert( pcInputImage->getNumberOfFullPlanes()   == pcOutputImage->getNumberOfFullPlanes  () );
   assert( pcInputImage->getNumberOfQuaterPlanes() == pcOutputImage->getNumberOfQuaterPlanes() );
@@ -746,7 +752,8 @@ Void TRenFilter::binominal( PelImage* pcInputImage, PelImage* pcOutputImage, UIn
  }
 }
 
-Void TRenFilter::binominal( PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane, UInt uiSize )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::binominal( PelImagePlane* pcInputPlane, PelImagePlane* pcOutputPlane, UInt uiSize )
 {
   Int iWidth  = pcInputPlane ->getWidth ();
   Int iHeight = pcInputPlane ->getHeight();
@@ -776,16 +783,16 @@ Void TRenFilter::binominal( PelImagePlane* pcInputPlane, PelImagePlane* pcOutput
   switch( uiSize )
   {
   case 1:
-    fpFilter = &TRenFilter::xFiltBinom3;
+    fpFilter = &TRenFilter<bitDepth>::xFiltBinom3;
     break;
   case 2:
-    fpFilter = &TRenFilter::xFiltBinom5;
+    fpFilter = &TRenFilter<bitDepth>::xFiltBinom5;
     break;
   case 3:
-    fpFilter = &TRenFilter::xFiltBinom7;
+    fpFilter = &TRenFilter<bitDepth>::xFiltBinom7;
     break;
   case 4:
-    fpFilter = &TRenFilter::xFiltBinom9;
+    fpFilter = &TRenFilter<bitDepth>::xFiltBinom9;
     break;
   default:
       AOT(true);
@@ -817,18 +824,17 @@ Void TRenFilter::binominal( PelImagePlane* pcInputPlane, PelImagePlane* pcOutput
   delete[] pcTempData;
 }
 
-Pel TRenFilter::xFiltBinom3( Pel* pcInputData, Int iStride )
+template<UInt bitDepth>
+Pel TRenFilter<bitDepth>::xFiltBinom3( Pel* pcInputData, Int iStride )
 {
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Int iSum = pcInputData[-1 * iStride ] + pcInputData[ 0 ] +  (pcInputData[iStride ] << 1 );
-  return ClipY( (iSum +  2) >>  2 );
+  return ClipBD( (iSum +  2) >>  2 , bitDepth);
 }
 
-Pel TRenFilter::xFiltBinom5( Pel* pcInputData, Int iStride )
+template<UInt bitDepth>
+Pel TRenFilter<bitDepth>::xFiltBinom5( Pel* pcInputData, Int iStride )
 {
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
-  // { 1,4,6,4,1 }
+    // { 1,4,6,4,1 }
   Int iStride0  = 0;
   Int iStrideM1 = iStride0  - iStride;
   Int iStrideM2 = iStrideM1 - iStride;
@@ -840,13 +846,13 @@ Pel TRenFilter::xFiltBinom5( Pel* pcInputData, Int iStride )
   Int iTmp2 = pcInputData[iStride0 ];
 
   Int iSum = iTmp0 +  (iTmp2 << 1) + ((iTmp1 + iTmp2) << 2);
-  return ClipY( (iSum +  8) >>  4 );
+  return ClipBD( (iSum +  8) >>  4 , bitDepth);
 }
 
-Pel TRenFilter::xFiltBinom7( Pel* pcInputData, Int iStride )
+template<UInt bitDepth>
+Pel TRenFilter<bitDepth>::xFiltBinom7( Pel* pcInputData, Int iStride )
 {
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
-  // { 1,6,15,20,15,6,1 }
+    // { 1,6,15,20,15,6,1 }
   Int iStride0  = 0;
   Int iStrideM1 = iStride0  - iStride;
   Int iStrideM2 = iStrideM1 - iStride;
@@ -862,12 +868,12 @@ Pel TRenFilter::xFiltBinom7( Pel* pcInputData, Int iStride )
 
   Int iSum = iTmp0 - iTmp2 + ( iTmp1  << 1) + ( (iTmp1 + iTmp3) << 2) + ((iTmp2 + iTmp3) << 4);
 
-  return ClipY( (iSum +  32) >>  6 );
+  return ClipBD( (iSum +  32) >>  6 , bitDepth);
 }
 
-Pel TRenFilter::xFiltBinom9( Pel* pcInputData, Int iStride )
-{
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
+template<UInt bitDepth>
+Pel TRenFilter<bitDepth>::xFiltBinom9( Pel* pcInputData, Int iStride )
+{  
   // {  1     8    28    56    70    56    28     8     1 }
   Int iStride0  = 0;
   Int iStrideM1 = iStride0  - iStride;
@@ -887,11 +893,11 @@ Pel TRenFilter::xFiltBinom9( Pel* pcInputData, Int iStride )
 
   Int iSum = iTmp0 + ((iTmp4 ) << 1) + ( ( iTmp4 - iTmp2 ) << 2) +  ( (iTmp1 - iTmp3) << 3 ) +  ((iTmp2 ) << 5) + ((iTmp3+ iTmp4 ) << 6);
 
-  return ClipY( (iSum +  128) >>  8 );
+  return ClipBD( (iSum +  128) >>  8 , bitDepth);
 }
 
-
-Pel TRenFilter::interpCHSpline(Double dX, Double dS0, Double dS1, Int iQ0, Int iQ1, Int iQ2, Int iQ3)
+template<UInt bitDepth>
+Pel TRenFilter<bitDepth>::interpCHSpline(Double dX, Double dS0, Double dS1, Int iQ0, Int iQ1, Int iQ2, Int iQ3)
 {
   Double dSq = (dX - dS0) / (dS1 - dS0);
 
@@ -915,7 +921,8 @@ Pel TRenFilter::interpCHSpline(Double dX, Double dS0, Double dS1, Int iQ0, Int i
 
 }
 
-Void TRenFilter::diffHorSym(PelImage* pcInputImage, IntImage* pcOutputImage)
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::diffHorSym(PelImage* pcInputImage, IntImage* pcOutputImage)
 {
   for (UInt uiCurPlane = 0; uiCurPlane < pcInputImage->getNumberOfPlanes(); uiCurPlane++)
   {
@@ -923,7 +930,8 @@ Void TRenFilter::diffHorSym(PelImage* pcInputImage, IntImage* pcOutputImage)
   };
 }
 
-Void TRenFilter::diffHorSym(PelImagePlane* pcInputPlane, IntImagePlane* pcOutputPlane)
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::diffHorSym(PelImagePlane* pcInputPlane, IntImagePlane* pcOutputPlane)
 {
   UInt uiInputStride = pcInputPlane ->getStride();
   UInt uiOutputStride = pcOutputPlane->getStride();
@@ -949,7 +957,8 @@ Void TRenFilter::diffHorSym(PelImagePlane* pcInputPlane, IntImagePlane* pcOutput
   };
 }
 
-Void TRenFilter::laplace( DoubleImage* pcInputImage, DoubleImage* pcOutputImage )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::laplace( DoubleImage* pcInputImage, DoubleImage* pcOutputImage )
 {
   for (UInt uiCurPlane = 0; uiCurPlane < pcInputImage->getNumberOfPlanes(); uiCurPlane++)
   {
@@ -1021,8 +1030,8 @@ Void TRenFilter::laplace( DoubleImage* pcInputImage, DoubleImage* pcOutputImage 
   }
 }
 
-
-Void TRenFilter::conv( PelImage* pcImage, DoubleImage* pcKernel )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::conv( PelImage* pcImage, DoubleImage* pcKernel )
 {
   PelImage* pcTemp = pcImage->create();
 
@@ -1095,9 +1104,10 @@ Void TRenFilter::conv( PelImage* pcImage, DoubleImage* pcKernel )
 
 
 // Horizontal Up sampling luma
-Void TRenFilter::sampleHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
-  TRenInterpFilter cFilter;
+  TRenInterpFilter<bitDepth> cFilter;
   switch ( iLog2HorSampFac )
   {
   case 0:
@@ -1117,7 +1127,8 @@ Void TRenFilter::sampleHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iI
 }
 
 // horizontal up sampling chroma
-Void TRenFilter::sampleCHorUp(Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleCHorUp(Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
   switch ( iLog2HorSampFac )
   {
@@ -1126,51 +1137,53 @@ Void TRenFilter::sampleCHorUp(Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iI
     break;
   case 1:
     xDistributeArray( pcInputPlaneData,   iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                  , iOutputStride, 2 , 1 );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 2 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 2 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
     break;
   case 2:
     xDistributeArray( pcInputPlaneData,   iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                  , iOutputStride, 4 , 1 );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_QUA0 );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_QUA1 );
     break;
   }
 }
 
-Void TRenFilter::sampleCUpHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleCUpHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
 
   switch ( iLog2HorSampFac )
   {
   case 0:
     xDistributeArray( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData                -2, iOutputStride, 2,  2 );
-    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-2, iOutputStride, 2 , 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 2, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData+1                , iOutputStride, 2 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-2, iOutputStride, 2 , 2, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 2, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData+1                , iOutputStride, 2 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
     break;
   case 1:
     xDistributeArray( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData                -4, iOutputStride, 4 , 2 );
-    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-4, iOutputStride, 4 , 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
+    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-4, iOutputStride, 4 , 2, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_QUA0 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_QUA1 );
     break;
   case 2:
     xDistributeArray( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData                -8, iOutputStride, 8 , 2 );
-    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-8, iOutputStride, 8 , 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT0 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT1 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +4, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +5, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT2 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +6, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +7, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT3 );
+    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-8, iOutputStride, 8 , 2, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 8 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_OCT0 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 8 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_QUA0 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 8 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_OCT1 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +4, iOutputStride, 8 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +5, iOutputStride, 8 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_OCT2 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +6, iOutputStride, 8 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_QUA1 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +7, iOutputStride, 8 , 1, &TRenInterpFilter<REN_BIT_DEPTH>::xCTI_Filter_VP04_C_OCT3 );
     break;
   }
 }
 
 // Down Sampling
 // Down sample luma
-Void TRenFilter::sampleHorDown(Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleHorDown(Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
   switch ( iLog2HorSampFac )
   {
@@ -1186,8 +1199,8 @@ Void TRenFilter::sampleHorDown(Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int 
   }
 }
 
-
-Void TRenFilter::sampleCHorDown(Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleCHorDown(Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
   //GT: currently the same as for luma
   sampleHorDown( iLog2HorSampFac, pcInputPlaneData, iInputStride, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride);
@@ -1196,7 +1209,8 @@ Void TRenFilter::sampleCHorDown(Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int
 
 
 // Up sampling chroma
-Void TRenFilter::sampleCDownHorDown( Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iInputHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::sampleCDownHorDown( Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iInputHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
   // create buffer
   Int iBufferStride   = iInputWidth >> (iLog2HorSampFac + 1);
@@ -1218,14 +1232,15 @@ Void TRenFilter::sampleCDownHorDown( Int iLog2HorSampFac,  Pel* pcInputPlaneData
   delete[] piBuffer;
 }
 
-Void TRenFilter::xDistributeArray(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* pcDst, Int iDstStride, Int iDstStepX, Int iDstStepY)
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xDistributeArray(const Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* pcDst, Int iDstStride, Int iDstStepX, Int iDstStepY)
 {
   iDstStride *= iDstStepY;
   iSrcStride *= iSrcStepY;
   for (Int iYPos = 0; iYPos < iHeight; iYPos++ )
   {
     Pel* pcCurDst = pcDst;
-    Pel* pcCurSrc  = pcSrc;
+    const Pel* pcCurSrc  = pcSrc;
     for (Int iXPos = 0; iXPos < iWidth; iXPos ++)
     {
       *pcCurDst = *pcCurSrc;
@@ -1238,20 +1253,20 @@ Void TRenFilter::xDistributeArray(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int
   }
 }
 
-Void TRenFilter::xInterpHorChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xInterpHorChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter )
 {
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
   Int   iSum;
   Pel*  piSrcTmp;
 
-  TRenInterpFilter cFilter;
+  TRenInterpFilter<REN_BIT_DEPTH> cFilter;
   for ( Int y = iHeight; y != 0; y-- )
   {
     piSrcTmp = piSrc - iSrcStepX;
     for ( Int x = 0; x < iWidth; x++ )
     {
       iSum      = (cFilter.*fpFilter)( piSrcTmp,  iSrcStepX );
-      piDst[x * iDstStepX ] =  ClipC ((iSum +  32) >>  6 );
+      piDst[x * iDstStepX ] =  ClipBD ((iSum +  32) >>  6 , bitDepth);
       piSrcTmp+= iSrcStepX;
     }
     piSrc += iSrcStride * iSrcStepY;
@@ -1259,20 +1274,20 @@ Void TRenFilter::xInterpHorChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, In
   }
 }
 
-Void TRenFilter::xInterpVerChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter )
-{
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xInterpVerChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter )
+{  
   Int   iSum;
   Pel*  piSrcTmp;
 
-  TRenInterpFilter cFilter;
+  TRenInterpFilter<bitDepth> cFilter;
   for ( Int y = iHeight; y != 0; y-- )
   {
     piSrcTmp = piSrc - iSrcStepY * iSrcStride;
     for ( Int x = 0; x < iWidth; x++ )
     {
       iSum      = (cFilter.*fpFilter)( piSrcTmp,  iSrcStepY * iSrcStride );
-      piDst[x * iDstStepX ]  =  ClipC ((iSum +  32) >>  6 );
+      piDst[x * iDstStepX ]  =  ClipBD ((iSum +  32) >>  6, bitDepth );
       piSrcTmp += iSrcStepX;
     }
     piSrc += iSrcStride * iSrcStepY;
@@ -1280,11 +1295,9 @@ Void TRenFilter::xInterpVerChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, In
   }
 }
 
-
-Void TRenFilter::xSampleDownHor2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iHeight, Pel* piDst, Int iDstStride  )
-{
-  
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xSampleDownHor2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iHeight, Pel* piDst, Int iDstStride  )
+{ 
 
   Int   iSum;
   Pel*  piSrcTmp;
@@ -1297,7 +1310,7 @@ Void TRenFilter::xSampleDownHor2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
     {
       // { 1,2,1 }
       iSum = piSrcTmp[0] + piSrcTmp[2] +  (piSrcTmp[1] << 1);
-      piDst[x] = ClipY( (iSum +  2) >>  2 );
+      piDst[x] = ClipBD( (iSum +  2) >>  2 , bitDepth);
       piSrcTmp += 2;
     }
     piSrc += iSrcStride;
@@ -1305,10 +1318,9 @@ Void TRenFilter::xSampleDownHor2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
   }
 };
 
-Void TRenFilter::xSampleDownVer2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iSrcHeight, Pel* piDst, Int iDstStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xSampleDownVer2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iSrcHeight, Pel* piDst, Int iDstStride  )
 {
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Int   iSum;
   Pel*  piSrcTmp;
 
@@ -1319,7 +1331,7 @@ Void TRenFilter::xSampleDownVer2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
     {
       // { 1,2,1 }
       iSum = piSrcTmp[0] + piSrcTmp[ iSrcStride << 1] +  (piSrcTmp[ iSrcStride ] << 1);
-      piDst[x] = ClipY( (iSum +  2) >>  2 );
+      piDst[x] = ClipBD( (iSum +  2) >>  2, bitDepth );
       piSrcTmp += 1;
     }
     piSrc += (iSrcStride << 1);
@@ -1327,9 +1339,9 @@ Void TRenFilter::xSampleDownVer2( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
   }
 };
 
-Void TRenFilter::xSampleDownHor4( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iHeight, Pel* piDst, Int iDstStride  )
-{
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xSampleDownHor4( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iHeight, Pel* piDst, Int iDstStride  )
+{ 
 
   Int   iSum;
   Pel*  piSrcTmp;
@@ -1347,7 +1359,7 @@ Void TRenFilter::xSampleDownHor4( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
       iTmp2 = piSrcTmp[2];
 
       iSum = iTmp0 +  (iTmp2 << 1) + ((iTmp1 + iTmp2) << 2);
-      piDst[x] = ClipY( (iSum +  8) >>  4 );
+      piDst[x] = ClipBD( (iSum +  8) >>  4, bitDepth );
       piSrcTmp += 4;
     }
     piSrc += iSrcStride;
@@ -1355,10 +1367,9 @@ Void TRenFilter::xSampleDownHor4( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
   }
 };
 
-Void TRenFilter::xSampleDownHor8( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iHeight, Pel* piDst, Int iDstStride  )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xSampleDownHor8( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int iHeight, Pel* piDst, Int iDstStride  )
 {
-  assert( g_bitDepthY == g_bitDepthC); // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Int   iSum;
   Pel*  piSrcTmp;
 
@@ -1376,7 +1387,7 @@ Void TRenFilter::xSampleDownHor8( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
       iTmp3 = piSrcTmp[3];
 
       iSum = iTmp0 - iTmp2 + ( iTmp1  << 1) + ( (iTmp1 + iTmp3) << 2) + ((iTmp2 + iTmp3) << 4);
-      piDst[x] = ClipY( (iSum +  32) >>  6 );
+      piDst[x] = ClipBD( (iSum +  32) >>  6 , bitDepth);
       piSrcTmp += 8;
     }
     piSrc += iSrcStride;
@@ -1384,7 +1395,8 @@ Void TRenFilter::xSampleDownHor8( Pel* piSrc, Int iSrcStride, Int iSrcWidth, Int
   }
 };
 
-Void TRenFilter::xDilate( Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iSize, Bool bVerticalDir, Bool bToTopOrLeft )
+template<UInt bitDepth>
+Void TRenFilter<bitDepth>::xDilate( Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iSize, Bool bVerticalDir, Bool bToTopOrLeft )
 {
   Int iFDimStart   = 0;
   Int iInc         = 1;
@@ -1451,13 +1463,15 @@ Void TRenFilter::xDilate( Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, P
 };
 
 
-template Bool TRenFilter::compare   (TRenImage<Pel     >*, TRenImage<Pel>*      );
-template Bool TRenFilter::compare   (TRenImagePlane<Pel>*, TRenImagePlane<Pel>* );
+template class TRenFilter<REN_BIT_DEPTH>;
 
-template Void TRenFilter::mirrorHor(        TRenImage<Double>        *pcImage );
-template Void TRenFilter::mirrorHor(        TRenImage<Pel>           *pcImage );
-template Void TRenFilter::mirrorHor(        TRenImage<Int>           *pcImage );
-template Void TRenFilter::mirrorHor(        TRenImagePlane<Pel>      *pcImagePlane );
+template Bool TRenFilter<REN_BIT_DEPTH>::compare   (TRenImage<Pel     >*, TRenImage<Pel>*      );
+template Bool TRenFilter<REN_BIT_DEPTH>::compare   (TRenImagePlane<Pel>*, TRenImagePlane<Pel>* );
+                         
+template Void TRenFilter<REN_BIT_DEPTH>::mirrorHor( TRenImage<Double>        *pcImage );
+template Void TRenFilter<REN_BIT_DEPTH>::mirrorHor( TRenImage<Pel>           *pcImage );
+template Void TRenFilter<REN_BIT_DEPTH>::mirrorHor( TRenImage<Int>           *pcImage );
+template Void TRenFilter<REN_BIT_DEPTH>::mirrorHor( TRenImagePlane<Pel>      *pcImagePlane );
 
 #endif 
 

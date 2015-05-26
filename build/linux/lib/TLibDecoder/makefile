@@ -16,11 +16,17 @@ SRC_DIR4		=
 USER_INC_DIRS	= -I$(SRC_DIR)
 USER_LIB_DIRS	=
 
+ifeq ($(HIGHBITDEPTH), 1)
+HBD=HighBitDepth
+else
+HBD=
+endif
+
 # intermediate directory for object files
-OBJ_DIR			= ./objects
+OBJ_DIR			= ./objects$(HBD)
 
 # the library name
-PRJ_NAME	 	= TLibDecoder
+PRJ_NAME	 	= TLibDecoder$(HBD)
 
 # version information
 MAJOR_VER		= 0

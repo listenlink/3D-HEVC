@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,9 @@
 #include <cassert>
 #include <vector>
 #include "AnnexBread.h"
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+#include "TLibCommon/TComCodingStatistics.h"
+#endif
 
 using namespace std;
 
@@ -55,7 +58,7 @@ using namespace std;
  * of std::ios_base::failure is thrown.  The contsnts of stats will
  * be correct at this point.
  */
-static void
+static Void
 _byteStreamNALUnit(
   InputByteStream& bs,
   vector<uint8_t>& nalUnit,
@@ -69,10 +72,16 @@ _byteStreamNALUnit(
    * that the next four bytes in the bitstream form the four-byte sequence
    * 0x00000001.
    */
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  TComCodingStatistics::SStat &statBits=TComCodingStatistics::GetStatisticEP(STATS__NAL_UNIT_PACKING);
+#endif
   while ((bs.eofBeforeNBytes(24/8) || bs.peekBytes(24/8) != 0x000001)
   &&     (bs.eofBeforeNBytes(32/8) || bs.peekBytes(32/8) != 0x00000001))
   {
     uint8_t leading_zero_8bits = bs.readByte();
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    statBits.bits+=8; statBits.count++;
+#endif
     assert(leading_zero_8bits == 0);
     stats.m_numLeadingZero8BitsBytes++;
   }
@@ -88,6 +97,9 @@ _byteStreamNALUnit(
   if (bs.peekBytes(24/8) != 0x000001)
   {
     uint8_t zero_byte = bs.readByte();
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    statBits.bits+=8; statBits.count++;
+#endif
     assert(zero_byte == 0);
     stats.m_numZeroByteBytes++;
   }
@@ -99,6 +111,9 @@ _byteStreamNALUnit(
    */
   /* NB, (1) guarantees that the next three bytes are 0x00 00 01 */
   uint32_t start_code_prefix_one_3bytes = bs.readBytes(24/8);
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  statBits.bits+=24; statBits.count+=3;
+#endif
   assert(start_code_prefix_one_3bytes == 0x000001);
   stats.m_numStartCodePrefixBytes += 3;
 
@@ -116,11 +131,19 @@ _byteStreamNALUnit(
    * decoded using the NAL unit decoding process
    */
   /* NB, (unsigned)x > 2 implies n!=0 && n!=1 */
-  while (bs.eofBeforeNBytes(24/8) || bs.peekBytes(24/8) > 2) 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  TComCodingStatistics::SStat &bodyStats=TComCodingStatistics::GetStatisticEP(STATS__NAL_UNIT_TOTAL_BODY);
+#endif
+  while (bs.eofBeforeNBytes(24/8) || bs.peekBytes(24/8) > 2)
   {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    uint8_t thebyte=bs.readByte();bodyStats.bits+=8;bodyStats.count++;
+    nalUnit.push_back(thebyte);
+#else
     nalUnit.push_back(bs.readByte());
+#endif
   }
-  
+
   /* 5. When the current position in the byte stream is:
    *  - not at the end of the byte stream (as determined by unspecified means)
    *  - and the next bytes in the byte stream do not start with a three-byte
@@ -140,6 +163,9 @@ _byteStreamNALUnit(
   &&     (bs.eofBeforeNBytes(32/8) || bs.peekBytes(32/8) != 0x00000001))
   {
     uint8_t trailing_zero_8bits = bs.readByte();
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    statBits.bits+=8; statBits.count++;
+#endif
     assert(trailing_zero_8bits == 0);
     stats.m_numTrailingZero8BitsBytes++;
   }

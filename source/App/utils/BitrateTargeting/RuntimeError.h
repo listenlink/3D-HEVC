@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DIRECTORY_LIB_RUNTIME_ERROR_H
-#define DIRECTORY_LIB_RUNTIME_ERROR_H
+#ifndef __RUNTIMEERROR__
+#define __RUNTIMEERROR__
 
 #include <sstream>
 #include <stdexcept>
@@ -43,7 +43,7 @@ class RuntimeError: public std::runtime_error
   public:
     RuntimeError( ): std::runtime_error( "" ), m_firstWhat( true ) { }
     virtual ~RuntimeError( ) throw ( ) { }
-    
+
     /// Implementation of the std::exception::what method
     const char * what( ) const throw( )
     {
@@ -56,12 +56,12 @@ class RuntimeError: public std::runtime_error
       }
       return m_what.c_str( );
     }
-    
+
   protected:
     /// The implementing class implements this method to customize the what output
     /// \param o The what stream is outputted to this parameter
     virtual void outputWhat( std::ostream & o ) const =0;
-  
+
   private:
     mutable bool m_firstWhat;  ///< True i.f.f. the what method has not yet been called
     mutable std::string m_what;  ///< Contains the what string.  Populated by the first call to the what method.

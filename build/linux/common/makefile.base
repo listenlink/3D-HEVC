@@ -12,7 +12,7 @@ endif
 # executables used
 #########################################################
 
-CPP   	= g++
+CPP     = g++
 CC      = gcc
 AR    	= ar
 LD    	= $(CPP)
@@ -47,7 +47,7 @@ endif
 
 # default cpp flags for all configurations
 #CPPFLAGS          = -Wall -fPIC $(DEFS) -I$(CURDIR)/$(INC_DIR) $(USER_INC_DIRS)
-CPPFLAGS          = -fPIC $(DEFS) $(ADDDEFS) -I$(CURDIR)/$(INC_DIR) $(USER_INC_DIRS) -Wall -Wshadow -Wno-sign-compare -Werror
+CPPFLAGS          = -fPIC $(DEFS)  $(ADDDEFS) -I$(CURDIR)/$(INC_DIR) $(USER_INC_DIRS) -Wall -Wshadow -Wno-sign-compare -Werror
 
 ########## 
 # enforce 32-bit build : 1=yes, 0=no
@@ -57,6 +57,10 @@ ifeq ($(M32),1)
 CPPFLAGS+=-m32
 endif
 ##########
+
+ifeq ($(HIGHBITDEPTH), 1)
+CPPFLAGS+="-DRExt__HIGH_BIT_DEPTH_SUPPORT=1"
+endif
 
 #
 # debug cpp flags

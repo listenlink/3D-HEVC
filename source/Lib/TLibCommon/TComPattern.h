@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,6 @@
 #define __TCOMPATTERN__
 
 // Include files
-#include <stdio.h>
 #include "CommonDef.h"
 
 //! \ingroup TLibCommon
@@ -50,45 +49,28 @@
 // ====================================================================================================================
 
 class TComDataCU;
+class TComTU;
 
 /// neighbouring pixel access class for one component
 class TComPatternParam
 {
 private:
-  Int   m_iOffsetLeft;
-  Int   m_iOffsetAbove;
-  Pel*  m_piPatternOrigin;
-  
+  Pel*  m_piROIOrigin;
+
 public:
   Int   m_iROIWidth;
   Int   m_iROIHeight;
   Int   m_iPatternStride;
-  
-  /// return starting position of buffer
-  Pel*  getPatternOrigin()        { return  m_piPatternOrigin; }
-  
+  Int   m_bitDepth;
+
   /// return starting position of ROI (ROI = &pattern[AboveOffset][LeftOffset])
   __inline Pel*  getROIOrigin()
   {
-    return  m_piPatternOrigin + m_iPatternStride * m_iOffsetAbove + m_iOffsetLeft;
+    return  m_piROIOrigin;
   }
-  
+
   /// set parameters from Pel buffer for accessing neighbouring pixels
-  Void setPatternParamPel ( Pel*        piTexture,
-                           Int         iRoiWidth,
-                           Int         iRoiHeight,
-                           Int         iStride,
-                           Int         iOffsetLeft,
-                           Int         iOffsetAbove );
-  
-  /// set parameters of one color component from CU data for accessing neighbouring pixels
-  Void setPatternParamCU  ( TComDataCU* pcCU,
-                           UChar       iComp,
-                           UChar       iRoiWidth,
-                           UChar       iRoiHeight,
-                           Int         iOffsetLeft,
-                           Int         iOffsetAbove,
-                           UInt        uiAbsZorderIdx );
+  Void setPatternParamPel( Pel* piTexture, Int iRoiWidth, Int iRoiHeight, Int iStride, Int bitDepth );
 };
 
 /// neighbouring pixel access class for all components
@@ -96,25 +78,26 @@ class TComPattern
 {
 private:
   TComPatternParam  m_cPatternY;
-  TComPatternParam  m_cPatternCb;
-  TComPatternParam  m_cPatternCr;
-#if H_3D_IC
+//  TComPatternParam  m_cPatternCb;
+  //TComPatternParam  m_cPatternCr;
+#if NH_3D_IC
   Bool              m_bICFlag;
 #endif
 #if H_3D_INTER_SDC
   Bool              m_bSDCMRSADFlag;
 #endif
-  static const UChar m_aucIntraFilter[5];
-  
+
+
 public:
-  
+
   // ROI & pattern information, (ROI = &pattern[AboveOffset][LeftOffset])
   Pel*  getROIY()                 { return m_cPatternY.getROIOrigin();    }
   Int   getROIYWidth()            { return m_cPatternY.m_iROIWidth;       }
   Int   getROIYHeight()           { return m_cPatternY.m_iROIHeight;      }
   Int   getPatternLStride()       { return m_cPatternY.m_iPatternStride;  }
+  Int   getBitDepthY()            { return m_cPatternY.m_bitDepth; }
 
-#if H_3D_IC
+#if NH_3D_IC
   Bool  getICFlag()               { return m_bICFlag; }
   Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
 #endif
@@ -123,66 +106,12 @@ public:
   Void  setSDCMRSADFlag( Bool bSDCMRSADFlag )    { m_bSDCMRSADFlag = bSDCMRSADFlag; }
 #endif
 
-  // access functions of ADI buffers
-  Int*  getAdiOrgBuf              ( Int iCuWidth, Int iCuHeight, Int* piAdiBuf );
-  Int*  getAdiCbBuf               ( Int iCuWidth, Int iCuHeight, Int* piAdiBuf );
-  Int*  getAdiCrBuf               ( Int iCuWidth, Int iCuHeight, Int* piAdiBuf );
-  
-  Int*  getPredictorPtr           ( UInt uiDirMode, UInt uiWidthBits, Int* piAdiBuf );
   // -------------------------------------------------------------------------------------------------------------------
   // initialization functions
   // -------------------------------------------------------------------------------------------------------------------
-  
+
   /// set parameters from Pel buffers for accessing neighbouring pixels
-  Void initPattern            ( Pel*        piY,
-                               Pel*        piCb,
-                               Pel*        piCr,
-                               Int         iRoiWidth,
-                               Int         iRoiHeight,
-                               Int         iStride,
-                               Int         iOffsetLeft,
-                               Int         iOffsetAbove );
-  
-  /// set parameters from CU data for accessing neighbouring pixels
-  Void  initPattern           ( TComDataCU* pcCU,
-                               UInt        uiPartDepth,
-                               UInt        uiAbsPartIdx );
-  
-  /// set luma parameters from CU data for accessing ADI data
-  Void  initAdiPattern        ( TComDataCU* pcCU,
-                               UInt        uiZorderIdxInPart,
-                               UInt        uiPartDepth,
-                               Int*        piAdiBuf,
-                               Int         iOrgBufStride,
-                               Int         iOrgBufHeight,
-                               Bool&       bAbove,
-                               Bool&       bLeft
-                              ,Bool        bLMmode = false // using for LM chroma or not
-                               );
-  
-  /// set chroma parameters from CU data for accessing ADI data
-  Void  initAdiPatternChroma  ( TComDataCU* pcCU,
-                               UInt        uiZorderIdxInPart,
-                               UInt        uiPartDepth,
-                               Int*        piAdiBuf,
-                               Int         iOrgBufStride,
-                               Int         iOrgBufHeight,
-                               Bool&       bAbove,
-                               Bool&       bLeft );
-
-private:
-
-  /// padding of unavailable reference samples for intra prediction
-  Void  fillReferenceSamples        (Int bitDepth, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, Bool bLMmode = false);
-  
-
-  /// constrained intra prediction
-  Bool  isAboveLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT );
-  Int   isAboveAvailable      ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool* bValidFlags );
-  Int   isLeftAvailable       ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool* bValidFlags );
-  Int   isAboveRightAvailable ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool* bValidFlags );
-  Int   isBelowLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool* bValidFlags );
-
+  Void initPattern( Pel* piY, Int iRoiWidth, Int iRoiHeight, Int iStride, Int bitDepthLuma );
 };
 
 //! \}
