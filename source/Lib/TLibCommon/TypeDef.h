@@ -70,6 +70,7 @@
 #define NH_3D_VSO                         1
 #define NH_3D_NBDV                        1
 #define NH_3D_NBDV_REF                    1
+#define NH_3D_MLC                         1
 #endif
 
 #if H_3D
@@ -711,7 +712,7 @@ enum MVP_DIR
   MD_BELOW_LEFT,        ///< MVP of below left block
   MD_ABOVE_LEFT         ///< MVP of above left block
 };
-#if H_3D
+#if NH_3D_MLC
 enum DefaultMergCandOrder
 {
   MRG_T = 0,            ///< MPI
@@ -724,7 +725,7 @@ enum DefaultMergCandOrder
   MRG_IVDC,             ///< Disparity inter-view
   MRG_A0,               ///< Left bottom
   MRG_B2,               ///< Above left
-  MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
+  MRG_IVSHIFT,          ///< Shifted IVMC or Shifted IVDC. (These are mutually exclusive)
   MRG_COL               ///< Temporal co-located
 };
 #endif

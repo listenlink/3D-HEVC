@@ -1761,7 +1761,7 @@ Int  TEncCu::updateCtuDataISlice(TComDataCU* pCtu, Int width, Int height)
 Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode )
 {
   assert( rpcTempCU->getSlice()->getSliceType() != I_SLICE );
-#if H_3D_IV_MERGE
+#if NH_3D_MLC
   TComMvField  cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
 #else
@@ -1796,33 +1796,63 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
 
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to CTU level
+
 #if H_3D_VSP
 #if !H_3D_ARP
   Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
   memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
   InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-  rpcTempCU->m_bAvailableFlagA1 = 0;
-  rpcTempCU->m_bAvailableFlagB1 = 0;
-  rpcTempCU->m_bAvailableFlagB0 = 0;
-  rpcTempCU->m_bAvailableFlagA0 = 0;
-  rpcTempCU->m_bAvailableFlagB2 = 0;
+#if NH_3D_MLC
+  rpcTempCU->initAvailableFlags();
+#endif
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
+#if NH_3D_MLC
+  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
+#if H_3D_SPIVMP
+    , pcMvFieldSP, puhInterDirSP
+#endif
+    , numValidMergeCand 
+    );
+
+  rpcTempCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours, vspFlag
+#if H_3D_SPIVMP
+    , bSPIVMPFlag
+#endif
+    , numValidMergeCand 
+    );
+#endif
 #endif
 #else
-#if H_3D
-  rpcTempCU->m_bAvailableFlagA1 = 0;
-  rpcTempCU->m_bAvailableFlagB1 = 0;
-  rpcTempCU->m_bAvailableFlagB0 = 0;
-  rpcTempCU->m_bAvailableFlagA0 = 0;
-  rpcTempCU->m_bAvailableFlagB2 = 0;
-  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
-#else
+#if NH_3D_MLC
+  rpcTempCU->initAvailableFlags();
+#endif
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
+#if NH_3D_MLC
+  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
+#if H_3D_SPIVMP
+    , pcMvFieldSP, puhInterDirSP
+#endif
+    , numValidMergeCand 
+    );
+#if NH_3D_MLC
+  rpcTempCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours
+#if H_3D_SPIVMP
+    , bSPIVMPFlag
+#endif
+    , numValidMergeCand 
+    );
 #endif
 #endif
-#if H_3D_IV_MERGE
+#endif
+
+
+
+
+
+
+
+
+#if NH_3D_MLC
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS_MEM];
 #else
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS];
@@ -1830,9 +1860,12 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if H_3D_ARP
 for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
 #else
+#if NH_3D_MLC
+  for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
+#else
   for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #endif
-
+#endif
   {
     mergeCandBuffer[ui] = 0;
   }
@@ -1886,7 +1919,10 @@ for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
       , numValidMergeCand 
       );
 
-    rpcTempCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours, vspFlag
+    rpcTempCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours
+#if H_3D_VSP
+      , vspFlag
+#endif
 #if H_3D_SPIVMP
       , bSPIVMPFlag
 #endif

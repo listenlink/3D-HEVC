@@ -196,7 +196,7 @@ private:
   Bool*         m_pbDBBPFlag;        ///< array of DBBP flags
   DbbpTmpData   m_sDBBPTmpData;
 #endif
-#if H_3D
+#if NH_3D_MLC
   Bool          m_bAvailableFlagA1;    ///< A1 available flag
   Bool          m_bAvailableFlagB1;    ///< B1 available flag
   Bool          m_bAvailableFlagB0;    ///< B0 available flag
@@ -219,12 +219,10 @@ private:
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;        ///< sum of partition bins
   Char          m_codedQP;
-#if H_3D
-  DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
-#endif
-#if H_3D_IV_MERGE
-  TComMotionCand  m_mergCands[MRG_IVSHIFT+1];
-  Int           m_baseListidc;
+#if NH_3D_MLC
+  DisInfo         m_cDefaultDisInfo;    ///< Default disparity information for initializing
+  TComMotionCand  m_mergCands[MRG_IVSHIFT+1];   ///< Motion candidates for merge mode
+  Int             m_numSpatialCands;
 #endif
 
   UChar*        m_explicitRdpcmMode[MAX_NUM_COMPONENT]; ///< Stores the explicit RDPCM mode for all TUs belonging to this CU
@@ -653,12 +651,12 @@ public:
 
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
 
-#if H_3D
-  Bool          getAvailableFlagA1() { return m_bAvailableFlagA1;}
-  Bool          getAvailableFlagB1() { return m_bAvailableFlagB1;}
-  Bool          getAvailableFlagB0() { return m_bAvailableFlagB0;}
-  Bool          getAvailableFlagA0() { return m_bAvailableFlagA0;}
-  Bool          getAvailableFlagB2() { return m_bAvailableFlagB2;}
+#if NH_3D_MLC
+  Bool          getAvailableFlagA1() { return m_bAvailableFlagA1;   }
+  Bool          getAvailableFlagB1() { return m_bAvailableFlagB1;   }
+  Bool          getAvailableFlagB0() { return m_bAvailableFlagB0;   }
+  Bool          getAvailableFlagA0() { return m_bAvailableFlagA0;   }
+  Bool          getAvailableFlagB2() { return m_bAvailableFlagB2;   }
   Void          initAvailableFlags() { m_bAvailableFlagA1 = m_bAvailableFlagB1 = m_bAvailableFlagB0 = m_bAvailableFlagA0 = m_bAvailableFlagB2 = 0;  }
   Void          buildMCL(TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #if H_3D_VSP
@@ -669,14 +667,13 @@ public:
 #endif
     , Int& numValidMergeCand
     );
-  Void          getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1);
-  Void          xGetInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
-#else
-  Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
-#endif
+  Void          xGetInterMergeCandidates      ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #if H_3D_SPIVMP
-                                            , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
+  , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
+  , Int& numValidMergeCand, Int mrgCandIdx = -1 );
+#endif
+  Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
 
 #if H_3D_VSP
 #if H_3D_SPIVMP
