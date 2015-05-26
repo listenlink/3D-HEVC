@@ -191,7 +191,8 @@ public:
 
 //! \}
 
-#if H_3D_IV_MERGE
+#if NH_3D_MLC
+/// class for container of merge candidate
 class TComMotionCand
 {
 public:
@@ -201,7 +202,9 @@ public:
 #if H_3D_VSP
   Int                   m_iVspFlag;
 #endif  
+#if H_3D_SPIVMP
   Bool                  m_bSPIVMPFlag;
+#endif
 
 public:
   TComMotionCand()
@@ -211,7 +214,9 @@ public:
 #if H_3D_VSP
     m_iVspFlag = 0;
 #endif
+#if H_3D_SPIVMP
     m_bSPIVMPFlag = false;
+#endif
   }
 
   ~TComMotionCand()
@@ -228,7 +233,9 @@ public:
 #if H_3D_VSP
     m_iVspFlag = 0;
 #endif
+#if H_3D_SPIVMP
     m_bSPIVMPFlag = false;
+#endif
     m_cMvField[0].setMvField(cZeroMv, NOT_VALID);
     m_cMvField[1].setMvField(cZeroMv, NOT_VALID);
   }
@@ -237,7 +244,9 @@ public:
 #if H_3D_VSP
     , Int vspFlag
 #endif
+#if H_3D_SPIVMP
     , Bool bSPIVMPFlag
+#endif
     )
   {
     m_bAvailable = true;
@@ -247,15 +256,18 @@ public:
 #if H_3D_VSP
     m_iVspFlag = vspFlag;
 #endif
+#if H_3D_SPIVMP
     m_bSPIVMPFlag = bSPIVMPFlag;
+#endif
   }
-
-
+  
   Void getCand(Int iCount, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours
 #if H_3D_VSP
     , Int* vspFlag
 #endif
+#if H_3D_SPIVMP
     , Bool* pbSPIVMPFlag
+#endif
     )
   {
     pcMvFieldNeighbours[iCount<<1] = m_cMvField[0];
@@ -264,7 +276,9 @@ public:
 #if H_3D_VSP
     vspFlag[iCount] = m_iVspFlag;
 #endif
+#if H_3D_SPIVMP
     pbSPIVMPFlag[iCount] = m_bSPIVMPFlag;
+#endif
   }
 };
 #endif

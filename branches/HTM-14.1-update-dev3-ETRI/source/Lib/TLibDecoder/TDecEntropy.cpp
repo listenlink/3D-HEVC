@@ -235,7 +235,8 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   UInt uiNumPU = ( ePartSize == SIZE_2Nx2N ? 1 : ( ePartSize == SIZE_NxN ? 4 : 2 ) );
   UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - uiDepth ) << 1 ) ) >> 4;
-#if H_3D_IV_MERGE
+//#if H_3D_IV_MERGE
+#if NH_3D_MLC
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
 #else
@@ -482,7 +483,36 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         if ( !hasMergedCandList )
         {
           pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth ); // temporarily set.
+
+#if NH_3D_MLC
+#if H_3D_VSP
+          Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
+          memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#endif
+#if H_3D_SPIVMP
+          memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
+#endif
+          pcSubCU->initAvailableFlags();
+#endif
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+#if NH_3D_MLC
+          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_SPIVMP
+            , pcMvFieldSP, puhInterDirSP
+#endif
+            , numValidMergeCand );
+          pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_VSP
+            , vspFlag
+#endif
+#if H_3D_SPIVMP
+            , bSPIVMPFlag
+#endif
+            , numValidMergeCand );
+#if H_3D_VSP
+          pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
+#endif
+#endif
           pcSubCU->setPartSizeSubParts( ePartSize, 0, uiDepth ); // restore.
           hasMergedCandList = true;
         }
@@ -490,7 +520,36 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       else
       {
         uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+
+#if NH_3D_MLC
+#if H_3D_VSP
+        Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
+        memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#endif
+#if H_3D_SPIVMP
+        memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
+#endif
+        pcSubCU->initAvailableFlags();
+#endif
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#if NH_3D_MLC
+        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_SPIVMP
+          , pcMvFieldSP, puhInterDirSP
+#endif
+          ,numValidMergeCand, uiMergeIndex );
+        pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_VSP
+          , vspFlag
+#endif
+#if H_3D_SPIVMP
+          , bSPIVMPFlag
+#endif
+          ,numValidMergeCand );
+#if H_3D_VSP
+        pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
+#endif
+#endif
       }
 
       pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );

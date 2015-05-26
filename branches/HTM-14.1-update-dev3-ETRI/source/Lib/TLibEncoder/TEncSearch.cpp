@@ -3924,9 +3924,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     if ( iPUIdx == 0 )
     {
       pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth ); // temporarily set
-#if H_3D
+#if NH_3D_MLC
       pcCU->initAvailableFlags();
-      pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
+      pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
       pcCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
 #if H_3D_SPIVMP
         , pcMvFieldSP, puhInterDirSP
@@ -3941,7 +3941,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #if H_3D_SPIVMP
         , pbSPIVMPFlag
 #endif
-                                        , numValidMergeCand
+        , numValidMergeCand
         );
 #else
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
@@ -3951,9 +3951,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
   }
   else
   {
-#if H_3D
+#if NH_3D_MLC
     pcCU->initAvailableFlags();
-    pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
+    pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
     pcCU->xGetInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
 #if H_3D_SPIVMP
       , pcMvFieldSP, puhInterDirSP
@@ -3968,7 +3968,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #if H_3D_SPIVMP
       , pbSPIVMPFlag
 #endif
-                                      , numValidMergeCand
+      , numValidMergeCand
       );
 #else
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
