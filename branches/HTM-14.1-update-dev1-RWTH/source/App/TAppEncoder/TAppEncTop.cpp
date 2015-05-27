@@ -2413,7 +2413,7 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
       UInt uiNumBitsBitMap         = 0;
       
       UInt uiMaxDiff               = 0;
-      UInt uiMinDiff               = INT_MAX;
+      UInt uiMinDiff               = MAX_INT;
       UInt uiLengthMinDiff         = 0;
       UInt uiLengthDltDiffMinusMin = 0;
       
