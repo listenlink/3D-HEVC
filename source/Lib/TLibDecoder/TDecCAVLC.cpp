@@ -522,7 +522,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
       if ( pcDLT->getUseDLTFlag( layerId ) )
       {
         Bool bDltBitMapRepFlag    = false;
-        UInt uiMaxDiff            = INT_MAX;
+        UInt uiMaxDiff            = MAX_INT;
         UInt uiMinDiff            = 0;
         UInt uiCodeLength         = 0;
         

@@ -443,7 +443,7 @@ Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
         else
         {
           UInt uiMaxDiff               = 0;
-          UInt uiMinDiff               = INT_MAX;
+          UInt uiMinDiff               = MAX_INT;
           UInt uiLengthMinDiff         = 0;
           UInt uiLengthDltDiffMinusMin = 0;
           
