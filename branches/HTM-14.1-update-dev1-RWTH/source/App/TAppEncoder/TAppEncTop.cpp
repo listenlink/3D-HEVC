@@ -2483,17 +2483,6 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
       bDltBitMapRepFlag = (uiNumBitsBitMap > uiNumBitsNonBitMap) ? false : true;
       
       dlt.setUseBitmapRep(layer, bDltBitMapRepFlag);
-      
-//#ifdef DEBUG
-//      printf("---------------------------------------------\n");
-//      printf("LayerId: %d\n", layer);
-//      printf("getUseDLTFlag: %d\n", dlt.getUseDLTFlag(layer));
-//      printf("getInterViewDltPredEnableFlag: %d\n", dlt.getInterViewDltPredEnableFlag(layer));
-//      printf("getUseBitmapRep: %d\n", dlt.getUseBitmapRep(layer));
-//      printf("getNumDepthValues: %d\n", dlt.getNumDepthValues(layer));
-//      for(Int i=0; i<dlt.getNumDepthValues(layer); i++)
-//        printf("depthValue[%d] = %d\n", i, dlt.idx2DepthValue(layer, i));
-//#endif
     }
   }
 

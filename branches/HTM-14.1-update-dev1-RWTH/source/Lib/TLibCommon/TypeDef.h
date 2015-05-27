@@ -69,7 +69,7 @@
 #if NH_3D
 #define NH_3D_VSO                         1
 #define NH_3D_DMM                         1   // Depth modeling modes
-#define NH_3D_DLT                         0   // Depth Lookup Table
+#define NH_3D_DLT                         1   // Depth Lookup Table
 #define NH_3D_SDC_INTRA                   1   // Segment-wise DC Coding method for INTRA
 #define NH_3D_SDC_INTER                   0   // Segment-wise DC Coding method for INTER  
 #define NH_3D_ENC_DEPTH                   1   // Encoder optimizations for depth, incl.

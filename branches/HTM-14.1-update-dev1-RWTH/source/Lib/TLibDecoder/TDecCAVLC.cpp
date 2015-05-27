@@ -545,7 +545,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
         }
         
         UInt uiNumDepthValues = 0;
-        std::vector<Int> aiIdx2DepthValue(256);
+        std::vector<Int> aiIdx2DepthValue(256, 0);
         
         // Bit map
         if ( bDltBitMapRepFlag )
@@ -626,17 +626,6 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
           // store final DLT
           pcDLT->setDepthLUTs(layerId, aiIdx2DepthValue, uiNumDepthValues);
         }
-        
-//#ifdef DEBUG
-//        printf("---------------------------------------------\n");
-//        printf("LayerId: %d\n", layerId);
-//        printf("getUseDLTFlag: %d\n", pcDLT->getUseDLTFlag(layerId));
-//        printf("getInterViewDltPredEnableFlag: %d\n", pcDLT->getInterViewDltPredEnableFlag(layerId));
-//        printf("getUseBitmapRep: %d\n", pcDLT->getUseBitmapRep(layerId));
-//        printf("getNumDepthValues: %d\n", pcDLT->getNumDepthValues(layerId));
-//        for(Int i=0; i<pcDLT->getNumDepthValues(layerId); i++)
-//          printf("depthValue[%d] = %d\n", i, pcDLT->idx2DepthValue(layerId, i));
-//#endif
       }
     }
   }
