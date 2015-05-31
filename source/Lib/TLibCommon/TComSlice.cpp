@@ -2031,8 +2031,8 @@ Int TComVPS::getNumScalabilityTypes() const
 
 Int TComVPS::scalTypeToScalIdx( ScalabilityType scalType ) const
 {
-  assert( scalType >= 0 && scalType <= MAX_NUM_SCALABILITY_TYPES ); 
-  assert( scalType == MAX_NUM_SCALABILITY_TYPES || getScalabilityMaskFlag( scalType ) );
+  assert( (Int)scalType >= 0 && (Int)scalType <= MAX_NUM_SCALABILITY_TYPES );
+  assert( (Int)scalType == MAX_NUM_SCALABILITY_TYPES || getScalabilityMaskFlag( scalType ) );
   Int scalIdx = 0; 
   for( Int curScalType = 0; curScalType < scalType; curScalType++ )
   {

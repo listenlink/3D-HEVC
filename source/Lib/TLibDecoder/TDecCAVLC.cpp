@@ -1830,7 +1830,7 @@ Void TDecCavlc::parseVPSVUI( const TComVPS* pcVPS, TComVPSVUI* vpsVui )
   }
   else
   {
-    vpsVui->setVpsNumVideoSignalInfoMinus1( pcVPS->getMaxLayersMinus1() - pcVPS->getVpsBaseLayerInternalFlag() ? 0 : 1 ); 
+    vpsVui->setVpsNumVideoSignalInfoMinus1( (pcVPS->getMaxLayersMinus1() - pcVPS->getVpsBaseLayerInternalFlag()) ? 0 : 1 );
   }
 
   std::vector<TComVideoSignalInfo> videoSignalInfos; 

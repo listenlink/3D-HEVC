@@ -2348,7 +2348,7 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
 #if NH_3D_SDC_INTRA
   if( pcCU->isIntra( absPartIdx ) && pcCU->getSDCFlag( absPartIdx ))
   {
-    m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
+    m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SDC_DELTADC_FLAG) );
     assert( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N );
     assert( pcCU->getTransformIdx(absPartIdx) == 0 );
     assert( pcCU->getCbf(absPartIdx, COMPONENT_Y) == 1 );
@@ -2508,7 +2508,7 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol = 0;
 
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, 0 ) );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SDC_INTRA_FLAG) );
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU("dc_only_flag", uiSymbol)
 #endif

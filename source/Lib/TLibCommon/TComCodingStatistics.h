@@ -102,6 +102,10 @@ enum TComCodingStatisticsType
   STATS__CABAC_BITS__DMMMODE,
   STATS__CABAC_BITS__DMM1_BITS_EP,
 #endif
+#if NH_3D_SDC_INTRA
+  STATS__CABAC_BITS__SDC_INTRA_FLAG,
+  STATS__CABAC_BITS__SDC_DELTADC_FLAG,
+#endif
 
   STATS__NUM_STATS
 };
@@ -162,6 +166,10 @@ static inline const Char* getName(TComCodingStatisticsType name)
    ,"STATS__CABAC_BITS__NOTDMM_FLAG"
    ,"STATS__CABAC_BITS__DMMMODE"
    ,"STATS__CABAC_BITS__DMM1_BITS_EP"
+#endif
+#if NH_3D_SDC_INTRA
+    ,"STATS__CABAC_BITS__SDC_INTRA_FLAG"
+    ,"STATS__CABAC_BITS__SDC_DELTADC_FLAG"
 #endif
   };
   assert(STATS__NUM_STATS == sizeof(statNames)/sizeof(Char *) && name < STATS__NUM_STATS);

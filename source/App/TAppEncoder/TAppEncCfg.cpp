@@ -2291,7 +2291,7 @@ Void TAppEncCfg::xCheckParameter()
   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
 
   dimBitOffset[ 0 ] = 0; 
-  for (Int j = 1; j <= ((Int) m_dimIds.size() - m_splittingFlag ? 1 : 0); j++ )
+  for (Int j = 1; j <= (((Int) m_dimIds.size() - m_splittingFlag) ? 1 : 0); j++ )
   {
     dimBitOffset[ j ] = dimBitOffset[ j - 1 ] + m_dimensionIdLen[ j - 1]; 
   }

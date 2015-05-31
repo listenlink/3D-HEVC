@@ -106,7 +106,7 @@ private:
 
   UInt    m_uiBitDepthForLUT;
   UInt    m_iLog2Precision;
-  UInt    m_uiInputBitDepth;
+  // UInt    m_uiInputBitDepth;
 
   // look-up tables
   Double****   m_adBaseViewShiftLUT;       ///< Disparity LUT

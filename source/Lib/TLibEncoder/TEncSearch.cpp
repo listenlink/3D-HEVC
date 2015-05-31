@@ -3142,15 +3142,14 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #endif
 
 #if NH_3D_DMM
+    const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
+    const UInt uiAbsPartIdx=tuRecurseWithPU.GetAbsPartIdxTU();
+    
+    Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
+    Pel* piPred        = pcPredYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
+    UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
     if( m_pcEncCfg->getIsDepth() )
     {
-      const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
-      const UInt uiAbsPartIdx=tuRecurseWithPU.GetAbsPartIdxTU();
-
-      Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
-      Pel* piPred        = pcPredYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
-      UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
-
       if( puRect.width >= DMM_MIN_SIZE && puRect.width <= DMM_MAX_SIZE &&  puRect.width == puRect.height &&
           ((m_pcEncCfg->getUseDMM() &&  pcCU->getSlice()->getIntraSdcWedgeFlag()) || pcCU->getSlice()->getIntraContourFlag()) )
       {
@@ -3228,7 +3227,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #endif
     DEBUG_STRING_NEW(sPU)
     UInt       uiBestPUMode  = 0;
-#if H_3D_FAST_INTRA_SDC
+#if NH_3D_ENC_DEPTH
     UInt    uiBestPUModeConv  = 0;
     UInt    uiSecondBestPUModeConv  = 0;
     UInt    uiThirdBestPUModeConv  = 0;
@@ -3241,16 +3240,16 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #endif
     Double     dBestPUCost   = MAX_DOUBLE;
 
-#if H_3D_FAST_INTRA_SDC
+#if NH_3D_ENC_DEPTH
     Double  dBestPUCostConv   = MAX_DOUBLE;
-    UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, uiWidth,uiHeight,pcCU->getDepth(0));
+    UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, puRect.width, puRect.height, pcCU->getDepth(0), pcCU->getSlice()->getSPS()->getMaxCUWidth());
     UInt rdSDC = m_pcEncCfg->getIsDepth() ? numModesForFullRD : 0;
 #endif
 #if NH_3D_SDC_INTRA
     Bool    bBestUseSDC   = false;
     Pel     apBestDCOffsets[2] = {0,0};
 #endif
-#if H_3D_FAST_INTRA_SDC
+#if NH_3D_ENC_DEPTH
     for( UInt uiMode = 0; uiMode < numModesForFullRD + rdSDC; uiMode++ )
 #else
 #if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
@@ -3268,11 +3267,11 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #endif
     {
       // set luma prediction mode
-#if !H_3D_FAST_INTRA_SDC
+#if !NH_3D_ENC_DEPTH
       UInt uiOrgMode = uiRdModeList[uiMode];
 #endif
 
-#if H_3D_FAST_INTRA_SDC
+#if NH_3D_ENC_DEPTH
       UInt uiOrgMode;
       if (uiMode < numModesForFullRD)
       {   
@@ -3298,7 +3297,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
       pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, uiOrgMode, uiPartOffset, uiDepth + uiInitTrDepth );
 
 #if NH_3D_SDC_INTRA
-#if H_3D_FAST_INTRA_SDC
+#if NH_3D_ENC_DEPTH
       Bool bTestSDC = ( ( m_pcEncCfg->getUseSDC() &&  pcCU->getSlice()->getIntraSdcWedgeFlag() ) && pcCU->getSDCAvailable(uiPartOffset) && uiMode >= numModesForFullRD);
 #else
       Bool bTestSDC = ( m_pcEncCfg->getUseSDC() && pcCU->getSDCAvailable(uiPartOffset) );
@@ -3306,7 +3305,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 
       for( UInt uiSDC=0; uiSDC<=(bTestSDC?1:0); uiSDC++ )
       {
-#if H_3D_FAST_INTRA_SDC
+#if NH_3D_ENC_DEPTH
         if (!uiSDC && uiMode >= numModesForFullRD) continue;
 #endif
         pcCU->setSDCFlagSubParts( (uiSDC != 0), uiPartOffset, uiDepth + uiInitTrDepth );
@@ -3391,7 +3390,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #if HHI_RQT_INTRA_SPEEDUP
 #if NH_3D_ENC_DEPTH
       xRecurIntraCodingLumaQT( pcOrgYuv, pcPredYuv, pcResiYuv, resiLumaPU, uiPUDistY, true, dPUCost, tuRecurseWithPU DEBUG_STRING_PASS_INTO(sMode), (zeroResi != 0) );
-#if H_3D_FAST_INTRA_SDC    
+#if NH_3D_ENC_DEPTH
               if( dPUCost < dBestPUCostConv )
               {
                 uiThirdBestPUModeConv = uiSecondBestPUModeConv;
@@ -3623,7 +3622,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
     //--- set reconstruction for next intra prediction blocks ---
     if( !tuRecurseWithPU.IsLastSection() )
     {
-      const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
+      //const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
       const UInt  uiCompWidth   = puRect.width;
       const UInt  uiCompHeight  = puRect.height;
 
