@@ -357,11 +357,7 @@ const ComponentID   compID,
 #endif
 #if NH_3D_SDC_INTRA
   Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bZeroResidual, Int iSDCDeltaResi    );
-#endif
-#if TEMP_SDC_CLEANUP // PM: consider this cleanup for SDC
-#if NH_3D_SDC_INTRA
   Void xCalcConstantSDC           ( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& valDC );
-#endif
 #endif
 
 

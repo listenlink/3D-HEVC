@@ -1185,7 +1185,6 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
 #if NH_3D_SDC_INTRA
 Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if TEMP_SDC_CLEANUP // PM: consider this cleanup for DMM and SDC
   TComYuv* pcRecoYuv  = m_ppcYuvReco[uiDepth];
   TComYuv* pcPredYuv  = m_ppcYuvReco[uiDepth];
   TComYuv* pcResiYuv  = m_ppcYuvResi[uiDepth];
@@ -1323,138 +1322,6 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if NH_3D_DMM
   }
 #endif
-#else
-  UInt uiWidth        = pcCU->getWidth  ( 0 );
-  UInt uiHeight       = pcCU->getHeight ( 0 );
-  TComWedgelet* dmm4SegmentationOrg = new TComWedgelet( uiWidth, uiHeight );
-  UInt numParts = 1;
-  UInt sdcDepth    = 0;
-  TComYuv* pcRecoYuv  = m_ppcYuvReco[uiDepth];
-  TComYuv* pcPredYuv  = m_ppcYuvReco[uiDepth];
-  TComYuv* pcResiYuv  = m_ppcYuvResi[uiDepth];
-
-  UInt    uiStride = 0;
-  Pel*    piReco;
-  Pel*    piPred;
-  Pel*    piResi;
-
-  UInt    uiZOrder;        
-  Pel*    piRecIPred;      
-  UInt    uiRecIPredStride;
-
-  UInt    uiLumaPredMode = 0;  
-
-  if ((uiWidth >> pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize()) > 1)
-  {
-    numParts = uiWidth * uiWidth >> (2 * pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize());
-    sdcDepth = g_aucConvertToBit[uiWidth] + 2 - pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize();
-    uiWidth = uiHeight = (1 << pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize());
-  }
-
-  for ( Int i = 0; i < numParts; i++ )
-  {
-    uiStride    = pcRecoYuv->getStride  ();
-    piReco      = pcRecoYuv->getLumaAddr( uiAbsPartIdx );
-    piPred      = pcPredYuv->getLumaAddr( uiAbsPartIdx );
-    piResi      = pcResiYuv->getLumaAddr( uiAbsPartIdx );
-
-    uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
-    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
-    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
-
-    uiLumaPredMode    = pcCU->getLumaIntraDir     ( uiAbsPartIdx );
-
-    AOF( uiWidth == uiHeight );
-
-    //===== init availability pattern =====
-    Bool  bAboveAvail = false;
-    Bool  bLeftAvail  = false;
-
-    pcCU->getPattern()->initPattern   ( pcCU, sdcDepth, uiAbsPartIdx );
-    pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, sdcDepth, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
-
-    TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-    //===== get prediction signal =====
-    if( isDmmMode( uiLumaPredMode ) )
-    {
-      m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, false, dmm4Segmentation  );
-      Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
-      Bool* dmm4PatternOrg = dmm4SegmentationOrg->getPattern();
-      for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
-      { 
-        dmm4PatternOrg[k+(uiAbsPartIdx<<4)] = dmm4PatternSplit[k];
-      }
-    }
-    else
-    {
-      m_pcPrediction->predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
-    }
-
-    if ( numParts > 1 )
-    {
-      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-      {
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          piReco        [ uiX ] = ClipY( piPred[ uiX ] );
-          piRecIPred    [ uiX ] = piReco[ uiX ];
-        }
-        piPred     += uiStride;
-        piReco     += uiStride;
-        piRecIPred += uiRecIPredStride;
-      }
-    }
-    uiAbsPartIdx += ( (uiWidth * uiWidth) >> 4 );
-    dmm4Segmentation->destroy(); delete dmm4Segmentation;
-  }
-  uiAbsPartIdx = 0;
-  
-  if ( numParts > 1 )
-  {
-    uiWidth = pcCU->getWidth( 0 );
-    uiHeight = pcCU->getHeight( 0 );
-  }
-  piReco      = pcRecoYuv->getLumaAddr( uiAbsPartIdx );
-  piPred      = pcPredYuv->getLumaAddr( uiAbsPartIdx );
-  piResi      = pcResiYuv->getLumaAddr( uiAbsPartIdx );
-  uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
-  piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
-  uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
-  // number of segments depends on prediction mode
-  UInt uiNumSegments = 1;
-  Bool* pbMask = NULL;
-  UInt uiMaskStride = 0;
-  
-  if( getDmmType( uiLumaPredMode ) == DMM1_IDX )
-  {
-    Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
-
-    WedgeList* pacWedgeList  = pcCU->isDMM1UpscaleMode(uiWidth) ? &g_dmmWedgeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])] :  &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
-    TComWedgelet* pcWedgelet = &(pacWedgeList->at( uiTabIdx ));
-
-    uiNumSegments = 2;
-
-    pbMask       = pcCU->isDMM1UpscaleMode( uiWidth ) ? pcWedgelet->getScaledPattern(uiWidth) : pcWedgelet->getPattern();
-    uiMaskStride = pcCU->isDMM1UpscaleMode( uiWidth ) ? uiWidth : pcWedgelet->getStride();
-  }
-  if( getDmmType( uiLumaPredMode ) == DMM4_IDX )
-  {
-    uiNumSegments = 2;
-    pbMask  = dmm4SegmentationOrg->getPattern();
-    uiMaskStride = dmm4SegmentationOrg->getStride();
-  }
-  // get DC prediction for each segment
-  Pel apDCPredValues[2];
-  if ( getDmmType( uiLumaPredMode ) == DMM1_IDX || getDmmType( uiLumaPredMode ) == DMM4_IDX )
-  {
-    apDCPredValues[0] = pcCU->getDmmPredictor( 0 );
-    apDCPredValues[1] = pcCU->getDmmPredictor( 1 );
-  }
-  else
-  {
-    m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
-  }
-#endif
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
@@ -1514,11 +1381,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pRecCr += uiStrideC;
   }
 #if NH_3D_DMM
-#if TEMP_SDC_CLEANUP // PM: consider this cleanup for DMM and SDC
   if( pbMask ) { delete[] pbMask; }
-#else
-  dmm4SegmentationOrg->destroy(); delete dmm4SegmentationOrg;
-#endif
 #endif
 }
 #endif

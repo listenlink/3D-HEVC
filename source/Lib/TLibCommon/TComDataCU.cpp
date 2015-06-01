@@ -656,10 +656,6 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
     memset( m_pbSDCFlag,     false,                m_uiNumPartition * sizeof( *m_pbSDCFlag ) );
     memset( m_apSegmentDCOffset[0],     0,                m_uiNumPartition * sizeof( *m_apSegmentDCOffset[0] ) );
     memset( m_apSegmentDCOffset[1],     0,                m_uiNumPartition * sizeof( *m_apSegmentDCOffset[1] ) );
-#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-    m_apDmmPredictor[0] = 0;
-    m_apDmmPredictor[1] = 0;
-#endif
 #endif
 #if H_3D_DBBP
     memset( m_pbDBBPFlag        + firstElement, false,                    numElements * sizeof( *m_pbDBBPFlag ) );
@@ -814,10 +810,6 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
       m_pbSDCFlag           [ui] = false;
       m_apSegmentDCOffset[0][ui] = 0;
       m_apSegmentDCOffset[1][ui] = 0;
-#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-      m_apDmmPredictor[0] = 0;
-      m_apDmmPredictor[1] = 0;
-#endif
 #endif
 #if H_3D_DBBP
       m_pbDBBPFlag[ui] = false;
@@ -920,10 +912,6 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_pbSDCFlag,            0, sizeof(Bool) * m_uiNumPartition  );
   memset( m_apSegmentDCOffset[0], 0, sizeof(Pel) * m_uiNumPartition   );
   memset( m_apSegmentDCOffset[1], 0, sizeof(Pel) * m_uiNumPartition   );
-#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-  m_apDmmPredictor[0] = 0;
-  m_apDmmPredictor[1] = 0;
-#endif
 #endif
 #if H_3D_DBBP
   memset( m_pbDBBPFlag,         0, iSizeInBool  );
@@ -2390,7 +2378,6 @@ Void TComDataCU::setSDCFlagSubParts ( Bool bSDCFlag, UInt absPartIdx, UInt depth
 
 Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
 {
-#if TEMP_SDC_CLEANUP // PM: consider this cleanup for DMM and SDC
   if( getSlice()->getIsDepth() && isIntra(uiAbsPartIdx) && getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N )
   {
     UInt lumaPredMode = getIntraDir( CHANNEL_TYPE_LUMA, uiAbsPartIdx );
@@ -2400,32 +2387,6 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
 #endif
   }
   return false;
-#else
-  // check general CU information
-  if( !getSlice()->getIsDepth() || !isIntra(uiAbsPartIdx) || getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )
-  {
-    return false;
-  }
-
-  if( isDmmMode( getLumaIntraDir( uiAbsPartIdx ) ) )
-  {
-    return true;
-  }
-  
-  if( getLumaIntraDir( uiAbsPartIdx ) < NUM_INTRA_MODE )
-  {
-    return true;
-  }
-
-  return false;
-  // check prediction mode
-  UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
-  if( uiLumaPredMode == PLANAR_IDX || ( getDmmType( uiLumaPredMode ) == DMM1_IDX  ) )
-    return true;
-  
-  // else
-  return false;
-#endif
 }
 #endif
 
