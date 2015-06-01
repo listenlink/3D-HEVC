@@ -169,14 +169,8 @@ public:
   Void predBiSegDCs               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool* biSegPattern, Int patternStride, Pel& predDC1, Pel& predDC2 );
   Void assignBiSegDCs             ( Pel* ptrDst, UInt dstStride, Bool* biSegPattern, Int patternStride, Pel valDC1, Pel valDC2 );
 #endif
-#if TEMP_SDC_CLEANUP // PM: consider this cleanup for SDC
 #if NH_3D_SDC_INTRA
   Void predConstantSDC            ( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& predDC );
-#endif
-#else // PM: should be obsolete after cleanup
-#if NH_3D_SDC_INTRA
-  Void analyzeSegmentsSDC         ( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride, UInt uiIntraMode, Bool orgDC=false );
-#endif
 #endif
   
 #if H_3D_DBBP

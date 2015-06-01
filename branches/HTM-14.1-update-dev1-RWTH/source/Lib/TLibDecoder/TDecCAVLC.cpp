@@ -499,7 +499,6 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
   UInt uiCode = 0; 
   //
   TComDLT* pcDLT = pcPPS->getDLT();
-  //Ed.(GT): PPSs are copied in HM16.4. This would cause that the only the DLT pointer is copied. Therefore, a deep copy of the DLT needs to be implemented. Another option would be to use a vectors for the DLT arrays in TComDLT.
 
   READ_FLAG(uiCode, "dlt_present_flag");
   pcDLT->setDltPresentFlag( (uiCode == 1) ? true : false );

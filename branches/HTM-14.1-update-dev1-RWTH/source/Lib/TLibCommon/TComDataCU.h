@@ -188,9 +188,6 @@ private:
 #if NH_3D_SDC_INTRA
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
-#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-  Pel           m_apDmmPredictor[2];
-#endif
 #endif
 #if H_3D_DBBP
   Bool*         m_pbDBBPFlag;        ///< array of DBBP flags
@@ -572,10 +569,6 @@ public:
   Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
   Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
-#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-  Void          setDmmPredictor ( Pel pOffset, UInt uiSeg) { m_apDmmPredictor[uiSeg] = pOffset; }
-  Pel           getDmmPredictor ( UInt uiSeg) { return m_apDmmPredictor[uiSeg]; }
-#endif
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -744,13 +737,6 @@ public:
   UInt&         getTotalNumPart()               { return m_uiNumPartition;    }
 
   UInt          getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, const UInt uiHeight, const ComponentID compID) const ;
-
-#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-#if NH_3D_DMM
-  Bool         isDMM1UpscaleMode       ( UInt uiWidth ){ Bool bDMM1UpsampleModeFlag = true; UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ bDMM1UpsampleModeFlag = false; } return bDMM1UpsampleModeFlag; };
-  UInt         getDMM1BasePatternWidth ( UInt uiWidth ){ UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ uiBaseWidth =  uiWidth; } return uiBaseWidth; }
-#endif
-#endif
 };
 
 namespace RasterAddress

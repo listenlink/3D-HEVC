@@ -79,8 +79,6 @@
                                               // H_3D_FAST_DEPTH_INTRA
 #endif
 
-#define TEMP_SDC_CLEANUP                  1   // PM: consider these cleanups for DMM and SDC
-
 #if H_3D
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 

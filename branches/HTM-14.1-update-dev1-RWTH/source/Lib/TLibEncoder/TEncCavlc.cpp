@@ -371,18 +371,6 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 #if NH_3D
 Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
 {
-  // Assuming that all PPS indirectly refer to the same VPS via different SPS
-  // There is no parsing dependency in decoding DLT in PPS. 
-  // The VPS information passed to decodePPS() is used to arrange the decoded DLT tables to their corresponding layers. 
-  // This is equivalent to the process of 
-  //   Step 1) decoding DLT tables based on the number of depth layers, and
-  //   Step 2) mapping DLT tables to the depth layers
-  // as described in the 3D-HEVC WD.
-
-  // GT: Please remove dependency from VPS in the encoding as well as in the parsing function, e.g. using the equivalent process.
-  // GT: Moreover this function should only carry out the coding of the DLT and NO rate based decisions.
-  // GT: Please add a function e.g. xSetDLT in e.g. TEncSlice to find the best DLT syntax representation and do ONLY the coding of the DLT here !!
-
 #if NH_3D_DLT
   WRITE_FLAG( pcPPS->getDLT()->getDltPresentFlag() ? 1 : 0, "dlt_present_flag" );
 

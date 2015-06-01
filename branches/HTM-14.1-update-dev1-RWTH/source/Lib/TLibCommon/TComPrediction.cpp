@@ -567,12 +567,7 @@ Void TComPrediction::predIntraLumaDmm( TComDataCU* pcCU, UInt uiAbsPartIdx, DmmI
   // set prediction signal
   Pel* pDst = piPred;
   assignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
-#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
-#if NH_3D_SDC_INTRA
-  pcCU->setDmmPredictor(segDC1, 0);
-  pcCU->setDmmPredictor(segDC2, 1);
-#endif
-#endif
+  
   delete[] biSegPattern;
 }
 #endif
@@ -2387,7 +2382,6 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 }
 #endif
 
-#if TEMP_SDC_CLEANUP // PM: consider this cleanup for SDC
 #if NH_3D_SDC_INTRA
 Void TComPrediction::predConstantSDC( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& predDC )
 {
@@ -2397,75 +2391,7 @@ Void TComPrediction::predConstantSDC( Pel* ptrSrc, UInt srcStride, UInt uiSize, 
   Pel* pRightBottom = (ptrSrc+ (srcStride*(uiSize-1))  + (uiSize-1));
   predDC = (*pLeftTop + *pRightTop + *pLeftBottom + *pRightBottom + 2)>>2;
 }
-#endif
-#else // PM: should be obsolete after cleanup
-#if NH_3D_SDC_INTRA
-Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride
-                                         ,UInt uiIntraMode
-                                         ,Bool orgDC
-                                        )
-{
-  Int iSumDepth[2];
-  memset(iSumDepth, 0, sizeof(Int)*2);
-  Int iSumPix[2];
-  memset(iSumPix, 0, sizeof(Int)*2);
-
-  for( Int i = 0; i < uiNumSegments; i++ )
-  {
-    rpSegMeans[i] = 0;  
-  }
-
-  if ( !orgDC )
-  {
-    Pel* pLeftTop = pOrig;
-    Pel* pRightTop = pOrig + (uiSize-1);
-    Pel* pLeftBottom = (pOrig+ (uiStride*(uiSize-1)));
-    Pel* pRightBottom = (pOrig+ (uiStride*(uiSize-1)) + (uiSize-1));
-
-    rpSegMeans[0] = (*pLeftTop + *pRightTop + *pLeftBottom + *pRightBottom + 2)>>2;
-    return;
-  }
-
-  Int subSamplePix;
-  if ( uiSize == 64 || uiSize == 32 )
-  {
-    subSamplePix = 2;
-  }
-  else
-  {
-    subSamplePix = 1;
-  }
-
-  for (Int y=0; y<uiSize; y+=subSamplePix)
-  {
-    for (Int x=0; x<uiSize; x+=subSamplePix)
-    {
-      UChar ucSegment = pMask?(UChar)pMask[x]:0;
-      assert( ucSegment < uiNumSegments );
-      
-      iSumDepth[ucSegment] += pOrig[x];
-      iSumPix[ucSegment]   += 1;
-    }
-    
-    pOrig  += uiStride*subSamplePix;
-    pMask  += uiMaskStride*subSamplePix;
-  }
-  
-  // compute mean for each segment
-  for( UChar ucSeg = 0; ucSeg < uiNumSegments; ucSeg++ )
-  {
-    if( iSumPix[ucSeg] > 0 )
-    {
-      rpSegMeans[ucSeg] = iSumDepth[ucSeg] / iSumPix[ucSeg];
-    }
-    else
-    {
-      rpSegMeans[ucSeg] = 0;  // this happens for zero-segments
-    }
-  }
-}
 #endif // NH_3D_SDC_INTRA
-#endif
 
 #if NH_3D_DMM
 Void TComPrediction::predContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool* segPattern )
