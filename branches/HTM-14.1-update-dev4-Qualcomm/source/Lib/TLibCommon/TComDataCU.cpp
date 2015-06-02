@@ -974,6 +974,8 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #endif
 #if H_3D_VSP
       m_piVSPFlag[ui]=pcCU->m_piVSPFlag[uiPartOffset+ui];
+#endif
+#if H_3D_VSP || NH_3D_DBBP
       m_pDvInfo[ ui ] = pcCU->m_pDvInfo[uiPartOffset+ui];
 #endif
 #if H_3D_SPIVMP
@@ -1236,6 +1238,8 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_puhMergeIndex      = pcCU->getMergeIndex()            + uiAbsPartIdx;
 #if H_3D_VSP
   m_piVSPFlag          = pcCU->getVSPFlag()               + uiAbsPartIdx;
+#endif
+#if H_3D_VSP || NH_3D_DBBP
   m_pDvInfo            = pcCU->getDvInfo()                + uiAbsPartIdx;
 #endif
 #if H_3D_SPIVMP
@@ -1294,6 +1298,8 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_puhMergeIndex       + uiOffset, pcCU->getMergeIndex(),        iSizeInUchar );
 #if H_3D_VSP
   memcpy( m_piVSPFlag           + uiOffset, pcCU->getVSPFlag(),           sizeof( Char ) * uiNumPartition );
+#endif
+#if H_3D_VSP || NH_3D_DBBP
   memcpy( m_pDvInfo             + uiOffset, pcCU->getDvInfo(),            sizeof( *m_pDvInfo ) * uiNumPartition );
 #endif
 #if H_3D_SPIVMP
@@ -1421,7 +1427,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   memcpy( pCtu->getMergeIndex()        + m_absZIdxInCtu, m_puhMergeIndex,       iSizeInUchar );
   #if H_3D_VSP
   memcpy( rpcCU->getVSPFlag()           + m_uiAbsIdxInLCU, m_piVSPFlag,           sizeof( Char ) * m_uiNumPartition );
-  memcpy( rpcCU->getDvInfo()            + m_uiAbsIdxInLCU, m_pDvInfo,             sizeof( *m_pDvInfo ) * m_uiNumPartition );
+#endif
+#if H_3D_VSP || NH_3D_DBBP
+  memcpy( pCtu->getDvInfo()            + m_absZIdxInCtu, m_pDvInfo,             sizeof( *m_pDvInfo ) * m_uiNumPartition );
 #endif
 #if H_3D_SPIVMP
   memcpy( rpcCU->getSPIVMPFlag()        + m_uiAbsIdxInLCU, m_pbSPIVMPFlag,        sizeof( Bool ) * m_uiNumPartition );
@@ -2117,10 +2125,8 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
   Pel* pDepthPels = NULL;
   
   // DBBP is a texture coding tool
-  if( getSlice()->getIsDepth() )
-  {
-    return NULL;
-  }  
+  assert( !getSlice()->getIsDepth() );
+  
 #if H_3D_FCO
   TComPic* depthPic = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
   
@@ -2506,11 +2512,12 @@ Void TComDataCU::setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPa
 {
   setSubPart<Char>( iVSPFlag, m_piVSPFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
 }
-#if H_3D_VSP
+#endif
+#if H_3D_VSP || NH_3D_DBBP
 template<typename T>
 Void TComDataCU::setSubPartT( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx )
 {
-  UInt uiCurrPartNumQ = (m_pcPic->getNumPartInCU() >> (2 * uiCUDepth)) >> 2;
+  UInt uiCurrPartNumQ = (m_pcPic->getNumPartitionsInCtu() >> (2 * uiCUDepth)) >> 2;
   switch ( m_pePartSize[ uiCUAddr ] )
   {
   case SIZE_2Nx2N:
@@ -2641,7 +2648,6 @@ Void TComDataCU::setSubPartT( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt 
   }
 
 }
-#endif
 #endif
 
 Void TComDataCU::setInterDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
@@ -6130,7 +6136,7 @@ Void TComDataCU::setDvInfoSubParts( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiD
     m_pDvInfo[uiAbsPartIdx + ui] = cDvInfo;
   }
 }
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
 Void TComDataCU::setDvInfoSubParts( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth )
 {
   setSubPartT<DisInfo>( cDvInfo, m_pDvInfo, uiAbsPartIdx, uiDepth, uiPUIdx );

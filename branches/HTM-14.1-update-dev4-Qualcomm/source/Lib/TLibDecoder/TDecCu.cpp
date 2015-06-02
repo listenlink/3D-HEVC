@@ -301,7 +301,11 @@ if(!pcCU->getSlice()->isIntra())
 #if H_3D_IV_MERGE
     if( pcCU->getSlice()->getVPS()->getIvMvPredFlag(pcCU->getSlice()->getLayerId()) )
 #else
+#if NH_3D_DBBP
+    if( pcCU->getSlice()->getDepthBasedBlkPartFlag() )
+#else
     if (0)
+#endif
 #endif
 #endif
 #endif
@@ -877,6 +881,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     UInt uiPartAddr = uiSegment*uiPUOffset;
     
     pDBBPTmpData->auhInterDir[uiSegment] = pcCU->getInterDir(uiPartAddr);
+    assert( pDBBPTmpData->auhInterDir[uiSegment] == 1 || pDBBPTmpData->auhInterDir[uiSegment] == 2  );  // only uni-prediction allowed
     
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {

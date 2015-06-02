@@ -80,7 +80,7 @@ private:
   TDecSlice*            m_pcSliceDecoder;
   TComLoopFilter*       m_pcLoopFilter;
 #if NH_MV
-  TDecTop*              m_decTop; 
+  //TDecTop*              m_decTop;
 #endif
 
   TComSampleAdaptiveOffset*     m_pcSAO;
