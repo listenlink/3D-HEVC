@@ -500,7 +500,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
   //
   TComDLT* pcDLT = pcPPS->getDLT();
 
-  READ_FLAG(uiCode, "dlt_present_flag");
+  READ_FLAG(uiCode, "dlts_present_flag");
   pcDLT->setDltPresentFlag( (uiCode == 1) ? true : false );
 
   if ( pcDLT->getDltPresentFlag() )
@@ -508,7 +508,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
     READ_CODE(6, uiCode, "pps_depth_layers_minus1");
     pcDLT->setNumDepthViews( uiCode+1 );
     
-    READ_CODE(4, uiCode, "pps_bit_depth_for_depth_views_minus8");
+    READ_CODE(4, uiCode, "pps_bit_depth_for_depth_layers_minus8");
     pcDLT->setDepthViewBitDepth( (uiCode+8) );
     
     for( Int i = 0; i <= pcDLT->getNumDepthViews(); i++ )
@@ -525,7 +525,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
         UInt uiMinDiff            = 0;
         UInt uiCodeLength         = 0;
         
-        READ_FLAG(uiCode, "inter_view_dlt_pred_enable_flag[ i ]");
+        READ_FLAG(uiCode, "dlt_pred_flag[i]");
         
         if( uiCode )
         {
@@ -535,7 +535,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
         
         if ( pcDLT->getInterViewDltPredEnableFlag( layerId ) == false )
         {
-          READ_FLAG(uiCode, "dlt_bit_map_rep_flag[ layerId ]");
+          READ_FLAG(uiCode, "dlt_val_flags_present_flag[i]");
           bDltBitMapRepFlag = (uiCode == 1) ? true : false;
         }
         else
@@ -551,7 +551,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
         {
           for (UInt d=0; d<256; d++)
           {
-            READ_FLAG(uiCode, "dlt_bit_map_flag[ layerId ][ j ]");
+            READ_FLAG(uiCode, "dlt_value_flag[i][j]");
             if (uiCode == 1)
             {
               aiIdx2DepthValue[uiNumDepthValues] = d;
@@ -562,14 +562,14 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
         // Diff Coding
         else
         {
-          READ_CODE(8, uiNumDepthValues, "num_depth_values_in_dlt[i]");   // num_entry
+          READ_CODE(8, uiNumDepthValues, "num_val_delta_dlt");   // num_entry
           
           {
             // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component.
             
             if (uiNumDepthValues > 1)
             {
-              READ_CODE(8, uiCode, "max_diff[ layerId ]");
+              READ_CODE(8, uiCode, "max_diff");
               uiMaxDiff = uiCode;
             }
             else
@@ -580,7 +580,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
             if (uiNumDepthValues > 2)
             {
               uiCodeLength = (UInt) gCeilLog2(uiMaxDiff + 1);
-              READ_CODE(uiCodeLength, uiCode, "min_diff_minus1[ layerId ]");
+              READ_CODE(uiCodeLength, uiCode, "min_diff_minus1");
               uiMinDiff = uiCode + 1;
             }
             else
@@ -588,7 +588,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
               uiMinDiff = uiMaxDiff;   // when there are only one or two values in DLT
             }
             
-            READ_CODE(8, uiCode, "dlt_depth_value0[layerId]");   // entry0
+            READ_CODE(8, uiCode, "delta_dlt_val0");   // entry0
             aiIdx2DepthValue[0] = uiCode;
             
             if (uiMaxDiff == uiMinDiff)
@@ -603,7 +603,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
               uiCodeLength = (UInt) gCeilLog2(uiMaxDiff - uiMinDiff + 1);
               for (UInt d=1; d<uiNumDepthValues; d++)
               {
-                READ_CODE(uiCodeLength, uiCode, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");
+                READ_CODE(uiCodeLength, uiCode, "delta_val_diff_minus_min[k]");
                 aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + uiCode;
               }
             }
@@ -647,7 +647,7 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
     if (pcVUI->getAspectRatioIdc() == 255)
     {
       READ_CODE(16, uiCode, "sar_width");                             pcVUI->setSarWidth(uiCode);
-      READ_CODE(16, uiCode, "sar_height");                            pcVUI->setSarHeight(uiCode);
+      READ_CODE(16, uiCode, "sar_height");                              pcVUI->setSarHeight(uiCode);
     }
   }
 

@@ -90,7 +90,6 @@ extern const UInt   g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ];
 extern const UChar  g_aucIntraModeNumFast_UseMPM[MAX_CU_DEPTH];
 extern const UChar  g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH];
 extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
-
 // ====================================================================================================================
 // Depth coding modes
 // ====================================================================================================================
@@ -100,14 +99,11 @@ extern const UChar                                           g_dmm1TabIdxBits   
 extern Bool                                                  g_wedgePattern[32*32];
 extern       std::vector< std::vector<TComWedgelet> >        g_dmmWedgeLists;
 extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
-
 Void initWedgeLists( Bool initNodeList = false );
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
-
 WedgeList*     getWedgeListScaled    ( UInt blkSize );
 WedgeNodeList* getWedgeNodeListScaled( UInt blkSize );
-
 __inline Void mapDmmToIntraDir( UInt& intraMode ) { if( isDmmMode( intraMode ) ) intraMode = DC_IDX; }
 __inline Void mapDmmToIntraDir(  Int& intraMode ) { if( isDmmMode( intraMode ) ) intraMode = DC_IDX; }
 #endif

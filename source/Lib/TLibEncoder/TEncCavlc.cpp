@@ -372,18 +372,18 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
 {
 #if NH_3D_DLT
-  WRITE_FLAG( pcPPS->getDLT()->getDltPresentFlag() ? 1 : 0, "dlt_present_flag" );
+  WRITE_FLAG( pcPPS->getDLT()->getDltPresentFlag() ? 1 : 0, "dlts_present_flag" );
 
   if ( pcPPS->getDLT()->getDltPresentFlag() )
   {
     WRITE_CODE(pcPPS->getDLT()->getNumDepthViews() - 1, 6, "pps_depth_layers_minus1");
-    WRITE_CODE((pcPPS->getDLT()->getDepthViewBitDepth() - 8), 4, "pps_bit_depth_for_depth_views_minus8");
+    WRITE_CODE((pcPPS->getDLT()->getDepthViewBitDepth() - 8), 4, "pps_bit_depth_for_depth_layers_minus8");
     
     for( Int i = 0; i <= pcPPS->getDLT()->getNumDepthViews(); i++ )
     {
       Int layerId = pcPPS->getDLT()->getDepthIdxToLayerId(i);
       
-      WRITE_FLAG( pcPPS->getDLT()->getUseDLTFlag( layerId ) ? 1 : 0, "dlt_flag[layerId]" );
+      WRITE_FLAG( pcPPS->getDLT()->getUseDLTFlag( layerId ) ? 1 : 0, "dlt_flag[i]" );
       
       if ( pcPPS->getDLT()->getUseDLTFlag( layerId ) )
       {
@@ -391,10 +391,10 @@ Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
         UInt uiNumDepthValues_coded = pcPPS->getDLT()->getNumDepthValues(layerId);
         
         // ----------------------------- Actual coding -----------------------------
-        WRITE_FLAG( pcPPS->getDLT()->getInterViewDltPredEnableFlag( layerId ) ? 1 : 0, "inter_view_dlt_pred_enable_flag[ layerId ]");
+        WRITE_FLAG( pcPPS->getDLT()->getInterViewDltPredEnableFlag( layerId ) ? 1 : 0, "dlt_pred_flag[i]");
         if ( pcPPS->getDLT()->getInterViewDltPredEnableFlag( layerId ) == false )
         {
-          WRITE_FLAG( pcPPS->getDLT()->getUseBitmapRep( layerId ) ? 1 : 0, "dlt_bit_map_rep_flag[ layerId ]" );
+          WRITE_FLAG( pcPPS->getDLT()->getUseBitmapRep( layerId ) ? 1 : 0, "dlt_val_flags_present_flag[i]" );
           
           for( UInt ui = 0; ui<uiNumDepthValues_coded; ui++ )
           {
@@ -418,12 +418,12 @@ Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
           {
             if ( d == aiIdx2DepthValue_coded[uiDltArrayIndex] )
             {
-              WRITE_FLAG(1, "dlt_bit_map_flag[ layerId ][ j ]");
+              WRITE_FLAG(1, "dlt_value_flag[i][j]");
               uiDltArrayIndex++;
             }
             else
             {
-              WRITE_FLAG(0, "dlt_bit_map_flag[ layerId ][ j ]");
+              WRITE_FLAG(0, "dlt_value_flag[i][j]");
             }
           }
         }
@@ -461,26 +461,26 @@ Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
             uiLengthDltDiffMinusMin = (UInt) gCeilLog2(uiMaxDiff - uiMinDiff + 1);
           }
           
-          WRITE_CODE(uiNumDepthValues_coded, 8, "num_depth_values_in_dlt[layerId]");    // num_entry
+          WRITE_CODE(uiNumDepthValues_coded, 8, "num_val_delta_dlt");    // num_entry
           {
             // The condition if( uiNumDepthValues_coded > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component.
             if ( uiNumDepthValues_coded > 1 )
             {
-              WRITE_CODE(uiMaxDiff, 8, "max_diff[ layerId ]");        // max_diff
+              WRITE_CODE(uiMaxDiff, 8, "max_diff");        // max_diff
             }
             
             if ( uiNumDepthValues_coded > 2 )
             {
-              WRITE_CODE((uiMinDiff - 1), uiLengthMinDiff, "min_diff_minus1[ layerId ]");     // min_diff_minus1
+              WRITE_CODE((uiMinDiff - 1), uiLengthMinDiff, "min_diff_minus1");     // min_diff_minus1
             }
             
-            WRITE_CODE(aiIdx2DepthValue_coded[0], 8, "dlt_depth_value0[layerId]");          // entry0
+            WRITE_CODE(aiIdx2DepthValue_coded[0], 8, "delta_dlt_val0");          // entry0
             
             if (uiMaxDiff > uiMinDiff)
             {
               for (UInt d=1; d < uiNumDepthValues_coded; d++)
               {
-                WRITE_CODE( (puiDltDiffValues[d] - uiMinDiff), uiLengthDltDiffMinusMin, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");    // entry_value_diff_minus_min[ k ]
+                WRITE_CODE( (puiDltDiffValues[d] - uiMinDiff), uiLengthDltDiffMinusMin, "delta_val_diff_minus_min[k]");    // entry_value_diff_minus_min[ k ]
               }
             }
           }

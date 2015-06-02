@@ -64,7 +64,7 @@
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-#define H_MV_ENC_DEC_TRAC                 0  //< CU/PU level tracking
+#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
 
 #if NH_3D
 #define NH_3D_VSO                         1
