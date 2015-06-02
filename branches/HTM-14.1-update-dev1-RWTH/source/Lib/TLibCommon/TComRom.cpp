@@ -252,7 +252,6 @@ Void destroyROM()
       }
     }
   }
-
 #if NH_3D_DMM
   if( !g_dmmWedgeLists.empty() ) 
   {
@@ -525,7 +524,6 @@ const WedgeResolution g_dmmWedgeResolution[6] =
 const UChar g_dmm1TabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
      0,    7,   10,   9,    9,   13 };
-
 Bool g_wedgePattern[32*32];
 extern std::vector< std::vector<TComWedgelet> >   g_dmmWedgeLists;
 extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
@@ -538,7 +536,7 @@ Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 FILE*  g_hTrace = NULL; // Set to NULL to open up a file. Set to stdout to use the current output
 const Bool g_bEncDecTraceEnable  = true;
 const Bool g_bEncDecTraceDisable = false;
-Bool   g_HLSTraceEnable = false;
+Bool   g_HLSTraceEnable = true;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
 #if H_MV_ENC_DEC_TRAC
@@ -739,7 +737,6 @@ Void writeToTraceFile( const Char* symbolName, Bool doIt )
 #if NH_3D_DMM
 std::vector< std::vector<TComWedgelet>  > g_dmmWedgeLists;
 std::vector< std::vector<TComWedgeNode> > g_dmmWedgeNodeLists;
-
 Void initWedgeLists( Bool initNodeList )
 {
   if( !g_dmmWedgeLists.empty() ) return;
@@ -750,7 +747,6 @@ Void initWedgeLists( Bool initNodeList )
     std::vector<TComWedgeRef> acWedgeRefList;
     createWedgeList( uiWedgeBlockSize, uiWedgeBlockSize, acWedgeList, acWedgeRefList, g_dmmWedgeResolution[ui] );
     g_dmmWedgeLists.push_back( acWedgeList );
-
     if( initNodeList )
     {
       // create WedgeNodeList
@@ -810,7 +806,6 @@ Void initWedgeLists( Bool initNodeList )
     }
   }
 }
-
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes )
 {
   assert( uiWidth == uiHeight );
@@ -851,7 +846,6 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     posStart = posEnd;
   }
 }
-
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList )
 {
   Bool bValid = cWedgelet.checkNotPlain();

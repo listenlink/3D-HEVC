@@ -3197,13 +3197,13 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #if NH_3D_ENC_DEPTH
           Bool zeroResiTest = (pcCU->getSlice()->getIsDepth() && !pcCU->getSlice()->isIRAP());
 #if NH_3D_SDC_INTRA
-          zeroResiTest |= pcCU->getSDCFlag(uiPartOffset);
+          zeroResiTest = zeroResiTest || pcCU->getSDCFlag(uiPartOffset);
           if( uiSDC != 0 && iSDCDeltaResi != 0 )
           {
             zeroResiTest = false;
           }
 #endif
-          for( UInt zeroResi = 0; zeroResi <= zeroResiTest?1:0; zeroResi++ )
+          for( UInt zeroResi = 0; zeroResi <= ( zeroResiTest ? 1 : 0 ); zeroResi++ )
           {
 #endif
       DEBUG_STRING_NEW(sMode)
