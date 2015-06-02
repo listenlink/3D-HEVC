@@ -305,13 +305,13 @@ Void TAppRendererCfg::xCheckParameter()
   xConfirmPara( m_iPostProcMode       < 0 || m_iPostProcMode       >  2, "PostProcMode       must be more than or equal to 0 and less than 3"  );
 
   Int iNumNonNULL;
-  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchDepthInputFileList[iNumNonNULL]; iNumNonNULL++);  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
-  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchVideoInputFileList[iNumNonNULL]; iNumNonNULL++);  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
+  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchDepthInputFileList[iNumNonNULL]; iNumNonNULL++) {};  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
+  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchVideoInputFileList[iNumNonNULL]; iNumNonNULL++) {};  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
 
 
   if ( !m_bSweep )
   {
-  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfOutputViews) && m_pchSynthOutputFileList[iNumNonNULL]; iNumNonNULL++); xConfirmPara( iNumNonNULL < m_iNumberOfOutputViews, "Number of SynthOutputFiles must be greater than or equal to number of SynthViewNumbers" );
+    for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfOutputViews) && m_pchSynthOutputFileList[iNumNonNULL]; iNumNonNULL++) {}; xConfirmPara( iNumNonNULL < m_iNumberOfOutputViews, "Number of SynthOutputFiles must be greater than or equal to number of SynthViewNumbers" );
   }
   else
   {
