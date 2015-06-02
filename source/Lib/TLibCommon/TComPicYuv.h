@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,8 @@
 #include <stdio.h>
 #include "CommonDef.h"
 #include "TComRom.h"
+#include "TComChromaFormat.h"
+#include "SEI.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -53,119 +55,115 @@
 class TComPicYuv
 {
 private:
-  
+
   // ------------------------------------------------------------------------------------------------
   //  YUV buffer
   // ------------------------------------------------------------------------------------------------
-  
-  Pel*  m_apiPicBufY;           ///< Buffer (including margin)
-  Pel*  m_apiPicBufU;
-  Pel*  m_apiPicBufV;
-  
-  Pel*  m_piPicOrgY;            ///< m_apiPicBufY + m_iMarginLuma*getStride() + m_iMarginLuma
-  Pel*  m_piPicOrgU;
-  Pel*  m_piPicOrgV;
-  
+
+  Pel*  m_apiPicBuf[MAX_NUM_COMPONENT];             ///< Buffer (including margin)
+
+  Pel*  m_piPicOrg[MAX_NUM_COMPONENT];              ///< m_apiPicBufY + m_iMarginLuma*getStride() + m_iMarginLuma
+
   // ------------------------------------------------------------------------------------------------
   //  Parameter for general YUV buffer usage
   // ------------------------------------------------------------------------------------------------
-  
-  Int   m_iPicWidth;            ///< Width of picture
-  Int   m_iPicHeight;           ///< Height of picture
-  
-  Int   m_iCuWidth;             ///< Width of Coding Unit (CU)
-  Int   m_iCuHeight;            ///< Height of Coding Unit (CU)
-  Int*  m_cuOffsetY;
-  Int*  m_cuOffsetC;
-  Int*  m_buOffsetY;
-  Int*  m_buOffsetC;
-  
-  Int   m_iLumaMarginX;
-  Int   m_iLumaMarginY;
-  Int   m_iChromaMarginX;
-  Int   m_iChromaMarginY;
-  
+
+  Int   m_iPicWidth;                                ///< Width of picture in pixels
+  Int   m_iPicHeight;                               ///< Height of picture in pixels
+  ChromaFormat m_chromaFormatIDC;                   ///< Chroma Format
+
+  Int*  m_ctuOffsetInBuffer[MAX_NUM_CHANNEL_TYPE];  ///< Gives an offset in the buffer for a given CTU (and channel)
+  Int*  m_subCuOffsetInBuffer[MAX_NUM_CHANNEL_TYPE];///< Gives an offset in the buffer for a given sub-CU (and channel), relative to start of CTU
+
+  Int   m_iMarginX;                                 ///< margin of Luma channel (chroma's may be smaller, depending on ratio)
+  Int   m_iMarginY;                                 ///< margin of Luma channel (chroma's may be smaller, depending on ratio)
+
   Bool  m_bIsBorderExtended;
-  
 #if H_3D_IV_MERGE
   Int   m_iBaseUnitWidth;       ///< Width of Base Unit (with maximum depth or minimum size, m_iCuWidth >> Max. Depth)
   Int   m_iBaseUnitHeight;      ///< Height of Base Unit (with maximum depth or minimum size, m_iCuHeight >> Max. Depth)
   Int   m_iNumCuInWidth;
 #endif
-protected:
-  Void  xExtendPicCompBorder (Pel* piTxt, Int iStride, Int iWidth, Int iHeight, Int iMarginX, Int iMarginY);
-#if H_3D
+
+#if NH_3D_VSO
   Void  xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Pel iVal );
 #endif
-  
+
 public:
-  TComPicYuv         ();
-  virtual ~TComPicYuv();
-  
+               TComPicYuv         ();
+  virtual     ~TComPicYuv         ();
+
   // ------------------------------------------------------------------------------------------------
   //  Memory management
   // ------------------------------------------------------------------------------------------------
-  
-  Void  create      ( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth );
-  Void  destroy     ();
-  
-  Void  createLuma  ( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uhMaxCUDepth );
-  Void  destroyLuma ();
-  
+
+  Void          create            (const Int iPicWidth,
+                                   const Int iPicHeight,
+                                   const ChromaFormat chromaFormatIDC,
+                                   const UInt uiMaxCUWidth,  ///< used for generating offsets to CUs. Can use iPicWidth if no offsets are required
+                                   const UInt uiMaxCUHeight, ///< used for generating offsets to CUs. Can use iPicHeight if no offsets are required
+                                   const UInt uiMaxCUDepth,  ///< used for generating offsets to CUs. Can use 0 if no offsets are required
+                                   const Bool bUseMargin);   ///< if true, then a margin of uiMaxCUWidth+16 and uiMaxCUHeight+16 is created around the image.
+
+  Void          destroy           ();
+
+  // The following have been removed - Use CHROMA_400 in the above function call.
+  //Void  createLuma  ( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uhMaxCUDepth );
+  //Void  destroyLuma ();
+
   // ------------------------------------------------------------------------------------------------
   //  Get information of picture
   // ------------------------------------------------------------------------------------------------
-  
-  Int   getWidth    ()     { return  m_iPicWidth;    }
-  Int   getHeight   ()     { return  m_iPicHeight;   }
-  
-  Int   getStride   ()     { return (m_iPicWidth     ) + (m_iLumaMarginX  <<1); }
-  Int   getCStride  ()     { return (m_iPicWidth >> 1) + (m_iChromaMarginX<<1); }
-  
-  Int   getLumaMargin   () { return m_iLumaMarginX;  }
-  Int   getChromaMargin () { return m_iChromaMarginX;}
-  
+
+  Int           getWidth          (const ComponentID id) const { return  m_iPicWidth >> getComponentScaleX(id);   }
+  Int           getHeight         (const ComponentID id) const { return  m_iPicHeight >> getComponentScaleY(id);  }
+  ChromaFormat  getChromaFormat   ()                     const { return m_chromaFormatIDC; }
+  UInt          getNumberValidComponents() const { return ::getNumberValidComponents(m_chromaFormatIDC); }
+
+  Int           getStride         (const ComponentID id) const { return ((m_iPicWidth     ) + (m_iMarginX  <<1)) >> getComponentScaleX(id); }
+  Int           getTotalHeight    (const ComponentID id) const { return ((m_iPicHeight    ) + (m_iMarginY  <<1)) >> getComponentScaleY(id); }
+
+  Int           getMarginX        (const ComponentID id) const { return m_iMarginX >> getComponentScaleX(id);  }
+  Int           getMarginY        (const ComponentID id) const { return m_iMarginY >> getComponentScaleY(id);  }
+
   // ------------------------------------------------------------------------------------------------
   //  Access function for picture buffer
   // ------------------------------------------------------------------------------------------------
-  
+
   //  Access starting position of picture buffer with margin
-  Pel*  getBufY     ()     { return  m_apiPicBufY;   }
-  Pel*  getBufU     ()     { return  m_apiPicBufU;   }
-  Pel*  getBufV     ()     { return  m_apiPicBufV;   }
-  
+  Pel*          getBuf            (const ComponentID ch)       { return  m_apiPicBuf[ch];   }
+
   //  Access starting position of original picture
-  Pel*  getLumaAddr ()     { return  m_piPicOrgY;    }
-  Pel*  getCbAddr   ()     { return  m_piPicOrgU;    }
-  Pel*  getCrAddr   ()     { return  m_piPicOrgV;    }
-  
+  Pel*          getAddr           (const ComponentID ch)       { return  m_piPicOrg[ch];   }
+  const Pel*    getAddr           (const ComponentID ch) const { return  m_piPicOrg[ch];   }
+
   //  Access starting position of original picture for specific coding unit (CU) or partition unit (PU)
-  Pel*  getLumaAddr ( Int iCuAddr ) { return m_piPicOrgY + m_cuOffsetY[ iCuAddr ]; }
-  Pel*  getCbAddr   ( Int iCuAddr ) { return m_piPicOrgU + m_cuOffsetC[ iCuAddr ]; }
-  Pel*  getCrAddr   ( Int iCuAddr ) { return m_piPicOrgV + m_cuOffsetC[ iCuAddr ]; }
-  Pel*  getLumaAddr ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgY + m_cuOffsetY[iCuAddr] + m_buOffsetY[g_auiZscanToRaster[uiAbsZorderIdx]]; }
-  Pel*  getCbAddr   ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgU + m_cuOffsetC[iCuAddr] + m_buOffsetC[g_auiZscanToRaster[uiAbsZorderIdx]]; }
-  Pel*  getCrAddr   ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgV + m_cuOffsetC[iCuAddr] + m_buOffsetC[g_auiZscanToRaster[uiAbsZorderIdx]]; }
-  
+  Pel*          getAddr           (const ComponentID ch, const Int ctuRSAddr )       { return m_piPicOrg[ch] + m_ctuOffsetInBuffer[ch==0?0:1][ ctuRSAddr ]; }
+  const Pel*    getAddr           (const ComponentID ch, const Int ctuRSAddr ) const { return m_piPicOrg[ch] + m_ctuOffsetInBuffer[ch==0?0:1][ ctuRSAddr ]; }
+  Pel*          getAddr           (const ComponentID ch, const Int ctuRSAddr, const Int uiAbsZorderIdx )
+                                     { return m_piPicOrg[ch] + m_ctuOffsetInBuffer[ch==0?0:1][ctuRSAddr] + m_subCuOffsetInBuffer[ch==0?0:1][g_auiZscanToRaster[uiAbsZorderIdx]]; }
+  const Pel*    getAddr           (const ComponentID ch, const Int ctuRSAddr, const Int uiAbsZorderIdx ) const
+                                     { return m_piPicOrg[ch] + m_ctuOffsetInBuffer[ch==0?0:1][ctuRSAddr] + m_subCuOffsetInBuffer[ch==0?0:1][g_auiZscanToRaster[uiAbsZorderIdx]]; }
+
+  UInt          getComponentScaleX(const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
+  UInt          getComponentScaleY(const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }
+
   // ------------------------------------------------------------------------------------------------
   //  Miscellaneous
   // ------------------------------------------------------------------------------------------------
-  
+
   //  Copy function to picture
-  Void  copyToPic       ( TComPicYuv*  pcPicYuvDst );
-  Void  copyToPicLuma   ( TComPicYuv*  pcPicYuvDst );
-  Void  copyToPicCb     ( TComPicYuv*  pcPicYuvDst );
-  Void  copyToPicCr     ( TComPicYuv*  pcPicYuvDst );
-  
+  Void          copyToPic         ( TComPicYuv*  pcPicYuvDst ) const ;
+
   //  Extend function of picture buffer
-  Void  extendPicBorder      ();
-  
+  Void          extendPicBorder   ();
+
   //  Dump picture
-  Void  dump (Char* pFileName, Bool bAdd = false);
-  
+  Void          dump              (const Char* pFileName, const BitDepths &bitDepths, Bool bAdd = false) const ;
+
   // Set border extension flag
-  Void  setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
-#if H_3D
+  Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
+#if NH_3D
   // Set Function 
   Void  setLumaTo    ( Pel pVal );  
   Void  setChromaTo  ( Pel pVal );  
@@ -175,11 +173,15 @@ public:
   Void  getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
 #endif
 #endif
+
 };// END CLASS DEFINITION TComPicYuv
 
-void calcChecksum(TComPicYuv& pic, UChar digest[3][16]);
-void calcCRC(TComPicYuv& pic, UChar digest[3][16]);
-void calcMD5(TComPicYuv& pic, UChar digest[3][16]);
+
+// These functions now return the length of the digest strings.
+UInt calcChecksum(const TComPicYuv& pic, TComPictureHash &digest, const BitDepths &bitDepths);
+UInt calcCRC     (const TComPicYuv& pic, TComPictureHash &digest, const BitDepths &bitDepths);
+UInt calcMD5     (const TComPicYuv& pic, TComPictureHash &digest, const BitDepths &bitDepths);
+std::string hashToString(const TComPictureHash &digest, Int numChar);
 //! \}
 
 #endif // __TCOMPICYUV__

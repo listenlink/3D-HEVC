@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,45 +60,62 @@ class TAppDecTop : public TAppDecCfg
 {
 private:
   // class interface
-#if H_MV
+#if NH_MV
   TDecTop*                        m_tDecTop             [ MAX_NUM_LAYERS ];    ///< decoder classes
   TVideoIOYuv*                    m_tVideoIOYuvReconFile[ MAX_NUM_LAYERS ];    ///< reconstruction YUV class
   Int                             m_layerIdToDecIdx     [ MAX_NUM_LAYER_IDS ]; ///< maping from layer id to decoder index
   Int                             m_numDecoders;                               ///< number of decoder instances
   TComPicLists                    m_ivPicLists;                                ///< picture buffers of decoder instances
   Bool                            m_layerInitilizedFlags[ MAX_NUM_LAYER_IDS ]; ///< for layerwise startup 
-  TComVPS*                        m_vps;                                ///< active VPS
+  const TComVPS*                  m_vps;                                ///< active VPS
 #else
   TDecTop                         m_cTDecTop;                     ///< decoder class
   TVideoIOYuv                     m_cTVideoIOYuvReconFile;        ///< reconstruction YUV class
 #endif
-    // for output control
-#if H_MV
+  // for output control
+#if NH_MV
   Int                             m_pocLastDisplay      [ MAX_NUM_LAYERS ]; ///< last POC in display order
   Bool                            m_reconOpen           [ MAX_NUM_LAYERS ]; ///< reconstruction file opened
   Bool                            m_markedForOutput; 
 #else
   Int                             m_iPOCLastDisplay;              ///< last POC in display order
 #endif
+  std::ofstream                   m_seiMessageFileStream;         ///< Used for outputing SEI messages.
 
-#if H_3D
+#if NH_3D
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
 #endif
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
-  
+
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
+#if NH_MV
+  UInt  getNumberOfChecksumErrorsDetected( ) const 
+  {
+    UInt numOfChecksumErrors = 0; 
+    for (Int i = 0; i < m_numDecoders; i++ )
+    {
+      numOfChecksumErrors += getNumberOfChecksumErrorsDetected( i ); 
+    }
+    return numOfChecksumErrors; 
+  }
+
+  UInt  getNumberOfChecksumErrorsDetected( Int decIdx ) const { return m_tDecTop[decIdx]->getNumberOfChecksumErrorsDetected(); }
+
+#else
+  UInt  getNumberOfChecksumErrorsDetected() const { return m_cTDecTop.getNumberOfChecksumErrorsDetected(); }
+#endif
 
 protected:
   Void  xCreateDecLib     (); ///< create internal classes
   Void  xDestroyDecLib    (); ///< destroy internal classes
   Void  xInitDecLib       (); ///< initialize decoder class
 
-#if H_MV
+#if NH_MV
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int layerId, Int tId ); ///< write YUV to file
 
   Void  xMarkForOutput   ( Bool allLayersDecoded, Int pocLastPic, Int layerIdLastPic );         

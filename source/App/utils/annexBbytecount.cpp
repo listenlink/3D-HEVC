@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
 
 using namespace std;
 
-static struct {
+static const struct {
   AnnexBStats expected;
   unsigned data_len;
   const char data[10];
@@ -85,7 +85,9 @@ void selftest()
     {
       cout << hex << (unsigned int)tests[i].data[j] << dec;
       if (j < tests[i].data_len-1)
+      {
         cout << ",";
+      }
     }
     cout << "} ";
 
@@ -102,7 +104,9 @@ void selftest()
     VERIFY(actual, tests[i].expected, m_numTrailingZero8BitsBytes);
 #undef VERIFY
     if (ok)
+    {
       cout << "OK";
+    }
     cout << endl;
   }
 }
@@ -112,7 +116,9 @@ int main(int argc, char*argv[])
   selftest();
 
   if (argc != 2)
+  {
     return 0;
+  }
 
   ifstream in(argv[1], ifstream::in | ifstream::binary);
   InputByteStream bs(in);
@@ -149,7 +155,9 @@ int main(int argc, char*argv[])
     numNALUnits++;
 
     if (!annexBStatsSingle.m_numBytesInNALUnit)
+    {
       continue;
+    }
 
     /* identify the NAL unit type and add stats to the correct
      * accumulators */

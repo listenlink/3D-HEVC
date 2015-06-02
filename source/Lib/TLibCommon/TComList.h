@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@
     \brief    general list class (header)
 */
 
-#ifndef _TCOMLIST_
-#define _TCOMLIST_
+#ifndef __TCOMLIST__
+#define __TCOMLIST__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -58,11 +58,11 @@ using namespace std;
 
 /// list template
 template< class C >
-class TComList : public std::list< C >
+class TComList : public std::list< C > // NOTE: should not inherit from STL classes
 {
 public:
   typedef typename std::list<C>::iterator TComIterator;
-  
+
   TComList& operator += ( const TComList& rcTComList)
   {
     if( ! rcTComList.empty() )
@@ -71,21 +71,21 @@ public:
     }
     return *this;
   } // leszek
-  
+
   C popBack()
   {
     C cT = this->back();
     this->pop_back();
     return cT;
   }
-  
+
   C popFront()
   {
     C cT = this->front();
     this->pop_front();
     return cT;
   }
-  
+
   Void pushBack( const C& rcT )
   {
     /*assert( sizeof(C) == 4);*/
@@ -94,7 +94,7 @@ public:
       this->push_back( rcT);
     }
   }
-  
+
   Void pushFront( const C& rcT )
   {
     /*assert( sizeof(C) == 4);*/
@@ -103,10 +103,10 @@ public:
       this->push_front( rcT);
     }
   }
-  
+
   TComIterator find( const C& rcT ) // leszek
   {
-    return find( this->begin(), this->end(), rcT );
+    return std::list< C >::find( this->begin(), this->end(), rcT );
   }
 };
 

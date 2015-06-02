@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,45 +52,57 @@ using namespace std;
 
 TComOutputBitstream::TComOutputBitstream()
 {
-  m_fifo = new vector<uint8_t>;
   clear();
 }
 
 TComOutputBitstream::~TComOutputBitstream()
 {
-  delete m_fifo;
 }
 
-TComInputBitstream::TComInputBitstream(std::vector<uint8_t>* buf)
-{
-  m_fifo = buf;
-  m_fifo_idx = 0;
-  m_held_bits = 0;
-  m_num_held_bits = 0;
-  m_numBitsRead = 0;
-}
 
-TComInputBitstream::~TComInputBitstream()
-{
-}
+TComInputBitstream::TComInputBitstream()
+: m_fifo()
+, m_emulationPreventionByteLocation()
+, m_fifo_idx(0)
+, m_num_held_bits(0)
+, m_held_bits(0)
+, m_numBitsRead(0)
+{ }
+
+TComInputBitstream::TComInputBitstream(const TComInputBitstream &src)
+: m_fifo(src.m_fifo)
+, m_emulationPreventionByteLocation(src.m_emulationPreventionByteLocation)
+, m_fifo_idx(src.m_fifo_idx)
+, m_num_held_bits(src.m_num_held_bits)
+, m_held_bits(src.m_held_bits)
+, m_numBitsRead(src.m_numBitsRead)
+{ }
 
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
 
+Void TComInputBitstream::resetToStart()
+{
+  m_fifo_idx=0;
+  m_num_held_bits=0;
+  m_held_bits=0;
+  m_numBitsRead=0;
+}
+
 Char* TComOutputBitstream::getByteStream() const
 {
-  return (Char*) &m_fifo->front();
+  return (Char*) &m_fifo.front();
 }
 
 UInt TComOutputBitstream::getByteStreamLength()
 {
-  return UInt(m_fifo->size());
+  return UInt(m_fifo.size());
 }
 
-void TComOutputBitstream::clear()
+Void TComOutputBitstream::clear()
 {
-  m_fifo->clear();
+  m_fifo.clear();
   m_held_bits = 0;
   m_num_held_bits = 0;
 }
@@ -129,10 +141,10 @@ Void TComOutputBitstream::write   ( UInt uiBits, UInt uiNumberOfBits )
 
   switch (num_total_bits >> 3)
   {
-  case 4: m_fifo->push_back(write_bits >> 24);
-  case 3: m_fifo->push_back(write_bits >> 16);
-  case 2: m_fifo->push_back(write_bits >> 8);
-  case 1: m_fifo->push_back(write_bits);
+  case 4: m_fifo.push_back(write_bits >> 24);
+  case 3: m_fifo.push_back(write_bits >> 16);
+  case 2: m_fifo.push_back(write_bits >> 8);
+  case 1: m_fifo.push_back(write_bits);
   }
 
   m_held_bits = next_held_bits;
@@ -152,7 +164,7 @@ Void TComOutputBitstream::writeAlignZero()
   {
     return;
   }
-  m_fifo->push_back(m_held_bits);
+  m_fifo.push_back(m_held_bits);
   m_held_bits = 0;
   m_num_held_bits = 0;
 }
@@ -216,11 +228,11 @@ Int TComOutputBitstream::countStartCodeEmulations()
 }
 
 /**
- * read #uiNumberOfBits# from bitstream without updating the bitstream
- * state, storing the result in #ruiBits#.
+ * read uiNumberOfBits from bitstream without updating the bitstream
+ * state, storing the result in ruiBits.
  *
- * If reading #uiNumberOfBits# would overrun the bitstream buffer,
- * the bitsream is effectively padded with sufficient zero-bits to
+ * If reading uiNumberOfBits would overrun the bitstream buffer,
+ * the bitstream is effectively padded with sufficient zero-bits to
  * avoid the overrun.
  */
 Void TComInputBitstream::pseudoRead ( UInt uiNumberOfBits, UInt& ruiBits )
@@ -242,7 +254,7 @@ Void TComInputBitstream::pseudoRead ( UInt uiNumberOfBits, UInt& ruiBits )
 Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
 {
   assert( uiNumberOfBits <= 32 );
-  
+
   m_numBitsRead += uiNumberOfBits;
 
   /* NB, bits are extracted from the MSB of each byte. */
@@ -278,14 +290,14 @@ Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
    */
   UInt aligned_word = 0;
   UInt num_bytes_to_load = (uiNumberOfBits - 1) >> 3;
-  assert(m_fifo_idx + num_bytes_to_load < m_fifo->size());
+  assert(m_fifo_idx + num_bytes_to_load < m_fifo.size());
 
   switch (num_bytes_to_load)
   {
-  case 3: aligned_word  = (*m_fifo)[m_fifo_idx++] << 24;
-  case 2: aligned_word |= (*m_fifo)[m_fifo_idx++] << 16;
-  case 1: aligned_word |= (*m_fifo)[m_fifo_idx++] <<  8;
-  case 0: aligned_word |= (*m_fifo)[m_fifo_idx++];
+  case 3: aligned_word  = m_fifo[m_fifo_idx++] << 24;
+  case 2: aligned_word |= m_fifo[m_fifo_idx++] << 16;
+  case 1: aligned_word |= m_fifo[m_fifo_idx++] <<  8;
+  case 0: aligned_word |= m_fifo[m_fifo_idx++];
   }
 
   /* resolve remainder bits */
@@ -305,72 +317,83 @@ Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
  * insert the contents of the bytealigned (and flushed) bitstream src
  * into this at byte position pos.
  */
-void TComOutputBitstream::insertAt(const TComOutputBitstream& src, UInt pos)
+Void TComOutputBitstream::insertAt(const TComOutputBitstream& src, UInt pos)
 {
   UInt src_bits = src.getNumberOfWrittenBits();
   assert(0 == src_bits % 8);
 
-  vector<uint8_t>::iterator at = this->m_fifo->begin() + pos;
-  this->m_fifo->insert(at, src.m_fifo->begin(), src.m_fifo->end());
+  vector<uint8_t>::iterator at = m_fifo.begin() + pos;
+  m_fifo.insert(at, src.m_fifo.begin(), src.m_fifo.end());
 }
 
-Void TComInputBitstream::readOutTrailingBits ()
+UInt TComInputBitstream::readOutTrailingBits ()
 {
+  UInt count=0;
   UInt uiBits = 0;
 
   while ( ( getNumBitsLeft() > 0 ) && (getNumBitsUntilByteAligned()!=0) )
   {
+    count++;
     read ( 1, uiBits );
   }
+  return count;
 }
-
-TComOutputBitstream& TComOutputBitstream::operator= (const TComOutputBitstream& src)
-{
-  vector<uint8_t>::iterator at = this->m_fifo->begin();
-  this->m_fifo->insert(at, src.m_fifo->begin(), src.m_fifo->end());
-
-  this->m_num_held_bits             = src.m_num_held_bits;
-  this->m_held_bits                 = src.m_held_bits;
-
-  return *this;
-}
+//
+//TComOutputBitstream& TComOutputBitstream::operator= (const TComOutputBitstream& src)
+//{
+//  vector<uint8_t>::iterator at = m_fifo.begin();
+//  m_fifo.insert(at, src.m_fifo.begin(), src.m_fifo.end());
+//
+//  m_num_held_bits             = src.m_num_held_bits;
+//  m_held_bits                 = src.m_held_bits;
+//
+//  return *this;
+//}
 
 /**
- - extract substream from the current bitstream
- .
- \param  pcBitstream  bitstream which contains substreams
+ Extract substream from the current bitstream.
+
  \param  uiNumBits    number of bits to transfer
  */
 TComInputBitstream *TComInputBitstream::extractSubstream( UInt uiNumBits )
 {
   UInt uiNumBytes = uiNumBits/8;
-  std::vector<uint8_t>* buf = new std::vector<uint8_t>;
-  UInt uiByte;
+  TComInputBitstream *pResult = new TComInputBitstream;
+
+  std::vector<uint8_t> &buf = pResult->getFifo();
+  buf.reserve((uiNumBits+7)>>3);
+
+  if (m_num_held_bits == 0)
+  {
+    std::size_t currentOutputBufferSize=buf.size();
+    const UInt uiNumBytesToReadFromFifo = std::min<UInt>(uiNumBytes, (UInt)m_fifo.size() - m_fifo_idx);
+    buf.resize(currentOutputBufferSize+uiNumBytes);
+    memcpy(&(buf[currentOutputBufferSize]), &(m_fifo[m_fifo_idx]), uiNumBytesToReadFromFifo); m_fifo_idx+=uiNumBytesToReadFromFifo;
+    if (uiNumBytesToReadFromFifo != uiNumBytes)
+    {
+      memset(&(buf[currentOutputBufferSize+uiNumBytesToReadFromFifo]), 0, uiNumBytes - uiNumBytesToReadFromFifo);
+    }
+  }
+  else
+  {
   for (UInt ui = 0; ui < uiNumBytes; ui++)
   {
+      UInt uiByte;
     read(8, uiByte);
-    buf->push_back(uiByte);
+      buf.push_back(uiByte);
+    }
   }
   if (uiNumBits&0x7)
   {
-    uiByte = 0;
+    UInt uiByte = 0;
     read(uiNumBits&0x7, uiByte);
     uiByte <<= 8-(uiNumBits&0x7);
-    buf->push_back(uiByte);
+    buf.push_back(uiByte);
   }
-  return new TComInputBitstream(buf);
+  return pResult;
 }
 
-/**
- - delete internal fifo
- */
-Void TComInputBitstream::deleteFifo()
-{
-  delete m_fifo;
-  m_fifo = NULL;
-}
-
-Void TComInputBitstream::readByteAlignment()
+UInt TComInputBitstream::readByteAlignment()
 {
   UInt code = 0;
   read( 1, code );
@@ -383,6 +406,7 @@ Void TComInputBitstream::readByteAlignment()
     read( numBits, code );
     assert(code == 0);
   }
+  return numBits+1;
 }
 
 //! \}

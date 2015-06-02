@@ -41,16 +41,14 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#if H_MV
+#if NH_MV
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
 
 TAppExtrTop::TAppExtrTop()
 {
-  // To suppress compiler warnings on potential division by 0. 
-  g_uiMaxCUWidth  = 1;
-  g_uiMaxCUHeight = 1;
+
 }
 
 TAppExtrTop::~TAppExtrTop()
@@ -109,7 +107,7 @@ Void TAppExtrTop::extract()
     }
     else
     {
-      read( nalu, nalUnit );
+      read( nalu );
 
       // decide whether to extract packet or not
       if ( m_cTExtrTop.extract( nalu, m_suiExtractLayerIds ) && outputBitstreamFile.is_open() )
