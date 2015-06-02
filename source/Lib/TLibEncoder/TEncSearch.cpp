@@ -2992,17 +2992,16 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
     }
 #endif
 
-#if NH_3D_DMM || NH_3D_ENC_DEPTH
-    const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
-    const UInt uiAbsPartIdx=tuRecurseWithPU.GetAbsPartIdxTU();
-    
-    Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
-    UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
-#endif
 #if NH_3D_DMM
-    Pel* piPred        = pcPredYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
     if( m_pcEncCfg->getIsDepth() )
     {
+      const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
+      const UInt uiAbsPartIdx=tuRecurseWithPU.GetAbsPartIdxTU();
+
+      Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
+      Pel* piPred        = pcPredYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
+      UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
+
       if( puRect.width >= DMM_MIN_SIZE && puRect.width <= DMM_MAX_SIZE &&  puRect.width == puRect.height &&
           ((m_pcEncCfg->getUseDMM() &&  pcCU->getSlice()->getIntraSdcWedgeFlag()) || pcCU->getSlice()->getIntraContourFlag()) )
       {
@@ -3095,7 +3094,6 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 
 #if NH_3D_ENC_DEPTH
     Double  dBestPUCostConv   = MAX_DOUBLE;
-    UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, puRect.width, puRect.height, pcCU->getDepth(0), pcCU->getSlice()->getSPS()->getMaxCUWidth());
     UInt rdSDC = m_pcEncCfg->getIsDepth() ? numModesForFullRD : 0;
 #endif
 #if NH_3D_SDC_INTRA
@@ -3132,6 +3130,14 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
       }
       else
       {
+        const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
+        const UInt uiAbsPartIdx=tuRecurseWithPU.GetAbsPartIdxTU();
+        
+        Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
+        UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
+        
+        UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, puRect.width, puRect.height, pcCU->getDepth(0), pcCU->getSlice()->getSPS()->getMaxCUWidth());
+        
         uiOrgMode = uiRdModeList[uiMode - numModesForFullRD];
 
         if (uiBestPUModeConv <= 1 )
