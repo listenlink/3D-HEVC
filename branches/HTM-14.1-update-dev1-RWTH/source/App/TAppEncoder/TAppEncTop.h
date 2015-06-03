@@ -89,9 +89,6 @@ private:
   Int                        m_iFrameRcvd;                  ///< number of received frames
 #endif
 
-#if NH_3D_DLT
-  TComDLT                    m_dlt;                         ///< dlt
-#endif
 #if NH_3D
   TComSps3dExtension         m_sps3dExtension;              ///< Currently all layers share the same sps 3D Extension  
 #endif
@@ -154,7 +151,7 @@ protected:
   Bool xLayerIdInTargetEncLayerIdList( Int nuhLayerId );
 #endif
 #if NH_3D_DLT
-  Void xDeriveDltArray( TComVPS& vps, TComDLT& dlt );
+  Void xDeriveDltArray( TComVPS& vps, TComDLT* dlt );
   Void xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt);
 #endif
 
