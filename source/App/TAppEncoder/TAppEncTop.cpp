@@ -91,7 +91,7 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 
 #if NH_3D_DLT
-  TComDLT dlt = m_dlt;
+  TComDLT dlt = TComDLT();
 #endif
 
 #if NH_MV
@@ -149,7 +149,7 @@ Void TAppEncTop::xInitLibCfg()
   m_ivPicLists.setVPS      ( &vps );
 #endif
 #if NH_3D_DLT
-  xDeriveDltArray          ( vps, dlt );
+  xDeriveDltArray          ( vps, &dlt );
 #endif
   if ( m_targetEncLayerIdList.size() == 0 )
   {
@@ -2386,7 +2386,7 @@ Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
 
 
 #if NH_3D_DLT
-Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
+Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT* dlt )
 {
   Int  iNumDepthViews  = 0;
   Bool bDltPresentFlag = false;
@@ -2400,12 +2400,12 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
       iNumDepthViews++;
     }
 
-    dlt.setUseDLTFlag( layer , isDepth && m_useDLT );
-    if( dlt.getUseDLTFlag( layer ) )
+    dlt->setUseDLTFlag( layer , isDepth && m_useDLT );
+    if( dlt->getUseDLTFlag( layer ) )
     {
-      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod[layer], 24), &vps, &dlt);
-      bDltPresentFlag = bDltPresentFlag || dlt.getUseDLTFlag(layer);
-      dlt.setInterViewDltPredEnableFlag(layer, (dlt.getUseDLTFlag(layer) && (layer>1)));
+      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod[layer], 24), &vps, dlt);
+      bDltPresentFlag = bDltPresentFlag || dlt->getUseDLTFlag(layer);
+      dlt->setInterViewDltPredEnableFlag(layer, (dlt->getUseDLTFlag(layer) && (layer>1)));
       
       // ----------------------------- determine whether to use bit-map -----------------------------
       Bool bDltBitMapRepFlag       = false;
@@ -2420,20 +2420,20 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
       std::vector<Int> aiIdx2DepthValue_coded(256, 0);
       UInt uiNumDepthValues_coded = 0;
       
-      uiNumDepthValues_coded = dlt.getNumDepthValues(layer);
+      uiNumDepthValues_coded = dlt->getNumDepthValues(layer);
       for( UInt ui = 0; ui<uiNumDepthValues_coded; ui++ )
       {
-        aiIdx2DepthValue_coded[ui] = dlt.idx2DepthValue(layer, ui);
+        aiIdx2DepthValue_coded[ui] = dlt->idx2DepthValue(layer, ui);
       }
       
-      if( dlt.getInterViewDltPredEnableFlag( layer ) )
+      if( dlt->getInterViewDltPredEnableFlag( layer ) )
       {
         AOF( vps.getDepthId( 1 ) == 1 );
         AOF( layer > 1 );
         // assumes ref layer id to be 1
-        std::vector<Int> piRefDLT = dlt.idx2DepthValue( 1 );
-        UInt uiRefNum = dlt.getNumDepthValues( 1 );
-        dlt.getDeltaDLT(layer, piRefDLT, uiRefNum, aiIdx2DepthValue_coded, uiNumDepthValues_coded);
+        std::vector<Int> piRefDLT = dlt->idx2DepthValue( 1 );
+        UInt uiRefNum = dlt->getNumDepthValues( 1 );
+        dlt->getDeltaDLT(layer, piRefDLT, uiRefNum, aiIdx2DepthValue_coded, uiNumDepthValues_coded);
       }
       
       std::vector<UInt> puiDltDiffValues(uiNumDepthValues_coded, 0);
@@ -2482,13 +2482,13 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
       // determine bDltBitMapFlag
       bDltBitMapRepFlag = (uiNumBitsBitMap > uiNumBitsNonBitMap) ? false : true;
       
-      dlt.setUseBitmapRep(layer, bDltBitMapRepFlag);
+      dlt->setUseBitmapRep(layer, bDltBitMapRepFlag);
     }
   }
 
-  dlt.setDltPresentFlag( bDltPresentFlag );
-  dlt.setNumDepthViews ( iNumDepthViews  );
-  dlt.setDepthViewBitDepth( m_inputBitDepth[CHANNEL_TYPE_LUMA] );
+  dlt->setDltPresentFlag( bDltPresentFlag );
+  dlt->setNumDepthViews ( iNumDepthViews  );
+  dlt->setDepthViewBitDepth( m_inputBitDepth[CHANNEL_TYPE_LUMA] );
 }
 #endif
 //! \}
