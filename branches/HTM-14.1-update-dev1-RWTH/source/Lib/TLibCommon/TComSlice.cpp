@@ -2827,7 +2827,9 @@ TComPPS::TComPPS()
 , m_ppsScalingListRefLayerId         (0)
 , m_pocResetInfoPresentFlag          (false)
 #endif
-
+#if NH_3D_DLT
+, m_cDLT                             ()
+#endif
 {
 #if NH_MV
   m_ppsRangeExtensionsFlag     = false;
