@@ -44,7 +44,7 @@
 
 using namespace std;
 
-#if H_3D_DIM_DMM
+#if NH_3D_DMM
 TComWedgelet::TComWedgelet( UInt uiWidth, UInt uiHeight ) : m_uhXs     ( 0 ),
                                                             m_uhYs     ( 0 ),
                                                             m_uhXe     ( 0 ),
@@ -63,11 +63,10 @@ TComWedgelet::TComWedgelet( const TComWedgelet &rcWedge ) : m_uhXs     ( rcWedge
                                                             m_uhOri    ( rcWedge.m_uhOri     ),
                                                             m_eWedgeRes( rcWedge.m_eWedgeRes ),
                                                             m_bIsCoarse( rcWedge.m_bIsCoarse ),
-                                                            m_uiAng    ( rcWedge.m_uiAng     ),
                                                             m_uiWidth  ( rcWedge.m_uiWidth   ),
                                                             m_uiHeight ( rcWedge.m_uiHeight  ),
-                                                            m_pbPattern( (Bool*)xMalloc( Bool, (m_uiWidth * m_uiHeight) ) )
-                                                            ,m_pbScaledPattern( g_wedgePattern )
+                                                            m_pbPattern( (Bool*)xMalloc( Bool, (m_uiWidth * m_uiHeight) ) ),
+                                                            m_pbScaledPattern( g_wedgePattern )
 {
   ::memcpy( m_pbPattern, rcWedge.m_pbPattern, sizeof(Bool) * (m_uiWidth * m_uiHeight));
 }
@@ -96,35 +95,6 @@ Void TComWedgelet::destroy()
 Void TComWedgelet::clear()
 {
   ::memset( m_pbPattern, 0, (m_uiWidth * m_uiHeight) * sizeof(Bool) );
-}
-
-Void TComWedgelet::findClosestAngle()
-{
-  UInt uiAng=0,uiOptAng=0;
-  UInt uiMinD=MAX_UINT;
-  UInt uiTmpD=0;
-  Int angTable[9]    = {0,    2,    5,   9,  13,  17,  21,  26,  32};
-  
-  UChar uhXs = m_uhXs;
-  UChar uhYs = m_uhYs;
-  UChar uhXe = m_uhXe;
-  UChar uhYe = m_uhYe;
-
-  for(uiAng=2; uiAng<=34; uiAng++)
-  {
-    Int iSign    = (uiAng<VER_IDX && uiAng>HOR_IDX ) ? -1 : 1;
-    Int iVer     = uiAng>17 ? 32 : angTable[(uiAng>10) ? (uiAng-10) : (10-uiAng)];
-    Int iHor     = uiAng<19 ? 32 : angTable[(uiAng>26) ? (uiAng-26) : (26-uiAng)];
-
-    uiTmpD  = abs(iVer*iSign*(uhXs-uhXe) - iHor*(uhYe-uhYs));
-    
-    if( uiTmpD < uiMinD )
-    {
-      uiMinD = uiTmpD;
-      uiOptAng = uiAng;
-    }
-  }
-  m_uiAng = uiOptAng;
 }
 
 Void TComWedgelet::setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse )
@@ -204,7 +174,6 @@ Void TComWedgelet::generateWedgePatternByRotate(const TComWedgelet &rcWedge, Int
   m_uhOri = rotate;
   m_eWedgeRes = rcWedge.m_eWedgeRes;
   m_bIsCoarse = rcWedge.m_bIsCoarse;
-  m_uiAng = rcWedge.m_uiAng;
   m_uiWidth  = rcWedge.m_uiWidth;
   m_uiHeight = rcWedge.m_uiHeight;
 }
@@ -294,31 +263,66 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
   }
 }
 
-Bool* TComWedgelet::getScaledPattern(UInt uiDstSize)
+Bool* TComWedgelet::getPatternScaled( UInt dstSize )
 {
   Bool *pbSrcPat = this->getPattern();
   UInt uiSrcSize = this->getStride();
 
-  Int scale = (g_aucConvertToBit[uiDstSize] - g_aucConvertToBit[uiSrcSize]);
-  assert(scale>=0);
-  for (Int y=0; y<uiDstSize; y++)
+  if( 16 >= dstSize )
   {
-    for (Int x=0; x<uiDstSize; x++)
+    assert( dstSize == uiSrcSize );
+    return pbSrcPat;
+  }
+  else
+  {
+    Int scale = (g_aucConvertToBit[dstSize] - g_aucConvertToBit[uiSrcSize]);
+    assert(scale>=0);
+    for (Int y=0; y<dstSize; y++)
     {
-      Int srcX = x>>scale;
-      Int srcY = y>>scale;
-      m_pbScaledPattern[y*uiDstSize + x] = pbSrcPat[ srcY*uiSrcSize + srcX ];
+      for (Int x=0; x<dstSize; x++)
+      {
+        Int srcX = x>>scale;
+        Int srcY = y>>scale;
+        m_pbScaledPattern[y*dstSize + x] = pbSrcPat[ srcY*uiSrcSize + srcX ];
+      }
+    }
+    return m_pbScaledPattern;
+  }
+}
+
+Void TComWedgelet::getPatternScaledCopy( UInt dstSize, Bool* dstBuf )
+{
+  Bool *pbSrcPat = this->getPattern();
+  UInt uiSrcSize = this->getStride();
+
+  if( 16 >= dstSize )
+  {
+    assert( dstSize == uiSrcSize );
+    memcpy( dstBuf, pbSrcPat, (dstSize*dstSize) );
+  }
+  else
+  {
+    Int scale = (g_aucConvertToBit[dstSize] - g_aucConvertToBit[uiSrcSize]);
+    assert(scale>=0);
+    for (Int y=0; y<dstSize; y++)
+    {
+      for (Int x=0; x<dstSize; x++)
+      {
+        Int srcX = x>>scale;
+        Int srcY = y>>scale;
+        dstBuf[y*dstSize + x] = pbSrcPat[ srcY*uiSrcSize + srcX ];
+      }
     }
   }
-  return m_pbScaledPattern;
 }
+
 
 TComWedgeNode::TComWedgeNode()
 {
-  m_uiPatternIdx = DMM_NO_WEDGEINDEX;
+  m_uiPatternIdx = DMM_NO_WEDGE_IDX;
   for( UInt uiPos = 0; uiPos < DMM_NUM_WEDGE_REFINES; uiPos++ )
   {
-    m_uiRefineIdx[uiPos] = DMM_NO_WEDGEINDEX;
+    m_uiRefineIdx[uiPos] = DMM_NO_WEDGE_IDX;
   }
 }
 
@@ -340,4 +344,4 @@ Void TComWedgeNode::setRefineIdx( UInt uiIdx, UInt uiPos )
   assert( uiPos < DMM_NUM_WEDGE_REFINES );
   m_uiRefineIdx[uiPos] = uiIdx;  
 }
-#endif //H_3D_DIM_DMM
+#endif //NH_3D_DMM

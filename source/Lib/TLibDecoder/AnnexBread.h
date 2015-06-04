@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,11 +38,14 @@
 
 #pragma once
 
+#ifndef __ANNEXBREAD__
+#define __ANNEXBREAD__
+
 #include <stdint.h>
 #include <istream>
 #include <vector>
 
-#include "../TLibCommon/TypeDef.h"
+#include "TLibCommon/CommonDef.h"
 
 //! \ingroup TLibDecoder
 //! \{
@@ -71,7 +74,7 @@ public:
    * Reset the internal state.  Must be called if input stream is
    * modified externally to this class
    */
-  void reset()
+  Void reset()
   {
     m_NumFutureBytes = 0;
     m_FutureBytes = 0;
@@ -85,7 +88,9 @@ public:
   {
     assert(n <= 4);
     if (m_NumFutureBytes >= n)
+    {
       return false;
+    }
 
     n -= m_NumFutureBytes;
     try
@@ -149,9 +154,15 @@ public:
   {
     uint32_t val = 0;
     for (UInt i = 0; i < n; i++)
+    {
       val = (val << 8) | readByte();
+    }
     return val;
   }
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  UInt GetNumBufferedBytes() const { return m_NumFutureBytes; }
+#endif
 
 private:
   UInt m_NumFutureBytes; /* number of valid bytes in m_FutureBytes */
@@ -184,3 +195,5 @@ struct AnnexBStats
 Bool byteStreamNALUnit(InputByteStream& bs, std::vector<uint8_t>& nalUnit, AnnexBStats& stats);
 
 //! \}
+
+#endif

@@ -46,7 +46,7 @@
 #include <string>
 #include <vector>
 
-#if H_3D
+#if NH_3D
 
 // ====================================================================================================================
 // Class definition
@@ -65,13 +65,10 @@ protected:
   Bool               m_bSweep;                         ///< 1: Store view range in file
 
 
-  // bit-depth      ( Currently interal luma and chroma bit-depth are required to be equal. )
-  Int                m_inputBitDepthY;                 ///< bit-depth of input file (luma component)
-  Int                m_inputBitDepthC;                 ///< bit-depth of input file (chroma component)
-  Int                m_outputBitDepthY;                ///< bit-depth of output file (luma component)
-  Int                m_outputBitDepthC;                ///< bit-depth of output file (chroma component)
-  Int                m_internalBitDepthY;              ///< bit-depth renderer operates at in luma (input/output files will be converted)
-  Int                m_internalBitDepthC;              ///< bit-depth renderer operates at in chroma (input/output files will be converted)
+  // bit-depth      ( Currently internal, output and input luma and chroma bit-depth are required to be equal to 8 )
+  Int                m_inputBitDepth[2];               ///< bit-depth of input file (luma/chroma component)  
+  Int                m_outputBitDepth[2];              ///< bit-depth of output file (luma/chroma component)    
+  Int                m_internalBitDepth[2];            ///< bit-depth renderer operates at in luma/chroma (input/output files will be converted)
 
 
   // derived
@@ -122,10 +119,9 @@ protected:
   Void xCheckParameter ();                              ///< check validity of configuration values
   Void xPrintParameter ();                              ///< print configuration values
   Void xPrintUsage     ();                              ///< print usage
-  Void xSetGlobal();
 
   Void xCreateFileNames();
-  Void xGetMaxPrecision( std::vector< Int > adIn, Int& iPrecBefore, Int& iPrecAfter );
+  Void xGetMaxPrecision( IntAry1d adIn, Int& iPrecBefore, Int& iPrecAfter );
   Void xAddNumberToFileName( Char* pchSourceFileName, Char*& rpchTargetFileName, Int iNumberToAdd, UInt uiPrecBefore, UInt uiPrecAfter );
 public:
   TAppRendererCfg();
@@ -141,4 +137,4 @@ public:
 };// END CLASS DEFINITION TAppRendererCfg
 
 #endif // __TAppRENDERERCFG__
-#endif // H_3D
+#endif // NH_3D

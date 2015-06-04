@@ -38,16 +38,18 @@
 */
 
 #include "TRenInterpFilter.h"
-#if H_3D
+#if NH_3D
 
 // ====================================================================================================================
 // Constructor
 // ====================================================================================================================
 
-TRenInterpFilter::TRenInterpFilter()
+template<UInt bitDepthLuma>
+TRenInterpFilter<bitDepthLuma>::TRenInterpFilter()
 {
   // initial number of taps for Luma
 }
 
-#endif // H_3D
+template class TRenInterpFilter<REN_BIT_DEPTH>;
+#endif // NH_3D
 
