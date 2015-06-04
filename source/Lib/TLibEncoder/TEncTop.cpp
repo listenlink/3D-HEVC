@@ -993,7 +993,7 @@ Void TEncTop::xInitPPS()
   {
     Int layerId = getVPS()->getLayerIdInNuh(i);
     if( getVPS()->getDepthId(layerId) )
-      m_cDLT.setDepthIdxToLayerId(j++, i);
+      m_cDLT.setDepthIdxToLayerId(j++, layerId);
   }
   m_cPPS.setDLT( m_cDLT );
 #endif

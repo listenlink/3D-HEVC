@@ -1329,7 +1329,7 @@ Void TDecTop::xDecodePPS(const std::vector<UChar> &naluData)
   {
     Int layerId = m_parameterSetManager.getFirstVPS()->getLayerIdInNuh(i);
     if( m_parameterSetManager.getFirstVPS()->getDepthId(layerId) )
-      pps->getDLT()->setDepthIdxToLayerId(j++, i);
+      pps->getDLT()->setDepthIdxToLayerId(j++, layerId);
   }
 #endif
   m_cEntropyDecoder.decodePPS( pps );
