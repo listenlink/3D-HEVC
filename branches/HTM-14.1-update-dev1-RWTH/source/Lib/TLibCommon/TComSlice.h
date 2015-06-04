@@ -1366,16 +1366,14 @@ private:
   Bool              m_bDltBitMapRepFlag           [ MAX_NUM_LAYERS ];
 
   Int               m_iNumDepthmapValues          [ MAX_NUM_LAYERS ];
-  std::vector<Int>  m_iDepthValue2Idx [ MAX_NUM_LAYERS ];
-  std::vector<Int>  m_iIdx2DepthValue [ MAX_NUM_LAYERS ];
+  std::vector<Int>  m_iDepthValue2Idx             [ MAX_NUM_LAYERS ];
+  std::vector<Int>  m_iIdx2DepthValue             [ MAX_NUM_LAYERS ];
 
   Int               m_iNumDepthViews;
   UInt              m_uiDepthViewBitDepth;
   
   // mapping
-  Int     m_iDepthIdxToLayerId          [ MAX_NUM_LAYERS ];
-  
-  // these are only needed at the encoder to decide on coding
+  Int               m_iDepthIdxToLayerId          [ MAX_NUM_LAYERS ];
 
 public:
   TComDLT();

@@ -2854,11 +2854,14 @@ TComDLT::TComDLT()
   {
     m_bUseDLTFlag                 [i] = false;
     m_bInterViewDltPredEnableFlag [i] = false;
+    m_bDltBitMapRepFlag           [i] = false;
 
     // allocate some memory and initialize with default mapping
     m_iNumDepthmapValues[i] = ((1 << m_uiDepthViewBitDepth)-1)+1;
     m_iDepthValue2Idx[i]    = std::vector<Int>(m_iNumDepthmapValues[i]);
     m_iIdx2DepthValue[i]    = std::vector<Int>(m_iNumDepthmapValues[i]);
+    
+    m_iDepthIdxToLayerId[i] = i;
 
     //default mapping
     for (Int d=0; d<m_iNumDepthmapValues[i]; d++)
