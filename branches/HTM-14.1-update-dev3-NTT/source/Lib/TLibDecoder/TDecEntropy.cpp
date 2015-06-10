@@ -317,7 +317,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
         if ( !isMerged )
         {
-#if H_3D_VSP
+#if NH_3D_VSP
           Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
           memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
 #if H_3D_SPIVMP
@@ -336,7 +336,6 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
             , numValidMergeCand );
           pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
-
 #else
 #if H_3D
           pcSubCU->initAvailableFlags();
@@ -354,7 +353,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       else
       {
         uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
-#if H_3D_VSP
+#if NH_3D_VSP
         Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
         memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
 #if H_3D_SPIVMP
@@ -394,7 +393,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiSubPartIdx, uiPartIdx, uiDepth);
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
-#if H_3D_VSP
+#if NH_3D_VSP
 #if H_3D_DBBP
           if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 && !pcCU->getDBBPFlag( uiAbsPartIdx ) )
 #else
@@ -485,7 +484,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth ); // temporarily set.
 
 #if NH_3D_MLC
-#if H_3D_VSP
+#if NH_3D_VSP
           Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
           memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
 #endif
@@ -502,14 +501,14 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
             , numValidMergeCand );
           pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
             , vspFlag
 #endif
 #if H_3D_SPIVMP
             , bSPIVMPFlag
 #endif
             , numValidMergeCand );
-#if H_3D_VSP
+#if NH_3D_VSP
           pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 #endif
 #endif
@@ -522,7 +521,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
 
 #if NH_3D_MLC
-#if H_3D_VSP
+#if NH_3D_VSP
         Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
         memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
 #endif
@@ -539,14 +538,14 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
           ,numValidMergeCand, uiMergeIndex );
         pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
           , vspFlag
 #endif
 #if H_3D_SPIVMP
           , bSPIVMPFlag
 #endif
           ,numValidMergeCand );
-#if H_3D_VSP
+#if NH_3D_VSP
         pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 #endif
 #endif
@@ -563,7 +562,20 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiSubPartIdx, uiPartIdx, uiDepth);
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
-
+#if NH_3D_VSP
+          if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 )
+          {
+            if ( uhInterDirNeighbours[ uiMergeIndex ] & (1<<uiRefListIdx) )
+            {
+              UInt dummy;
+              Int vspSize;
+              Int width, height;
+              pcCU->getPartIndexAndSize( uiPartIdx, dummy, width, height, uiSubPartIdx, pcCU->getTotalNumPart()==256 );
+              pcCU->setMvFieldPUForVSP( pcCU, uiSubPartIdx, width, height, RefPicList( uiRefListIdx ), cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getRefIdx(), vspSize );
+              pcCU->setVSPFlag( uiSubPartIdx, vspSize );
+            }
+          }
+#endif
         }
       }
     }

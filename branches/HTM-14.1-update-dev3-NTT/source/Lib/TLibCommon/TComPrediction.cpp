@@ -81,8 +81,8 @@ TComPrediction::TComPrediction()
       m_piYuvExt[ch][buf] = NULL;
     }
   }
-#if H_3D_VSP
-  m_pDepthBlock = (Int*) malloc(MAX_NUM_SPU_W*MAX_NUM_SPU_W*sizeof(Int));
+#if NH_3D_VSP
+  m_pDepthBlock = (Int*) malloc(MAX_NUM_PART_IDXS_IN_CTU_WIDTH*MAX_NUM_PART_IDXS_IN_CTU_WIDTH*sizeof(Int));
   if (m_pDepthBlock == NULL)
   {
       printf("ERROR: UKTGHU, No memory allocated.\n");
@@ -93,7 +93,7 @@ TComPrediction::TComPrediction()
 
 TComPrediction::~TComPrediction()
 {
-#if H_3D_VSP
+#if NH_3D_VSP
   if (m_pDepthBlock != NULL)
   {
     free(m_pDepthBlock);
@@ -185,8 +185,8 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
     m_acYuvPredBase[0] .create( g_uiMaxCUWidth, g_uiMaxCUHeight );
     m_acYuvPredBase[1] .create( g_uiMaxCUWidth, g_uiMaxCUHeight );
 #endif
-#if H_3D_VSP
-    m_cYuvDepthOnVsp.create( g_uiMaxCUWidth, g_uiMaxCUHeight );
+#if NH_3D_VSP
+    m_cYuvDepthOnVsp.create( MAX_CU_SIZE, MAX_CU_SIZE, chromaFormatIDC );
 #endif
 
   }
@@ -1204,7 +1204,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
   if ( iPartIdx >= 0 )
   {
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
-#if H_3D_VSP
+#if NH_3D_VSP
     if ( pcCU->getVSPFlag(uiPartAddr) == 0)
     {
 #endif
@@ -1269,7 +1269,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
         }
 #endif
     }
-#if H_3D_VSP
+#if NH_3D_VSP
     }
     else
     {
@@ -1290,7 +1290,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
   {
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
 
-#if H_3D_VSP
+#if NH_3D_VSP
     if ( pcCU->getVSPFlag(uiPartAddr) == 0 )
     {
 #endif
@@ -1354,7 +1354,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
        }
 #endif
     }
-#if H_3D_VSP
+#if NH_3D_VSP
     }
     else
     {
@@ -1424,7 +1424,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #endif
 }
 
-#if H_3D_VSP
+#if NH_3D_VSP
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
   Int vspSize = pcCU->getVSPFlag( uiPartAddr ) >> 1;
@@ -1445,7 +1445,7 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
 Void TComPrediction::xPredInterUniSubPU( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, Int widthSubPU, Int heightSubPU )
 {
-  UInt numPartsInLine       = pcCU->getPic()->getNumPartInWidth();
+  UInt numPartsInLine       = pcCU->getPic()->getNumPartInCtuWidth();
   UInt horiNumPartsInSubPU  = widthSubPU >> 2;
   UInt vertNumPartsInSubPU  = (heightSubPU >> 2) * numPartsInLine;
 
@@ -1461,13 +1461,12 @@ Void TComPrediction::xPredInterUniSubPU( TComDataCU* pcCU, UInt uiPartAddr, Int 
       TComMv  cMv           = pcCU->getCUMvField( eRefPicList )->getMv( partAddrSubPU );
       pcCU->clipMv(cMv);
 
-      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi );
-      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi );
-
+      xPredInterBlk( COMPONENT_Y,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) );
+      xPredInterBlk( COMPONENT_Cb, pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA) );
+      xPredInterBlk( COMPONENT_Cr, pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA) );
     }
   }
 }
-
 #endif
 
 #if H_3D_ARP
@@ -1853,8 +1852,7 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
   }
 }
 
-#if H_3D_VSP
-
+#if NH_3D_VSP
 Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred )
 {
   TComYuv* pcMbYuv;
@@ -1876,9 +1874,8 @@ Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWi
     xPredInterUniVSP ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, bi );
   }
 
-  xWeightedAverage( &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
+  xWeightedAverage( &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred, pcCU->getSlice()->getSPS()->getBitDepths() );
 }
-
 #endif
 
 /**

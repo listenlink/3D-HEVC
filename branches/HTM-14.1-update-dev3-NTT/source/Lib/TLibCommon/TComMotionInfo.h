@@ -169,7 +169,7 @@ public:
 #if H_3D_SPIVMP
   Void    setMvFieldSP ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  );
 #endif
-#if H_3D_VSP
+#if NH_3D_VSP
   Void    setMv         ( Int iIdx, TComMv const & rcMv ) { m_pcMv[iIdx] = rcMv; }
   Void    setRefIdx     ( Int iIdx, Int iRefIdx )         { m_piRefIdx[iIdx] = iRefIdx; }
 #endif
@@ -199,9 +199,9 @@ public:
   Bool                  m_bAvailable;
   TComMvField           m_cMvField[2];
   UChar                 m_uDir;
-#if H_3D_VSP
+#if NH_3D_VSP
   Int                   m_iVspFlag;
-#endif  
+#endif
 #if H_3D_SPIVMP
   Bool                  m_bSPIVMPFlag;
 #endif
@@ -211,7 +211,7 @@ public:
   {
     m_bAvailable = false;
     m_uDir = 0;
-#if H_3D_VSP
+#if NH_3D_VSP
     m_iVspFlag = 0;
 #endif
 #if H_3D_SPIVMP
@@ -230,7 +230,7 @@ public:
 
     m_bAvailable = false;
     m_uDir = 0;
-#if H_3D_VSP
+#if NH_3D_VSP
     m_iVspFlag = 0;
 #endif
 #if H_3D_SPIVMP
@@ -241,7 +241,7 @@ public:
   }
 
   Void setCand(TComMvField* pcMvFieldNeighbours, UChar uhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
     , Int vspFlag
 #endif
 #if H_3D_SPIVMP
@@ -253,7 +253,7 @@ public:
     m_cMvField[0] = pcMvFieldNeighbours[0];
     m_cMvField[1] = pcMvFieldNeighbours[1];
     m_uDir = uhInterDirNeighbours;
-#if H_3D_VSP
+#if NH_3D_VSP
     m_iVspFlag = vspFlag;
 #endif
 #if H_3D_SPIVMP
@@ -262,7 +262,7 @@ public:
   }
   
   Void getCand(Int iCount, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
     , Int* vspFlag
 #endif
 #if H_3D_SPIVMP
@@ -273,7 +273,7 @@ public:
     pcMvFieldNeighbours[iCount<<1] = m_cMvField[0];
     pcMvFieldNeighbours[(iCount<<1) + 1] = m_cMvField[1];
     puhInterDirNeighbours[iCount] = m_uDir;
-#if H_3D_VSP
+#if NH_3D_VSP
     vspFlag[iCount] = m_iVspFlag;
 #endif
 #if H_3D_SPIVMP

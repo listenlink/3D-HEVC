@@ -151,7 +151,7 @@ Void TDecCu::decodeCtu( TComDataCU* pCtu, Bool& isLastCtuOfSliceSegment )
   {
     setIsChromaQpAdjCoded(true);
   }
-
+  
   // start from the top level CU
   xDecodeCU( pCtu, 0, 0, isLastCtuOfSliceSegment);
 }
@@ -292,9 +292,18 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
  
 if(!pcCU->getSlice()->isIntra())
   {
-#if H_3D_ARP && H_3D_IV_MERGE
-    if( pcCU->getSlice()->getIvResPredFlag() || pcCU->getSlice()->getIvMvPredFlag() )
+#if NH_3D_ARP && NH_3D_IV_MERGE && NH_3D_VSP
+    if( pcCU->getSlice()->getIvResPredFlag() || pcCU->getSlice()->getIvMvPredFlag() || pcCU->getSlice()->getViewSynthesisPredFlag() )
 #else 
+#if NH_3D_IV_MERGE && NH_3D_VSP
+    if( pcCU->getSlice()->getIvMvPredFlag() || pcCU->getSlice()->getViewSynthesisPredFlag() )
+#else
+#if NH_3D_ARP && NH_3D_VSP
+    if( pcCU->getSlice()->getIvResPredFlag() || pcCU->getSlice()->getViewSynthesisPredFlag() )
+#else
+#if NH_3D_VSP
+    if( pcCU->getSlice()->getViewSynthesisPredFlag() )
+#else
 #if H_3D_ARP
     if( pcCU->getSlice()->getVPS()->getUseAdvRP(pcCU->getSlice()->getLayerId()) )
 #else
@@ -302,6 +311,9 @@ if(!pcCU->getSlice()->isIntra())
     if( pcCU->getSlice()->getVPS()->getIvMvPredFlag(pcCU->getSlice()->getLayerId()) )
 #else
     if (0)
+#endif
+#endif
+#endif
 #endif
 #endif
 #endif
@@ -407,7 +419,7 @@ if(!pcCU->getSlice()->isIntra())
 #endif
 
 
-#if H_3D_VSP
+#if NH_3D_VSP
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
 #endif
@@ -432,7 +444,7 @@ if(!pcCU->getSlice()->isIntra())
       , numValidMergeCand, uiMergeIndex );
 
     m_ppcCU[uiDepth]->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
       , vspFlag
 #endif
 #if H_3D_SPIVMP
@@ -440,7 +452,7 @@ if(!pcCU->getSlice()->isIntra())
 #endif
       , numValidMergeCand );
 #endif
-#if H_3D_VSP
+#if NH_3D_VSP
     pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 #endif
 
@@ -455,7 +467,7 @@ if(!pcCU->getSlice()->isIntra())
         pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiAbsPartIdx, 0, uiDepth);
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
-#if H_3D_VSP
+#if NH_3D_VSP
         if( pcCU->getVSPFlag( uiAbsPartIdx ) != 0 )
         {
           if ( uhInterDirNeighbours[ uiMergeIndex ] & (1<<uiRefListIdx) )

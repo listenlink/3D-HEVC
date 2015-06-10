@@ -71,6 +71,7 @@
 #define NH_3D_NBDV                        1
 #define NH_3D_NBDV_REF                    1
 #define NH_3D_MLC                         1
+#define NH_3D_VSP                         1
 #endif
 
 #if H_3D
@@ -311,15 +312,6 @@
 /////////////////////////////////////////////////////////////////////////////////////
 /// GT: Move values which are not flags to CommonDef.h and convert to static int !!
 ///////////////////////////////////////////////////////////////////////////////////
-///// ***** VIEW SYNTHESIS PREDICTION *********
-#if H_3D_VSP
-#define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
-#if H_3D_VSP_BLOCKSIZE == 1
-#define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
-#else
-#define H_3D_VSP_CONSTRAINED              0
-#endif
-#endif
 ///// ***** ILLUMATION COMPENSATION *********
 #if H_3D_IC
 #define IC_REG_COST_SHIFT                 7
