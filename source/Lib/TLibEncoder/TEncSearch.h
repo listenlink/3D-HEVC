@@ -408,13 +408,13 @@ const ComponentID   compID,
                                     Distortion&  ruiCost,
                                     TComMvField* cMvFieldNeighbours,
                                     UChar*       uhInterDirNeighbours,
-#if H_3D_VSP
+                                    Int&         numValidMergeCand
+#if NH_3D_VSP
                                   , Int* vspFlag
 #endif
 #if H_3D_SPIVMP
                                   , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
-                                    Int&         numValidMergeCand
                                    );
 
   Void xRestrictBipredMergeCand   ( TComDataCU*     pcCU,

@@ -90,7 +90,7 @@ protected:
   UInt   m_uiaShift[ 64 ];       // Table for multiplication to substitue of division operation
 #endif
 
-#if H_3D_VSP
+#if NH_3D_VSP
   Int*    m_pDepthBlock;         ///< Store a depth block, local variable, to prevent memory allocation every time
   TComYuv m_cYuvDepthOnVsp;
 #endif
@@ -107,7 +107,7 @@ protected:
 
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv* pcYuvPred, Bool bi=false          );
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv* pcYuvPred          );
-#if H_3D_VSP
+#if NH_3D_VSP
   Void xPredInterUniVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
   Void xPredInterBiVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
 #endif
@@ -127,7 +127,7 @@ protected:
 #if H_3D_IC
     , Bool bICFlag    = false
 #endif
-#if H_3D_VSP
+#if NH_3D_VSP
   Void xPredInterUniSubPU        ( TComDataCU *cu, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, Int widthSubPU=4, Int heightSubPU=4 );
 #endif
 

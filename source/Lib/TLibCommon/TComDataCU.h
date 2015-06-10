@@ -169,7 +169,7 @@ private:
 #if NH_3D_NBDV
   DisInfo*      m_pDvInfo;
 #endif
-#if H_3D_VSP
+#if NH_3D_VSP
   Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not  ///< 0: non-VSP; 1: VSP
 #endif
 #if H_3D_SPIVMP
@@ -232,7 +232,7 @@ protected:
   /// add possible motion vector predictor candidates
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
-#if H_3D_VSP
+#if NH_3D_VSP
   Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount);
 #endif
 #if H_3D_IV_MERGE
@@ -254,7 +254,7 @@ protected:
 
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
 
-#if H_3D_VSP
+#if NH_3D_VSP
   Void xSetMvFieldForVSP  ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, Int *shiftLUT, RefPicList refPicList, Int refIdx, Bool isDepth, Int &vspSize );
 #endif
 
@@ -451,7 +451,7 @@ public:
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseCtu, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
-#if H_3D_VSP
+#if NH_3D_VSP
   template<typename T>
   Void          setSubPartT           ( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 #endif
@@ -539,6 +539,8 @@ public:
   Void          setICFlag          ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
   Void          setICFlagSubParts  ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Bool          isICFlagRequired   ( UInt uiAbsPartIdx );
+  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
+#elif NH_3D_VSP
   Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
 #else
   // -------------------------------------------------------------------------------------------------------------------
@@ -659,7 +661,7 @@ public:
   Bool          getAvailableFlagB2() { return m_bAvailableFlagB2;   }
   Void          initAvailableFlags() { m_bAvailableFlagA1 = m_bAvailableFlagB1 = m_bAvailableFlagB0 = m_bAvailableFlagA0 = m_bAvailableFlagB2 = 0;  }
   Void          buildMCL(TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
     , Int* vspFlag
 #endif
 #if H_3D_SPIVMP
@@ -675,7 +677,7 @@ public:
 #endif
   Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
 
-#if H_3D_VSP
+#if NH_3D_VSP
 #if H_3D_SPIVMP
   Bool*         getSPIVMPFlag        ()                        { return m_pbSPIVMPFlag;          }
   Bool          getSPIVMPFlag        ( UInt uiIdx )            { return m_pbSPIVMPFlag[uiIdx];   }
