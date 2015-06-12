@@ -2893,6 +2893,13 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
       DistParam distParam;
       const Bool bUseHadamard=pcCU->getCUTransquantBypass(0) == 0;
       m_pcRdCost->setDistParam(distParam, sps.getBitDepth(CHANNEL_TYPE_LUMA), piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height, bUseHadamard);
+
+#if NH_3D_IC_FIX
+      distParam.bUseIC = false;
+#endif
+#if H_3D_INTER_SDC_FIX
+      distParam.bUseSDCMRSAD = false;
+#endif
       distParam.bApplyWeight = false;
       for( Int modeIdx = 0; modeIdx < numModesAvailable; modeIdx++ )
       {

@@ -644,7 +644,7 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
@@ -661,8 +661,8 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && bLimQtPredFlag )
 #endif
   {
-    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
-    UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
+    TComDataCU *pcTextureCU = pcTexture->getCtu(pcCU->getCtuRsAddr());
+    UInt uiCUIdx            = (pcCU->getZorderIdxInCtu() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCtu();
     assert(pcTextureCU->getDepth(uiCUIdx) >= uiDepth);
     if(pcTextureCU->getDepth(uiCUIdx) == uiDepth )
     {
@@ -693,7 +693,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_MV_ENC_DEC_TRAC          
   DTRACE_CU("part_mode", eSize )
 #endif        
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
     if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
     {
 #endif
@@ -767,7 +767,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       break;
     }
   }
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
     }
     else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
     {
@@ -784,7 +784,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       case SIZE_2NxN:
         {
           m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          if (  pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize  )
           {     
             m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
           }
@@ -819,7 +819,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       case SIZE_Nx2N:
         {
           m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          if ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize )
           {     
             m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
           }
@@ -1025,7 +1025,7 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   UInt uiCurrSplitFlag = ( pcCU->getDepth( uiAbsPartIdx ) > uiDepth ) ? 1 : 0;
 
   assert( uiCtx < 3 );
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   Bool bCodeSplitFlag    = true;
 
   
@@ -1042,8 +1042,8 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && bLimQtPredFlag  )
 #endif
   {
-    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
-    UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
+    TComDataCU *pcTextureCU = pcTexture->getCtu(pcCU->getCtuRsAddr());
+    UInt uiCUIdx            = (pcCU->getZorderIdxInCtu() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCtu();
     assert(pcTextureCU->getDepth(uiCUIdx) >= uiDepth);
     bCodeSplitFlag          = (pcTextureCU->getDepth(uiCUIdx) > uiDepth);
   }

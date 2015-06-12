@@ -93,7 +93,7 @@ private:
   Int**                 m_aaiCodedOffset;
 #endif
 #endif
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   Bool                  m_bReduceBitsQTL;
 #endif
 #if H_3D_NBDV
@@ -131,7 +131,7 @@ public:
   Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
 #endif
 #endif
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
   Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
 #endif
