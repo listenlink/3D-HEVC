@@ -74,7 +74,7 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   m_bReduceBitsQTL    = 0;
 #endif
 #if H_3D_NBDV

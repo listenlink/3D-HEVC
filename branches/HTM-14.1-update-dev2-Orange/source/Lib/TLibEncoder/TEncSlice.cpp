@@ -1193,8 +1193,8 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
       }
     }
 
-#if H_3D_QTLPC
-    rpcPic->setReduceBitsFlag(true);
+#if NH_3D_QTLPC
+    pcPic->setReduceBitsFlag(true);
 #endif
     if ( pcSlice->getSPS()->getUseSAO() )
     {
@@ -1265,8 +1265,8 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
         pcSlice->addSubstreamSize( (pcSubstreams[uiSubStrm].getNumberOfWrittenBits() >> 3) + pcSubstreams[uiSubStrm].countStartCodeEmulations() );
       }
     }
-#if H_3D_QTLPC
-    rpcPic->setReduceBitsFlag(false);
+#if NH_3D_QTLPC
+    pcPic->setReduceBitsFlag(false);
 #endif
   } // CTU-loop
 

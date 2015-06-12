@@ -602,6 +602,13 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Int bitDep
 
   cDtParam.bitDepth   = bitDepth;
 
+#if NH_3D_IC_FIX
+  cDtParam.bUseIC       = false;
+#endif
+#if H_3D_INTER_SDC_FIX
+  cDtParam.bUseSDCMRSAD = false;
+#endif
+
   Dist dist = cDtParam.DistFunc( &cDtParam );
 
   if ( m_bUseWVSO )   

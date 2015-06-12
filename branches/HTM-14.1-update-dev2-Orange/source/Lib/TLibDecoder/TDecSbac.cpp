@@ -720,7 +720,7 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 #endif
 
   UInt uiSymbol;
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   Bool bParseSplitFlag    = true;
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
   TComPic *pcTexture      = pcCU->getSlice()->getTexturePic();
@@ -735,7 +735,7 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag)
 #endif
   {
-    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
+    TComDataCU *pcTextureCU = pcTexture->getCtu(pcCU->getCtuRsAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
     bParseSplitFlag         = (pcTextureCU->getDepth(uiAbsPartIdx) > uiDepth);
   }
@@ -750,7 +750,7 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tSplitFlag\n" )
 #endif
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   }
   else
   {
@@ -782,7 +782,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   assert ( pcCU->getSlice()->getSPS()->getLog2DiffMaxMinCodingBlockSize() == log2DiffMaxMinCodingBlockSize);
 
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   Bool bParsePartSize    = true;
 
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
@@ -801,7 +801,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag )
 #endif
   {
-    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
+    TComDataCU *pcTextureCU = pcTexture->getCtu(pcCU->getCtuRsAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
     if(pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth )
     {
@@ -818,7 +818,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
     if(bParsePartSize)
     {
 #endif
@@ -831,7 +831,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #endif        
     }
     eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
     }
 #endif
     UInt uiTrLevel = 0;
@@ -849,7 +849,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   else
   {
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
     if(bParsePartSize)
     {
       if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
@@ -893,18 +893,18 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
         }
       }
     }
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
       }
       else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
       {
         UInt uiMaxNumBits = 1;
-        if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+        if ( ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize )
         {
           uiMaxNumBits ++;
         }
         for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
         {
-          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
           if ( uiSymbol )
           {
             break;
@@ -912,30 +912,30 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
           uiMode++;
         }
         eMode = (PartSize) uiMode;
-        if(uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==1 )
+        if(uiMode && ( ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiSymbol==1 )
         {
           eMode = SIZE_2NxN;
         }
-        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth )==0  && uiSymbol==0)
+        else if (uiMode && (( ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize )==0)  && uiSymbol==0)
         {
           eMode = SIZE_2NxN;
         }
-        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==0)
+        else if (uiMode && ( ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiSymbol==0)
         {
-          m_pcTDecBinIf->decodeBinEP(uiSymbol);
+          m_pcTDecBinIf->decodeBinEP(uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
           eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
         }
       }
       else if(uiTexturePart == SIZE_Nx2N|| uiTexturePart==SIZE_nLx2N || uiTexturePart==SIZE_nRx2N)
       {
         UInt uiMaxNumBits = 1;
-        if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+        if (  ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize ) 
         {
           uiMaxNumBits ++;
         }
         for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
         {
-          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
           if ( uiSymbol )
           {
             break;
@@ -943,17 +943,17 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
           uiMode++;
         }
         eMode = (PartSize) uiMode;
-        if(uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==1 )
+        if(uiMode && ( ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiSymbol==1 )
         {
           eMode = SIZE_Nx2N;
         }
-        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth )==0  && uiSymbol==0)
+        else if (uiMode && (( ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize )==0)  && uiSymbol==0)
         {
           eMode = SIZE_Nx2N;
         }
-        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==0)
+        else if (uiMode && ( ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiDepth < log2DiffMaxMinCodingBlockSize ) && uiSymbol==0)
         {
-          m_pcTDecBinIf->decodeBinEP(uiSymbol);
+          m_pcTDecBinIf->decodeBinEP(uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
           eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
         }
       }
@@ -965,7 +965,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #if H_MV_ENC_DEC_TRAC          
       DTRACE_CU("part_mode", eMode )
 #endif
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
     }
 #endif
   }

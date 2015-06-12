@@ -84,8 +84,13 @@
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
                                               // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
                                               // LGE_CHROMA_IC_J0050_J0034
+
+#define NH_3D_IC_FIX                      1   // Fix uninitialized value in cDtParam.bUseIC (it happened on intra block)
 #define NH_3D_FULL_PEL_DEPTH_MAP_MV_ACC   1   // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
 
+#define NH_3D_QTLPC                       1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
+                                              // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
+                                              // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
 
 #endif
 
@@ -244,6 +249,7 @@
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
                                               // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
+#define H_3D_INTER_SDC_FIX                1
 #define H_3D_SPIVMP                       1   // H_3D_SPIVMP JCT3V-F0110: Sub-PU level inter-view motion prediction
                                               // SEC_SPIVMP_MCP_SIZE_G0077, Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
                                               // QC_SPIVMP_MPI_G0119 Sub-PU level MPI merge candidate

@@ -412,7 +412,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   const TComSPS &sps=*(rpcTempCU->getSlice()->getSPS());
 
 
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
   Bool  bLimQtPredFalg    = pcPic->getSlice(0)->getQtPredFlag(); 
   TComPic *pcTexture      = rpcBestCU->getSlice()->getTexturePic();
 
@@ -428,7 +428,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu() );
 
-#if H_3D_QTLPC  
+#if NH_3D_QTLPC  
   Bool    bTrySplit     = true;
   Bool    bTrySplitDQP  = true;
 #endif
@@ -528,7 +528,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         iQP = lowestQP;
       }
 
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
       bTrySplit    = true;
 #endif
 
@@ -546,7 +546,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
 
       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
 #if H_3D_FCO
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ) && pcTexture->getReconMark())
@@ -554,8 +554,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
 #endif
       {
-        TComDataCU* pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() ); //Corresponding texture LCU
-        UInt uiCUIdx            = rpcBestCU->getZorderIdxInCU();
+        TComDataCU* pcTextureCU = pcTexture->getCtu( rpcBestCU->getCtuRsAddr() ); //Corresponding texture LCU
+        UInt uiCUIdx            = rpcBestCU->getZorderIdxInCtu();
         assert(pcTextureCU->getDepth(uiCUIdx) >= uiDepth); //Depth cannot be more partitioned than the texture.
         if (pcTextureCU->getDepth(uiCUIdx) > uiDepth || pcTextureCU->getPartitionSize(uiCUIdx) == SIZE_NxN) //Texture was split.
         {
@@ -712,7 +712,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
 #endif
       }
-#if H_3D_QTLPC      
+#if NH_3D_QTLPC      
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
       {
         bTrySplitDQP = bTrySplit;
@@ -767,7 +767,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           if(!( (rpcBestCU->getWidth(0)==8) && (rpcBestCU->getHeight(0)==8) ))
           {
             if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() && doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTrySplit
 #endif
 )
@@ -787,7 +787,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
 
           if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
             && bTryNx2N
 #endif
 )
@@ -808,7 +808,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
           if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
             && bTry2NxN
 #endif
 )
@@ -849,7 +849,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if ( bTestAMP_Hor )
             {
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTry2NxN
 #endif
 )
@@ -869,7 +869,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
               }
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTry2NxN
 #endif
 )
@@ -895,7 +895,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             else if ( bTestMergeAMP_Hor )
             {
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTry2NxN
 #endif
 )
@@ -917,7 +917,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
               }
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTry2NxN
 #endif
 )
@@ -944,7 +944,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if ( bTestAMP_Ver )
             {
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTryNx2N
 #endif
 )
@@ -965,7 +965,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
               }
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTryNx2N
 #endif
 )
@@ -985,7 +985,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             else if ( bTestMergeAMP_Ver )
             {
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTryNx2N
 #endif
 )
@@ -1005,7 +1005,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
               }
               if(doNotBlockPu
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
                 && bTryNx2N
 #endif
 )
@@ -1026,7 +1026,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
 #else
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
             if (bTry2NxN)
             {
 #endif
@@ -1041,7 +1041,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_VSP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
             }
             if (bTryNx2N)
             {
@@ -1056,7 +1056,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_VSP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
             }
 #endif
 
@@ -1114,7 +1114,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() )
           {
-#if H_3D_QTLPC //Try IntraNxN
+#if NH_3D_QTLPC //Try IntraNxN
               if(bTrySplit)
               {
 #endif
@@ -1130,7 +1130,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               intraCost = std::min(intraCost, tmpIntraCost);
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
-#if H_3D_QTLPC
+#if NH_3D_QTLPC
               }
 #endif
           }
@@ -1246,8 +1246,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
     // further split
-#if H_3D_QTLPC
-    if( bSubBranch && bTrySplitDQP && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
+#if NH_3D_QTLPC
+
+    if( bSubBranch && bTrySplitDQP && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() )
 #else
     if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() )
 #endif
