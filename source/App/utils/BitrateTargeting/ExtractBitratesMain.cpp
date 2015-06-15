@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@ void replaceWithE( std::string &out, const std::string& toFind )
 {
   assert( 2 == toFind.size( ) );
   assert( 'e' == toFind[ 0 ] );
-  
+
   std::string::size_type pos( out.find( toFind ) );
   assert( pos != std::string::npos );
   out.erase( pos + 1, 1 );
@@ -56,10 +56,10 @@ void outputDouble( std::ostream& left, double right )
   oss.precision( 6 );
   oss << std::scientific << right;
   std::string s( oss.str( ) );
-  
+
   replaceWithE( s, "e+" );
   replaceWithE( s, "e0" );
-  
+
   left << s;
 }
 
@@ -68,7 +68,7 @@ int main( int, char** )
   try
   {
     std::vector< double > result( extractBitratesForTemporalLayers( std::cin ) );  // Extract the bitrate vector
-    
+
     // Output the bitrate vector
     if( 0 < result.size( ) )
     {
@@ -88,7 +88,7 @@ int main( int, char** )
         }
       }
     }
-    
+
     return 0;
   }
   catch( std::exception& e )
