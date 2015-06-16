@@ -191,7 +191,7 @@ public:
                                   TComYuv*    pcRecoYuv,
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
                                   DEBUG_STRING_FN_DECLARE(sDebug));
-#if H_3D
+#if NH_3D_DIS
   Void  estIntraPredDIS        ( TComDataCU* pcCU, 
                                  TComYuv*    pcOrgYuv, 
                                  TComYuv*    pcPredYuv, 
@@ -343,7 +343,7 @@ const ComponentID   compID,
 
   Void  xStoreIntraResultQT       ( const ComponentID compID, TComTU &rTu);
   Void  xLoadIntraResultQT        ( const ComponentID compID, TComTU &rTu);
-#if H_3D
+#if NH_3D_DIS
   Void xIntraCodingDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, UInt uiPredMode );
 #endif
 

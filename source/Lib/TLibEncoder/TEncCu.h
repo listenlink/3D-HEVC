@@ -158,7 +158,7 @@ protected:
   Void  xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTemp, Bool* pMask, UInt uiValidSegment );
   Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG = false );
 #endif
-#if H_3D
+#if NH_3D_DIS
   Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,

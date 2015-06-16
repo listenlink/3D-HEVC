@@ -59,14 +59,13 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
-#if H_3D
+#if NH_3D_DIS
 Void TDecEntropy::decodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   if( !pcCU->getSlice()->getDepthIntraSkipFlag() )
   {
     return;
   }  
-
   m_pcEntropyDecoderIf->parseDIS( pcCU, uiAbsPartIdx, uiDepth );
 }
 #endif

@@ -61,7 +61,7 @@ TEncSbac::TEncSbac()
 , m_numContextModels                   ( 0 )
 , m_cCUSplitFlagSCModel                ( 1,             1,                      NUM_SPLIT_FLAG_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUSkipFlagSCModel                 ( 1,             1,                      NUM_SKIP_FLAG_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D
+#if NH_3D_DIS
 , m_cCUDISFlagSCModel                  ( 1,             1,                      NUM_DIS_FLAG_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUDISTypeSCModel                  ( 1,             1,                      NUM_DIS_TYPE_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
@@ -142,7 +142,7 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
 
   m_cCUSplitFlagSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
-#if H_3D
+#if NH_3D_DIS
   m_cCUDISFlagSCModel.initBuffer                  ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
   m_cCUDISTypeSCModel.initBuffer                  ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
 #endif
@@ -230,7 +230,7 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 
       curCost  = m_cCUSplitFlagSCModel.calcCost                ( curSliceType, qp, (UChar*)INIT_SPLIT_FLAG );
       curCost += m_cCUSkipFlagSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_SKIP_FLAG );
-#if H_3D
+#if NH_3D_DIS
       curCost += m_cCUDISFlagSCModel.calcCost                  ( curSliceType, qp, (UChar*)INIT_DIS_FLAG );
       curCost += m_cCUDISTypeSCModel.calcCost                  ( curSliceType, qp, (UChar*)INIT_DIS_TYPE );
 #endif
@@ -296,11 +296,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
     return I_SLICE;
   }
 }
-
-#if H_3D
-  m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
-  m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
-#endif
 #if H_3D_ARP
   m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
@@ -419,7 +414,7 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
   m_pcBinIf->encodeBinsEP( bins, numBins );
 }
 
-#if H_3D
+#if NH_3D_DIS
 Void TEncSbac::codeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiSymbol = pcCU->getDISFlag(uiAbsPartIdx ) ? 1 : 0;

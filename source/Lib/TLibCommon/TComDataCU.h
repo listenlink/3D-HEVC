@@ -115,9 +115,9 @@ private:
   // -------------------------------------------------------------------------------------------------------------------
 
   Bool*          m_skipFlag;           ///< array of skip flags
-#if H_3D
-  Bool*         m_bDISFlag;         
-  UInt*         m_uiDISType;
+#if NH_3D_DIS
+  Bool*          m_bDISFlag;         
+  UChar*         m_ucDISType;
 #endif
   Char*          m_pePartSize;         ///< array of partition sizes
   Char*          m_pePredMode;         ///< array of prediction modes
@@ -333,16 +333,16 @@ public:
   Bool          getSkipFlag            (UInt idx)                { return m_skipFlag[idx];     }
   Void          setSkipFlag           ( UInt idx, Bool skip)     { m_skipFlag[idx] = skip;   }
   Void          setSkipFlagSubParts   ( Bool skip, UInt absPartIdx, UInt depth );
-#if H_3D
+#if NH_3D_DIS
   Bool*        getDISFlag            ()                         { return m_bDISFlag;          }
   Bool         getDISFlag            ( UInt idx)                { return m_bDISFlag[idx];     }
   Void         setDISFlag            ( UInt idx, Bool bDIS)     { m_bDISFlag[idx] = bDIS;   }
-  Void         setDISFlagSubParts    ( Bool bDIS, UInt absPartIdx, UInt depth );
+  Void         setDISFlagSubParts    ( Bool bDIS, UInt uiAbsPartIdx, UInt uiDepth );
 
-  UInt*        getDISType            ()                         { return m_uiDISType; }
-  UInt         getDISType            ( UInt idx)                { return m_uiDISType[idx];     }
-  Void         getDISType            ( UInt idx, UInt uiDISType)     { m_uiDISType[idx] = uiDISType;   }
-  Void         setDISTypeSubParts    ( UInt uiDISType, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth );
+  UChar*       getDISType            ()                         { return m_ucDISType; }
+  UChar        getDISType            ( UInt idx)                { return m_ucDISType[idx];     }
+  Void         getDISType            ( UInt idx, UChar ucDISType)     { m_ucDISType[idx] = ucDISType;   }
+  Void         setDISTypeSubParts    ( UChar ucDISType, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   Char*         getPredictionMode     ()                        { return m_pePredMode;        }
   PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
@@ -500,13 +500,14 @@ public:
 #if H_3D
   Void          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
-
-   Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
 #endif
 #if H_3D_NBDV_REF
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT );
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
 #endif //H_3D_NBDV_REF
+#endif
+#if NH_3D_DIS
+   Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
 #endif
 #if  H_3D_FAST_TEXTURE_ENCODING
   Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);

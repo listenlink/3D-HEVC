@@ -41,7 +41,6 @@
 
 #include "CommonDef.h"
 #include "libmd5/MD5.h"
-
 //! \ingroup TLibCommon
 //! \{
 class TComSPS;

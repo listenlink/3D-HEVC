@@ -110,8 +110,8 @@ public:
   Void  parseMVPIdx          ( Int& riMVPIdx );
         
   Void  parseSkipFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D
-  Void  parseDIS            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if NH_3D_DIS
+  Void  parseDIS             ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );

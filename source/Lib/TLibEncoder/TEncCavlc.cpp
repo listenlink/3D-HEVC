@@ -2549,7 +2549,7 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
-#if H_3D
+#if NH_3D_DIS
 Void TEncCavlc::codeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

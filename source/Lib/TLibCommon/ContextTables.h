@@ -50,7 +50,7 @@
 
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
-#if H_3D
+#if NH_3D_DIS
 #define NUM_DIS_FLAG_CTX              1
 #define NUM_DIS_TYPE_CTX              1       
 #endif
@@ -217,7 +217,7 @@ INIT_SKIP_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SKIP_FLAG_CTX] =
   { 197,  185,  201, },
   { CNU,  CNU,  CNU, },
 };
-#if H_3D
+#if NH_3D_DIS
 static const UChar 
 INIT_DIS_FLAG[3][NUM_DIS_FLAG_CTX] =  
 {
