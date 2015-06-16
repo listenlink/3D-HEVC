@@ -137,7 +137,7 @@ protected:
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if H_3D
+#if NH_3D_DIS
   Void codeDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -203,7 +203,7 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
-#if H_3D
+#if NH_3D_DIS
   ContextModel3DBuffer m_cCUDISFlagSCModel;
   ContextModel3DBuffer m_cCUDISTypeSCModel;
 #endif

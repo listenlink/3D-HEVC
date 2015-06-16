@@ -40,11 +40,9 @@
 
 #ifndef __NALREAD__
 #define __NALREAD__
-
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComBitStream.h"
 #include "TLibCommon/NAL.h"
-
 //! \ingroup TLibDecoder
 //! \{
 

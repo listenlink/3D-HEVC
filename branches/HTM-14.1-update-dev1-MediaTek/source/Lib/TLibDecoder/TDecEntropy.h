@@ -37,14 +37,12 @@
 
 #ifndef __TDECENTROPY__
 #define __TDECENTROPY__
-
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComBitStream.h"
 #include "TLibCommon/TComSlice.h"
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
 #include "TLibCommon/TComRectangle.h"
-
 class TDecSbac;
 class TDecCavlc;
 class ParameterSetManagerDecoder;
@@ -77,7 +75,7 @@ public:
 
 public:
   virtual Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#if H_3D
+#if NH_3D_DIS
   virtual Void parseDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
   virtual Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -166,7 +164,7 @@ RefPicList eRefList );
 public:
   Void decodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D
+#if NH_3D_DIS
   Void decodeDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) ;
 #endif
   Void decodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

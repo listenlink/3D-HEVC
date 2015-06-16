@@ -149,7 +149,7 @@ TComSlice::TComSlice()
 , m_depthToDisparityB             (NULL)
 , m_depthToDisparityF             (NULL)
 #endif
-#if H_3D
+#if NH_3D_DIS
 , m_bApplyDIS                     (false)
 #endif
 #endif
@@ -1167,7 +1167,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
     m_interLayerPredLayerIdc[ layer ] = pSrc->m_interLayerPredLayerIdc[ layer ]; 
   }
 #endif
-#if H_3D
+#if NH_3D_DIS
   m_bApplyDIS = pSrc->m_bApplyDIS;
 #endif
 #if H_3D_IC

@@ -123,7 +123,7 @@ protected:
 
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt depth);
 
-#if H_3D
+#if NH_3D_DIS
   Void xReconDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if NH_3D_SDC_INTRA

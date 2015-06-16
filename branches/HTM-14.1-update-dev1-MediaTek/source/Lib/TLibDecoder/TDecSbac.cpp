@@ -66,9 +66,9 @@ TDecSbac::TDecSbac()
 , m_numContextModels                         ( 0 )
 , m_cCUSplitFlagSCModel                      ( 1,             1,                      NUM_SPLIT_FLAG_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUSkipFlagSCModel                       ( 1,             1,                      NUM_SKIP_FLAG_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D
-, m_cCUDISFlagSCModel         ( 1,             1,               NUM_DIS_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCUDISTypeSCModel         ( 1,             1,               NUM_DIS_TYPE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if NH_3D_DIS
+, m_cCUDISFlagSCModel                        ( 1,             1,                      NUM_DIS_FLAG_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCUDISTypeSCModel                        ( 1,             1,                      NUM_DIS_TYPE_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 , m_cCUMergeFlagExtSCModel                   ( 1,             1,                      NUM_MERGE_FLAG_EXT_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel                    ( 1,             1,                      NUM_MERGE_IDX_EXT_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
@@ -158,9 +158,9 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 
   m_cCUSplitFlagSCModel.initBuffer                ( sliceType, qp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_SKIP_FLAG );
-#if H_3D
-  m_cCUDISFlagSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_DIS_FLAG );
-  m_cCUDISTypeSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_DIS_TYPE );
+#if NH_3D_DIS
+  m_cCUDISFlagSCModel.initBuffer                  ( sliceType, qp, (UChar*)INIT_DIS_FLAG );
+  m_cCUDISTypeSCModel.initBuffer                  ( sliceType, qp, (UChar*)INIT_DIS_TYPE );
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
@@ -237,10 +237,6 @@ Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
   }
 }
 
-#if H_3D
-  m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
-  m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
-#endif
 #if H_3D_ARP
   m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
@@ -524,12 +520,12 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #endif
 
 }
-#if H_3D
+#if NH_3D_DIS
 Void TDecSbac::parseDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setDISFlagSubParts( false,        uiAbsPartIdx, uiDepth );
   UInt uiSymbol = 0;
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUDISFlagSCModel.get( 0, 0, 0 ) );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUDISFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SKIP_FLAG) );
   if( uiSymbol )
   {
     pcCU->setDISFlagSubParts( true,        uiAbsPartIdx, uiDepth );
@@ -537,11 +533,11 @@ Void TDecSbac::parseDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pcCU->setSDCFlagSubParts( false,        uiAbsPartIdx, uiDepth );
     pcCU->setPredModeSubParts( MODE_INTRA,  uiAbsPartIdx, uiDepth );
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
-    pcCU->setLumaIntraDirSubParts (DC_IDX, uiAbsPartIdx, uiDepth );
-    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+    pcCU->setIntraDirSubParts(CHANNEL_TYPE_LUMA, DC_IDX, uiAbsPartIdx, uiDepth );
+    pcCU->setSizeSubParts( pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth, pcCU->getSlice()->getSPS()->getMaxCUHeight()>>uiDepth, uiAbsPartIdx, uiDepth );
     pcCU->setMergeFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
     pcCU->setTrIdxSubParts(0, uiAbsPartIdx, uiDepth);
-    pcCU->setCbfSubParts(0, 1, 1, uiAbsPartIdx, uiDepth);
+    pcCU->setCbfSubParts(0, COMPONENT_Y, uiAbsPartIdx, uiDepth);
 
     UInt uiUnaryIdx = 0;
     UInt uiNumCand  = 4;
@@ -553,11 +549,11 @@ Void TDecSbac::parseDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         UInt uiSymbol2 = 0;
         if ( uiUnaryIdx==0 )
         {
-          m_pcTDecBinIf->decodeBin( uiSymbol2, m_cCUDISTypeSCModel.get( 0, 0, 0 ) );
+          m_pcTDecBinIf->decodeBin( uiSymbol2, m_cCUDISTypeSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SKIP_FLAG) );
         }
         else
         {
-          m_pcTDecBinIf->decodeBinEP( uiSymbol2);
+          m_pcTDecBinIf->decodeBinEP( uiSymbol2 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SKIP_FLAG));
         }
         if( uiSymbol2 == 0 )
         {
@@ -565,7 +561,7 @@ Void TDecSbac::parseDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         }
       }
     }
-    pcCU->setDISTypeSubParts(uiUnaryIdx, uiAbsPartIdx, 0, uiDepth);
+    pcCU->setDISTypeSubParts((UChar)uiUnaryIdx, uiAbsPartIdx, uiDepth);
   }
 }
 #endif

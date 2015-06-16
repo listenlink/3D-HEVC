@@ -132,7 +132,7 @@ private:
 public:
 
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D
+#if NH_3D_DIS
   Void parseDIS          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
@@ -181,7 +181,7 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
-#if H_3D
+#if NH_3D_DIS
   ContextModel3DBuffer m_cCUDISFlagSCModel;
   ContextModel3DBuffer m_cCUDISTypeSCModel;
 #endif

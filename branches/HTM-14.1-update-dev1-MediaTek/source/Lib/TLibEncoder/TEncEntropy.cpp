@@ -115,7 +115,7 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
-#if H_3D
+#if NH_3D_DIS
 Void TEncEntropy::encodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if ( !pcCU->getSlice()->getIsDepth() )

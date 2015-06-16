@@ -3223,7 +3223,7 @@ Void TDecCavlc::parseRemainingBytes( Bool noTrailingBytesExpected )
   }
 }
 
-#if H_3D
+#if NH_3D_DIS
 Void TDecCavlc::parseDIS( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
