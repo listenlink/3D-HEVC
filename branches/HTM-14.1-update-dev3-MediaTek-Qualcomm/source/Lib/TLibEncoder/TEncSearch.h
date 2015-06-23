@@ -412,7 +412,7 @@ const ComponentID   compID,
 #if NH_3D_VSP
                                   , Int* vspFlag
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
                                   , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
                                    );

@@ -49,7 +49,7 @@
 // Type definition
 // ====================================================================================================================
 
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
 class TComDataCU;
 #endif
 /// parameters for AMVP
@@ -106,7 +106,7 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   Bool operator== ( const TComMvField& rcMv ) const
   {
     return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());
@@ -166,7 +166,7 @@ public:
   Void    setAllMvd    ( TComMv const & rcMvd,        PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllRefIdx ( Int iRefIdx,                 PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllMvField( TComMvField const & mvField, PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
   Void    setMvFieldSP ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  );
 #endif
 #if NH_3D_VSP
@@ -202,7 +202,7 @@ public:
 #if NH_3D_VSP
   Int                   m_iVspFlag;
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
   Bool                  m_bSPIVMPFlag;
 #endif
 
@@ -214,7 +214,7 @@ public:
 #if NH_3D_VSP
     m_iVspFlag = 0;
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     m_bSPIVMPFlag = false;
 #endif
   }
@@ -233,7 +233,7 @@ public:
 #if NH_3D_VSP
     m_iVspFlag = 0;
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     m_bSPIVMPFlag = false;
 #endif
     m_cMvField[0].setMvField(cZeroMv, NOT_VALID);
@@ -244,7 +244,7 @@ public:
 #if NH_3D_VSP
     , Int vspFlag
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     , Bool bSPIVMPFlag
 #endif
     )
@@ -256,7 +256,7 @@ public:
 #if NH_3D_VSP
     m_iVspFlag = vspFlag;
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     m_bSPIVMPFlag = bSPIVMPFlag;
 #endif
   }
@@ -265,7 +265,7 @@ public:
 #if NH_3D_VSP
     , Int* vspFlag
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     , Bool* pbSPIVMPFlag
 #endif
     )
@@ -276,7 +276,7 @@ public:
 #if NH_3D_VSP
     vspFlag[iCount] = m_iVspFlag;
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     pbSPIVMPFlag[iCount] = m_bSPIVMPFlag;
 #endif
   }

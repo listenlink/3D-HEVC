@@ -1442,7 +1442,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->checkInCompPredRefLayers(); 
     }   
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
     // This needs to be done after initialization of 3D tool parameters.
     pcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( pcSlice->getMpiFlag( ) || pcSlice->getIvMvPredFlag( ) || pcSlice->getViewSynthesisPredFlag( )   ) ? 1 : 0 ));
 #endif

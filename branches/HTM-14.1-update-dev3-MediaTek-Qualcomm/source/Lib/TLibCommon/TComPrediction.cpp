@@ -660,7 +660,7 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
   return false;
 }
 
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
 Void TComPrediction::xGetSubPUAddrAndMerge(TComDataCU* pcCU, UInt uiPartAddr, Int iSPWidth, Int iSPHeight, Int iNumSPInOneLine, Int iNumSP, UInt* uiMergedSPW, UInt* uiMergedSPH, UInt* uiSPAddr )
 {
   for (Int i = 0; i < iNumSP; i++)
@@ -669,10 +669,12 @@ Void TComPrediction::xGetSubPUAddrAndMerge(TComDataCU* pcCU, UInt uiPartAddr, In
     uiMergedSPH[i] = iSPHeight;
     pcCU->getSPAbsPartIdx(uiPartAddr, iSPWidth, iSPHeight, i, iNumSPInOneLine, uiSPAddr[i]);
   }
+#if H_3D_ARP
   if( pcCU->getARPW( uiPartAddr ) != 0 )
   {
     return;
   }
+#endif
 
   // horizontal sub-PU merge
   for (Int i=0; i<iNumSP; i++)
@@ -1208,24 +1210,24 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     if ( pcCU->getVSPFlag(uiPartAddr) == 0)
     {
 #endif
-    if ( eRefPicList != REF_PIC_LIST_X )
-    {
-      if( pcCU->getSlice()->getPPS()->getUseWP())
+      if ( eRefPicList != REF_PIC_LIST_X )
       {
-        xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, true );
+        if( pcCU->getSlice()->getPPS()->getUseWP())
+        {
+          xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, true );
+        }
+        else
+        {
+          xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred );
+        }
+        if ( pcCU->getSlice()->getPPS()->getUseWP() )
+        {
+          xWeightedPredictionUni( pcCU, pcYuvPred, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred );
+        }
       }
       else
       {
-        xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred );
-      }
-      if ( pcCU->getSlice()->getPPS()->getUseWP() )
-      {
-        xWeightedPredictionUni( pcCU, pcYuvPred, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred );
-      }
-    }
-    else
-    {
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
         if ( pcCU->getSPIVMPFlag(uiPartAddr)!=0)  
         {
           Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
@@ -1257,18 +1259,18 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
         else
         {
 #endif
-      if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
-      {
-        xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
-      }
-      else
-      {
-        xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
-      }
-#if H_3D_SPIVMP
+          if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+          {
+            xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+          }
+          else
+          {
+            xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
+          }
+#if NH_3D_SPIVMP
         }
 #endif
-    }
+      }
 #if NH_3D_VSP
     }
     else
@@ -1311,8 +1313,8 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     }
     else
     {
-#if H_3D_SPIVMP
-       if (pcCU->getSPIVMPFlag(uiPartAddr)!=0)  
+#if NH_3D_SPIVMP
+      if (pcCU->getSPIVMPFlag(uiPartAddr)!=0)  
       {
         Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
 
@@ -1342,16 +1344,16 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
       else
       {
 #endif
-      if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
-      {
-        xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+        if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+        {
+          xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+        }
+        else
+        {
+          xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
+        }
+#if NH_3D_SPIVMP
       }
-      else
-      {
-        xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
-      }
-#if H_3D_SPIVMP
-       }
 #endif
     }
 #if NH_3D_VSP

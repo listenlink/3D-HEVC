@@ -277,7 +277,7 @@ Void TComSlice::initSlice()
   {
     m_iSliceChromaQpDelta[component] = 0;
   }
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS_MEM;
 #else
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
@@ -3853,7 +3853,7 @@ Void TComSlice::setDepthToDisparityLUTs()
   setupLUT = setupLUT || getDepthRefinementFlag( );
 #endif  
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   setupLUT = setupLUT || ( getIvMvPredFlag() && getIsDepth() );
 #endif
 

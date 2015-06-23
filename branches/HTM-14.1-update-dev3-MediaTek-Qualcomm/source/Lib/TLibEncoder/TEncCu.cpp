@@ -614,7 +614,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
           rpcTempCU->setPartSizeSubParts(SIZE_2Nx2N, 0, uiDepth);
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
           if (rpcTempCU->getSlice()->getIsDepth() )
           {
             rpcTempCU->getDispforDepth(0, 0, &DvInfo);
@@ -632,7 +632,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             {
               rpcTempCU->getDisMvpCandNBDV(&DvInfo);
             }
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
           }
 #endif
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -1809,6 +1809,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to CTU level
 
+#if NH_3D_SPIVMP
+  Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
+  memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
+  TComMvField*  pcMvFieldSP;
+  UChar* puhInterDirSP;
+  pcMvFieldSP = new TComMvField[rpcTempCU->getPic()->getPicSym()->getNumPartitionsInCtu()*2]; 
+  puhInterDirSP = new UChar[rpcTempCU->getPic()->getPicSym()->getNumPartitionsInCtu()]; 
+#endif
+
 #if NH_3D_VSP
 #if !H_3D_ARP
   Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
@@ -1819,14 +1828,14 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 #if NH_3D_MLC
   rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     , pcMvFieldSP, puhInterDirSP
 #endif
     , numValidMergeCand 
     );
 
   rpcTempCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours, vspFlag
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     , bSPIVMPFlag
 #endif
     , numValidMergeCand 
@@ -1855,13 +1864,6 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
 #endif
 #endif
-
-
-
-
-
-
-
 
 #if NH_3D_MLC
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS_MEM];
@@ -1982,7 +1984,7 @@ for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
 #if NH_3D_VSP
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
           rpcTempCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeCand], 0, 0, uhDepth);
           if (bSPIVMPFlag[uiMergeCand])
           {
@@ -2205,7 +2207,7 @@ for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
     }
   }
   DEBUG_STRING_APPEND(sDebug, bestStr)
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
  delete[] pcMvFieldSP;
  delete[] puhInterDirSP;
 #endif

@@ -162,7 +162,7 @@ Void TDecCu::decodeCtu( TComDataCU* pCtu, Bool& isLastCtuOfSliceSegment )
  */
 Void TDecCu::decompressCtu( TComDataCU* pCtu )
 {
-#if !H_3D_IV_MERGE
+#if !NH_3D_IV_MERGE
   xDecompressCU( pCtu, 0,  0 );
 #endif
 }
@@ -326,7 +326,7 @@ if(!pcCU->getSlice()->isIntra())
       m_ppcCU[uiDepth]->setWidth (0, pcCU->getSlice()->getSPS()->getMaxCUWidth () / (1 << uiDepth));
       m_ppcCU[uiDepth]->setHeight(0, pcCU->getSlice()->getSPS()->getMaxCUHeight() / (1 << uiDepth));
       m_ppcCU[uiDepth]->setPartSizeSubParts(SIZE_2Nx2N, 0, uiDepth);     
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
       if( pcCU->getSlice()->getIsDepth())
       {
         m_ppcCU[uiDepth]->getDispforDepth(0, 0, &DvInfo);
@@ -344,7 +344,7 @@ if(!pcCU->getSlice()->isIntra())
       {
         m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo);
       }
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
       }
 #endif
 #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
@@ -391,7 +391,7 @@ if(!pcCU->getSlice()->isIntra())
 #endif
     m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
     m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
     m_ppcCU[uiDepth]->copyDVInfoFrom(pcCU, uiAbsPartIdx);
     TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
     UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
@@ -423,13 +423,13 @@ if(!pcCU->getSlice()->isIntra())
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
     TComMvField*  pcMvFieldSP;
     UChar* puhInterDirSP;
-    pcMvFieldSP = new TComMvField[pcCU->getPic()->getPicSym()->getNumPartition()*2]; 
-    puhInterDirSP = new UChar[pcCU->getPic()->getPicSym()->getNumPartition()]; 
+    pcMvFieldSP = new TComMvField[pcCU->getPic()->getPicSym()->getNumPartitionsInCtu()*2]; 
+    puhInterDirSP = new UChar[pcCU->getPic()->getPicSym()->getNumPartitionsInCtu()]; 
 #endif
 
 #if NH_3D_MLC
@@ -438,7 +438,7 @@ if(!pcCU->getSlice()->isIntra())
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
 #if NH_3D_MLC
     m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours 
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
       , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand, uiMergeIndex );
@@ -447,7 +447,7 @@ if(!pcCU->getSlice()->isIntra())
 #if NH_3D_VSP
       , vspFlag
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
       , bSPIVMPFlag
 #endif
       , numValidMergeCand );
@@ -500,7 +500,7 @@ if(!pcCU->getSlice()->isIntra())
 #endif
       }
     }
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth ); 
     if (bSPIVMPFlag[uiMergeIndex])
     {
@@ -525,7 +525,7 @@ if(!pcCU->getSlice()->isIntra())
 #endif
 
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
     xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
 #endif
 
@@ -550,7 +550,7 @@ if(!pcCU->getSlice()->isIntra())
       m_pcEntropyDecoder->decodeSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
       xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
       xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
 #endif
       return;
@@ -570,7 +570,7 @@ if(!pcCU->getSlice()->isIntra())
   }
 #endif
   xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
 #endif
 }
@@ -593,7 +593,7 @@ Void TDecCu::xFinishDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth,
 Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
 {
   TComPic* pcPic = pCtu->getPic();
-#if !H_3D_IV_MERGE
+#if !NH_3D_IV_MERGE
   TComSlice * pcSlice = pCtu->getSlice();
   const TComSPS &sps=*(pcSlice->getSPS());
 
