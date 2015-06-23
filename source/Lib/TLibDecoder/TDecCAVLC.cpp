@@ -2804,7 +2804,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     if (!pcSlice->isIntra())
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
       pcSlice->setMaxNumMergeCand(( ( pcSlice->getMpiFlag() || pcSlice->getIvMvPredFlag() || pcSlice->getViewSynthesisPredFlag() ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
 #else
       pcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);

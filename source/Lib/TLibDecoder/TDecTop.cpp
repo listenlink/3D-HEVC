@@ -291,7 +291,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
 }
 
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 Void
 CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
 {
@@ -1166,7 +1166,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
 #if NH_3D
     pcSlice->checkInCompPredRefLayers(); 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 #if H_3D_FCO
     //assert( !getIsDepth() );
 #else
@@ -1263,7 +1263,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cTrQuant.setUseScalingList(false);
   }
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 #if H_3D_FCO
   if( !pcSlice->getIsDepth() && m_pcCamParsCollector )
 #else

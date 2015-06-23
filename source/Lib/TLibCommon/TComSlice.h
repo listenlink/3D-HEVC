@@ -2708,7 +2708,10 @@ public:
 #endif                                                                                                                                               
 #if H_3D                                                                                                                                             
   TComPic*                    getTexturePic       ()                                 { return  m_ivPicsCurrPoc[0][ m_viewIndex ];                    }
-#endif                                                                                                                                               
+#endif                            
+#if NH_3D_IV_MERGE
+  TComPic*                    getTexturePic       ()                                 { return  m_ivPicsCurrPoc[0][ m_viewIndex ];                    }
+#endif
 #if H_3D_IC                                                                                                                                          
   Void                        setApplyIC( Bool b )                                   { m_bApplyIC = b;                                               }
   Bool                        getApplyIC()                                           { return m_bApplyIC;                                            }
