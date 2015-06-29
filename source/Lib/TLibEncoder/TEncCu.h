@@ -68,7 +68,7 @@ private:
 
   TComDataCU**            m_ppcBestCU;      ///< Best CUs in each depth
   TComDataCU**            m_ppcTempCU;      ///< Temporary CUs in each depth
-#if H_3D_ARP
+#if NH_3D_ARP
   TComDataCU**            m_ppcWeightedTempCU;
 #endif
   UChar                   m_uhTotalDepth;

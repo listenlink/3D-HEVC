@@ -2593,7 +2593,7 @@ private:
 #if H_3D_TMVP
   Int        m_aiAlterRefIdx   [2]; 
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   Bool       m_arpRefPicAvailable[2][MAX_NUM_LAYERS];
   TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
   UInt        m_nARPStepNum; 
@@ -2717,7 +2717,7 @@ public:
   Void                        setIcSkipParseFlag( Bool b )                           { m_icSkipParseFlag = b;                                        }
   Bool                        getIcSkipParseFlag()                                   { return m_icSkipParseFlag;                                     }
 #endif                                                                                                                                               
-#if H_3D_ARP                                                                                                                                         
+#if NH_3D_ARP                                                                                                                                         
   Void                        setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic; }                  
   Void                        setARPStepNum( TComPicLists*ivPicLists );                                                                              
   TComPic*                    getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )     { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
@@ -2924,7 +2924,7 @@ public:
   Void                        setAlterRefIdx          ( RefPicList e, Int i )        { m_aiAlterRefIdx[e]    = i;                                    }
   Int                         getAlterRefIdx          ( RefPicList e )               { return  m_aiAlterRefIdx[e];                                   }
 #endif                                                                                                                                               
-#if H_3D_ARP                                                                                                                                         
+#if NH_3D_ARP                                                                                                                                         
   Int                         getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];                                  }
   Void                        setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;                                   }
   Bool                        getArpRefPicAvailable  ( RefPicList e, Int viewIdx)    { return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }

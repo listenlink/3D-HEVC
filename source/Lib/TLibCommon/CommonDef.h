@@ -362,7 +362,7 @@ __inline T gCeilLog2( T val )
 
 #endif
 
-#if H_3D_IV_MERGE
+#if H_3D_IV_MERGE || NH_3D_ARP
 #define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
 #endif
 

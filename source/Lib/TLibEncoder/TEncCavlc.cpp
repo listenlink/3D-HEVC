@@ -2577,7 +2577,7 @@ Void TEncCavlc::codeMergeIndex    ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ 
   assert(0);
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TEncCavlc::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

@@ -49,9 +49,6 @@
 #include "TComRdCost.h"
 #include "TComPattern.h"
 
-#if H_3D_ARP
-#include "TComYuv.h"
-#endif
 #if H_3D
 #include <algorithm>
 #include <vector>
@@ -175,7 +172,7 @@ private:
 #if H_3D_SPIVMP
   Bool*         m_pbSPIVMPFlag;       ///< array of sub-PU IVMP flags to indicate whehter a block uses sub-PU IVMP ///< 0: non-SPIVMP; 1: SPIVMP
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   UChar*        m_puhARPW;
 #endif
 #if H_3D_IC
@@ -250,7 +247,7 @@ protected:
 
 
   /// compute scaling factor from POC difference
-#if !H_3D_ARP
+#if !NH_3D_ARP
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 #endif
 
@@ -267,7 +264,8 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
   // -------------------------------------------------------------------------------------------------------------------
-#if H_3D_ARP
+#if NH_3D_ARP
+  /// compute scaling factor from POC difference
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 #endif 
   Void          create                ( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
@@ -317,7 +315,10 @@ public:
 #if NH_3D_VSO
   Void          getPosInPic           ( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY ) const;
 #endif
-
+#if NH_3D_ARP
+  Void          setSlice              ( TComSlice* pcSlice)     { m_pcSlice = pcSlice;       }
+  Void          setPic                ( TComDataCU* pcCU  )     { m_pcPic              = pcCU->getPic(); }
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
@@ -530,12 +531,11 @@ public:
     , Bool bICFlag
     );   
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   UChar*        getARPW            ()                        { return m_puhARPW;               }
   UChar         getARPW            ( UInt uiIdx )            { return m_puhARPW[uiIdx];        }
   Void          setARPW            ( UInt uiIdx, UChar w )   { m_puhARPW[uiIdx] = w;           }
   Void          setARPWSubParts    ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
-  Double        getARPWFactor      ( UInt uiIdx );
 #endif
 #if H_3D_IC
   Bool*         getICFlag          ()                        { return m_pbICFlag;               }
@@ -709,7 +709,6 @@ public:
 #if H_3D_IC
   Bool          isIC      ( UInt uiPartIdx );
 #endif
-
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)
   // -------------------------------------------------------------------------------------------------------------------
@@ -728,7 +727,7 @@ public:
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
-#if H_3D_ARP
+#if NH_3D_ARP
   UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
 #endif  
 

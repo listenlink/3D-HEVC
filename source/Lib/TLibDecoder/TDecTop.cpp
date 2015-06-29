@@ -1144,21 +1144,8 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #if NH_3D_NBDV
     pcSlice->setDefaultRefView();
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
     pcSlice->setARPStepNum(m_ivPicLists);
-    if( pcSlice->getARPStepNum() > 1 )
-    {
-      // GT: This seems to be broken, not all nuh_layer_ids are necessarily present
-      for(Int iLayerId = 0; iLayerId < nalu.m_nuhLayerId; iLayerId ++ )
-      {
-        Int  iViewIdx =   pcSlice->getVPS()->getViewIndex(iLayerId);
-        Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
-        if( iViewIdx<getViewIndex() && !bIsDepth )
-        {
-          pcSlice->setBaseViewRefPicList( m_ivPicLists->getPicList( iLayerId ), iViewIdx );
-        }
-      }
-    }
 #endif
 #else
     pcSlice->setRefPicList( m_cListPic, true );

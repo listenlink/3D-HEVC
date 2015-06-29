@@ -104,7 +104,7 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TDecEntropy::decodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   if( !pcCU->getSlice()->getARPStepNum() || pcCU->isIntra( uiAbsPartIdx ) )
@@ -296,7 +296,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
   //decodeSDCFlag ( pcCU, uiAbsPartIdx, uiDepth );
 
-#if H_3D_ARP
+#if NH_3D_ARP
   decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 #if H_3D_IC

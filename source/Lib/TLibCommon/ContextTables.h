@@ -161,7 +161,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1
 
-#if H_3D_ARP
+#if NH_3D_ARP
 #define NUM_ARPW_CTX                  3       ///< number of context models for weighting factor index used by advanced residual prediction
 #endif
 
@@ -541,7 +541,7 @@ INIT_CROSS_COMPONENT_PREDICTION[NUMBER_OF_SLICE_TYPES][NUM_CROSS_COMPONENT_PREDI
 
 //! \}
 
-#if H_3D_ARP
+#if NH_3D_ARP
 static const UChar 
 INIT_ARPW[3][NUM_ARPW_CTX] = 
 {

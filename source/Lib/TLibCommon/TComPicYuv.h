@@ -166,11 +166,10 @@ public:
 #if NH_3D
   // Set Function 
   Void  setLumaTo    ( Pel pVal );  
-  Void  setChromaTo  ( Pel pVal );  
-#if H_3D_IV_MERGE
+  Void  setChromaTo  ( Pel pVal ); 
+#if H_3D_IV_MERGE 
   // sample to block and block to sample conversion
   Void  getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY );
-  Void  getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
 #endif
 #endif
 

@@ -3375,7 +3375,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* /*pcCU*/, UInt& /*ruiMergeIndex*/ 
   assert(0);
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
