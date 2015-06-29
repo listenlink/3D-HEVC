@@ -3296,9 +3296,8 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
 {
 #if NH_3D_IV_MERGE
   TComMv cZeroMv;
+  TComMvField tmpMV[2];  
 #endif
-  TComMvField tmpMV[2];
-  UChar tmpDir;
 
   //////////////////////////////////
   //////// GET DISPARITIES  ////////
