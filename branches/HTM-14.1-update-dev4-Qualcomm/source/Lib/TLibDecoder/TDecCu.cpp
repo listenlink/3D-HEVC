@@ -292,11 +292,11 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
  
 if(!pcCU->getSlice()->isIntra())
   {
-#if H_3D_ARP && H_3D_IV_MERGE
+#if NH_3D_ARP && H_3D_IV_MERGE
     if( pcCU->getSlice()->getIvResPredFlag() || pcCU->getSlice()->getIvMvPredFlag() )
 #else 
-#if H_3D_ARP
-    if( pcCU->getSlice()->getVPS()->getUseAdvRP(pcCU->getSlice()->getLayerId()) )
+#if NH_3D_ARP
+    if( pcCU->getSlice()->getIvResPredFlag( ) )
 #else
 #if H_3D_IV_MERGE
     if( pcCU->getSlice()->getVPS()->getIvMvPredFlag(pcCU->getSlice()->getLayerId()) )
@@ -398,7 +398,7 @@ if(!pcCU->getSlice()->isIntra())
     }
     m_pcEntropyDecoder->decodeMergeIndex( pcCU, 0, uiAbsPartIdx, uiDepth );
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
-#if H_3D_ARP
+#if NH_3D_ARP
     m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth );
 #endif
 #if H_3D_IC

@@ -72,8 +72,8 @@ TDecSbac::TDecSbac()
 #endif
 , m_cCUMergeFlagExtSCModel                   ( 1,             1,                      NUM_MERGE_FLAG_EXT_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel                    ( 1,             1,                      NUM_MERGE_IDX_EXT_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_ARP
-, m_cCUPUARPWSCModel          ( 1,             1,               NUM_ARPW_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+#if NH_3D_ARP
+, m_cCUPUARPWSCModel                         ( 1,             1,                             NUM_ARPW_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if H_3D_IC
 , m_cCUICFlagSCModel          ( 1,             1,               NUM_IC_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
@@ -163,8 +163,8 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
-#if H_3D_ARP
-  m_cCUPUARPWSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_ARPW );
+#if NH_3D_ARP
+  m_cCUPUARPWSCModel.initBuffer                   ( sliceType, qp, (UChar*)INIT_ARPW );
 #endif
 #if H_3D_IC
   m_cCUICFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_IC_FLAG );
@@ -239,9 +239,6 @@ Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 #if H_3D
   m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
   m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
-#endif
-#if H_3D_ARP
-  m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
 #if H_3D_IC
   m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
@@ -2416,27 +2413,25 @@ Void TDecSbac::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
   }
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  UInt uiMaxW = pcCU->getSlice()->getARPStepNum() - 1;
   UInt uiW = 0;
   UInt uiOffset = pcCU->getCTXARPWFlag(uiAbsPartIdx);
   UInt uiCode = 0;
 
-  assert ( uiMaxW > 0 );
-
-  m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 0 + uiOffset ) );
+  m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 0 + uiOffset ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__ARP_FLAG));
 
   uiW = uiCode;
   if( 1 == uiW )   
   {
-    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
+    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 2 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__ARP_FLAG));
     uiW += ( 1 == uiCode ? 1 : 0 );
   }
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU("iv_res_pred_weight_idx", uiW )
 #endif
+  
   pcCU->setARPWSubParts( ( UChar )( uiW ) , uiAbsPartIdx, uiDepth );  
 }
 #endif

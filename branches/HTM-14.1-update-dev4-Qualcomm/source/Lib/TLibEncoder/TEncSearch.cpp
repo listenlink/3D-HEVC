@@ -5006,12 +5006,16 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   // prediction pattern
   if ( pcCU->getSlice()->testWeightPred() && pcCU->getSlice()->getSliceType()==P_SLICE )
   {
-    xPredInterBlk( COMPONENT_Y, pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, true, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) );
+    xPredInterBlk( COMPONENT_Y, pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, true, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) 
+#if NH_3D_ARP
+      , false //add this for IC, otherwise, it could be removed
+#endif
+      );
   }
   else
   {
     xPredInterBlk( COMPONENT_Y, pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) 
-#if H_3D_ARP
+#if NH_3D_ARP
       , false
 #endif
 #if H_3D_IC
@@ -5780,7 +5784,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, true );
-#if H_3D_ARP
+#if NH_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
 #if H_3D_IC
@@ -7096,7 +7100,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt& ruiBits )
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, true);
-#if H_3D_ARP
+#if NH_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
 #if H_3D_IC
@@ -7123,7 +7127,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt& ruiBits )
 #if H_3D_DIM_SDC
     m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0  );
 #endif
 #if H_3D_IC

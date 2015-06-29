@@ -67,7 +67,7 @@ TEncSbac::TEncSbac()
 #endif
 , m_cCUMergeFlagExtSCModel             ( 1,             1,                      NUM_MERGE_FLAG_EXT_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel              ( 1,             1,                      NUM_MERGE_IDX_EXT_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_ARP
+#if NH_3D_ARP
 , m_cCUPUARPWSCModel                   ( 1,             1,                      NUM_ARPW_CTX                         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif                                                                                                               
 #if H_3D_IC                                                                                                          
@@ -147,7 +147,7 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT);
   m_cCUMergeIdxExtSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
-#if H_3D_ARP
+#if NH_3D_ARP
   m_cCUPUARPWSCModel.initBuffer                   ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
 #if H_3D_IC
@@ -234,7 +234,7 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #endif
       curCost += m_cCUMergeFlagExtSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT);
       curCost += m_cCUMergeIdxExtSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_MERGE_IDX_EXT);
-#if H_3D_ARP
+#if NH_3D_ARP
       curCost += m_cCUPUARPWSCModel.calcCost                   ( curSliceType, qp, (UChar*)INIT_ARPW );
 #endif                                                     
 #if H_3D_IC                                                
@@ -300,9 +300,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #if H_3D
   m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
   m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
-#endif
-#if H_3D_ARP
-  m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
 #if H_3D_IC
   m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
@@ -970,7 +967,7 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #endif
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   Int  iW = (Int)pcCU->getARPW( uiAbsPartIdx );

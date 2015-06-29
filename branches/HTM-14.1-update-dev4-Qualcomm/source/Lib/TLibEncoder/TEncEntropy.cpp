@@ -183,7 +183,7 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 }
 #endif
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TEncEntropy::encodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   if( !pcCU->getSlice()->getARPStepNum() || pcCU->isIntra( uiAbsPartIdx ) ) 

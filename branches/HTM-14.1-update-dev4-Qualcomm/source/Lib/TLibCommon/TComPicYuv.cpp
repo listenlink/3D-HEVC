@@ -305,19 +305,6 @@ TComPicYuv::getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& 
   riX                 = iCuX * m_iCuWidth  + iBaseX * m_iBaseUnitWidth;
   riY                 = iCuY * m_iCuHeight + iBaseY * m_iBaseUnitHeight; 
 }
-
-Void
-TComPicYuv::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx )
-{
-  Int iCuX            = iX / m_iCuWidth;
-  Int iCuY            = iY / m_iCuHeight;
-  Int iBaseX          = ( iX - iCuX * m_iCuWidth  ) / m_iBaseUnitWidth;
-  Int iBaseY          = ( iY - iCuY * m_iCuHeight ) / m_iBaseUnitHeight;
-  Int iCuSizeInBases  = m_iCuWidth                  / m_iBaseUnitWidth;
-  riCuAddr            = iCuY   * m_iNumCuInWidth + iCuX;
-  Int iRastPartIdx    = iBaseY * iCuSizeInBases  + iBaseX;
-  riAbsZorderIdx      = g_auiRasterToZscan[ iRastPartIdx ];
-}
 #endif
 Void TComPicYuv::setLumaTo( Pel pVal )
 {

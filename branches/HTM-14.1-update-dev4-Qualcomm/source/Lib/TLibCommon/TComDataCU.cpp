@@ -133,7 +133,7 @@ TComDataCU::TComDataCU()
 #if H_3D_SPIVMP
   m_pbSPIVMPFlag         = NULL;
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   m_puhARPW              = NULL;
 #endif
 #if H_3D_IC
@@ -248,8 +248,8 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
       m_acCUMvField[i].create( uiNumPartition );
     }
 
-#if H_3D_ARP
-    m_puhARPW            = new UChar[ uiNumPartition];
+#if NH_3D_ARP
+    m_puhARPW            = (UChar*  )xMalloc(UChar,   uiNumPartition);
 #endif
 #if H_3D_IC
     m_pbICFlag           = (Bool* )xMalloc(Bool,   uiNumPartition);
@@ -467,8 +467,8 @@ Void TComDataCU::destroy()
 #endif
 
 
-#if H_3D_ARP
-    if ( m_puhARPW            ) { delete[] m_puhARPW;           m_puhARPW           = NULL; }
+#if NH_3D_ARP
+    if ( m_puhARPW            ) { xFree(m_puhARPW);             m_puhARPW           = NULL; }
 #endif
 #if H_3D_IC
     if ( m_pbICFlag           ) { xFree(m_pbICFlag);            m_pbICFlag          = NULL; }
@@ -597,9 +597,6 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   memset( m_puhWidth          , maxCUWidth,                 m_uiNumPartition * sizeof( *m_puhWidth ) );
   memset( m_puhHeight         , maxCUHeight,                m_uiNumPartition * sizeof( *m_puhHeight ) );
 
-#if H_3D_ARP
-    m_puhARPW   [ui] = pcFrom->getARPW( ui );
-#endif
 #if H_3D_IC
     m_pbICFlag[ui]   =  pcFrom->m_pbICFlag[ui];
 #endif
@@ -650,8 +647,8 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
     memset( m_puhIntraDir[ch] , ((ch==0) ? DC_IDX : 0),   m_uiNumPartition * sizeof( *(m_puhIntraDir[ch]) ) );
   }
 
-#if H_3D_ARP
-    memset( m_puhARPW           + firstElement, 0,                        numElements * sizeof( UChar )         );
+#if NH_3D_ARP
+  memset( m_puhARPW      ,      0,        m_uiNumPartition * sizeof( *m_puhARPW )         );
 #endif
 #if H_3D_IC
     memset( m_pbICFlag          + firstElement, false,                    numElements * sizeof( *m_pbICFlag )   );
@@ -808,8 +805,8 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
     {
       m_puhCbf[comp][ui] = 0;
     }
-#if H_3D_ARP
-      m_puhARPW[ui] = 0;
+#if NH_3D_ARP
+    m_puhARPW[ui] = 0;
 #endif
 #if H_3D_IC
       m_pbICFlag[ui]  = false;
@@ -914,14 +911,15 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     memset( m_puhCbf[comp],                        0, iSizeInUchar );
     memset( m_explicitRdpcmMode[comp],             NUMBER_OF_RDPCM_MODES, iSizeInUchar );
   }
-#if H_3D_ARP
-  memset( m_puhARPW,            0, iSizeInUchar  );
-#endif
+
 
   memset( m_puhDepth,     uiDepth, iSizeInUchar );
   memset( m_puhWidth,          uhWidth,  iSizeInUchar );
   memset( m_puhHeight,         uhHeight, iSizeInUchar );
   memset( m_pbIPCMFlag,        0, iSizeInBool  );
+#if NH_3D_ARP
+  memset( m_puhARPW,           0, iSizeInUchar  );
+#endif
 #if H_3D_IC
   memset( m_pbICFlag,          0, iSizeInBool  );
 #endif
@@ -981,8 +979,8 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #if H_3D_SPIVMP
       m_pbSPIVMPFlag[ui]=pcCU->m_pbSPIVMPFlag[uiPartOffset+ui];
 #endif
-#if H_3D_ARP
-      m_puhARPW           [ui] = pcCU->getARPW( uiPartOffset+ui );
+#if NH_3D_ARP
+     m_puhARPW            [ui] = pcCU->getARPW( uiPartOffset + ui );
 #endif
 #if H_3D_IC
       m_pbICFlag          [ui] = pcCU->m_pbICFlag[uiPartOffset+ui];
@@ -1088,7 +1086,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #if H_3D_SPIVMP
   m_pbSPIVMPFlag        = pcCU->getSPIVMPFlag()          + uiPart;
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   m_puhARPW             = pcCU->getARPW()             + uiPart;
 #endif
 #if H_3D_IC
@@ -1248,7 +1246,7 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
 
   m_apiMVPIdx[eRefPicList] = pcCU->getMVPIdx(eRefPicList) + uiAbsPartIdx;
   m_apiMVPNum[eRefPicList] = pcCU->getMVPNum(eRefPicList) + uiAbsPartIdx;
-#if H_3D_ARP
+#if NH_3D_ARP
   m_puhARPW            = pcCU->getARPW()                  + uiAbsPartIdx;
 #endif    
 #if NH_3D_DBBP
@@ -1342,6 +1340,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
 #if NH_3D_DBBP
   memcpy( m_pbDBBPFlag          + uiOffset, pcCU->getDBBPFlag(),          iSizeInBool  );
 #endif
+#if NH_3D_ARP
+  memcpy( m_puhARPW             + uiOffset, pcCU->getARPW(),              iSizeInUchar );
+#endif
 
   memcpy( m_puhDepth  + uiOffset, pcCU->getDepth(),  iSizeInUchar );
   memcpy( m_puhWidth  + uiOffset, pcCU->getWidth(),  iSizeInUchar );
@@ -1382,9 +1383,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     memcpy( m_pcIPCMSample[ch] + offset, pcCU->getPCMSample(component), sizeof(Pel)*(numCoeffY>>componentShift) );
   }
 
-#if H_3D_ARP
-  memcpy( m_puhARPW             + uiOffset, pcCU->getARPW(),              iSizeInUchar );
-#endif
+
 #if H_3D_IC
   memcpy( m_pbICFlag            + uiOffset, pcCU->getICFlag(),            iSizeInBool );
 #endif
@@ -1472,7 +1471,9 @@ for (UInt ch=0; ch<numValidChan; ch++)
 #if NH_3D_DBBP
   memcpy( pCtu->getDBBPFlag()          + m_absZIdxInCtu, m_pbDBBPFlag,          iSizeInBool  );
 #endif
-
+#if NH_3D_ARP
+  memcpy( pCtu->getARPW()              + m_absZIdxInCtu, m_puhARPW,             iSizeInUchar );
+#endif
   memcpy( pCtu->getDepth()  + m_absZIdxInCtu, m_puhDepth,  iSizeInUchar );
   memcpy( pCtu->getWidth()  + m_absZIdxInCtu, m_puhWidth,  iSizeInUchar );
   memcpy( pCtu->getHeight() + m_absZIdxInCtu, m_puhHeight, iSizeInUchar );
@@ -1505,9 +1506,7 @@ for (UInt ch=0; ch<numValidChan; ch++)
     memcpy( pCtu->getPCMSample(component) + (offsetY>>componentShift), m_pcIPCMSample[component], sizeof(Pel)*(numCoeffY>>componentShift) );
   }
 
-#if H_3D_ARP
-  memcpy( rpcCU->getARPW()             + m_uiAbsIdxInLCU, m_puhARPW,             iSizeInUchar );
-#endif
+
 #if H_3D_IC
   memcpy( rpcCU->getICFlag()           + m_uiAbsIdxInLCU, m_pbICFlag,            iSizeInBool );
 #endif
@@ -1543,9 +1542,6 @@ for (UInt ch=0; ch<numValidChan; ch++)
   memcpy( rpcCU->getSDCSegmentDCOffset(0) + uiPartOffset, m_apSegmentDCOffset[0], sizeof( Pel ) * uiQNumPart);
   memcpy( rpcCU->getSDCSegmentDCOffset(1) + uiPartOffset, m_apSegmentDCOffset[1], sizeof( Pel ) * uiQNumPart);
 #endif
-#endif
-#if H_3D_ARP
-  memcpy( rpcCU->getARPW()             + uiPartOffset, m_puhARPW,             iSizeInUchar );
 #endif
 #if H_3D_IC
   memcpy( rpcCU->getICFlag()           + uiPartOffset, m_pbICFlag,            iSizeInBool );
@@ -2101,16 +2097,16 @@ UInt TComDataCU::getCtxSkipFlag( UInt uiAbsPartIdx )
 
   return uiCtx;
 }
-#if H_3D_ARP
+#if NH_3D_ARP
 UInt TComDataCU::getCTXARPWFlag( UInt uiAbsPartIdx )
 {
   TComDataCU* pcTempCU;
   UInt        uiTempPartIdx;
   UInt        uiCtx = 0;
   
-  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  pcTempCU = getPULeft( uiTempPartIdx, m_absZIdxInCtu + uiAbsPartIdx );
   uiCtx    = ( pcTempCU ) ? ((pcTempCU->getARPW( uiTempPartIdx )==0)?0:1) : 0;
-    return uiCtx;
+  return uiCtx;
 }
 #endif
 #if NH_3D_DBBP
@@ -3705,7 +3701,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_IC
   Bool bICFlag = getICFlag(uiAbsPartIdx);
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   Bool bARPFlag = getARPW(uiAbsPartIdx) > 0;
 #endif
 #if NH_3D_DBBP
@@ -3743,7 +3739,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_IC
       && !bICFlag
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
       && !bARPFlag
 #endif
 #if NH_3D_DBBP
@@ -4191,7 +4187,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_IC
       !bICFlag &&
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
       !bARPFlag &&
 #endif
 #if H_3D
@@ -6130,7 +6126,12 @@ Void TComDataCU::xDeriveRightBottomNbIdx(Int &riLCUIdxRBNb, Int &riPartIdxRBNb )
 
 Void TComDataCU::setDvInfoSubParts( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if BUF_FIX
+  UInt uiCurrPartNumb = m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1);
+  assert(m_pcPic->getNumPartitionsInCtu() ==m_pcPic->getNumPartInCtuWidth()*m_pcPic->getNumPartInCtuHeight());
+#else
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCtuWidth() >> (uiDepth << 1);
+#endif
   for (UInt ui = 0; ui < uiCurrPartNumb; ui++ )
   {
     m_pDvInfo[uiAbsPartIdx + ui] = cDvInfo;
@@ -6674,11 +6675,10 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   return false;
 }
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TComDataCU::setARPWSubParts ( UChar w, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  assert( sizeof( *m_puhARPW) == 1 );
-  memset( m_puhARPW + uiAbsPartIdx, w, m_pcPic->getNumPartInCU() >> ( 2 * uiDepth ) );
+  setSubPart<UChar>( w, m_puhARPW, uiAbsPartIdx, uiDepth, 0 );
 }
 #endif
 

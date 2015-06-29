@@ -83,7 +83,7 @@ public:
 #endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if H_3D_ARP
+#if NH_3D_ARP
   virtual Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
 #if H_3D_IC
@@ -172,7 +172,7 @@ public:
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if H_3D_ARP
+#if NH_3D_ARP
   Void encodeARPW         ( TComDataCU* pcCU, UInt uiAbspartIdx );
 #endif
 #if H_3D_IC
