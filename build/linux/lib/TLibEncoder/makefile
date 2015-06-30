@@ -16,11 +16,17 @@ SRC_DIR4		=
 USER_INC_DIRS	= -I$(SRC_DIR)
 USER_LIB_DIRS	=
 
+ifeq ($(HIGHBITDEPTH), 1)
+HBD=HighBitDepth
+else
+HBD=
+endif
+
 # intermediate directory for object files
-OBJ_DIR			= ./objects
+OBJ_DIR			= ./objects$(HBD)
 
 # the library name
-PRJ_NAME	 	= TLibEncoder
+PRJ_NAME	 	= TLibEncoder$(HBD)
 
 # version information
 MAJOR_VER		= 0
@@ -33,12 +39,12 @@ DEFS			= -DMSYS_LINUX
 # set objects
 OBJS          	= \
 			$(OBJ_DIR)/NALwrite.o \
+			$(OBJ_DIR)/SEIEncoder.o \
 			$(OBJ_DIR)/SEIwrite.o \
 			$(OBJ_DIR)/SyntaxElementWriter.o \
 			$(OBJ_DIR)/TEncBinCoderCABAC.o \
 			$(OBJ_DIR)/TEncBinCoderCABACCounter.o \
 			$(OBJ_DIR)/TEncSampleAdaptiveOffset.o \
-			$(OBJ_DIR)/TEncAnalyze.o \
 			$(OBJ_DIR)/TEncCavlc.o \
 			$(OBJ_DIR)/TEncCu.o \
 			$(OBJ_DIR)/TEncEntropy.o \

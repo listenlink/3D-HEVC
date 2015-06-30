@@ -38,7 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComPicYuv.h"
 #include "TRenImagePlane.h"
-#if H_3D
+#if NH_3D
 
 
 #define PelImage    TRenImage<Pel>
@@ -69,15 +69,15 @@ public:
   TRenImagePlane<T>*  getPlane(UInt uiPlaneNumber) const;
   TRenImagePlane<T>** getPlanes() const;
 
-  Void getDataAndStrides( T**    pptData, Int*  piStrides );
-  Void getWidthAndHeight( Int*  piWidths, Int*  piHeights );
+  Void getDataAndStrides ( T**    pptData, Int*  piStrides ) const ;
+  Void getWidthAndHeight ( Int*  piWidths, Int*  piHeights ) const ;
 
   UInt getNumberOfPlanes()  const;
   UInt getNumberOfQuaterPlanes() const;
   UInt getNumberOfFullPlanes() const;
-  Bool is420() {return m_uiNumberOfFullPlanes == 1 && m_uiNumberOfQuaterPlanes == 2; };
-  Bool is444() {return m_uiNumberOfFullPlanes == 3 && m_uiNumberOfQuaterPlanes == 0; };
-  Bool is400() {return m_uiNumberOfFullPlanes == 1 && m_uiNumberOfQuaterPlanes == 0; };
+  Bool is420() const {return m_uiNumberOfFullPlanes == 1 && m_uiNumberOfQuaterPlanes == 2; };
+  Bool is444() const {return m_uiNumberOfFullPlanes == 3 && m_uiNumberOfQuaterPlanes == 0; };
+  Bool is400() const {return m_uiNumberOfFullPlanes == 1 && m_uiNumberOfQuaterPlanes == 0; };
 
   // Assign
   Void assign(Int iVal);
@@ -94,12 +94,13 @@ private:
   UInt m_uiNumberOfFullPlanes;
   UInt m_uiNumberOfQuaterPlanes;
   UInt m_uiNumberOfPlanes;
+  UInt m_bitDepth;
   TRenImagePlane<T> ** m_apcPlanes;   // First Full Planes, then Quater Planes
 
   Void xDeletePlanes();
 };
 
-#endif // H_3D
+#endif // NH_3D
 #endif // __TRENIMAGE__
 
 

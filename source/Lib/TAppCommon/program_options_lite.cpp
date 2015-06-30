@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@
 #include <map>
 #include <algorithm>
 #include "program_options_lite.h"
-#include  "../TLibCommon/TypeDef.h"
+#include  "../TLibCommon/CommonDef.h"
 using namespace std;
 
 //! \ingroup TAppCommon
@@ -49,7 +49,21 @@ namespace df
 {
   namespace program_options_lite
   {
-    
+    ErrorReporter default_error_reporter;
+
+    ostream& ErrorReporter::error(const string& where)
+    {
+      is_errored = 1;
+      cerr << where << " error: ";
+      return cerr;
+    }
+
+    ostream& ErrorReporter::warn(const string& where)
+    {
+      cerr << where << " warning: ";
+      return cerr;
+    }
+
     Options::~Options()
     {
       for(Options::NamesPtrList::iterator it = opt_list.begin(); it != opt_list.end(); it++)
@@ -57,13 +71,13 @@ namespace df
         delete *it;
       }
     }
-    
+
     void Options::addOption(OptionBase *opt)
     {
       Names* names = new Names();
       names->opt = opt;
       string& opt_string = opt->opt_string;
-      
+
       size_t opt_start = 0;
       for (size_t opt_end = 0; opt_end != string::npos;)
       {
@@ -95,19 +109,19 @@ namespace df
     {
       return OptionSpecific(*this);
     }
-    
-    static void setOptions(Options::NamesPtrList& opt_list, const string& value)
+
+    static void setOptions(Options::NamesPtrList& opt_list, const string& value, ErrorReporter& error_reporter)
     {
       /* multiple options may be registered for the same name:
        *   allow each to parse value */
       for (Options::NamesPtrList::iterator it = opt_list.begin(); it != opt_list.end(); ++it)
       {
-        (*it)->opt->parse(value);
+        (*it)->opt->parse(value, error_reporter);
       }
     }
 
     static const char spaces[41] = "                                        ";
-    
+
     /* format help text for a single option:
      * using the formatting: "-x, --long",
      * if a short/long option isn't specified, it is not printed
@@ -137,7 +151,7 @@ namespace df
         out << "--" << entry.opt_long.front();
       }
     }
-    
+
     /* format the help text */
     void doHelp(ostream& out, Options& opts, unsigned columns)
     {
@@ -146,7 +160,7 @@ namespace df
       unsigned max_width = 0;
       for(Options::NamesPtrList::iterator it = opts.opt_list.begin(); it != opts.opt_list.end(); it++)
       {
-#if H_MV
+#if NH_MV
         if  ( (*it)->opt->opt_duplicate ) continue; 
 #endif
         ostringstream line(ios_base::out);
@@ -156,7 +170,7 @@ namespace df
 
       unsigned opt_width = min(max_width+2, 28u + pad_short) + 2;
       unsigned desc_width = columns - opt_width;
-      
+
       /* second pass: write out formatted option and help text.
        *  - align start of help text to start at opt_width
        *  - if the option text is longer than opt_width, place the help
@@ -164,7 +178,7 @@ namespace df
        */
       for(Options::NamesPtrList::iterator it = opts.opt_list.begin(); it != opts.opt_list.end(); it++)
       {
-#if H_MV
+#if NH_MV
         if  ( (*it)->opt->opt_duplicate ) continue; 
 #endif
         ostringstream line(ios_base::out);
@@ -214,7 +228,7 @@ namespace df
             /* eat up multiple space characters */
             split_pos = opt_desc.find_last_not_of(' ', split_pos) + 1;
           }
-          
+
           /* bad split if no suitable space to split at.  fall back to width */
           bool bad_split = split_pos == string::npos || split_pos <= cur_pos;
           if (bad_split)
@@ -222,14 +236,14 @@ namespace df
             split_pos = cur_pos + desc_width;
           }
           line << opt_desc.substr(cur_pos, split_pos - cur_pos);
-          
+
           /* eat up any space for the start of the next line */
           if (!bad_split)
           {
             split_pos = opt_desc.find_first_not_of(' ', split_pos);
           }
           cur_pos = newline_pos = split_pos;
-          
+
           if (cur_pos >= opt_desc.size())
           {
             break;
@@ -240,8 +254,27 @@ namespace df
         cout << line.str() << endl;
       }
     }
-    
-    bool storePair(Options& opts, bool allow_long, bool allow_short, const string& name, const string& value)
+
+    struct OptionWriter
+    {
+      OptionWriter(Options& rOpts, ErrorReporter& err)
+      : opts(rOpts), error_reporter(err)
+      {}
+      virtual ~OptionWriter() {}
+
+      virtual const string where() = 0;
+
+      bool storePair(bool allow_long, bool allow_short, const string& name, const string& value);
+      bool storePair(const string& name, const string& value)
+      {
+        return storePair(true, true, name, value);
+      }
+
+      Options& opts;
+      ErrorReporter& error_reporter;
+    };
+
+    bool OptionWriter::storePair(bool allow_long, bool allow_short, const string& name, const string& value)
     {
       bool found = false;
       Options::NamesMap::iterator opt_it;
@@ -253,7 +286,7 @@ namespace df
           found = true;
         }
       }
-      
+
       /* check for the short list */
       if (allow_short && !(found && allow_long))
       {
@@ -266,24 +299,31 @@ namespace df
 
       if (!found)
       {
-        /* not found */
-        cerr << "Unknown option: `" << name << "' (value:`" << value << "')" << endl;
+        error_reporter.error(where())
+          << "Unknown option `" << name << "' (value:`" << value << "')\n";
         return false;
       }
 
-      setOptions((*opt_it).second, value);
+      setOptions((*opt_it).second, value, error_reporter);
       return true;
     }
-    
-    bool storePair(Options& opts, const string& name, const string& value)
+
+    struct ArgvParser : public OptionWriter
     {
-      return storePair(opts, true, true, name, value);
-    }
-    
+      ArgvParser(Options& rOpts, ErrorReporter& rError_reporter)
+      : OptionWriter(rOpts, rError_reporter)
+      {}
+
+      const string where() { return "command line"; }
+
+      unsigned parseGNU(unsigned argc, const char* argv[]);
+      unsigned parseSHORT(unsigned argc, const char* argv[]);
+    };
+
     /**
      * returns number of extra arguments consumed
      */
-    unsigned parseGNU(Options& opts, unsigned argc, const char* argv[])
+    unsigned ArgvParser::parseGNU(unsigned argc, const char* argv[])
     {
       /* gnu style long options can take the forms:
        *  --option=arg
@@ -293,7 +333,7 @@ namespace df
       size_t arg_opt_start = arg.find_first_not_of('-');
       size_t arg_opt_sep = arg.find_first_of('=');
       string option = arg.substr(arg_opt_start, arg_opt_sep - arg_opt_start);
-      
+
       unsigned extra_argc_consumed = 0;
       if (arg_opt_sep == string::npos)
       {
@@ -304,10 +344,12 @@ namespace df
         * where longopts have to include an =, otherwise they are
         * booleans */
         if (argc == 1)
+        {
           return 0; /* run out of argv for argument */
+        }
         extra_argc_consumed = 1;
 #endif
-        if(!storePair(opts, true, false, option, "1"))
+        if(!storePair(true, false, option, "1"))
         {
           return 0;
         }
@@ -316,13 +358,13 @@ namespace df
       {
         /* argument occurs after option_sep */
         string val = arg.substr(arg_opt_sep + 1);
-        storePair(opts, true, false, option, val);
+        storePair(true, false, option, val);
       }
 
       return extra_argc_consumed;
     }
 
-    unsigned parseSHORT(Options& opts, unsigned argc, const char* argv[])
+    unsigned ArgvParser::parseSHORT(unsigned argc, const char* argv[])
     {
       /* short options can take the forms:
        *  --option arg
@@ -337,17 +379,20 @@ namespace df
       /* xxx, need to handle case where option isn't required */
       if (argc == 1)
       {
-        cerr << "Not processing option without argument `" << option << "'" << endl;
+        error_reporter.error(where())
+          << "Not processing option `" << option << "' without argument\n";
         return 0; /* run out of argv for argument */
       }
-      storePair(opts, false, true, option, string(argv[1]));
+      storePair(false, true, option, string(argv[1]));
 
       return 1;
     }
-    
+
     list<const char*>
-    scanArgv(Options& opts, unsigned argc, const char* argv[])
+    scanArgv(Options& opts, unsigned argc, const char* argv[], ErrorReporter& error_reporter)
     {
+      ArgvParser avp(opts, error_reporter);
+
       /* a list for anything that didn't get handled as an option */
       list<const char*> non_option_arguments;
 
@@ -369,11 +414,7 @@ namespace df
         if (argv[i][1] != '-')
         {
           /* handle short (single dash) options */
-#if 0
-          i += parsePOSIX(opts, argc - i, &argv[i]);
-#else
-          i += parseSHORT(opts, argc - i, &argv[i]);
-#endif
+          i += avp.parseSHORT(argc - i, &argv[i]);
           continue;
         }
 
@@ -381,18 +422,41 @@ namespace df
         {
           /* a lone double dash ends option processing */
           while (++i < argc)
+          {
             non_option_arguments.push_back(argv[i]);
+          }
           break;
         }
 
         /* handle long (double dash) options */
-        i += parseGNU(opts, argc - i, &argv[i]);
+        i += avp.parseGNU(argc - i, &argv[i]);
       }
 
       return non_option_arguments;
     }
-    
-    void scanLine(Options& opts, string& line)
+
+    struct CfgStreamParser : public OptionWriter
+    {
+      CfgStreamParser(const string& rName, Options& rOpts, ErrorReporter& rError_reporter)
+      : OptionWriter(rOpts, rError_reporter)
+      , name(rName)
+      , linenum(0)
+      {}
+
+      const string name;
+      int linenum;
+      const string where()
+      {
+        ostringstream os;
+        os << name << ":" << linenum;
+        return os.str();
+      }
+
+      void scanLine(string& line);
+      void scanStream(istream& in);
+    };
+
+    void CfgStreamParser::scanLine(string& line)
     {
       /* strip any leading whitespace */
       size_t start = line.find_first_not_of(" \t\n\r");
@@ -415,11 +479,13 @@ namespace df
       if (start == string::npos)
       {
         /* error: badly formatted line */
+        error_reporter.warn(where()) << "line formatting error\n";
         return;
       }
       if (line[start] != ':')
       {
         /* error: badly formatted line */
+        error_reporter.warn(where()) << "line formatting error\n";
         return;
       }
 
@@ -428,6 +494,11 @@ namespace df
       if (start == string::npos)
       {
         /* error: badly formatted line */
+#if !NH_MV
+        error_reporter.warn(where()) << "line formatting error\n";
+#else
+        // HTM also allows empty parameters.
+#endif
         return;
       }
 
@@ -446,8 +517,7 @@ namespace df
         /* consume any white space, incase there is another word.
          * any trailing whitespace will be removed shortly */
         value_end = line.find_first_not_of(" \t\n\r", value_end);
-      }
-      while (value_end != string::npos);
+      } while (value_end != string::npos);
       /* strip any trailing space from value*/
       value_end = line.find_last_not_of(" \t\n\r", value_end);
 
@@ -459,22 +529,27 @@ namespace df
       else
       {
         /* error: no value */
+#if !NH_MV
+        error_reporter.warn(where()) << "no value found\n";
+#else
+        // This is ok for HTM.
+#endif
         return;
       }
 
       /* store the value in option */
-      storePair(opts, true, false, option, value);
+      storePair(true, false, option, value);
     }
 
-    void scanFile(Options& opts, istream& in)
+    void CfgStreamParser::scanStream(istream& in)
     {
       do
       {
+        linenum++;
         string line;
         getline(in, line);
-        scanLine(opts, line);
-      }
-      while(!!in);
+        scanLine(line);
+      } while(!!in);
     }
 
     /* for all options in opts, set their storage to their specified
@@ -487,18 +562,19 @@ namespace df
       }
     }
 
-    void parseConfigFile(Options& opts, const string& filename)
+    void parseConfigFile(Options& opts, const string& filename, ErrorReporter& error_reporter)
     {
       ifstream cfgstream(filename.c_str(), ifstream::in);
       if (!cfgstream)
       {
-        cerr << "Failed to open config file: `" << filename << "'" << endl;
-        exit(EXIT_FAILURE);
+        error_reporter.error(filename) << "Failed to open config file\n";
+        return;
       }
-      scanFile(opts, cfgstream);
+      CfgStreamParser csp(filename, opts, error_reporter);
+      csp.scanStream(cfgstream);
     }
 
-  };
-};
+  }
+}
 
 //! \}
