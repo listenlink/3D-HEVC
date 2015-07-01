@@ -72,7 +72,6 @@
 #define NH_3D_NBDV_REF                    1
 
 #define NH_3D_DBBP                         1
-#define TEST 0
 #define BUF_FIX 1
 #define NH_3D_ARP                         1  // Advanced residual prediction (ARP), JCT3V-D0177
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
