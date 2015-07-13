@@ -78,7 +78,7 @@
 #define NH_3D_TEXT_MERGE                  1
 #define NH_3D_DBBP                         1
 #define BUF_FIX 1
-#define NH_3D_ARP                         0  // Advanced residual prediction (ARP), JCT3V-D0177
+#define NH_3D_ARP                         1  // Advanced residual prediction (ARP), JCT3V-D0177
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
                                               // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
                                               // LGE_ARP_CTX_F0161                JCT3V-F0161
