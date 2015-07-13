@@ -3326,11 +3326,11 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
   UInt uiPartIdxLT, uiPartIdxRT, uiPartIdxLB;
   deriveLeftRightTopIdxGeneral( uiAbsPartIdx, uiPUIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdxGeneral  ( uiAbsPartIdx, uiPUIdx, uiPartIdxLB );
-#if H_3D
+#if NH_3D_TEXT_MERGE
   Bool bMPIFlag   = getSlice()->getMpiFlag(); 
-  Bool bIsDepth = getSlice()->getIsDepth();
+  Int  tmpDir;
 #endif 
-#if NH_3D_IV_MERGE
+#if NH_3D_IV_MERGE || NH_3D_TEXT_MERGE
   Bool bIsDepth = getSlice()->getIsDepth();
 #endif
 
@@ -3446,7 +3446,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
   }
 
 
-#if H_3D_IV_MERGE
+#if NH_3D_TEXT_MERGE
 
   /////////////////////////////////////////////
   //////// TEXTURE MERGE CANDIDATE (T) ////////
@@ -3472,7 +3472,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
       Int           iCurrPosX, iCurrPosY;
 
       this->getPartIndexAndSize( uiPUIdx, uiPartAddr, iWidth, iHeight );
-      pcTexRec->getTopLeftSamplePos( this->getAddr(), this->getZorderIdxInCU() + uiPartAddr, iCurrPosX, iCurrPosY );
+      pcTexRec->getTopLeftSamplePos( this->getCtuRsAddr(), this->getZorderIdxInCtu() + uiPartAddr, iCurrPosX, iCurrPosY );
 
       Int iPUWidth, iPUHeight, iNumPart, iNumPartLine;
       this->getSPPara(iWidth, iHeight, iNumPart, iNumPartLine, iPUWidth, iPUHeight);
@@ -3497,8 +3497,9 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
       Int iOffsetY = iPUHeight/2;
 
       Int         iTexPosX, iTexPosY;
+#if NH_3D_INTEGER_MV_DEPTH
       const TComMv cMvRounding( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
-
+#endif
       Int         iCenterPosX = iCurrPosX + ( ( iWidth /  iPUWidth ) >> 1 )  * iPUWidth + ( iPUWidth >> 1 );
       Int         iCenterPosY = iCurrPosY + ( ( iHeight /  iPUHeight ) >> 1 )  * iPUHeight + (iPUHeight >> 1);
       Int         iTexCenterCUAddr, iTexCenterAbsPartIdx;
@@ -3512,7 +3513,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
       // derivation of center motion parameters from the collocated texture CU
 
       pcTexRec->getCUAddrAndPartIdx( iCenterPosX , iCenterPosY , iTexCenterCUAddr, iTexCenterAbsPartIdx );
-      TComDataCU* pcDefaultCU    = pcTexPic->getCU( iTexCenterCUAddr );
+      TComDataCU* pcDefaultCU    = pcTexPic->getCtu( iTexCenterCUAddr );
 
       if( pcDefaultCU->getPredictionMode( iTexCenterAbsPartIdx ) != MODE_INTRA )
       {
@@ -3531,8 +3532,12 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
               if (iDefaultRefPOC == m_pcSlice->getRefPOC(eCurrRefPicList, iRefPicList))
               {
                 bSPIVMPFlag = true;
+#if NH_3D_INTEGER_MV_DEPTH
                 TComMv cMv = cDefaultMvField.getMv() + cMvRounding;
                 cMv >>= 2;
+#else
+                TComMv cMv = cDefaultMvField.getMv();
+#endif
                 cMvFieldSaved[eCurrRefPicList].setMvField(cMv, iRefPicList) ;
                 break;
               }
@@ -3557,7 +3562,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
             iTexPosX     = j + iOffsetX;
             iTexPosY     = i + iOffsetY; 
             pcTexRec->getCUAddrAndPartIdx( iTexPosX, iTexPosY, iTexCUAddr, iTexAbsPartIdx );
-            pcTexCU  = pcTexPic->getCU( iTexCUAddr );
+            pcTexCU  = pcTexPic->getCtu( iTexCUAddr );
 
             if( pcTexCU && !pcTexCU->isIntra(iTexAbsPartIdx) )
             {
@@ -3569,8 +3574,12 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
                 Int iValidDepRef = getPic()->isTextRefValid( eCurrRefPicList, cTexMvField.getRefIdx() );
                 if( (cTexMvField.getRefIdx()>=0) && ( iValidDepRef >= 0 ) )
                 {
+#if NH_3D_INTEGER_MV_DEPTH
                   TComMv cMv = cTexMvField.getMv() + cMvRounding;
                   cMv >>=2;          
+#else
+                  TComMv cMv = cTexMvField.getMv();
+#endif         
                   pcMvFieldSP[2*iPartition + uiCurrRefListId].setMvField(cMv, iValidDepRef);
                 }
               }
@@ -3589,9 +3598,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
             iPartition ++;
           }
         }
-#if H_3D
       }
-#endif
 #if H_3D_FCO
     }
 #endif
