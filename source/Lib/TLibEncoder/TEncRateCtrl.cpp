@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 */
 #include "TEncRateCtrl.h"
 #include "../TLibCommon/TComPic.h"
+#include "../TLibCommon/TComChromaFormat.h"
 
 #include <cmath>
 
@@ -115,6 +116,7 @@ Void TEncRCSeq::create( Int totalFrames, Int targetBitrate, Int frameRate, Int G
     m_alphaUpdate = 0.4;
     m_betaUpdate  = 0.2;
   }
+
   m_averageBits     = (Int)(m_targetBits / totalFrames);
   Int picWidthInBU  = ( m_picWidth  % m_LCUWidth  ) == 0 ? m_picWidth  / m_LCUWidth  : m_picWidth  / m_LCUWidth  + 1;
   Int picHeightInBU = ( m_picHeight % m_LCUHeight ) == 0 ? m_picHeight / m_LCUHeight : m_picHeight / m_LCUHeight + 1;
@@ -221,7 +223,7 @@ Void TEncRCSeq::initPicPara( TRCParameter* picPara )
       }
       else
       {
-        m_picPara[i].m_alpha = ALPHA;   
+        m_picPara[i].m_alpha = ALPHA;
         m_picPara[i].m_beta  = BETA2;
       }
     }
@@ -401,7 +403,7 @@ Double TEncRCGOP::xSolveEqua( Double targetBpp, Double* equaCoeffA, Double* equa
   Double minNumber = 0.1;
   Double maxNumber = 10000.0;
   for ( Int i=0; i<g_RCIterationNum; i++ )
-  { 
+  {
     Double fx = 0.0;
     for ( Int j=0; j<GOPSize; j++ )
     {
@@ -697,13 +699,13 @@ Double TEncRCPic::estimatePicLambda( list<TEncRCPic*>& listPreviousPictures, Sli
   Double estLambda;
   if (eSliceType == I_SLICE)
   {
-    estLambda = calculateLambdaIntra(alpha, beta, pow(m_totalCostIntra/(Double)m_numberOfPixel, BETA1), bpp); 
+    estLambda = calculateLambdaIntra(alpha, beta, pow(m_totalCostIntra/(Double)m_numberOfPixel, BETA1), bpp);
   }
   else
   {
     estLambda = alpha * pow( bpp, beta );
   }
-  
+
   Double lastLevelLambda = -1.0;
   Double lastPicLambda   = -1.0;
   Double lastValidLambda = -1.0;
@@ -785,7 +787,7 @@ Double TEncRCPic::estimatePicLambda( list<TEncRCPic*>& listPreviousPictures, Sli
 
 Int TEncRCPic::estimatePicQP( Double lambda, list<TEncRCPic*>& listPreviousPictures )
 {
-  Int QP = Int( 4.2005 * log( lambda ) + 13.7122 + 0.5 ); 
+  Int QP = Int( 4.2005 * log( lambda ) + 13.7122 + 0.5 );
 
   Int lastLevelQP = g_RCInvalidQPValue;
   Int lastPicQP   = g_RCInvalidQPValue;
@@ -888,7 +890,7 @@ Double TEncRCPic::estimatePicLambdaIV( list<TEncRCPic*>& listPreviousPictures, I
 #endif
 
 
-Double TEncRCPic::getLCUTargetBpp(SliceType eSliceType)  
+Double TEncRCPic::getLCUTargetBpp(SliceType eSliceType)
 {
   Int   LCUIdx    = getLCUCoded();
   Double bpp      = -1.0;
@@ -913,13 +915,13 @@ Double TEncRCPic::getLCUTargetBpp(SliceType eSliceType)
   }
   else
   {
-  Double totalWeight = 0;
-  for ( Int i=LCUIdx; i<m_numberOfLCU; i++ )
-  {
-    totalWeight += m_LCUs[i].m_bitWeight;
-  }
-  Int realInfluenceLCU = min( g_RCLCUSmoothWindowSize, getLCULeft() );
-  avgBits = (Int)( m_LCUs[LCUIdx].m_bitWeight - ( totalWeight - m_bitsLeft ) / realInfluenceLCU + 0.5 );
+    Double totalWeight = 0;
+    for ( Int i=LCUIdx; i<m_numberOfLCU; i++ )
+    {
+      totalWeight += m_LCUs[i].m_bitWeight;
+    }
+    Int realInfluenceLCU = min( g_RCLCUSmoothWindowSize, getLCULeft() );
+    avgBits = (Int)( m_LCUs[LCUIdx].m_bitWeight - ( totalWeight - m_bitsLeft ) / realInfluenceLCU + 0.5 );
   }
 
   if ( avgBits < 1 )
@@ -1072,7 +1074,7 @@ Double TEncRCPic::getLCUEstLambda( Double bpp )
 
   //for Lambda clip, LCU level clip
   Double clipNeighbourLambda = -1.0;
-  for ( int i=LCUIdx - 1; i>=0; i-- )
+  for ( Int i=LCUIdx - 1; i>=0; i-- )
   {
     if ( m_LCUs[i].m_lambda > 0 )
     {
@@ -1084,7 +1086,7 @@ Double TEncRCPic::getLCUEstLambda( Double bpp )
   if ( clipNeighbourLambda > 0.0 )
   {
     estLambda = Clip3( clipNeighbourLambda * pow( 2.0, -1.0/3.0 ), clipNeighbourLambda * pow( 2.0, 1.0/3.0 ), estLambda );
-  }  
+  }
 
   if ( clipPicLambda > 0.0 )
   {
@@ -1110,7 +1112,7 @@ Int TEncRCPic::getLCUEstQP( Double lambda, Int clipPicQP )
 
   //for Lambda clip, LCU level clip
   Int clipNeighbourQP = g_RCInvalidQPValue;
-  for ( int i=LCUIdx - 1; i>=0; i-- )
+  for ( Int i=LCUIdx - 1; i>=0; i-- )
   {
     if ( (getLCU(i)).m_QP > g_RCInvalidQPValue )
     {
@@ -1129,7 +1131,7 @@ Int TEncRCPic::getLCUEstQP( Double lambda, Int clipPicQP )
   return estQP;
 }
 
-Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Bool updateLCUParameter )
+Void TEncRCPic::updateAfterCTU( Int LCUIdx, Int bits, Int QP, Double lambda, Bool updateLCUParameter )
 {
   m_LCUs[LCUIdx].m_actualBits = bits;
   m_LCUs[LCUIdx].m_QP         = QP;
@@ -1176,12 +1178,13 @@ Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Boo
 
   calLambda = Clip3( inputLambda / 10.0, inputLambda * 10.0, calLambda );
   alpha += m_encRCSeq->getAlphaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * alpha;
-  double lnbpp = log( bpp );
+  Double lnbpp = log( bpp );
   lnbpp = Clip3( -5.0, -0.1, lnbpp );
   beta  += m_encRCSeq->getBetaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * lnbpp;
 
   alpha = Clip3( g_RCAlphaMinValue, g_RCAlphaMaxValue, alpha );
   beta  = Clip3( g_RCBetaMinValue,  g_RCBetaMaxValue,  beta  );
+
   TRCParameter rcPara;
   rcPara.m_alpha = alpha;
   rcPara.m_beta  = beta;
@@ -1231,7 +1234,7 @@ Double TEncRCPic::calAverageLambda()
     }
   }
 
-  Double avgLambda; 
+  Double avgLambda;
   if( numTotalLCUs == 0 )
   {
     avgLambda = -1.0;
@@ -1242,6 +1245,7 @@ Double TEncRCPic::calAverageLambda()
   }
   return avgLambda;
 }
+
 
 Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, Double averageQP, Double averageLambda, SliceType eSliceType)
 {
@@ -1266,41 +1270,44 @@ Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, D
 
   Double alpha = m_encRCSeq->getPicPara( m_frameLevel ).m_alpha;
   Double beta  = m_encRCSeq->getPicPara( m_frameLevel ).m_beta;
+
   if (eSliceType == I_SLICE)
   {
     updateAlphaBetaIntra(&alpha, &beta);
   }
   else
   {
-  // update parameters
-  Double picActualBits = ( Double )m_picActualBits;
-  Double picActualBpp  = picActualBits/(Double)m_numberOfPixel;
-  Double calLambda     = alpha * pow( picActualBpp, beta );
-  Double inputLambda   = m_picLambda;
+    // update parameters
+    Double picActualBits = ( Double )m_picActualBits;
+    Double picActualBpp  = picActualBits/(Double)m_numberOfPixel;
+    Double calLambda     = alpha * pow( picActualBpp, beta );
+    Double inputLambda   = m_picLambda;
 
-  if ( inputLambda < 0.01 || calLambda < 0.01 || picActualBpp < 0.0001 )
-  {
-    alpha *= ( 1.0 - m_encRCSeq->getAlphaUpdate() / 2.0 );
-    beta  *= ( 1.0 - m_encRCSeq->getBetaUpdate() / 2.0 );
+    if ( inputLambda < 0.01 || calLambda < 0.01 || picActualBpp < 0.0001 )
+    {
+      alpha *= ( 1.0 - m_encRCSeq->getAlphaUpdate() / 2.0 );
+      beta  *= ( 1.0 - m_encRCSeq->getBetaUpdate() / 2.0 );
+
+      alpha = Clip3( g_RCAlphaMinValue, g_RCAlphaMaxValue, alpha );
+      beta  = Clip3( g_RCBetaMinValue,  g_RCBetaMaxValue,  beta  );
+
+      TRCParameter rcPara;
+      rcPara.m_alpha = alpha;
+      rcPara.m_beta  = beta;
+      m_encRCSeq->setPicPara( m_frameLevel, rcPara );
+
+      return;
+    }
+
+    calLambda = Clip3( inputLambda / 10.0, inputLambda * 10.0, calLambda );
+    alpha += m_encRCSeq->getAlphaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * alpha;
+    Double lnbpp = log( picActualBpp );
+    lnbpp = Clip3( -5.0, -0.1, lnbpp );
+
+    beta  += m_encRCSeq->getBetaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * lnbpp;
 
     alpha = Clip3( g_RCAlphaMinValue, g_RCAlphaMaxValue, alpha );
     beta  = Clip3( g_RCBetaMinValue,  g_RCBetaMaxValue,  beta  );
-    TRCParameter rcPara;
-    rcPara.m_alpha = alpha;
-    rcPara.m_beta  = beta;
-    m_encRCSeq->setPicPara( m_frameLevel, rcPara );
-
-    return;
-  }
-
-  calLambda = Clip3( inputLambda / 10.0, inputLambda * 10.0, calLambda );
-  alpha += m_encRCSeq->getAlphaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * alpha;
-  double lnbpp = log( picActualBpp );
-  lnbpp = Clip3( -5.0, -0.1, lnbpp );
-  beta  += m_encRCSeq->getBetaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * lnbpp;
-
-  alpha = Clip3( g_RCAlphaMinValue, g_RCAlphaMaxValue, alpha );
-  beta  = Clip3( g_RCBetaMinValue,  g_RCBetaMaxValue,  beta  );
   }
 
   TRCParameter rcPara;
@@ -1332,16 +1339,16 @@ Int TEncRCPic::getRefineBitsForIntra( Int orgBits )
   }
 
   iIntraBits = (Int)(alpha* pow(m_totalCostIntra*4.0/(Double)orgBits, beta)*(Double)orgBits+0.5);
-  
+
   return iIntraBits;
 }
 
-Double TEncRCPic::calculateLambdaIntra(double alpha, double beta, double MADPerPixel, double bitsPerPixel)
+Double TEncRCPic::calculateLambdaIntra(Double alpha, Double beta, Double MADPerPixel, Double bitsPerPixel)
 {
   return ( (alpha/256.0) * pow( MADPerPixel/bitsPerPixel, beta ) );
 }
 
-Void TEncRCPic::updateAlphaBetaIntra(double *alpha, double *beta)
+Void TEncRCPic::updateAlphaBetaIntra(Double *alpha, Double *beta)
 {
   Double lnbpp = log(pow(m_totalCostIntra / (Double)m_numberOfPixel, BETA1));
   Double diffLambda = (*beta)*(log((Double)m_picActualBits)-log((Double)m_targetBits));
@@ -1352,7 +1359,7 @@ Void TEncRCPic::updateAlphaBetaIntra(double *alpha, double *beta)
 }
 
 
-Void TEncRCPic::getLCUInitTargetBits()  
+Void TEncRCPic::getLCUInitTargetBits()
 {
   Int iAvgBits     = 0;
 
@@ -1365,7 +1372,7 @@ Void TEncRCPic::getLCUInitTargetBits()
 }
 
 
-Double TEncRCPic::getLCUEstLambdaAndQP(Double bpp, Int clipPicQP, Int *estQP) 
+Double TEncRCPic::getLCUEstLambdaAndQP(Double bpp, Int clipPicQP, Int *estQP)
 {
   Int   LCUIdx = getLCUCoded();
 
@@ -1377,7 +1384,7 @@ Double TEncRCPic::getLCUEstLambdaAndQP(Double bpp, Int clipPicQP, Int *estQP)
   Double estLambda = calculateLambdaIntra(alpha, beta, costPerPixel, bpp);
 
   Int clipNeighbourQP = g_RCInvalidQPValue;
-  for (int i=LCUIdx-1; i>=0; i--)
+  for (Int i=LCUIdx-1; i>=0; i--)
   {
     if ((getLCU(i)).m_QP > g_RCInvalidQPValue)
     {
@@ -1391,8 +1398,8 @@ Double TEncRCPic::getLCUEstLambdaAndQP(Double bpp, Int clipPicQP, Int *estQP)
 
   if ( clipNeighbourQP > g_RCInvalidQPValue )
   {
-    maxQP = min(clipNeighbourQP + 1, maxQP); 
-    minQP = max(clipNeighbourQP - 1, minQP); 
+    maxQP = min(clipNeighbourQP + 1, maxQP);
+    minQP = max(clipNeighbourQP - 1, minQP);
   }
 
   Double maxLambda=exp(((Double)(maxQP+0.49)-13.7122)/4.2005);
@@ -1514,6 +1521,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
         bitsRatio[2] = 2;
         bitsRatio[3] = 14;
       }
+
       if ( keepHierBits == 2 )
       {
         adaptiveBit = 1;
@@ -1565,6 +1573,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
         bitsRatio[6] = 1;
         bitsRatio[7] = 1;
       }
+
       if ( keepHierBits == 2 )
       {
         adaptiveBit = 2;
@@ -1576,8 +1585,8 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
     }
   }
 
-  Int* GOPID2Level = new int[ GOPSize ];
-  for ( int i=0; i<GOPSize; i++ )
+  Int* GOPID2Level = new Int[ GOPSize ];
+  for ( Int i=0; i<GOPSize; i++ )
   {
     GOPID2Level[i] = 1;
     if ( !GOPList[i].m_refPic )
@@ -1585,6 +1594,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
       GOPID2Level[i] = 2;
     }
   }
+
   if ( keepHierBits > 0 )
   {
     if ( GOPSize == 4 && isLowdelay )
@@ -1658,4 +1668,3 @@ Void TEncRateCtrl::destroyRCGOP()
   delete m_encRCGOP;
   m_encRCGOP = NULL;
 }
-

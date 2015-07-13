@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,10 +31,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __SEI__
+#define __SEI__
+
 #pragma once
 #include <list>
 #include <vector>
 #include <cstring>
+
+#include "CommonDef.h"
+#include "libmd5/MD5.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -71,16 +77,28 @@ public:
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
-#if H_MV
-    SUB_BITSTREAM_PROPERTY               = 139,    // Final PayloadType to be defined after finalization
+    NO_DISPLAY                           = 135,
+    TIME_CODE                            = 136,
+    MASTERING_DISPLAY_COLOUR_VOLUME      = 137,
+    SEGM_RECT_FRAME_PACKING              = 138,
+    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 139,
+    CHROMA_SAMPLING_FILTER_HINT          = 140,
+    KNEE_FUNCTION_INFO                   = 141
+#if NH_MV
+    ,SUB_BITSTREAM_PROPERTY              = 164
 #endif
+
   };
-  
+
   SEI() {}
   virtual ~SEI() {}
-  
+
+  static const Char *getSEIMessageString(SEI::PayloadType payloadType);
+
   virtual PayloadType payloadType() const = 0;
 };
+
+static const UInt ISO_IEC_11578_LEN=16;
 
 class SEIuserDataUnregistered : public SEI
 {
@@ -96,8 +114,8 @@ public:
     delete userData;
   }
 
-  UChar uuid_iso_iec_11578[16];
-  UInt userDataLength;
+  UChar uuid_iso_iec_11578[ISO_IEC_11578_LEN];
+  UInt  userDataLength;
   UChar *userData;
 };
 
@@ -108,7 +126,7 @@ public:
 
   SEIDecodedPictureHash() {}
   virtual ~SEIDecodedPictureHash() {}
-  
+
   enum Method
   {
     MD5,
@@ -117,15 +135,15 @@ public:
     RESERVED,
   } method;
 
-  UChar digest[3][16];
+  TComPictureHash m_pictureHash;
 };
 
-class SEIActiveParameterSets : public SEI 
+class SEIActiveParameterSets : public SEI
 {
 public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
-  SEIActiveParameterSets() 
+  SEIActiveParameterSets()
     : activeVPSId            (0)
     , m_selfContainedCvsFlag (false)
     , m_noParameterSetUpdateFlag (false)
@@ -133,7 +151,7 @@ public:
   {}
   virtual ~SEIActiveParameterSets() {}
 
-  Int activeVPSId; 
+  Int activeVPSId;
   Bool m_selfContainedCvsFlag;
   Bool m_noParameterSetUpdateFlag;
   Int numSpsIdsMinus1;
@@ -144,6 +162,7 @@ class SEIBufferingPeriod : public SEI
 {
 public:
   PayloadType payloadType() const { return BUFFERING_PERIOD; }
+  void copyTo (SEIBufferingPeriod& target);
 
   SEIBufferingPeriod()
   : m_bpSeqParameterSetId (0)
@@ -173,25 +192,16 @@ class SEIPictureTiming : public SEI
 {
 public:
   PayloadType payloadType() const { return PICTURE_TIMING; }
+  void copyTo (SEIPictureTiming& target);
 
   SEIPictureTiming()
   : m_picStruct               (0)
   , m_sourceScanType          (0)
   , m_duplicateFlag           (false)
   , m_picDpbOutputDuDelay     (0)
-  , m_numNalusInDuMinus1      (NULL)
-  , m_duCpbRemovalDelayMinus1 (NULL)
   {}
   virtual ~SEIPictureTiming()
   {
-    if( m_numNalusInDuMinus1 != NULL )
-    {
-      delete m_numNalusInDuMinus1;
-    }
-    if( m_duCpbRemovalDelayMinus1  != NULL )
-    {
-      delete m_duCpbRemovalDelayMinus1;
-    }
   }
 
   UInt  m_picStruct;
@@ -204,8 +214,8 @@ public:
   UInt  m_numDecodingUnitsMinus1;
   Bool  m_duCommonCpbRemovalDelayFlag;
   UInt  m_duCommonCpbRemovalDelayMinus1;
-  UInt* m_numNalusInDuMinus1;
-  UInt* m_duCpbRemovalDelayMinus1;
+  std::vector<UInt> m_numNalusInDuMinus1;
+  std::vector<UInt> m_duCpbRemovalDelayMinus1;
 };
 
 class SEIDecodingUnitInfo : public SEI
@@ -238,6 +248,7 @@ public:
   Bool m_exactMatchingFlag;
   Bool m_brokenLinkFlag;
 };
+
 class SEIFramePacking : public SEI
 {
 public:
@@ -264,6 +275,19 @@ public:
   Int  m_arrangementReservedByte;
   Bool m_arrangementPersistenceFlag;
   Bool m_upsampledAspectRatio;
+};
+
+class SEISegmentedRectFramePacking : public SEI
+{
+public:
+  PayloadType payloadType() const { return SEGM_RECT_FRAME_PACKING; }
+
+  SEISegmentedRectFramePacking() {}
+  virtual ~SEISegmentedRectFramePacking() {}
+
+  Bool m_arrangementCancelFlag;
+  Int  m_contentInterpretationType;
+  Bool m_arrangementPersistenceFlag;
 };
 
 class SEIDisplayOrientation : public SEI
@@ -315,6 +339,19 @@ public:
   Bool m_gdrForegroundFlag;
 };
 
+class SEINoDisplay : public SEI
+{
+public:
+  PayloadType payloadType() const { return NO_DISPLAY; }
+
+  SEINoDisplay()
+    : m_noDisplay(false)
+  {}
+  virtual ~SEINoDisplay() {}
+
+  Bool m_noDisplay;
+};
+
 class SEISOPDescription : public SEI
 {
 public:
@@ -357,7 +394,7 @@ public:
   Int    m_cameraIsoSpeedValue;
   Int    m_exposureIndexIdc;
   Int    m_exposureIndexValue;
-  Int    m_exposureCompensationValueSignFlag;
+  Bool   m_exposureCompensationValueSignFlag;
   Int    m_exposureCompensationValueNumerator;
   Int    m_exposureCompensationValueDenomIdc;
   Int    m_refScreenLuminanceWhite;
@@ -367,7 +404,75 @@ public:
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
 
-#if H_MV
+class SEIKneeFunctionInfo : public SEI
+{
+public:
+  PayloadType payloadType() const { return KNEE_FUNCTION_INFO; }
+  SEIKneeFunctionInfo() {}
+  virtual ~SEIKneeFunctionInfo() {}
+
+  Int   m_kneeId;
+  Bool  m_kneeCancelFlag;
+  Bool  m_kneePersistenceFlag;
+  Int   m_kneeInputDrange;
+  Int   m_kneeInputDispLuminance;
+  Int   m_kneeOutputDrange;
+  Int   m_kneeOutputDispLuminance;
+  Int   m_kneeNumKneePointsMinus1;
+  std::vector<Int> m_kneeInputKneePoint;
+  std::vector<Int> m_kneeOutputKneePoint;
+};
+
+class SEIChromaSamplingFilterHint : public SEI
+{
+public:
+  PayloadType payloadType() const {return CHROMA_SAMPLING_FILTER_HINT;}
+  SEIChromaSamplingFilterHint() {}
+  virtual ~SEIChromaSamplingFilterHint() {
+    if(m_verChromaFilterIdc == 1)
+    {
+      for(Int i = 0; i < m_numVerticalFilters; i ++)
+      {
+        free(m_verFilterCoeff[i]);
+      }
+      free(m_verFilterCoeff);
+      free(m_verTapLengthMinus1);
+    }
+    if(m_horChromaFilterIdc == 1)
+    {
+      for(Int i = 0; i < m_numHorizontalFilters; i ++)
+      {
+        free(m_horFilterCoeff[i]);
+      }
+      free(m_horFilterCoeff);
+      free(m_horTapLengthMinus1);
+    }
+  }
+
+  Int   m_verChromaFilterIdc;
+  Int   m_horChromaFilterIdc;
+  Bool  m_verFilteringProcessFlag;
+  Int   m_targetFormatIdc;
+  Bool  m_perfectReconstructionFlag;
+  Int   m_numVerticalFilters;
+  Int*  m_verTapLengthMinus1;
+  Int** m_verFilterCoeff;
+  Int   m_numHorizontalFilters;
+  Int*  m_horTapLengthMinus1;
+  Int** m_horFilterCoeff;
+};
+
+class SEIMasteringDisplayColourVolume : public SEI
+{
+public:
+    PayloadType payloadType() const { return MASTERING_DISPLAY_COLOUR_VOLUME; }
+    SEIMasteringDisplayColourVolume() {}
+    virtual ~SEIMasteringDisplayColourVolume(){}
+    
+    TComSEIMasteringDisplay values;
+};
+
+#if NH_MV
 class SEISubBitstreamProperty : public SEI
 {
 public:
@@ -391,7 +496,7 @@ typedef std::list<SEI*> SEIMessages;
 /// output a selection of SEI messages by payload type. Ownership stays in original message list.
 SEIMessages getSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
-/// remove a selection of SEI messages by payload type from the original list and return them in a new list. 
+/// remove a selection of SEI messages by payload type from the original list and return them in a new list.
 SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
 /// delete list of SEI messages (freeing the referenced objects)
@@ -403,12 +508,10 @@ public:
   PayloadType payloadType() const { return SCALABLE_NESTING; }
 
   SEIScalableNesting() {}
+
   virtual ~SEIScalableNesting()
   {
-    if (!m_callerOwnsSEIs)
-    {
-      deleteSEIs(m_nestedSEIs);
-    }
+    deleteSEIs(m_nestedSEIs);
   }
 
   Bool  m_bitStreamSubsetFlag;
@@ -421,10 +524,80 @@ public:
   Bool  m_allLayersFlag;                             //value valid if m_nestingOpFlag == 0
   UInt  m_nestingNoOpMaxTemporalIdPlus1;             //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0
   UInt  m_nestingNumLayersMinus1;                    //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0
-  UChar m_nestingLayerId[MAX_NESTING_NUM_LAYER];     //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0. This can e.g. be a static array of 64 unsigned char values
+  UChar m_nestingLayerId[MAX_NESTING_NUM_LAYER];     //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0. This can e.g. be a static array of 64 UChar values
 
-  Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;
 };
+
+class SEITimeCode : public SEI
+{
+public:
+  PayloadType payloadType() const { return TIME_CODE; }
+  SEITimeCode() {}
+  virtual ~SEITimeCode(){}
+
+  UInt numClockTs;
+  TComSEITimeSet timeSetArray[MAX_TIMECODE_SEI_SETS];
+};
+
+//definition according to P1005_v1;
+class SEITempMotionConstrainedTileSets: public SEI
+{
+  struct TileSetData
+  {
+    protected:
+      std::vector<Int> m_top_left_tile_index;  //[tileSetIdx][tileIdx];
+      std::vector<Int> m_bottom_right_tile_index;
+
+    public:
+      Int     m_mcts_id;  
+      Bool    m_display_tile_set_flag;
+      Int     m_num_tile_rects_in_set; //_minus1;
+      Bool    m_exact_sample_value_match_flag;
+      Bool    m_mcts_tier_level_idc_present_flag;
+      Bool    m_mcts_tier_flag;
+      Int     m_mcts_level_idc;
+
+      Void setNumberOfTileRects(const Int number)
+      {
+        m_top_left_tile_index    .resize(number);
+        m_bottom_right_tile_index.resize(number);
+      }
+
+      Int  getNumberOfTileRects() const
+      {
+        assert(m_top_left_tile_index.size() == m_bottom_right_tile_index.size());
+        return Int(m_top_left_tile_index.size());
+      }
+
+            Int &topLeftTileIndex    (const Int tileRectIndex)       { return m_top_left_tile_index    [tileRectIndex]; }
+            Int &bottomRightTileIndex(const Int tileRectIndex)       { return m_bottom_right_tile_index[tileRectIndex]; }
+      const Int &topLeftTileIndex    (const Int tileRectIndex) const { return m_top_left_tile_index    [tileRectIndex]; }
+      const Int &bottomRightTileIndex(const Int tileRectIndex) const { return m_bottom_right_tile_index[tileRectIndex]; }
+  };
+
+protected:
+  std::vector<TileSetData> m_tile_set_data;
+
+public:
+
+  Bool    m_mc_all_tiles_exact_sample_value_match_flag;
+  Bool    m_each_tile_one_tile_set_flag;
+  Bool    m_limited_tile_set_display_flag;
+  Bool    m_max_mcs_tier_level_idc_present_flag;
+  Bool    m_max_mcts_tier_flag;
+  Int     m_max_mcts_level_idc;
+
+  PayloadType payloadType() const { return TEMP_MOTION_CONSTRAINED_TILE_SETS; }
+
+  Void setNumberOfTileSets(const Int number)       { m_tile_set_data.resize(number);     }
+  Int  getNumberOfTileSets()                 const { return Int(m_tile_set_data.size()); }
+
+        TileSetData &tileSetData (const Int index)       { return m_tile_set_data[index]; }
+  const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
+
+};
+
+#endif
 
 //! \}

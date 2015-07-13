@@ -187,7 +187,7 @@ public:
   Double              getMaxShiftDeviation      () { return m_dMaxShiftDeviation; }; 
 #endif
 
-#if H_3D_VSO
+#if NH_3D_VSO
   // SAIT_VSO_EST_A033
   Void                setDispCoeff              ( UInt uiStartFrameId, Int iViewIdx );
   Double              getDispCoeff              () { return m_dDispCoeff; }

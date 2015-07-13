@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,17 +49,16 @@ TComPic::TComPic()
 : m_uiTLayer                              (0)
 , m_bUsedByCurr                           (false)
 , m_bIsLongTerm                           (false)
-, m_apcPicSym                             (NULL)
 , m_pcPicYuvPred                          (NULL)
 , m_pcPicYuvResi                          (NULL)
 , m_bReconstructed                        (false)
 , m_bNeededForOutput                      (false)
-#if H_MV
+#if NH_MV
 , m_bPicOutputFlag                        (false)
 #endif
 , m_uiCurrSliceIdx                        (0)
 , m_bCheckLTMSB                           (false)
-#if H_MV
+#if NH_MV
 , m_layerId                               (0)
 , m_viewId                                (0)
 #if H_3D
@@ -69,13 +68,16 @@ TComPic::TComPic()
 , m_aaiCodedOffset                        (0)
 #endif
 #endif
+
 {
-  m_apcPicYuv[0]      = NULL;
-  m_apcPicYuv[1]      = NULL;
+  for(UInt i=0; i<NUM_PIC_YUV; i++)
+  {
+    m_apcPicYuv[i]      = NULL;
+  }
 #if H_3D_QTLPC
   m_bReduceBitsQTL    = 0;
 #endif
-#if H_3D_NBDV
+#if NH_3D_NBDV
   m_iNumDdvCandPics   = 0;
   m_eRapRefList       = REF_PIC_LIST_0;
   m_uiRapRefIdx       = 0;
@@ -86,32 +88,29 @@ TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow,
-                      Int *numReorderPics, Bool bIsVirtual)
-
+Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirtual)
 {
-  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+  const ChromaFormat chromaFormatIDC = sps.getChromaFormatIdc();
+  const Int          iWidth          = sps.getPicWidthInLumaSamples();
+  const Int          iHeight         = sps.getPicHeightInLumaSamples();
+  const UInt         uiMaxCuWidth    = sps.getMaxCUWidth();
+  const UInt         uiMaxCuHeight   = sps.getMaxCUHeight();
+  const UInt         uiMaxDepth      = sps.getMaxTotalCUDepth();
+
+  m_picSym.create( sps, pps, uiMaxDepth );
   if (!bIsVirtual)
   {
-    m_apcPicYuv[0]  = new TComPicYuv;  m_apcPicYuv[0]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+    m_apcPicYuv[PIC_YUV_ORG    ]   = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG     ]->create( iWidth, iHeight, chromaFormatIDC, uiMaxCuWidth, uiMaxCuHeight, uiMaxDepth, true );
+    m_apcPicYuv[PIC_YUV_TRUE_ORG]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_TRUE_ORG]->create( iWidth, iHeight, chromaFormatIDC, uiMaxCuWidth, uiMaxCuHeight, uiMaxDepth, true );
   }
-  m_apcPicYuv[1]  = new TComPicYuv;  m_apcPicYuv[1]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
-  
+  m_apcPicYuv[PIC_YUV_REC]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_REC]->create( iWidth, iHeight, chromaFormatIDC, uiMaxCuWidth, uiMaxCuHeight, uiMaxDepth, true );
+
   // there are no SEI messages associated with this picture initially
   if (m_SEIs.size() > 0)
   {
     deleteSEIs (m_SEIs);
   }
   m_bUsedByCurr = false;
-
-  /* store conformance window parameters with picture */
-  m_conformanceWindow = conformanceWindow;
-  
-  /* store display window parameters with picture */
-  m_defaultDisplayWindow = defaultDisplayWindow;
-
-  /* store number of reorder pics with picture */
-  memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
 #if H_3D_FCO
 /* initialize the texture to depth reference status */
@@ -124,60 +123,88 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   }
 #endif
 
-  return;
 }
 
 Void TComPic::destroy()
 {
-  if (m_apcPicSym)
+  m_picSym.destroy();
+
+  for(UInt i=0; i<NUM_PIC_YUV; i++)
   {
-    m_apcPicSym->destroy();
-    delete m_apcPicSym;
-    m_apcPicSym = NULL;
+    if (m_apcPicYuv[i])
+    {
+      m_apcPicYuv[i]->destroy();
+      delete m_apcPicYuv[i];
+      m_apcPicYuv[i]  = NULL;
+    }
   }
-  
-  if (m_apcPicYuv[0])
-  {
-    m_apcPicYuv[0]->destroy();
-    delete m_apcPicYuv[0];
-    m_apcPicYuv[0]  = NULL;
-  }
-  
-  if (m_apcPicYuv[1])
-  {
-    m_apcPicYuv[1]->destroy();
-    delete m_apcPicYuv[1];
-    m_apcPicYuv[1]  = NULL;
-  }
-  
+
   deleteSEIs(m_SEIs);
 }
-#if H_3D
+#if NH_3D
 Void TComPic::compressMotion(Int scale)
 #else
 Void TComPic::compressMotion()
 #endif
 {
-  TComPicSym* pPicSym = getPicSym(); 
-  for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getFrameHeightInCU()*pPicSym->getFrameWidthInCU(); uiCUAddr++ )
+  TComPicSym* pPicSym = getPicSym();
+  for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getNumberOfCtusInFrame(); uiCUAddr++ )
   {
-    TComDataCU* pcCU = pPicSym->getCU(uiCUAddr);
-#if H_3D
-    pcCU->compressMV(scale); 
+    TComDataCU* pCtu = pPicSym->getCtu(uiCUAddr);
+#if NH_3D
+    pCtu->compressMV(scale); 
 #else
-    pcCU->compressMV(); 
+    pCtu->compressMV();
 #endif
-  } 
+    
+  }
 }
 
 Bool  TComPic::getSAOMergeAvailability(Int currAddr, Int mergeAddr)
 {
-  Bool mergeCtbInSliceSeg = (mergeAddr >= getPicSym()->getCUOrderMap(getCU(currAddr)->getSlice()->getSliceCurStartCUAddr()/getNumPartInCU()));
+  Bool mergeCtbInSliceSeg = (mergeAddr >= getPicSym()->getCtuTsToRsAddrMap(getCtu(currAddr)->getSlice()->getSliceCurStartCtuTsAddr()));
   Bool mergeCtbInTile     = (getPicSym()->getTileIdxMap(mergeAddr) == getPicSym()->getTileIdxMap(currAddr));
   return (mergeCtbInSliceSeg && mergeCtbInTile);
 }
 
-#if H_MV
+UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRaster, TComSlice *pcSlice)
+{
+  UInt subStrm;
+  const bool bWPPEnabled=pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag();
+  const TComPicSym &picSym            = *(getPicSym());
+
+  if ((bWPPEnabled && picSym.getFrameHeightInCtus()>1) || (picSym.getNumTiles()>1)) // wavefronts, and possibly tiles being used.
+  {
+    if (bWPPEnabled)
+    {
+      const UInt ctuRsAddr                = bAddressInRaster?ctuAddr : picSym.getCtuTsToRsAddrMap(ctuAddr);
+      const UInt frameWidthInCtus         = picSym.getFrameWidthInCtus();
+      const UInt tileIndex                = picSym.getTileIdxMap(ctuRsAddr);
+      const UInt numTileColumns           = (picSym.getNumTileColumnsMinus1()+1);
+      const TComTile *pTile               = picSym.getTComTile(tileIndex);
+      const UInt firstCtuRsAddrOfTile     = pTile->getFirstCtuRsAddr();
+      const UInt tileYInCtus              = firstCtuRsAddrOfTile / frameWidthInCtus;
+      // independent tiles => substreams are "per tile"
+      const UInt ctuLine                  = ctuRsAddr / frameWidthInCtus;
+      const UInt startingSubstreamForTile =(tileYInCtus*numTileColumns) + (pTile->getTileHeightInCtus()*(tileIndex%numTileColumns));
+      subStrm = startingSubstreamForTile + (ctuLine - tileYInCtus);
+    }
+    else
+    {
+      const UInt ctuRsAddr                = bAddressInRaster?ctuAddr : picSym.getCtuTsToRsAddrMap(ctuAddr);
+      const UInt tileIndex                = picSym.getTileIdxMap(ctuRsAddr);
+      subStrm=tileIndex;
+    }
+  }
+  else
+  {
+    // dependent tiles => substreams are "per frame".
+    subStrm = 0;
+  }
+  return subStrm;
+}
+
+#if NH_MV
 Void TComPic::print( Bool legend )
 {
   if ( legend )
@@ -203,7 +230,7 @@ TComPic* TComPicLists::getPic( Int layerIdInNuh, Int poc )
   return pcPic;
 }
 
-#if H_3D
+#if NH_3D
 TComPic* TComPicLists::getPic( Int viewIndex, Bool depthFlag, Int poc )
 {
   return getPic   ( m_vps->getLayerIdInNuh( viewIndex, depthFlag ), poc );
@@ -249,7 +276,7 @@ TComPicYuv* TComPicLists::getPicYuv( Int layerIdInNuh, Int poc, Bool reconFlag )
   return pcPicYuv;
 }
 
-#if H_3D
+#if NH_3D
 TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon )
 {  
   Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag ); 
@@ -273,37 +300,39 @@ TComList<TComPic*>* TComPicLists::getPicList( Int layerIdInNuh )
 }
 #endif
 #endif
-#endif // H_MV
+#endif // NH_MV
 
-#if H_3D_NBDV 
-Int TComPic::getDisCandRefPictures( Int iColPOC )
+#if NH_3D_NBDV 
+Int TComPic::getDisCandRefPictures(Int iColPOC)
 {
   UInt       uiTempLayerCurr = 7;
   TComSlice* currSlice       = getSlice(getCurrSliceIdx());
   UInt       numDdvCandPics  = 0;
 
-  if ( !currSlice->getEnableTMVPFlag() )
+  if(!currSlice->getEnableTMVPFlag())
+  {
     return numDdvCandPics;
+  }
 
   numDdvCandPics += 1;
 
   UInt pocCurr = currSlice->getPOC();
   UInt pocDiff = 255;
 
-  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr ++)
+  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr++)
   {
-    UInt x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
+    Bool x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
 
-    for (UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
+    for(UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
     {
       if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() 
-        && (x == currSlice->getColFromL0Flag()||currSlice->getRefPOC((RefPicList)x, i)!= iColPOC) && numDdvCandPics!=2)
+         && (x == currSlice->getColFromL0Flag() || currSlice->getRefPOC((RefPicList)x, i) != iColPOC) && numDdvCandPics != 2)
       {
         TComSlice* refSlice    = currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx());
-        Bool       bRAP        = (refSlice->getViewIndex() && refSlice->isIRAP())? 1: 0; 
+        Bool       bRAP        = (refSlice->getViewIndex() && refSlice->isIRAP()) ? 1 : 0; 
         UInt       uiTempLayer = currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer(); 
         
-        if( bRAP )
+        if(bRAP)
         {
           this->setRapRefIdx(i);
           this->setRapRefList((RefPicList)x);
@@ -322,17 +351,17 @@ Int TComPic::getDisCandRefPictures( Int iColPOC )
   UInt z   = -1; // GT: Added to make code compile needs to be checked!
   UInt idx = 0;
   
-  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr ++)
+  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2 : 1); lpNr++)
   {
-    UInt x = lpNr? currSlice->getColFromL0Flag() : 1-currSlice->getColFromL0Flag();
+    Bool x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
     
-    for (UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
+    for(UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
     {
       Int iTempPoc = currSlice->getRefPic((RefPicList)x, i)->getPOC();
-      Int iTempDiff = (iTempPoc > pocCurr) ? (iTempPoc - pocCurr): (pocCurr - iTempPoc);
+      Int iTempDiff = (iTempPoc > pocCurr) ? (iTempPoc - pocCurr) : (pocCurr - iTempPoc);
       
-      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() &&  (x == currSlice->getColFromL0Flag()||currSlice->getRefPOC((RefPicList)x, i)!= iColPOC) 
-        && currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer() == uiTempLayerCurr && pocDiff > iTempDiff)
+      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() && (x == currSlice->getColFromL0Flag() || currSlice->getRefPOC((RefPicList)x, i) != iColPOC) 
+         && currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer() == uiTempLayerCurr && pocDiff > iTempDiff)
       {
         pocDiff = iTempDiff;
         z       = x;
@@ -341,10 +370,10 @@ Int TComPic::getDisCandRefPictures( Int iColPOC )
     }
   }
 
-  if( pocDiff < 255 )
+  if(pocDiff < 255)
   {
     this->setRapRefIdx(idx);
-    this->setRapRefList((RefPicList) z );
+    this->setRapRefList((RefPicList) z);
     numDdvCandPics = 2;
   }
 
@@ -355,13 +384,14 @@ Void TComPic::checkTemporalIVRef()
 {
   TComSlice* currSlice = getSlice(getCurrSliceIdx());
   const Int numCandPics = this->getNumDdvCandPics();
+
   for(Int curCandPic = 0; curCandPic < numCandPics; curCandPic++)
   {
     RefPicList eCurRefPicList   = REF_PIC_LIST_0 ;
     Int        curCandPicRefIdx = 0;
-    if( curCandPic == 0 ) 
+    if(curCandPic == 0) 
     { 
-      eCurRefPicList   = RefPicList(currSlice->isInterB() ? 1-currSlice->getColFromL0Flag() : 0);
+      eCurRefPicList   = RefPicList(currSlice->isInterB() ? 1 - currSlice->getColFromL0Flag() : 0);
       curCandPicRefIdx = currSlice->getColRefIdx();
     }
     else                 
@@ -369,26 +399,29 @@ Void TComPic::checkTemporalIVRef()
       eCurRefPicList   = this->getRapRefList();
       curCandPicRefIdx = this->getRapRefIdx();
     }
-    TComPic* pcCandColPic = currSlice->getRefPic( eCurRefPicList, curCandPicRefIdx);
-    TComSlice* pcCandColSlice = pcCandColPic->getSlice(0);// currently only support single slice
+
+    TComPic* pcCandColPic = currSlice->getRefPic(eCurRefPicList, curCandPicRefIdx);
+    TComSlice* pcCandColSlice = pcCandColPic->getSlice(0); // currently only support single slice
 
     if(!pcCandColSlice->isIntra())
     {
-      for( Int iColRefDir = 0; iColRefDir < (pcCandColSlice->isInterB() ? 2: 1); iColRefDir ++ )
+      for(Int iColRefDir = 0; iColRefDir < (pcCandColSlice->isInterB() ? 2 : 1); iColRefDir++)
       {
-        for( Int iColRefIdx =0; iColRefIdx < pcCandColSlice->getNumRefIdx(( RefPicList )iColRefDir ); iColRefIdx++)
+        for(Int iColRefIdx = 0; iColRefIdx < pcCandColSlice->getNumRefIdx((RefPicList)iColRefDir); iColRefIdx++)
         {
           m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = false;
           Int iColViewIdx    = pcCandColSlice->getViewIndex();
-          Int iColRefViewIdx = pcCandColSlice->getRefPic( ( RefPicList )iColRefDir, iColRefIdx)->getViewIndex();
+          Int iColRefViewIdx = pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx)->getViewIndex();
           if(iColViewIdx == iColRefViewIdx)
-            continue;
-
-          for(Int iCurrRefDir = 0;(iCurrRefDir < (currSlice->isInterB() ? 2: 1)) && (m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] == false ); iCurrRefDir++)
           {
-            for( Int iCurrRefIdx =0; iCurrRefIdx < currSlice->getNumRefIdx(( RefPicList )iCurrRefDir ); iCurrRefIdx++)
+            continue;
+          }
+
+          for(Int iCurrRefDir = 0; (iCurrRefDir < (currSlice->isInterB() ? 2 : 1)) && (m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] == false); iCurrRefDir++)
+          {
+            for(Int iCurrRefIdx = 0; iCurrRefIdx < currSlice->getNumRefIdx((RefPicList)iCurrRefDir); iCurrRefIdx++)
             {
-              if( currSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx )->getViewIndex() == iColRefViewIdx )
+              if(currSlice->getRefPic((RefPicList)iCurrRefDir, iCurrRefIdx)->getViewIndex() == iColRefViewIdx)
               {  
                 m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = true;
                 break;
@@ -400,45 +433,44 @@ Void TComPic::checkTemporalIVRef()
     }
   }
 }
+
 Bool TComPic::isTempIVRefValid(Int currCandPic, Int iColRefDir, Int iColRefIdx)
 {
   return m_abTIVRINCurrRL[currCandPic][iColRefDir][iColRefIdx];
 }
 
-Void TComPic::checkTextureRef(  )
+Void TComPic::checkTextureRef()
 {
   TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
-  TComPic* pcTextPic = pcCurrSlice->getTexturePic();
+  TComPic* pcTextPic = pcCurrSlice->getIvPic(0, getViewIndex());
 #if H_3D_FCO
   if ( pcTextPic )
   {
 #endif
+    TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
 
-  TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
-
-  for( Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB()? 2:1) ) && !pcTextSlice->isIntra(); iTextRefDir ++ )
-  {
-    for( Int iTextRefIdx =0; iTextRefIdx<pcTextSlice->getNumRefIdx(( RefPicList )iTextRefDir ); iTextRefIdx++)
+    for(Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB() ? 2 :1) ) && !pcTextSlice->isIntra(); iTextRefDir++)
     {
-      Int iTextRefPOC    = pcTextSlice->getRefPOC( ( RefPicList )iTextRefDir, iTextRefIdx);
-      Int iTextRefViewId = pcTextSlice->getRefPic( ( RefPicList )iTextRefDir, iTextRefIdx)->getViewIndex();
-      m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = -1;
-      Int iCurrRefDir = iTextRefDir;
-      for( Int iCurrRefIdx =0; ( iCurrRefIdx<pcCurrSlice->getNumRefIdx(( RefPicList )iCurrRefDir ) ) && ( m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0 ) ; iCurrRefIdx++)
+      for(Int iTextRefIdx =0; iTextRefIdx < pcTextSlice->getNumRefIdx((RefPicList)iTextRefDir); iTextRefIdx++)
       {
-        if( pcCurrSlice->getRefPOC( ( RefPicList )iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
-          pcCurrSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId )
-        {  
-          m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = iCurrRefIdx;
+        Int iTextRefPOC    = pcTextSlice->getRefPOC((RefPicList)iTextRefDir, iTextRefIdx);
+        Int iTextRefViewId = pcTextSlice->getRefPic((RefPicList)iTextRefDir, iTextRefIdx)->getViewIndex();
+        m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = -1;
+        Int iCurrRefDir = iTextRefDir;
+
+        for(Int iCurrRefIdx = 0; (iCurrRefIdx<pcCurrSlice->getNumRefIdx((RefPicList)iCurrRefDir)) && (m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0); iCurrRefIdx++)
+        {
+          if(pcCurrSlice->getRefPOC((RefPicList)iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
+             pcCurrSlice->getRefPic((RefPicList)iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId)
+          {  
+            m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = iCurrRefIdx;
+          }
         }
       }
     }
-
-  }
 #if H_3D_FCO
   }
 #endif
-
 }
 
 Int TComPic::isTextRefValid(Int iTextRefDir, Int iTextRefIdx)
@@ -446,4 +478,6 @@ Int TComPic::isTextRefValid(Int iTextRefDir, Int iTextRefIdx)
   return m_aiTexToDepRef[iTextRefDir][iTextRefIdx];
 }
 #endif
+
+
 //! \}

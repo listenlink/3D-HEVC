@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,12 +40,12 @@
 #include <string>
 #include "TAppDecCfg.h"
 #include "TAppCommon/program_options_lite.h"
-
-#if H_MV
-#include <cassert>
-#endif
+#include "TLibCommon/TComChromaFormat.h"
 #ifdef WIN32
 #define strdup _strdup
+#endif
+#if NH_MV
+#include <cassert>
 #endif
 
 using namespace std;
@@ -67,38 +67,52 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_BitstreamFile;
   string cfg_ReconFile;
   string cfg_TargetDecLayerIdSetFile;
-#if H_3D
+#if NH_3D
   string cfg_ScaleOffsetFile;
 #endif
+  string outputColourSpaceConvert;
+  Int warnUnknowParameter = 0;
 
   po::Options opts;
   opts.addOptions()
-  ("help", do_help, false, "this help text")
-  ("BitstreamFile,b", cfg_BitstreamFile, string(""), "bitstream input file name")
-  ("ReconFile,o",     cfg_ReconFile,     string(""), "reconstructed YUV output file name\n"
-                                                     "YUV writing is skipped if omitted")
-#if H_3D
-  ("ScaleOffsetFile,p", cfg_ScaleOffsetFile, string(""), "file with coded scales and offsets")
+
+
+  ("help",                      do_help,                               false,      "this help text")
+  ("BitstreamFile,b",           cfg_BitstreamFile,                     string(""), "bitstream input file name")
+  ("ReconFile,o",               cfg_ReconFile,                         string(""), "reconstructed YUV output file name\n"
+                                                                                   "YUV writing is skipped if omitted")
+#if NH_3D
+  ("ScaleOffsetFile,p",         cfg_ScaleOffsetFile,                   string(""), "file with coded scales and offsets")
+  ("Depth420OutputFlag",        m_depth420OutputFlag,                  true      , "Output depth layers in 4:2:0 ") 
 #endif
-  ("SkipFrames,s", m_iSkipFrame, 0, "number of frames to skip before random access")
-  ("OutputBitDepth,d", m_outputBitDepthY, 0, "bit depth of YUV output luma component (default: use 0 for native depth)")
-  ("OutputBitDepthC,d", m_outputBitDepthC, 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
-#if H_MV
-  ("TargetOptLayerSetIdx,x", m_targetOptLayerSetIdx, -1, "Target output layer set index. (default: -1, determine automatically to be equal to highest layer set index") // Should actually equal to 0 as default. However, this would cause only the base layer to be decoded.  
+  ("WarnUnknowParameter,w",     warnUnknowParameter,                                  0, "warn for unknown configuration parameters instead of failing")
+  ("SkipFrames,s",              m_iSkipFrame,                          0,          "number of frames to skip before random access")
+  ("OutputBitDepth,d",          m_outputBitDepth[CHANNEL_TYPE_LUMA],   0,          "bit depth of YUV output luma component (default: use 0 for native depth)")
+  ("OutputBitDepthC,d",         m_outputBitDepth[CHANNEL_TYPE_CHROMA], 0,          "bit depth of YUV output chroma component (default: use 0 for native depth)")
+  ("OutputColourSpaceConvert",  outputColourSpaceConvert,              string(""), "Colour space conversion to apply to input 444 video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(false))
+#if NH_MV
+  ("TargetOptLayerSetIdx,x",    m_targetOptLayerSetIdx,                -1,         "Target output layer set index. (default: -1, determine automatically to be equal to highest layer set index") // Should actually equal to 0 as default. However, this would cause only the base layer to be decoded.  
 #endif
-  ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
-  ("SEIDecodedPictureHash", m_decodedPictureHashSEIEnabled, 1, "Control handling of decoded picture hash SEI messages\n"
-                                              "\t1: check hash in SEI messages if available in the bitstream\n"
-                                              "\t0: ignore SEI message")
-  ("SEIpictureDigest", m_decodedPictureHashSEIEnabled, 1, "deprecated alias for SEIDecodedPictureHash")
-  ("TarDecLayerIdSetFile,l", cfg_TargetDecLayerIdSetFile, string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
-  ("RespectDefDispWindow,w", m_respectDefDispWindow, 0, "Only output content inside the default display window\n")
-#if H_MV
-  ("OutputVpsInfo,v", m_outputVpsInfo, false, "Output information about the layer dependencies and layer sets")
+  ("MaxTemporalLayer,t",        m_iMaxTemporalLayer,                   -1,         "Maximum Temporal Layer to be decoded. -1 to decode all layers")
+  ("SEIDecodedPictureHash",     m_decodedPictureHashSEIEnabled,        1,          "Control handling of decoded picture hash SEI messages\n"
+                                                                                   "\t1: check hash in SEI messages if available in the bitstream\n"
+                                                                                   "\t0: ignore SEI message")
+  ("SEINoDisplay",              m_decodedNoDisplaySEIEnabled,          true,       "Control handling of decoded no display SEI messages")
+  ("TarDecLayerIdSetFile,l",    cfg_TargetDecLayerIdSetFile,           string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
+  ("RespectDefDispWindow,w",    m_respectDefDispWindow,                0,          "Only output content inside the default display window\n")
+#if NH_MV
+  ("OutputVpsInfo,v",           m_outputVpsInfo,                       false,       "Output information about the layer dependencies and layer sets")
 #endif
+#if O0043_BEST_EFFORT_DECODING
+  ("ForceDecodeBitDepth",       m_forceDecodeBitDepth,                 0U,         "Force the decoder to operate at a particular bit-depth (best effort decoding)")
+#endif
+  ("OutputDecodedSEIMessagesFilename",  m_outputDecodedSEIMessagesFilename,    string(""), "When non empty, output decoded SEI messages to the indicated file. If file is '-', then output to stdout\n")
+  ("ClipOutputVideoToRec709Range",      m_bClipOutputVideoToRec709Range,  false, "If true then clip output video to the Rec. 709 Range on saving")
   ;
+
   po::setDefaults(opts);
-  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
+  po::ErrorReporter err;
+  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv, err);
 
   for (list<const Char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
   {
@@ -111,22 +125,39 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
     return false;
   }
 
+  if (err.is_errored)
+  {
+    if (!warnUnknowParameter)
+    {
+      /* errors have already been reported to stderr */
+      return false;
+    }
+  }
+
+  m_outputColourSpaceConvert = stringToInputColourSpaceConvert(outputColourSpaceConvert, false);
+  if (m_outputColourSpaceConvert>=NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS)
+  {
+    fprintf(stderr, "Bad output colour space conversion string\n");
+    return false;
+  }
+
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
 
-#if H_3D
+#if NH_3D
   m_pchScaleOffsetFile = cfg_ScaleOffsetFile.empty() ? NULL : strdup(cfg_ScaleOffsetFile.c_str());
 #endif
+
   if (!m_pchBitstreamFile)
   {
-    fprintf(stderr, "No input file specifed, aborting\n");
+    fprintf(stderr, "No input file specified, aborting\n");
     return false;
   }
 
   if ( !cfg_TargetDecLayerIdSetFile.empty() )
   {
-#if H_MV
+#if NH_MV
     m_targetDecLayerIdSetFileEmpty = false;     
 #endif
     FILE* targetDecLayerIdSetFile = fopen ( cfg_TargetDecLayerIdSetFile.c_str(), "r" );
@@ -151,7 +182,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
         }
         if ( layerIdParsed < 0 || layerIdParsed >= MAX_NUM_LAYER_IDS )
         {
-          fprintf(stderr, "Warning! Parsed LayerId %d is not withing allowed range [0,%d]. Ignoring this value.\n", layerIdParsed, MAX_NUM_LAYER_IDS-1 );
+          fprintf(stderr, "Warning! Parsed LayerId %d is not within allowed range [0,%d]. Ignoring this value.\n", layerIdParsed, MAX_NUM_LAYER_IDS-1 );
         }
         else
         {
@@ -171,14 +202,14 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
       fprintf(stderr, "File %s could not be opened. Using all LayerIds as default.\n", cfg_TargetDecLayerIdSetFile.c_str() );
     }
   }
-#if H_MV
-  m_targetDecLayerIdSet.push_back( 0 );         // Only base layer at startup
-#endif
 
+#if NH_MV
+  //m_targetDecLayerIdSet.push_back( 0 );         // Only base layer at startup
+#endif
   return true;
 }
 
-#if H_MV
+#if NH_MV
 Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName)
 {
   size_t iInLength     = strlen(pchInputFileName);

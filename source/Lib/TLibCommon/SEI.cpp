@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,9 +38,6 @@
 #include "CommonDef.h"
 #include "SEI.h"
 
-//Table D-7 Meaning of camera iso sensitivity indicator and exposure index rating indicator
-Int  Table_exp_indicator[32] = {0, 10, 12, 16, 20, 25, 32, 40, 50, 64, 80, 100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 5000, 6400, 8000, -1};
-
 SEIMessages getSeisByType(SEIMessages &seiList, SEI::PayloadType seiType)
 {
   SEIMessages result;
@@ -59,8 +56,8 @@ SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType)
 {
   SEIMessages result;
 
-  SEIMessages::iterator it=seiList.begin(); 
-  while ( it!=seiList.end() ) 
+  SEIMessages::iterator it=seiList.begin();
+  while ( it!=seiList.end() )
   {
     if ((*it)->payloadType() == seiType)
     {
@@ -83,4 +80,77 @@ Void deleteSEIs (SEIMessages &seiList)
     delete (*it);
   }
   seiList.clear();
+}
+
+void SEIBufferingPeriod::copyTo (SEIBufferingPeriod& target)
+{
+  target.m_bpSeqParameterSetId = m_bpSeqParameterSetId;
+  target.m_rapCpbParamsPresentFlag = m_rapCpbParamsPresentFlag;
+  target.m_cpbDelayOffset = m_cpbDelayOffset;
+  target.m_dpbDelayOffset = m_dpbDelayOffset;
+  target.m_concatenationFlag = m_concatenationFlag;
+  target.m_auCpbRemovalDelayDelta = m_auCpbRemovalDelayDelta;
+  ::memcpy(target.m_initialCpbRemovalDelay, m_initialCpbRemovalDelay, sizeof(m_initialCpbRemovalDelay));
+  ::memcpy(target.m_initialCpbRemovalDelayOffset, m_initialCpbRemovalDelayOffset, sizeof(m_initialCpbRemovalDelayOffset));
+  ::memcpy(target.m_initialAltCpbRemovalDelay, m_initialAltCpbRemovalDelay, sizeof(m_initialAltCpbRemovalDelay));
+  ::memcpy(target.m_initialAltCpbRemovalDelayOffset, m_initialAltCpbRemovalDelayOffset, sizeof(m_initialAltCpbRemovalDelayOffset));
+}
+
+void SEIPictureTiming::copyTo (SEIPictureTiming& target)
+{
+  target.m_picStruct = m_picStruct;
+  target.m_sourceScanType = m_sourceScanType;
+  target.m_duplicateFlag = m_duplicateFlag;
+
+  target.m_auCpbRemovalDelay = m_auCpbRemovalDelay;
+  target.m_picDpbOutputDelay = m_picDpbOutputDelay;
+  target.m_picDpbOutputDuDelay = m_picDpbOutputDuDelay;
+  target.m_numDecodingUnitsMinus1 = m_numDecodingUnitsMinus1;
+  target.m_duCommonCpbRemovalDelayFlag = m_duCommonCpbRemovalDelayFlag;
+  target.m_duCommonCpbRemovalDelayMinus1 = m_duCommonCpbRemovalDelayMinus1;
+
+  target.m_numNalusInDuMinus1 = m_numNalusInDuMinus1;
+  target.m_duCpbRemovalDelayMinus1 = m_duCpbRemovalDelayMinus1;
+}
+
+// Static member
+const Char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
+{
+  switch (payloadType)
+  {
+    case SEI::BUFFERING_PERIOD:                     return "Buffering period";
+    case SEI::PICTURE_TIMING:                       return "Picture timing";
+    case SEI::PAN_SCAN_RECT:                        return "Pan-scan rectangle";                   // not currently decoded
+    case SEI::FILLER_PAYLOAD:                       return "Filler payload";                       // not currently decoded
+    case SEI::USER_DATA_REGISTERED_ITU_T_T35:       return "User data registered";                 // not currently decoded
+    case SEI::USER_DATA_UNREGISTERED:               return "User data unregistered";
+    case SEI::RECOVERY_POINT:                       return "Recovery point";
+    case SEI::SCENE_INFO:                           return "Scene information";                    // not currently decoded
+    case SEI::FULL_FRAME_SNAPSHOT:                  return "Picture snapshot";                     // not currently decoded
+    case SEI::PROGRESSIVE_REFINEMENT_SEGMENT_START: return "Progressive refinement segment start"; // not currently decoded
+    case SEI::PROGRESSIVE_REFINEMENT_SEGMENT_END:   return "Progressive refinement segment end";   // not currently decoded
+    case SEI::FILM_GRAIN_CHARACTERISTICS:           return "Film grain characteristics";           // not currently decoded
+    case SEI::POST_FILTER_HINT:                     return "Post filter hint";                     // not currently decoded
+    case SEI::TONE_MAPPING_INFO:                    return "Tone mapping information";
+    case SEI::KNEE_FUNCTION_INFO:                   return "Knee function information";
+    case SEI::FRAME_PACKING:                        return "Frame packing arrangement";
+    case SEI::DISPLAY_ORIENTATION:                  return "Display orientation";
+    case SEI::SOP_DESCRIPTION:                      return "Structure of pictures information";
+    case SEI::ACTIVE_PARAMETER_SETS:                return "Active parameter sets";
+    case SEI::DECODING_UNIT_INFO:                   return "Decoding unit information";
+    case SEI::TEMPORAL_LEVEL0_INDEX:                return "Temporal sub-layer zero index";
+    case SEI::DECODED_PICTURE_HASH:                 return "Decoded picture hash";
+    case SEI::SCALABLE_NESTING:                     return "Scalable nesting";
+    case SEI::REGION_REFRESH_INFO:                  return "Region refresh information";
+    case SEI::NO_DISPLAY:                           return "No display";
+    case SEI::TIME_CODE:                            return "Time code";
+    case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
+    case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
+    case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
+    case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";
+#if NH_MV
+    case SEI::SUB_BITSTREAM_PROPERTY:               return "Sub-bitstream property SEI message";      
+#endif
+    default:                                        return "Unknown";
+  }
 }

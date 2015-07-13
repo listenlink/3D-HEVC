@@ -35,7 +35,7 @@
 #include "TRenFilter.h"
 #include "TRenModel.h"
 
-#if H_3D_VSO
+#if NH_3D_VSO
 ///////////  TRENMODEL //////////////////////
 TRenModel::TRenModel()
 {
@@ -241,8 +241,8 @@ TRenModel::create( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeigh
     m_aaaiSubPelShiftLut[1][uiEntry] = new Int[ iNumEntries ];
   }
 
-  TRenFilter::setSubPelShiftLUT( m_iShiftPrec, m_aaaiSubPelShiftLut[0], 0 );
-  TRenFilter::setSubPelShiftLUT( m_iShiftPrec, m_aaaiSubPelShiftLut[1], 0 );
+  TRenFilter<REN_BIT_DEPTH>::setSubPelShiftLUT( m_iShiftPrec, m_aaaiSubPelShiftLut[0], 0 );
+  TRenFilter<REN_BIT_DEPTH>::setSubPelShiftLUT( m_iShiftPrec, m_aaaiSubPelShiftLut[1], 0 );
 
   m_iSampledWidth       = iWidth << m_iShiftPrec;
 
@@ -356,10 +356,9 @@ TRenModel::createSingleModel( Int iBaseViewNum, Int iContent, Int iModelNum, Int
   AOT( iBaseViewNum  < -1 || iBaseViewNum  > m_iNumOfBaseViews );
   AOT( iBaseViewNum != -1 && iBaseViewNum != iLeftViewNum && iBaseViewNum != iRightViewNum );
   AOT( iContent      < -1 || iContent > 1 );
-  AOT( iBlendMode < -1 || iBlendMode > 2 );
-  AOT( g_bitDepthY  != g_bitDepthC ); 
+  AOT( iBlendMode < -1 || iBlendMode > 2 );  
 
-  Bool bBitInc = ( DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) != 0);
+  Bool bBitInc = ( REN_BIT_DEPTH != ENC_INTERNAL_BIT_DEPTH );
 
   AOT( m_apcRenModels[iModelNum] );
 
@@ -436,15 +435,17 @@ Void
 TRenModel::setBaseView( Int iViewNum, TComPicYuv* pcPicYuvVideoData, TComPicYuv* pcPicYuvDepthData, TComPicYuv* pcPicYuvOrgVideoData, TComPicYuv* pcPicYuvOrgDepthData )
 {
   AOT( iViewNum < 0 || iViewNum > m_iNumOfBaseViews );
-  AOF( pcPicYuvVideoData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvVideoData->getWidth() == m_iWidth );
-  AOF( pcPicYuvDepthData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvDepthData->getWidth() == m_iWidth );
-
+  AOF( pcPicYuvVideoData->getHeight( COMPONENT_Y ) >= m_iUsedHeight + m_uiHorOff && pcPicYuvVideoData->getWidth( COMPONENT_Y ) == m_iWidth );
+  AOF( pcPicYuvDepthData->getHeight( COMPONENT_Y ) >= m_iUsedHeight + m_uiHorOff && pcPicYuvDepthData->getWidth( COMPONENT_Y ) == m_iWidth );
+  
+  AOF( pcPicYuvVideoData   ->getChromaFormat() == CHROMA_420 );
+  
   pcPicYuvVideoData->extendPicBorder();
 
-  TRenFilter::sampleHorUp   ( m_iShiftPrec, pcPicYuvVideoData->getLumaAddr() +  m_uiHorOff        * pcPicYuvVideoData->getStride () , pcPicYuvVideoData->getStride() , m_iWidth,      m_iUsedHeight,      m_aapiCurVideoPel[ iViewNum ][0], m_aaiCurVideoStrides[iViewNum][0] );
-  TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getCbAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getCStride() , pcPicYuvVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiCurVideoPel[ iViewNum ][1], m_aaiCurVideoStrides[iViewNum][1] );
-  TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getCrAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getCStride() , pcPicYuvVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiCurVideoPel[ iViewNum ][2], m_aaiCurVideoStrides[iViewNum][2] );
-  TRenFilter::copy          (               pcPicYuvDepthData->getLumaAddr() +  m_uiHorOff        * pcPicYuvDepthData->getStride () , pcPicYuvDepthData->getStride(),  m_iWidth,      m_iUsedHeight,      m_apiCurDepthPel [ iViewNum],     m_aiCurDepthStrides [iViewNum]    );
+  TRenFilter<REN_BIT_DEPTH>::sampleHorUp   ( m_iShiftPrec, pcPicYuvVideoData->getAddr( COMPONENT_Y  ) +  m_uiHorOff        * pcPicYuvVideoData->getStride( COMPONENT_Y ) , pcPicYuvVideoData->getStride( COMPONENT_Y  ) , m_iWidth,      m_iUsedHeight,      m_aapiCurVideoPel[ iViewNum ][0], m_aaiCurVideoStrides[iViewNum][0] );
+  TRenFilter<REN_BIT_DEPTH>::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getAddr( COMPONENT_Cb ) + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getStride( COMPONENT_Cb) , pcPicYuvVideoData->getStride( COMPONENT_Cb ), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiCurVideoPel[ iViewNum ][1], m_aaiCurVideoStrides[iViewNum][1] );
+  TRenFilter<REN_BIT_DEPTH>::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getAddr( COMPONENT_Cr ) + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getStride( COMPONENT_Cr) , pcPicYuvVideoData->getStride( COMPONENT_Cr ), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiCurVideoPel[ iViewNum ][2], m_aaiCurVideoStrides[iViewNum][2] );
+  TRenFilter<REN_BIT_DEPTH>::copy          (               pcPicYuvDepthData->getAddr( COMPONENT_Y  ) +  m_uiHorOff        * pcPicYuvDepthData->getStride( COMPONENT_Y ) , pcPicYuvDepthData->getStride( COMPONENT_Y  ),  m_iWidth,      m_iUsedHeight,      m_apiCurDepthPel [ iViewNum],     m_aiCurDepthStrides [iViewNum]    );
 
   // Used for rendering reference pic from original video data
   m_abSetupVideoFromOrgForView[iViewNum] = (pcPicYuvOrgVideoData != NULL);
@@ -452,17 +453,18 @@ TRenModel::setBaseView( Int iViewNum, TComPicYuv* pcPicYuvVideoData, TComPicYuv*
 
   if ( m_abSetupVideoFromOrgForView[iViewNum] )
   {
-    AOF( pcPicYuvOrgVideoData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvOrgVideoData->getWidth() == m_iWidth );
+    AOF( pcPicYuvOrgVideoData->getChromaFormat() == CHROMA_420 );
+    AOF( pcPicYuvOrgVideoData->getHeight( COMPONENT_Y ) >= m_iUsedHeight + m_uiHorOff && pcPicYuvOrgVideoData->getWidth( COMPONENT_Y) == m_iWidth );    
     pcPicYuvOrgVideoData->extendPicBorder();
-    TRenFilter::sampleHorUp   ( m_iShiftPrec, pcPicYuvOrgVideoData->getLumaAddr() +  m_uiHorOff        * pcPicYuvOrgVideoData->getStride() , pcPicYuvOrgVideoData->getStride() , m_iWidth,      m_iUsedHeight,      m_aapiOrgVideoPel[ iViewNum ][0], m_aaiOrgVideoStrides[iViewNum][0] );
-    TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getCbAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getCStride(), pcPicYuvOrgVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][1], m_aaiOrgVideoStrides[iViewNum][1] );
-    TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getCrAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getCStride(), pcPicYuvOrgVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][2], m_aaiOrgVideoStrides[iViewNum][2] );
+    TRenFilter<REN_BIT_DEPTH>::sampleHorUp   ( m_iShiftPrec, pcPicYuvOrgVideoData->getAddr( COMPONENT_Y  ) +  m_uiHorOff          * pcPicYuvOrgVideoData->getStride( COMPONENT_Y  ), pcPicYuvOrgVideoData->getStride( COMPONENT_Y  ) , m_iWidth,      m_iUsedHeight,      m_aapiOrgVideoPel[ iViewNum ][0], m_aaiOrgVideoStrides[iViewNum][0] );
+    TRenFilter<REN_BIT_DEPTH>::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getAddr( COMPONENT_Cb )   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getStride( COMPONENT_Cb ), pcPicYuvOrgVideoData->getStride( COMPONENT_Cb ), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][1], m_aaiOrgVideoStrides[iViewNum][1] );
+    TRenFilter<REN_BIT_DEPTH>::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getAddr( COMPONENT_Cr )   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getStride( COMPONENT_Cr ), pcPicYuvOrgVideoData->getStride( COMPONENT_Cr ), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][2], m_aaiOrgVideoStrides[iViewNum][2] );
   }
 
   if ( m_abSetupDepthFromOrgForView[iViewNum] )
-  {
-    AOF( pcPicYuvOrgDepthData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvOrgDepthData->getWidth() == m_iWidth );
-    TRenFilter::copy          (               pcPicYuvOrgDepthData->getLumaAddr() +  m_uiHorOff        * pcPicYuvOrgDepthData->getStride() , pcPicYuvOrgDepthData->getStride(),  m_iWidth,     m_iUsedHeight,      m_apiOrgDepthPel [ iViewNum],     m_aiOrgDepthStrides [iViewNum]    );
+  {    
+    AOF( pcPicYuvOrgDepthData->getHeight( COMPONENT_Y ) >= m_iUsedHeight + m_uiHorOff && pcPicYuvOrgDepthData->getWidth( COMPONENT_Y ) == m_iWidth );
+    TRenFilter<REN_BIT_DEPTH>::copy          (               pcPicYuvOrgDepthData->getAddr( COMPONENT_Y ) +  m_uiHorOff        * pcPicYuvOrgDepthData->getStride( COMPONENT_Y) , pcPicYuvOrgDepthData->getStride( COMPONENT_Y),  m_iWidth,     m_iUsedHeight,      m_apiOrgDepthPel [ iViewNum],     m_aiOrgDepthStrides [iViewNum]    );
   }
 }
 
@@ -591,7 +593,7 @@ TRenModel::getDist( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
 }
 
 Void
-TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )
+TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData )
 {
   iStartPosY -= m_uiHorOff; 
 
@@ -624,7 +626,7 @@ TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
   if (m_iCurrentContent == 1)
   {
     Int iTargetStride = m_aiCurDepthStrides[ m_iCurrentView ];
-    TRenFilter::copy( piNewData, iStride, iWidth, iHeight,  m_apiCurDepthPel[ m_iCurrentView ] + iStartPosY * iTargetStride + iStartPosX, iTargetStride );
+    TRenFilter<REN_BIT_DEPTH>::copy( piNewData, iStride, iWidth, iHeight,  m_apiCurDepthPel[ m_iCurrentView ] + iStartPosY * iTargetStride + iStartPosX, iTargetStride );
   }
 #endif
 }
@@ -645,10 +647,10 @@ Void
 TRenModel::getTotalSSE( Int64& riSSEY, Int64& riSSEU, Int64& riSSEV )
 {
   TComPicYuv cPicYuvSynth;
-  cPicYuvSynth.create( m_iWidth, m_iUsedHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+  cPicYuvSynth.create( m_iWidth, m_iUsedHeight, CHROMA_420, 1, 1, 1, true);
 
   TComPicYuv cPicYuvTempRef;
-  cPicYuvTempRef.create( m_iWidth, m_iUsedHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
+  cPicYuvTempRef.create( m_iWidth, m_iUsedHeight, CHROMA_420, 1, 1, 1, true);
 
   Int64 iSSEY = 0;
   Int64 iSSEU = 0;
@@ -659,9 +661,9 @@ TRenModel::getTotalSSE( Int64& riSSEY, Int64& riSSEU, Int64& riSSEV )
     m_apcCurRenModels[iCurModel]->getSynthVideo( m_aiCurPosInModels[iCurModel], &cPicYuvSynth );    
     m_apcCurRenModels[iCurModel]->getRefVideo  ( m_aiCurPosInModels[iCurModel], &cPicYuvTempRef   );
 
-    iSSEY += TRenFilter::SSE( cPicYuvSynth.getLumaAddr(), cPicYuvSynth.getStride(),  m_iWidth,      m_iUsedHeight     , cPicYuvTempRef.getLumaAddr(), cPicYuvTempRef.getStride() , true  );
-    iSSEU += TRenFilter::SSE( cPicYuvSynth.getCbAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCbAddr()  , cPicYuvTempRef.getCStride(), false );
-    iSSEV += TRenFilter::SSE( cPicYuvSynth.getCrAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCrAddr()  , cPicYuvTempRef.getCStride(), false );
+    iSSEY += TRenFilter<REN_BIT_DEPTH>::SSE( cPicYuvSynth.getAddr(  COMPONENT_Y ), cPicYuvSynth.getStride( COMPONENT_Y  ),  m_iWidth,      m_iUsedHeight    , cPicYuvTempRef.getAddr( COMPONENT_Y  ), cPicYuvTempRef.getStride( COMPONENT_Y  ), true  );
+    iSSEU += TRenFilter<REN_BIT_DEPTH>::SSE( cPicYuvSynth.getAddr( COMPONENT_Cb ), cPicYuvSynth.getStride( COMPONENT_Cb ), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getAddr( COMPONENT_Cb ), cPicYuvTempRef.getStride( COMPONENT_Cb ), false );
+    iSSEV += TRenFilter<REN_BIT_DEPTH>::SSE( cPicYuvSynth.getAddr( COMPONENT_Cr ), cPicYuvSynth.getStride( COMPONENT_Cr ), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getAddr( COMPONENT_Cr ), cPicYuvTempRef.getStride( COMPONENT_Cr ), false );
   }
 
   riSSEY = ( iSSEY + (m_iNumOfCurRenModels >> 1) ) / m_iNumOfCurRenModels;
@@ -698,4 +700,4 @@ TRenModel::xSetLRViewAndAddModel( Int iModelNum, Int iBaseViewNum, Int iContent,
     }
   }
 }
-#endif // H_3D
+#endif // NH_3D

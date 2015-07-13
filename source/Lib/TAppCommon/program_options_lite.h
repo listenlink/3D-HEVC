@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,9 @@
 #include <string>
 #include <list>
 #include <map>
-#include  "../TLibCommon/TypeDef.h"
+#include  "../TLibCommon/CommonDef.h" 
 
-#if H_MV
+#if NH_MV
 #include <vector>
 #include <errno.h>
 #include <cstring>
@@ -46,6 +46,11 @@
 #define strdup _strdup
 #endif
 #endif
+
+
+#ifndef __PROGRAM_OPTIONS_LITE__
+#define __PROGRAM_OPTIONS_LITE__
+
 //! \ingroup TAppCommon
 //! \{
 
@@ -55,7 +60,7 @@ namespace df
   namespace program_options_lite
   {
     struct Options;
-    
+
     struct ParseFailure : public std::exception
     {
       ParseFailure(std::string arg0, std::string val0) throw()
@@ -70,22 +75,28 @@ namespace df
       const char* what() const throw() { return "Option Parse Failure"; }
     };
 
+    struct ErrorReporter
+    {
+      ErrorReporter() : is_errored(0) {}
+      virtual ~ErrorReporter() {}
+      virtual std::ostream& error(const std::string& where);
+      virtual std::ostream& warn(const std::string& where);
+      bool is_errored;
+    };
+
+    extern ErrorReporter default_error_reporter;
+
     void doHelp(std::ostream& out, Options& opts, unsigned columns = 80);
-    unsigned parseGNU(Options& opts, unsigned argc, const char* argv[]);
-    unsigned parseSHORT(Options& opts, unsigned argc, const char* argv[]);
-    std::list<const char*> scanArgv(Options& opts, unsigned argc, const char* argv[]);
-    void scanLine(Options& opts, std::string& line);
-    void scanFile(Options& opts, std::istream& in);
+    std::list<const char*> scanArgv(Options& opts, unsigned argc, const char* argv[], ErrorReporter& error_reporter = default_error_reporter);
     void setDefaults(Options& opts);
-    void parseConfigFile(Options& opts, const std::string& filename);
-    bool storePair(Options& opts, const std::string& name, const std::string& value);
-    
+    void parseConfigFile(Options& opts, const std::string& filename, ErrorReporter& error_reporter = default_error_reporter);
+
     /** OptionBase: Virtual base class for storing information relating to a
      * specific option This base class describes common elements.  Type specific
      * information should be stored in a derived class. */
     struct OptionBase
     {
-#if H_MV      
+#if NH_MV      
       OptionBase(const std::string& name, const std::string& desc, bool duplicate = false)
         : opt_string(name), opt_desc(desc), opt_duplicate(duplicate)
 #else
@@ -93,26 +104,26 @@ namespace df
       : opt_string(name), opt_desc(desc)
 #endif
       {};
-      
+
       virtual ~OptionBase() {}
-      
+
       /* parse argument arg, to obtain a value for the option */
-      virtual void parse(const std::string& arg) = 0;
+      virtual void parse(const std::string& arg, ErrorReporter&) = 0;
       /* set the argument to the default value */
       virtual void setDefault() = 0;
-      
+
       std::string opt_string;
       std::string opt_desc;
-#if H_MV
+#if NH_MV
       bool        opt_duplicate; 
 #endif
     };
-    
+
     /** Type specific option storage */
     template<typename T>
     struct Option : public OptionBase
     {
-#if H_MV
+#if NH_MV
       Option(const std::string& name, T& storage, T default_val, const std::string& desc, bool duplicate = false)
         : OptionBase(name, desc, duplicate), opt_storage(storage), opt_default_val(default_val)
 #else
@@ -120,22 +131,22 @@ namespace df
       : OptionBase(name, desc), opt_storage(storage), opt_default_val(default_val)
 #endif
       {}
-      
-      void parse(const std::string& arg);
-      
+
+      void parse(const std::string& arg, ErrorReporter&);
+
       void setDefault()
       {
         opt_storage = opt_default_val;
       }
-      
+
       T& opt_storage;
       T opt_default_val;
     };
-    
+
     /* Generic parsing */
     template<typename T>
     inline void
-    Option<T>::parse(const std::string& arg)
+    Option<T>::parse(const std::string& arg, ErrorReporter&)
     {
       std::istringstream arg_ss (arg,std::istringstream::in);
       arg_ss.exceptions(std::ios::failbit);
@@ -148,27 +159,27 @@ namespace df
         throw ParseFailure(opt_string, arg);
       }
     }
-    
+
     /* string parsing is specialized -- copy the whole string, not just the
      * first word */
     template<>
     inline void
-    Option<std::string>::parse(const std::string& arg)
+    Option<std::string>::parse(const std::string& arg, ErrorReporter&)
     {
       opt_storage = arg;
     }
 
-#if H_MV    
+#if NH_MV    
     template<>
     inline void
-      Option<char*>::parse(const std::string& arg)
+      Option<char*>::parse(const std::string& arg, ErrorReporter&)
     {
       opt_storage = arg.empty() ? NULL : strdup(arg.c_str()) ;
     }
 
     template<>
     inline void
-      Option< std::vector<char*> >::parse(const std::string& arg)
+      Option< std::vector<char*> >::parse(const std::string& arg, ErrorReporter&)
     {
       opt_storage.clear(); 
 
@@ -190,7 +201,7 @@ namespace df
 
     template<>    
     inline void
-      Option< std::vector<double> >::parse(const std::string& arg)
+      Option< std::vector<double> >::parse(const std::string& arg, ErrorReporter&)
     {
       char* pcNextStart = (char*) arg.data();
       char* pcEnd = pcNextStart + arg.length();
@@ -226,7 +237,7 @@ namespace df
 
     template<>
     inline void
-      Option< std::vector<int> >::parse(const std::string& arg)
+      Option< std::vector<int> >::parse(const std::string& arg, ErrorReporter&)
     {
       opt_storage.clear();
 
@@ -264,7 +275,7 @@ namespace df
 
     template<>
     inline void
-      Option< std::vector<bool> >::parse(const std::string& arg)
+      Option< std::vector<bool> >::parse(const std::string& arg, ErrorReporter&)
     {
       char* pcNextStart = (char*) arg.data();
       char* pcEnd = pcNextStart + arg.length();
@@ -298,41 +309,43 @@ namespace df
     /** Option class for argument handling using a user provided function */
     struct OptionFunc : public OptionBase
     {
-      typedef void (Func)(Options&, const std::string&);
-      
+      typedef void (Func)(Options&, const std::string&, ErrorReporter&);
+
       OptionFunc(const std::string& name, Options& parent_, Func *func_, const std::string& desc)
       : OptionBase(name, desc), parent(parent_), func(func_)
       {}
-      
-      void parse(const std::string& arg)
+
+      void parse(const std::string& arg, ErrorReporter& error_reporter)
       {
-        func(parent, arg);
+        func(parent, arg, error_reporter);
       }
-      
+
       void setDefault()
       {
         return;
       }
-      
+
     private:
       Options& parent;
-      void (*func)(Options&, const std::string&);
+      Func* func;
     };
-    
+
     class OptionSpecific;
     struct Options
     {
       ~Options();
-      
+
       OptionSpecific addOptions();
-      
+
       struct Names
       {
         Names() : opt(0) {};
         ~Names()
         {
           if (opt)
+          {
             delete opt;
+          }
         }
         std::list<std::string> opt_long;
         std::list<std::string> opt_short;
@@ -340,21 +353,21 @@ namespace df
       };
 
       void addOption(OptionBase *opt);
-      
+
       typedef std::list<Names*> NamesPtrList;
       NamesPtrList opt_list;
-      
+
       typedef std::map<std::string, NamesPtrList> NamesMap;
       NamesMap opt_long_map;
       NamesMap opt_short_map;
     };
-    
+
     /* Class with templated overloaded operator(), for use by Options::addOptions() */
     class OptionSpecific
     {
     public:
       OptionSpecific(Options& parent_) : parent(parent_) {}
-      
+
       /**
        * Add option described by name to the parent Options list,
        *   with storage for the option's value
@@ -368,8 +381,8 @@ namespace df
         parent.addOption(new Option<T>(name, storage, default_val, desc));
         return *this;
       }
-      
-#if H_MV
+
+#if NH_MV
       template<typename T>
       OptionSpecific&
         operator()(const std::string& name, std::vector<T>& storage, T default_val, unsigned uiMaxNum, const std::string& desc = "" )
@@ -418,8 +431,10 @@ namespace df
     private:
       Options& parent;
     };
-    
-  }; /* namespace: program_options_lite */
-}; /* namespace: df */
+
+  } /* namespace: program_options_lite */
+} /* namespace: df */
 
 //! \}
+
+#endif
