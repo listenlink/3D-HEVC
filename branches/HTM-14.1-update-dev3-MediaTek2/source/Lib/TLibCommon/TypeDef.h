@@ -74,6 +74,7 @@
 #define NH_3D_VSP                         1
 #define NH_3D_IV_MERGE                    1
 #define NH_3D_SPIVMP                      1
+#define NH_3D_INTEGER_MV_DEPTH            1
 #endif
 
 #if H_3D
