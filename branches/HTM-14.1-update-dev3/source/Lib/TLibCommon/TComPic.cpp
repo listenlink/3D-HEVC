@@ -142,6 +142,31 @@ Void TComPic::destroy()
   deleteSEIs(m_SEIs);
 }
 #if NH_3D
+#if NH_3D_ARP
+Void TComPic::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx )
+{
+  Int iMaxCUWidth   = (Int) ( getPicSym()->getSPS().getMaxCUWidth()  );
+  Int iMaxCuHeight  = (Int) ( getPicSym()->getSPS().getMaxCUHeight() );
+
+  UInt uiMaxTotalCUDepth = getPicSym()->getSPS().getMaxTotalCUDepth(); 
+  Int iBaseUnitWidth  = iMaxCUWidth >> uiMaxTotalCUDepth;
+  Int iBaseUnitHeight = iMaxCUWidth >> uiMaxTotalCUDepth;
+
+  Int iNumCuInWidth   = getPicYuvRec()->getWidth(COMPONENT_Y) / iMaxCUWidth;
+  iNumCuInWidth      += ( getPicYuvRec()->getWidth(COMPONENT_Y) % iMaxCUWidth ) ? 1 : 0;
+
+
+  Int iCuX            = iX / iMaxCUWidth;
+  Int iCuY            = iY / iMaxCuHeight;
+  Int iBaseX          = ( iX - iCuX * iMaxCUWidth  ) / iBaseUnitWidth;
+  Int iBaseY          = ( iY - iCuY * iMaxCuHeight ) / iBaseUnitHeight;
+  Int iCuSizeInBases  = iMaxCuHeight                 / iBaseUnitWidth;
+
+  riCuAddr            = iCuY   * iNumCuInWidth + iCuX;
+  Int iRastPartIdx    = iBaseY * iCuSizeInBases  + iBaseX;
+  riAbsZorderIdx      = g_auiRasterToZscan[ iRastPartIdx ];
+}
+#endif
 Void TComPic::compressMotion(Int scale)
 #else
 Void TComPic::compressMotion()
@@ -282,7 +307,7 @@ TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Boo
   Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag ); 
   return getPicYuv( layerIdInNuh, poc, recon );
 }
-#if H_3D_ARP
+#if NH_3D_ARP
 TComList<TComPic*>* TComPicLists::getPicList( Int layerIdInNuh )
 {
   TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin();

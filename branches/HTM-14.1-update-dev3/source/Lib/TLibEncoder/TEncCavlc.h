@@ -125,7 +125,7 @@ public:
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if H_3D_ARP
+#if NH_3D_ARP
   Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if H_3D_IC
@@ -135,7 +135,7 @@ public:
   Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( ComponentID /*component*/, UInt /*code*/ ) {printf("Not supported\n"); assert(0);}

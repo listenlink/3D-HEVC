@@ -49,9 +49,6 @@
 #include "TComRdCost.h"
 #include "TComPattern.h"
 
-#if H_3D_ARP
-#include "TComYuv.h"
-#endif
 #if H_3D
 #include <algorithm>
 #include <vector>
@@ -64,7 +61,7 @@ class TComTU; // forward declaration
 
 static const UInt NUM_MOST_PROBABLE_MODES=3;
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 typedef struct _DBBPTmpData
 {
   TComMv      acMvd[2][2];          // for two segments and two lists
@@ -175,7 +172,7 @@ private:
 #if NH_3D_SPIVMP
   Bool*         m_pbSPIVMPFlag;       ///< array of sub-PU IVMP flags to indicate whehter a block uses sub-PU IVMP ///< 0: non-SPIVMP; 1: SPIVMP
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   UChar*        m_puhARPW;
 #endif
 #if H_3D_IC
@@ -192,7 +189,7 @@ private:
   Pel           m_apDmmPredictor[2];
 #endif
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool*         m_pbDBBPFlag;        ///< array of DBBP flags
   DbbpTmpData   m_sDBBPTmpData;
 #endif
@@ -248,7 +245,7 @@ protected:
 
 
   /// compute scaling factor from POC difference
-#if !H_3D_ARP
+#if !NH_3D_ARP
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 #endif
 
@@ -265,7 +262,8 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
   // -------------------------------------------------------------------------------------------------------------------
-#if H_3D_ARP
+#if NH_3D_ARP
+  /// compute scaling factor from POC difference
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 #endif 
   Void          create                ( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
@@ -316,6 +314,10 @@ public:
   Void          getPosInPic           ( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY ) const;
 #endif
 
+#if NH_3D_ARP
+  Void          setSlice              ( TComSlice* pcSlice)     { m_pcSlice = pcSlice;       }
+  Void          setPic                ( TComDataCU* pcCU  )     { m_pcPic              = pcCU->getPic(); }
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
@@ -326,7 +328,7 @@ public:
   Void          setPartSizeSubParts   ( PartSize eMode, UInt uiAbsPartIdx, UInt uiDepth );
   Void          setCUTransquantBypassSubParts( Bool flag, UInt uiAbsPartIdx, UInt uiDepth );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Pel*          getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt& uiDepthStride);
 #endif
   
@@ -350,7 +352,7 @@ public:
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool*         getDBBPFlag           ()                        { return m_pbDBBPFlag;               }
   Bool          getDBBPFlag           ( UInt uiIdx )            { return m_pbDBBPFlag[uiIdx];        }
   Void          setDBBPFlag           ( UInt uiIdx, Bool b )    { m_pbDBBPFlag[uiIdx] = b;           }
@@ -451,7 +453,7 @@ public:
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseCtu, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
-#if NH_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
   template<typename T>
   Void          setSubPartT           ( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 #endif
@@ -479,7 +481,9 @@ public:
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
 #if NH_3D_NBDV
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
+#if H_3D_VSP || NH_3D_DBBP
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth);
+#endif
   DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                 }
   DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];          }
 #endif
@@ -530,12 +534,11 @@ public:
     , Bool bICFlag
     );   
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   UChar*        getARPW            ()                        { return m_puhARPW;               }
   UChar         getARPW            ( UInt uiIdx )            { return m_puhARPW[uiIdx];        }
   Void          setARPW            ( UInt uiIdx, UChar w )   { m_puhARPW[uiIdx] = w;           }
   Void          setARPWSubParts    ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
-  Double        getARPWFactor      ( UInt uiIdx );
 #endif
 #if H_3D_IC
   Bool*         getICFlag          ()                        { return m_pbICFlag;               }
@@ -729,7 +732,7 @@ public:
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
-#if H_3D_ARP
+#if NH_3D_ARP
   UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
 #endif  
 

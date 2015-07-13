@@ -1372,9 +1372,9 @@ TAppComCamPara::setDispCoeff( UInt uiFrameId, Int iViewIdx )
   UInt uiFrame = m_uiFirstFrameId + uiFrameId;
   Int  iSourceViewNum = m_aiBaseViews[ iViewIdx ];
   Double dBaseLine = 0.0;
-  Double dFL1, dCS1, dCP1, dZN1, dZF1; 
-  Bool bInterpolated;
-  double dPos[3];
+  Double dFL1 = 1.0, dCS1 = 1.0, dCP1 = 1.0, dZN1 = 1.0, dZF1 = 1.0;
+  Bool bInterpolated = false;
+  double dPos[3] = {0.0, 0.0, 0.0};
 
   if( m_iNumberOfBaseViews == 3 )
   {

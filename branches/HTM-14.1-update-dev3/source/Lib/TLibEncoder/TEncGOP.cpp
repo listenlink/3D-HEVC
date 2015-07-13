@@ -1473,21 +1473,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if NH_3D_NBDV
     pcSlice->setDefaultRefView();
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
     //GT: This seems to be broken when layerId in vps is not equal to layerId in nuh
     pcSlice->setARPStepNum(m_ivPicLists);
-    if(pcSlice->getARPStepNum() > 1)
-    {
-      for(Int iLayerId = 0; iLayerId < getLayerId(); iLayerId ++ )
-      {
-        Int  iViewIdx =   pcSlice->getVPS()->getViewIndex(iLayerId);
-        Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
-        if( iViewIdx<getViewIndex() && !bIsDepth )
-        {
-          pcSlice->setBaseViewRefPicList( m_ivPicLists->getPicList( iLayerId ), iViewIdx );
-        }
-      }
-    }
 #endif
 #if H_3D_IC
     pcSlice->setICEnableCandidate( m_aICEnableCandidate );         

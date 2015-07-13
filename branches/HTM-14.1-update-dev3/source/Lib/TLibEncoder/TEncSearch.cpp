@@ -3883,14 +3883,14 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
   pcCU->getPartIndexAndSize( iPUIdx, uiAbsPartIdx, iWidth, iHeight );
   UInt uiDepth = pcCU->getDepth( uiAbsPartIdx );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   DbbpTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();
   if( pcCU->getDBBPFlag(0) )
   {
     AOF( uiAbsPartIdx == 0 );
     AOF( iPUIdx == 0 );
     AOF( pcCU->getPartitionSize(0) == SIZE_2Nx2N );
-    AOF( pDBBPTmpData->eVirtualPartSize != SIZE_NONE );
+    AOF( pDBBPTmpData->eVirtualPartSize != NUMBER_OF_PART_SIZES );
     
     // temporary change of partition size for candidate derivation
     pcCU->setPartSizeSubParts( pDBBPTmpData->eVirtualPartSize, 0, pcCU->getDepth(0));
@@ -3915,7 +3915,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
 
   PartSize partSize = pcCU->getPartitionSize( 0 );
-#if H_3D_DBBP
+#if NH_3D_DBBP
   if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && partSize != SIZE_2Nx2N && pcCU->getWidth( 0 ) <= 8 && pcCU->getDBBPFlag(0) == false )
 #else
   if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && partSize != SIZE_2Nx2N && pcCU->getWidth( 0 ) <= 8 )
@@ -3977,7 +3977,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 
   xRestrictBipredMergeCand( pcCU, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   if( pcCU->getDBBPFlag(0) )
   {
     // reset to 2Nx2N for actual motion search
@@ -4024,7 +4024,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     else
 #endif
 #if NH_3D_VSP
-#if H_3D_DBBP
+#if NH_3D_DBBP
       if ( vspFlag[uiMergeCand] && !pcCU->getDBBPFlag(0) )
 #else
       if ( vspFlag[uiMergeCand] )
@@ -4549,7 +4549,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 #if AMP_MRG
     } // end if bTestNormalMC
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
     // test merge mode for DBBP (2Nx2N)
     if ( pcCU->getPartitionSize( uiPartAddr ) != SIZE_2Nx2N || pcCU->getDBBPFlag(0) )
 #else
@@ -4647,7 +4647,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
         else
 #endif
 #if NH_3D_VSP
-#if H_3D_DBBP
+#if NH_3D_DBBP
         if ( vspFlag[uiMRGIndex] && !pcCU->getDBBPFlag(uiPartAddr) )
 #else
         if ( vspFlag[uiMRGIndex] )
@@ -4748,14 +4748,14 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
   if (!bFilled)
   {
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
     DbbpTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();
     if( pcCU->getDBBPFlag(0) )
     {
       AOF( uiPartAddr == 0 );
       AOF( uiPartIdx == 0 );
       AOF( pcCU->getPartitionSize(0) == SIZE_2Nx2N );
-      AOF( pDBBPTmpData->eVirtualPartSize != SIZE_NONE );
+      AOF( pDBBPTmpData->eVirtualPartSize != NUMBER_OF_PART_SIZES );
       AOF( iRoiWidth == iRoiHeight );
       
       // temporary change of partition size for candidate derivation
@@ -4780,7 +4780,7 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
 #endif
 
     pcCU->fillMvpCand( uiPartIdx, uiPartAddr, eRefPicList, iRefIdx, pcAMVPInfo );
-#if H_3D_DBBP
+#if NH_3D_DBBP
     if( pcCU->getDBBPFlag(0) )
     {
       // restore 2Nx2N partitioning for motion estimation
@@ -5008,12 +5008,16 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   // prediction pattern
   if ( pcCU->getSlice()->testWeightPred() && pcCU->getSlice()->getSliceType()==P_SLICE )
   {
-    xPredInterBlk( COMPONENT_Y, pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, true, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) );
+    xPredInterBlk( COMPONENT_Y, pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, true, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) 
+#if NH_3D_ARP
+      , false //add this for IC, otherwise, it could be removed
+#endif
+      );
   }
   else
   {
     xPredInterBlk( COMPONENT_Y, pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) 
-#if H_3D_ARP
+#if NH_3D_ARP
       , false
 #endif
 #if H_3D_IC
@@ -5782,7 +5786,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, true );
-#if H_3D_ARP
+#if NH_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
 #if H_3D_IC
@@ -7098,7 +7102,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt& ruiBits )
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, true);
-#if H_3D_ARP
+#if NH_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
 #if H_3D_IC
@@ -7125,13 +7129,13 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt& ruiBits )
 #if H_3D_DIM_SDC
     m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0  );
 #endif
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
 #endif
-#if H_3D
+#if NH_3D_DBBP
     m_pcEntropyCoder->encodeDBBPFlag( pcCU, 0, true );
 #endif
 
