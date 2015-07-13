@@ -320,6 +320,7 @@ TComPicYuv::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorder
   Int iRastPartIdx    = iBaseY * iCuSizeInBases  + iBaseX;
   riAbsZorderIdx      = g_auiRasterToZscan[ iRastPartIdx ];
 }
+
 #endif
 
 #if H_3D

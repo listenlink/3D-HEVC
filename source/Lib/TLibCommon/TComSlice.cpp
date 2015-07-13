@@ -1995,7 +1995,7 @@ TComVPS::TComVPS()
     {
       m_dimensionId[i][j] = 0;
     }
-#if H_3D_ARP
+#if NH_3D_ARP
 #endif
   }  
 #endif
@@ -2031,8 +2031,8 @@ Int TComVPS::getNumScalabilityTypes() const
 
 Int TComVPS::scalTypeToScalIdx( ScalabilityType scalType ) const
 {
-  assert( scalType >= 0 && scalType <= MAX_NUM_SCALABILITY_TYPES ); 
-  assert( scalType == MAX_NUM_SCALABILITY_TYPES || getScalabilityMaskFlag( scalType ) );
+  assert( (Int)scalType >= 0 && (Int)scalType <= MAX_NUM_SCALABILITY_TYPES );
+  assert( (Int)scalType == MAX_NUM_SCALABILITY_TYPES || getScalabilityMaskFlag( scalType ) );
   Int scalIdx = 0; 
   for( Int curScalType = 0; curScalType < scalType; curScalType++ )
   {
@@ -3620,7 +3620,7 @@ Void TComSlice::setDefaultRefView()
 }
 #endif
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 {
   Bool tempRefPicInListsFlag = false;
@@ -3687,6 +3687,19 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
         {
           m_arpRefPicAvailable[eRefPicList][layerIdInNuh] = false;
         }
+      }
+    }
+  }
+  if( m_nARPStepNum > 1)
+  {
+    for(Int i = 0; i < getNumActiveRefLayerPics(); i ++ )
+    {
+      Int  iLayerId = getRefPicLayerId( i );
+      Int  iViewIdx =   getVPS()->getViewIndex(iLayerId);
+      Bool bIsDepth = ( getVPS()->getDepthId  ( iLayerId ) == 1 );
+      if( iViewIdx<getViewIndex() && !bIsDepth )
+      {
+        setBaseViewRefPicList( ivPicLists->getPicList( iLayerId ), iViewIdx );
       }
     }
   }

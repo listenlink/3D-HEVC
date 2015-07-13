@@ -76,6 +76,21 @@
 #define NH_3D_SPIVMP                      1
 #define NH_3D_INTEGER_MV_DEPTH            1
 #define NH_3D_TEXT_MERGE                  1
+#define NH_3D_DBBP                         1
+#define BUF_FIX 1
+#define NH_3D_ARP                         0  // Advanced residual prediction (ARP), JCT3V-D0177
+                                              // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
+                                              // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
+                                              // LGE_ARP_CTX_F0161                JCT3V-F0161
+                                              // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
+                                              // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053 
+                                              // MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085  Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
+                                              // QC_I0051_ARP_SIMP          
+                                              // SHARP_ARP_CHROMA_I0104     
+                                              // MTK_I0072_IVARP_SCALING_FIX
+                                              // SEC_ARP_VIEW_REF_CHECK_J0037    Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
+                                              // SEC_ARP_REM_ENC_RESTRICT_K0035    Removal of encoder restriction of ARP, JCT3V-K0035
+
 #endif
 
 #if H_3D
@@ -104,18 +119,6 @@
                                               // MTK_NBDV_TN_FIX_E0172     fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
                                               // MTK_TEXTURE_MRGCAND_BUGFIX_E0182  Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
                                               // LGE_SIMP_DISP_AVAIL_J0041    // Use 2 status for disparity availability - DISP_AVAILABLE and DISP_NONE
-#define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
-                                              // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
-                                              // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
-                                              // LGE_ARP_CTX_F0161                JCT3V-F0161
-                                              // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
-                                              // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053 
-                                              // MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085  Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
-                                              // QC_I0051_ARP_SIMP          
-                                              // SHARP_ARP_CHROMA_I0104     
-                                              // MTK_I0072_IVARP_SCALING_FIX
-                                              // SEC_ARP_VIEW_REF_CHECK_J0037    Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
-                                              // SEC_ARP_REM_ENC_RESTRICT_K0035    Removal of encoder restriction of ARP, JCT3V-K0035
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
@@ -300,7 +303,7 @@
 #define IDV_CANDS                         2
 #endif
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
-#if H_3D_ARP
+#if NH_3D_ARP
 #define H_3D_ARP_WFNR                     3
 #endif
 ///// ***** DEPTH INTRA MODES *********
@@ -324,7 +327,7 @@
 #define IC_LOW_LATENCY_ENCODING_THRESHOLD 0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
 #endif
 ///// ***** DEPTH BASED BLOCK PARTITIONING *********
-#if H_3D_DBBP
+#if NH_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
 #define DBBP_PACK_MODE               SIZE_2NxN
 #endif

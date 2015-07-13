@@ -120,7 +120,7 @@ private:
   Void  parseDeltaDC         ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
   Void  parseSDCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void parseDBBPFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
@@ -138,7 +138,7 @@ public:
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex );
-#if H_3D_ARP
+#if NH_3D_ARP
   Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_IC
@@ -189,7 +189,7 @@ private:
 #endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-#if H_3D_ARP
+#if NH_3D_ARP
   ContextModel3DBuffer m_cCUPUARPWSCModel;
 #endif
 #if H_3D_IC
@@ -239,7 +239,7 @@ private:
 #if H_3D_DIM_SDC  
   ContextModel3DBuffer m_cSDCFlagSCModel;
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   ContextModel3DBuffer m_cDBBPFlagSCModel;
 #endif
 

@@ -181,6 +181,9 @@ public:
   Bool          getPicOutputFlag()       { return m_bPicOutputFlag ;  }
 #endif
 #if NH_3D
+#if NH_3D_ARP
+  Void          getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
+#endif
   Void          compressMotion(Int scale); 
 #else   
   Void          compressMotion();
@@ -247,7 +250,7 @@ private:
 public: 
   Void        push_back( TComList<TComPic*>* list ) { m_lists.push_back( list );   }
   Int         size     ()                           { return (Int) m_lists.size(); } 
-#if H_3D_ARP
+#if NH_3D_ARP
   TComList<TComPic*>*  getPicList   ( Int layerIdInNuh );
 #endif
   TComPic*    getPic   ( Int layerIdInNuh,              Int poc );    
