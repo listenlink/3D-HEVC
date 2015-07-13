@@ -1831,7 +1831,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
 
 #if NH_3D_VSP
-#if !H_3D_ARP
+#if !NH_3D_ARP
   Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
   memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
 #if NH_3D_MLC
@@ -1853,7 +1853,6 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
     , numValidMergeCand 
     );
 #endif
-
 #endif
 #else
 #if NH_3D_MLC
@@ -1929,21 +1928,17 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
     rpcTempCU->getDvInfo(0) = cOrigDisInfo;
     rpcTempCU->setDvInfoSubParts(cOrigDisInfo, 0, uhDepth );
+#if NH_3D_VSP
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-#if H_3D_SPIVMP
-    Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
-    memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
-    TComMvField*  pcMvFieldSP;
-    UChar* puhInterDirSP;
-    pcMvFieldSP = new TComMvField[rpcTempCU->getPic()->getPicSym()->getNumPartition()*2]; 
-    puhInterDirSP = new UChar[rpcTempCU->getPic()->getPicSym()->getNumPartition()]; 
 #endif
-#if H_3D
+#if NH_3D
+#if NH_3D_MLC
     rpcTempCU->initAvailableFlags();
+#endif
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
     rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
       , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand 
@@ -1953,7 +1948,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if NH_3D_VSP
       , vspFlag
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
       , bSPIVMPFlag
 #endif
       , numValidMergeCand 
@@ -2225,12 +2220,12 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
     }
   }
   DEBUG_STRING_APPEND(sDebug, bestStr)
+#if NH_3D_ARP
+ }
+#endif
 #if NH_3D_SPIVMP
  delete[] pcMvFieldSP;
  delete[] puhInterDirSP;
-#endif
-#if NH_3D_ARP
- }
 #endif
 }
 
