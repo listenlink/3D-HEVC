@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
@@ -44,22 +44,21 @@
 //! \ingroup TLibCommon
 //! \{
 
+
 // ====================================================================================================================
 // Constants
 // ====================================================================================================================
 
-#define MAX_SAO_TRUNCATED_BITDEPTH     10 
+#define MAX_SAO_TRUNCATED_BITDEPTH     10
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-extern UInt g_saoMaxOffsetQVal[NUM_SAO_COMPONENTS]; 
 
-#if SAO_SGN_FUNC
-template <typename T> int sgn(T val) 
+template <typename T> Int sgn(T val)
 {
   return (T(0) < val) - (val < T(0));
 }
-#endif
 
 class TComSampleAdaptiveOffset
 {
@@ -67,27 +66,24 @@ public:
   TComSampleAdaptiveOffset();
   virtual ~TComSampleAdaptiveOffset();
   Void SAOProcess(TComPic* pDecPic);
-  Void create( Int picWidth, Int picHeight, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth );
+  Void create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth, UInt lumaBitShift, UInt chromaBitShift );
   Void destroy();
   Void reconstructBlkSAOParams(TComPic* pic, SAOBlkParam* saoBlkParams);
   Void PCMLFDisableProcess (TComPic* pcPic);
+  static Int getMaxOffsetQVal(const Int channelBitDepth) { return (1<<(std::min<Int>(channelBitDepth,MAX_SAO_TRUNCATED_BITDEPTH)-5))-1; } //Table 9-32, inclusive
+
 protected:
-  Void offsetBlock(Int compIdx, Int typeIdx, Int* offset, Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
+  Void offsetBlock(const Int channelBitDepth, Int typeIdx, Int* offset, Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
                   , Bool isLeftAvail, Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail);
-  Pel* getPicBuf(TComPicYuv* pPicYuv, Int compIdx);
-  Void invertQuantOffsets(Int compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets);
-  Void reconstructBlkSAOParam(SAOBlkParam& recParam, std::vector<SAOBlkParam*>& mergeList);
-  Int  getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, std::vector<SAOBlkParam*>& mergeList);
-  Void offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic);
+  Void invertQuantOffsets(ComponentID compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets);
+  Void reconstructBlkSAOParam(SAOBlkParam& recParam, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES]);
+  Int  getMergeList(TComPic* pic, Int ctuRsAddr, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES]);
+  Void offsetCTU(Int ctuRsAddr, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic);
   Void xPCMRestoration(TComPic* pcPic);
   Void xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth );
-  Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, TextType ttText);
+  Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID);
 protected:
-  UInt m_offsetStepLog2[NUM_SAO_COMPONENTS]; //offset step  
-  Int* m_offsetClip[NUM_SAO_COMPONENTS]; //clip table for fast operation
-#if !SAO_SGN_FUNC
-  Short* m_sign; //sign table for fast operation
-#endif
+  UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step
   TComPicYuv*   m_tempPicYuv; //temporary buffer
   Int m_picWidth;
   Int m_picHeight;
@@ -96,17 +92,14 @@ protected:
   Int m_numCTUInWidth;
   Int m_numCTUInHeight;
   Int m_numCTUsPic;
-  
-  
+
+
   Int m_lineBufWidth;
   Char* m_signLineBuf1;
   Char* m_signLineBuf2;
+  ChromaFormat m_chromaFormatIDC;
 private:
-  Bool m_picSAOEnabled[NUM_SAO_COMPONENTS];
-  Int*   m_offsetClipTable[NUM_SAO_COMPONENTS];
-#if !SAO_SGN_FUNC
-  Short* m_signTable;
-#endif
+  Bool m_picSAOEnabled[MAX_NUM_COMPONENT];
 };
 
 //! \}
