@@ -5108,7 +5108,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
 
   m_pcRdCost->setPredictor  ( *pcMvPred );
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   if( pcCU->getSlice()->getIsDepth() )
   {
     m_pcRdCost->setCostScale  ( 0 );
@@ -5117,7 +5117,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   {
 #endif
     m_pcRdCost->setCostScale  ( 2 );    
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   }
 #endif
 
@@ -5144,7 +5144,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   }
 
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   if( ! pcCU->getSlice()->getIsDepth() )
   {
 #endif
@@ -5157,12 +5157,12 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   rcMv <<= 2;
   rcMv += (cMvHalf <<= 1);
   rcMv +=  cMvQter;
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   }
 #endif
 
   UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   if( pcCU->getSlice()->getIsDepth() )
   {
     ruiCost += m_pcRdCost->getCost( uiMvBits );
@@ -5176,7 +5176,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
 {
   Int  iMvShift = 2;
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   if( pcCU->getSlice()->getIsDepth() )
   {
     iMvShift = 0;
@@ -5334,7 +5334,7 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
 
   UInt uiSearchRange = m_iSearchRange;
   pcCU->clipMv( rcMv );
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   if( ! pcCU->getSlice()->getIsDepth() )
 #endif
   rcMv >>= 2;
@@ -5354,12 +5354,12 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
     {
       TComMv cMv = m_acMvPredictors[index];
       pcCU->clipMv( cMv );
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
       if( ! pcCU->getSlice()->getIsDepth() )
       {      
 #endif
         cMv >>= 2;
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
       }
 #endif
 

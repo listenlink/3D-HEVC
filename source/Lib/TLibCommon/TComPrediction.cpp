@@ -1919,11 +1919,11 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   Int     xFrac  = mv->getHor() & ((1<<shiftHor)-1);
   Int     yFrac  = mv->getVer() & ((1<<shiftVer)-1);
 
-#if H_3D_IC
+#if NH_3D_INTEGER_MV_DEPTH
   if( cu->getSlice()->getIsDepth() )
   {
     refOffset = mv->getHor() + mv->getVer() * refStride;
-    ref       = refPic->getLumaAddr( cu->getAddr(), cu->getZorderIdxInCU() + partAddr ) + refOffset;
+    ref       = refPic->getAddr(compID, cu->getCtuRsAddr(), cu->getZorderIdxInCtu() + partAddr ) + refOffset;
     xFrac     = 0;
     yFrac     = 0;
   }
