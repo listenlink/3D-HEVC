@@ -162,7 +162,7 @@ Void TDecCu::decodeCtu( TComDataCU* pCtu, Bool& isLastCtuOfSliceSegment )
  */
 Void TDecCu::decompressCtu( TComDataCU* pCtu )
 {
-#if !H_3D_IV_MERGE
+#if !NH_3D_IV_MERGE
   xDecompressCU( pCtu, 0,  0 );
 #endif
 }
