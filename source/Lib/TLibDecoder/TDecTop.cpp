@@ -291,7 +291,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
 }
 
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 Void
 CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
 {
@@ -1148,24 +1148,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     pcSlice->getTempRefPicLists( m_cListPic, m_refPicSetInterLayer0, m_refPicSetInterLayer1, tempRefPicLists, usedAsLongTerm, numPocTotalCurr);
     pcSlice->setRefPicList     ( tempRefPicLists, usedAsLongTerm, numPocTotalCurr, true ); 
-#if H_3D
+#if NH_3D_NBDV
     pcSlice->setDefaultRefView();
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
     pcSlice->setARPStepNum(m_ivPicLists);
-    if( pcSlice->getARPStepNum() > 1 )
-    {
-      // GT: This seems to be broken, not all nuh_layer_ids are necessarily present
-      for(Int iLayerId = 0; iLayerId < nalu.m_nuhLayerId; iLayerId ++ )
-      {
-        Int  iViewIdx =   pcSlice->getVPS()->getViewIndex(iLayerId);
-        Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
-        if( iViewIdx<getViewIndex() && !bIsDepth )
-        {
-          pcSlice->setBaseViewRefPicList( m_ivPicLists->getPicList( iLayerId ), iViewIdx );
-        }
-      }
-    }
 #endif
 #else
     pcSlice->setRefPicList( m_cListPic, true );
@@ -1173,7 +1160,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
 #if NH_3D
     pcSlice->checkInCompPredRefLayers(); 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 #if H_3D_FCO
     //assert( !getIsDepth() );
 #else
@@ -1270,7 +1257,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cTrQuant.setUseScalingList(false);
   }
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 #if H_3D_FCO
   if( !pcSlice->getIsDepth() && m_pcCamParsCollector )
 #else

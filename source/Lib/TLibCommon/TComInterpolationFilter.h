@@ -44,7 +44,7 @@
 //! \ingroup TLibCommon
 //! \{
 
-#if H_3D_ARP
+#if NH_3D_ARP
 #define NTAPS_LUMA_ARP    2 ///< Number of taps for luma
 #define NTAPS_CHROMA_ARP  2 ///< Number of taps for chroma
 #endif
@@ -62,7 +62,7 @@ class TComInterpolationFilter
 {
   static const TFilterCoeff m_lumaFilter[LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_LUMA];     ///< Luma filter taps
   static const TFilterCoeff m_chromaFilter[CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_CHROMA]; ///< Chroma filter taps
-#if H_3D_ARP
+#if NH_3D_ARP
   static const Short m_lumaFilterARP  [4][NTAPS_LUMA_ARP];     ///< Luma filter taps for ARP
   static const Short m_chromaFilterARP[8][NTAPS_CHROMA_ARP];   ///< Chroma filter taps for ARP
 #endif
@@ -82,23 +82,16 @@ public:
   ~TComInterpolationFilter() {}
 
   Void filterHor(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast, const ChromaFormat fmt, const Int bitDepth 
-#if H_3D_ARP
+#if NH_3D_ARP
     , Bool filterType = false
 #endif
 );
   Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth 
-#if H_3D_ARP
+#if NH_3D_ARP
     , Bool filterType = false
 #endif
 );
 };
-
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
 
 //! \}
 

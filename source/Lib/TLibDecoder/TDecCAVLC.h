@@ -116,7 +116,7 @@ public:
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );
-#if H_3D_ARP 
+#if NH_3D_ARP 
   Void parseARPW            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if NH_3D_IC
@@ -126,7 +126,7 @@ public:
   Void  parseDeltaDC        ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
   Void  parseSDCFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void  parseDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

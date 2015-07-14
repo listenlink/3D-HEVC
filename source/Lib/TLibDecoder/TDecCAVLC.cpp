@@ -1839,7 +1839,7 @@ Void TDecCavlc::parseVPSVUI( const TComVPS* pcVPS, TComVPSVUI* vpsVui )
   }
   else
   {
-    vpsVui->setVpsNumVideoSignalInfoMinus1( pcVPS->getMaxLayersMinus1() - pcVPS->getVpsBaseLayerInternalFlag() ? 0 : 1 ); 
+    vpsVui->setVpsNumVideoSignalInfoMinus1( (pcVPS->getMaxLayersMinus1() - pcVPS->getVpsBaseLayerInternalFlag()) ? 0 : 1 );
   }
 
   std::vector<TComVideoSignalInfo> videoSignalInfos; 
@@ -2804,7 +2804,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     if (!pcSlice->isIntra())
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
       pcSlice->setMaxNumMergeCand(( ( pcSlice->getMpiFlag() || pcSlice->getIvMvPredFlag() || pcSlice->getViewSynthesisPredFlag() ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
 #else
       pcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
@@ -3375,7 +3375,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* /*pcCU*/, UInt& /*ruiMergeIndex*/ 
   assert(0);
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -3399,7 +3399,7 @@ Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 }
 
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void TDecCavlc::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     assert(0);

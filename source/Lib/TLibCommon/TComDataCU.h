@@ -49,9 +49,6 @@
 #include "TComRdCost.h"
 #include "TComPattern.h"
 
-#if H_3D_ARP
-#include "TComYuv.h"
-#endif
 #if H_3D
 #include <algorithm>
 #include <vector>
@@ -64,7 +61,7 @@ class TComTU; // forward declaration
 
 static const UInt NUM_MOST_PROBABLE_MODES=3;
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 typedef struct _DBBPTmpData
 {
   TComMv      acMvd[2][2];          // for two segments and two lists
@@ -166,16 +163,16 @@ private:
   Char*         m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
   Char*         m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
-#if H_3D_NBDV
+#if NH_3D_NBDV
   DisInfo*      m_pDvInfo;
 #endif
-#if H_3D_VSP
+#if NH_3D_VSP
   Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not  ///< 0: non-VSP; 1: VSP
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
   Bool*         m_pbSPIVMPFlag;       ///< array of sub-PU IVMP flags to indicate whehter a block uses sub-PU IVMP ///< 0: non-SPIVMP; 1: SPIVMP
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   UChar*        m_puhARPW;
 #endif
 #if NH_3D_IC
@@ -192,11 +189,11 @@ private:
   Pel           m_apDmmPredictor[2];
 #endif
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool*         m_pbDBBPFlag;        ///< array of DBBP flags
   DbbpTmpData   m_sDBBPTmpData;
 #endif
-#if H_3D
+#if NH_3D_MLC
   Bool          m_bAvailableFlagA1;    ///< A1 available flag
   Bool          m_bAvailableFlagB1;    ///< B1 available flag
   Bool          m_bAvailableFlagB0;    ///< B0 available flag
@@ -219,12 +216,10 @@ private:
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;        ///< sum of partition bins
   Char          m_codedQP;
-#if H_3D
-  DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
-#endif
-#if H_3D_IV_MERGE
-  TComMotionCand  m_mergCands[MRG_IVSHIFT+1];
-  Int           m_baseListidc;
+#if NH_3D_MLC
+  DisInfo         m_cDefaultDisInfo;    ///< Default disparity information for initializing
+  TComMotionCand  m_mergCands[MRG_IVSHIFT+1];   ///< Motion candidates for merge mode
+  Int             m_numSpatialCands;
 #endif
 
   UChar*        m_explicitRdpcmMode[MAX_NUM_COMPONENT]; ///< Stores the explicit RDPCM mode for all TUs belonging to this CU
@@ -234,10 +229,10 @@ protected:
   /// add possible motion vector predictor candidates
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
-#if H_3D_VSP
+#if NH_3D_VSP
   Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount);
 #endif
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int*   ivCandDir, TComMv* ivCandMv, Int* ivCandRefIdx ); 
 #endif
 
@@ -250,13 +245,13 @@ protected:
 
 
   /// compute scaling factor from POC difference
-#if !H_3D_ARP
+#if !NH_3D_ARP
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 #endif
 
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
 
-#if H_3D_VSP
+#if NH_3D_VSP
   Void xSetMvFieldForVSP  ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, Int *shiftLUT, RefPicList refPicList, Int refIdx, Bool isDepth, Int &vspSize );
 #endif
 
@@ -267,7 +262,8 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
   // -------------------------------------------------------------------------------------------------------------------
-#if H_3D_ARP
+#if NH_3D_ARP
+  /// compute scaling factor from POC difference
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 #endif 
   Void          create                ( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
@@ -281,13 +277,13 @@ public:
   Void          initEstData           ( const UInt uiDepth, const Int qp, const Bool bTransquantBypass );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D_NBDV
-  Void          copyDVInfoFrom (TComDataCU* pcCU, UInt uiAbsPartIdx);
+#if NH_3D_NBDV
+  Void          copyDVInfoFrom        (TComDataCU* pcCU, UInt uiAbsPartIdx);
 #endif
 
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx );
   Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList 
-#if H_3D_NBDV
+#if NH_3D_NBDV
   , Bool bNBDV = false
 #endif
 );
@@ -318,6 +314,10 @@ public:
   Void          getPosInPic           ( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY ) const;
 #endif
 
+#if NH_3D_ARP
+  Void          setSlice              ( TComSlice* pcSlice)     { m_pcSlice = pcSlice;       }
+  Void          setPic                ( TComDataCU* pcCU  )     { m_pcPic              = pcCU->getPic(); }
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
@@ -328,7 +328,7 @@ public:
   Void          setPartSizeSubParts   ( PartSize eMode, UInt uiAbsPartIdx, UInt uiDepth );
   Void          setCUTransquantBypassSubParts( Bool flag, UInt uiAbsPartIdx, UInt uiDepth );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Pel*          getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt& uiDepthStride);
 #endif
   
@@ -352,7 +352,7 @@ public:
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Bool*         getDBBPFlag           ()                        { return m_pbDBBPFlag;               }
   Bool          getDBBPFlag           ( UInt uiIdx )            { return m_pbDBBPFlag[uiIdx];        }
   Void          setDBBPFlag           ( UInt uiIdx, Bool b )    { m_pbDBBPFlag[uiIdx] = b;           }
@@ -453,7 +453,7 @@ public:
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseCtu, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
-#if H_3D_VSP
+#if H_3D_VSP || NH_3D_DBBP
   template<typename T>
   Void          setSubPartT           ( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 #endif
@@ -479,61 +479,66 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
-#if H_3D_NBDV
+#if NH_3D_NBDV
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
+#if H_3D_VSP || NH_3D_DBBP
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth);
+#endif
   DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                 }
   DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];          }
 #endif
-#if H_3D_NBDV
+#if NH_3D_NBDV
   Void          xDeriveRightBottomNbIdx(Int &uiLCUIdxRBNb, Int &uiPartIdxRBNb );
   Bool          xCheckSpatialNBDV (TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, IDVInfo* paMvpDvInfo,
                                    UInt uiMvpDvPos
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   , Bool bDepthRefine = false
 #endif
   );
   Bool          xGetColDisMV      ( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
   Void          getDisMvpCandNBDV ( DisInfo* pDInfo
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
    , Bool bDepthRefine = false
 #endif
    ); 
    
+#if NH_3D_IV_MERGE
+  Void          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#endif
+
 #if H_3D
   Void          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 
    Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
 #endif
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT );
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
-#endif //H_3D_NBDV_REF
+#endif //NH_3D_NBDV_REF
 #endif
 #if  H_3D_FAST_TEXTURE_ENCODING
   Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
   Void          getSPPara(Int iPUWidth, Int iPUHeight, Int& iNumSP, Int& iNumSPInOneLine, Int& iSPWidth, Int& iSPHeight);
   Void          getSPAbsPartIdx(UInt uiBaseAbsPartIdx, Int iWidth, Int iHeight, Int iPartIdx, Int iNumPartLine, UInt& ruiPartAddr );
   Void          setInterDirSP( UInt uiDir, UInt uiAbsPartIdx, Int iWidth, Int iHeight );
 #endif
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   Bool          getInterViewMergeCands          ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc, Bool bIsDepth           
 
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     , TComMvField* pcMFieldSP, UChar* puhInterDirSP
 #endif    
     , Bool bICFlag
     );   
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   UChar*        getARPW            ()                        { return m_puhARPW;               }
   UChar         getARPW            ( UInt uiIdx )            { return m_puhARPW[uiIdx];        }
   Void          setARPW            ( UInt uiIdx, UChar w )   { m_puhARPW[uiIdx] = w;           }
   Void          setARPWSubParts    ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
-  Double        getARPWFactor      ( UInt uiIdx );
 #endif
 #if NH_3D_IC
   Bool*         getICFlag          ()                        { return m_pbICFlag;               }
@@ -541,6 +546,8 @@ public:
   Void          setICFlag          ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
   Void          setICFlagSubParts  ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Bool          isICFlagRequired   ( UInt uiAbsPartIdx );
+  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
+#elif NH_3D_VSP
   Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
 #else
   // -------------------------------------------------------------------------------------------------------------------
@@ -653,33 +660,32 @@ public:
 
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
 
-#if H_3D
-  Bool          getAvailableFlagA1() { return m_bAvailableFlagA1;}
-  Bool          getAvailableFlagB1() { return m_bAvailableFlagB1;}
-  Bool          getAvailableFlagB0() { return m_bAvailableFlagB0;}
-  Bool          getAvailableFlagA0() { return m_bAvailableFlagA0;}
-  Bool          getAvailableFlagB2() { return m_bAvailableFlagB2;}
+#if NH_3D_MLC
+  Bool          getAvailableFlagA1() { return m_bAvailableFlagA1;   }
+  Bool          getAvailableFlagB1() { return m_bAvailableFlagB1;   }
+  Bool          getAvailableFlagB0() { return m_bAvailableFlagB0;   }
+  Bool          getAvailableFlagA0() { return m_bAvailableFlagA0;   }
+  Bool          getAvailableFlagB2() { return m_bAvailableFlagB2;   }
   Void          initAvailableFlags() { m_bAvailableFlagA1 = m_bAvailableFlagB1 = m_bAvailableFlagB0 = m_bAvailableFlagA0 = m_bAvailableFlagB2 = 0;  }
   Void          buildMCL(TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
     , Int* vspFlag
 #endif
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
     , Bool* pbSPIVMPFlag
 #endif
     , Int& numValidMergeCand
     );
-  Void          getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1);
-  Void          xGetInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
-#else
+  Void          xGetInterMergeCandidates      ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
+#if NH_3D_SPIVMP
+  , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
+#endif
+  , Int& numValidMergeCand, Int mrgCandIdx = -1 );
+#endif
   Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
-#endif
-#if H_3D_SPIVMP
-                                            , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
-#endif
 
-#if H_3D_VSP
-#if H_3D_SPIVMP
+#if NH_3D_VSP
+#if NH_3D_SPIVMP
   Bool*         getSPIVMPFlag        ()                        { return m_pbSPIVMPFlag;          }
   Bool          getSPIVMPFlag        ( UInt uiIdx )            { return m_pbSPIVMPFlag[uiIdx];   }
   Void          setSPIVMPFlag        ( UInt uiIdx, Bool n )     { m_pbSPIVMPFlag[uiIdx] = n;      }
@@ -722,7 +728,7 @@ public:
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
-#if H_3D_ARP
+#if NH_3D_ARP
   UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
 #endif  
 

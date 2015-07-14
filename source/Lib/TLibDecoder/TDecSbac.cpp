@@ -72,7 +72,7 @@ TDecSbac::TDecSbac()
 #endif
 , m_cCUMergeFlagExtSCModel                   ( 1,             1,                      NUM_MERGE_FLAG_EXT_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel                    ( 1,             1,                      NUM_MERGE_IDX_EXT_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_ARP
+#if NH_3D_ARP
 , m_cCUPUARPWSCModel          ( 1,             1,               NUM_ARPW_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if NH_3D_IC
@@ -118,7 +118,7 @@ TDecSbac::TDecSbac()
 #if H_3D_DIM_SDC
 , m_cSDCFlagSCModel                  ( 1,             1,  NUM_SDC_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
 , m_cDBBPFlagSCModel             ( 1,             1,                 DBBP_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 
@@ -163,7 +163,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
-#if H_3D_ARP
+#if NH_3D_ARP
   m_cCUPUARPWSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_ARPW );
 #endif
 #if NH_3D_IC
@@ -209,7 +209,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 #if H_3D_DIM_SDC
   m_cSDCFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_SDC_FLAG );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   m_cDBBPFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
@@ -240,9 +240,6 @@ Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
   m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
   m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
 #endif
-#if H_3D_ARP
-  m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
-#endif
 #if H_3D_DIM
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
@@ -255,9 +252,6 @@ Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 #endif
 #if H_3D_DIM_SDC
   m_cSDCFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
-#endif
-#if H_3D_DBBP
-  m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
 
@@ -2416,22 +2410,19 @@ Void TDecSbac::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
   }
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  UInt uiMaxW = pcCU->getSlice()->getARPStepNum() - 1;
   UInt uiW = 0;
   UInt uiOffset = pcCU->getCTXARPWFlag(uiAbsPartIdx);
   UInt uiCode = 0;
 
-  assert ( uiMaxW > 0 );
-
-  m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 0 + uiOffset ) );
+  m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 0 + uiOffset ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__ARP_FLAG));
 
   uiW = uiCode;
   if( 1 == uiW )   
   {
-    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
+    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 2 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__ARP_FLAG));
     uiW += ( 1 == uiCode ? 1 : 0 );
   }
 #if H_MV_ENC_DEC_TRAC
@@ -2538,7 +2529,7 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   AOF( pcCU->getSlice()->getDepthBasedBlkPartFlag() );
@@ -2546,11 +2537,11 @@ Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   UInt uiSymbol = 0;
   
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__DBBP_FLAG) );
   DTRACE_CU("dbbp_flag", uiSymbol)
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   AOF( ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N );
-  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - uiDepth ) << 1 ) ) >> 4;
   pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx, 0, uiDepth);
   pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx+uiPUOffset, 1, uiDepth);
 }

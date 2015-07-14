@@ -2593,7 +2593,7 @@ private:
 #if NH_3D_TMVP
   Int        m_aiAlterRefIdx   [2]; 
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   Bool       m_arpRefPicAvailable[2][MAX_NUM_LAYERS];
   TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
   UInt        m_nARPStepNum; 
@@ -2705,20 +2705,19 @@ public:
   Int                         getInCmpRefViewIdcs( Int i )             const         { return m_inCmpRefViewIdcs  [i];                               }
   Int                         getNumCurCmpLIds( )                      const         { return (Int) m_inCmpRefViewIdcs.size();                       }
   TComPic*                    getIvPic( Bool depthFlag, Int viewIndex) const         { return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ];    }
-#endif                                                                                                                                          
+#endif                                                                                                                                               
 #if NH_3D                                                                                                                                             
   TComPic*                    getTexturePic       ()                                 { return  m_ivPicsCurrPoc[0][ m_viewIndex ];                    }
-#endif                                                                                                                                               
-#if NH_3D_IC
+#endif                            
+#if NH_3D_IC                                                                                                                                          
   Void                        setApplyIC( Bool b )                                   { m_bApplyIC = b;                                               }
   Bool                        getApplyIC()                                           { return m_bApplyIC;                                            }
-  Void                        xSetApplyIC();
-  Void                        xSetApplyIC(Bool bUseLowLatencyICEnc);
-
+  Void                        xSetApplyIC();                                                                                                         
+  Void                        xSetApplyIC(Bool bUseLowLatencyICEnc);                                                                                 
   Void                        setIcSkipParseFlag( Bool b )                           { m_icSkipParseFlag = b;                                        }
   Bool                        getIcSkipParseFlag()                                   { return m_icSkipParseFlag;                                     }
 #endif                                                                                                                                               
-#if H_3D_ARP                                                                                                                                         
+#if NH_3D_ARP                                                                                                                                         
   Void                        setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic; }                  
   Void                        setARPStepNum( TComPicLists*ivPicLists );                                                                              
   TComPic*                    getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )     { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
@@ -2925,7 +2924,7 @@ public:
   Void                        setAlterRefIdx          ( RefPicList e, Int i )        { m_aiAlterRefIdx[e]    = i;                                    }
   Int                         getAlterRefIdx          ( RefPicList e )               { return  m_aiAlterRefIdx[e];                                   }
 #endif                                                                                                                                               
-#if H_3D_ARP                                                                                                                                         
+#if NH_3D_ARP                                                                                                                                         
   Int                         getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];                                  }
   Void                        setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;                                   }
   Bool                        getArpRefPicAvailable  ( RefPicList e, Int viewIdx)    { return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }
@@ -3073,6 +3072,14 @@ public:
 
   Int                         getMpiSubPbSize           ( )                          { return m_mpiSubPbSize           ;                             };
   Int                         getSubPbSize              ( )                          { return m_subPbSize              ;                             };
+#if NH_3D_NBDV
+  Int                         getDefaultRefViewIdx()                                 { return m_iDefaultRefViewIdx;                                  }
+  Void                        setDefaultRefViewIdx(Int iViewIdx)                     { m_iDefaultRefViewIdx = iViewIdx;                              }
+
+  Bool                        getDefaultRefViewIdxAvailableFlag()                    { return m_bDefaultRefViewIdxAvailableFlag;                     }
+  Void                        setDefaultRefViewIdxAvailableFlag(Bool bViewIdx)       { m_bDefaultRefViewIdxAvailableFlag = bViewIdx;                 }
+  Void                        setDefaultRefView( );
+#endif
 #endif
   // Inference 
   Bool                        inferPocMsbValPresentFlag();
