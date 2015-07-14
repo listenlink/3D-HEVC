@@ -486,25 +486,26 @@ Void TComYuv::addClipPartLuma( Int bitDepth, TComYuv* pcYuvSrc0, TComYuv* pcYuvS
   }
 }
 
-#if H_3D_ARP
-Void TComYuv::addARP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool bClip )
+#if NH_3D_ARP
+Void TComYuv::addARP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool bClip, const BitDepths &clipBitDepths )
 {
-  addARPLuma   ( pcYuvSrc0, pcYuvSrc1, uiAbsPartIdx, uiWidth   , uiHeight    , bClip );
-  addARPChroma ( pcYuvSrc0, pcYuvSrc1, uiAbsPartIdx, uiWidth>>1, uiHeight>>1 , bClip );
+  addARPLuma   ( pcYuvSrc0, pcYuvSrc1, uiAbsPartIdx, uiWidth   , uiHeight    , bClip , clipBitDepths);
+  addARPChroma ( pcYuvSrc0, pcYuvSrc1, uiAbsPartIdx, uiWidth>>1, uiHeight>>1 , bClip , clipBitDepths);
 }
 
-Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool bClip )
+Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool bClip, const BitDepths &clipBitDepths )
 {
   Int x, y;
 
-  Pel* pSrc0 = pcYuvSrc0->getLumaAddr( uiAbsPartIdx );
-  Pel* pSrc1 = pcYuvSrc1->getLumaAddr( uiAbsPartIdx );
-  Pel* pDst  = getLumaAddr( uiAbsPartIdx );
+  Pel* pSrc0 = pcYuvSrc0->getAddr( COMPONENT_Y, uiAbsPartIdx );
+  Pel* pSrc1 = pcYuvSrc1->getAddr( COMPONENT_Y, uiAbsPartIdx );
+  Pel* pDst  = getAddr( COMPONENT_Y, uiAbsPartIdx );
 
-  UInt iSrc0Stride = pcYuvSrc0->getStride();
-  UInt iSrc1Stride = pcYuvSrc1->getStride();
-  UInt iDstStride  = getStride();
-  Int iIFshift = IF_INTERNAL_PREC - g_bitDepthY;
+  UInt iSrc0Stride = pcYuvSrc0->getStride(COMPONENT_Y);
+  UInt iSrc1Stride = pcYuvSrc1->getStride(COMPONENT_Y);
+  UInt iDstStride  = getStride(COMPONENT_Y);
+  const Int clipbd = clipBitDepths.recon[CHANNEL_TYPE_LUMA];
+  Int iIFshift = IF_INTERNAL_PREC - clipbd;
   Int iOffSet  = ( 1 << ( iIFshift - 1 ) ) + IF_INTERNAL_OFFS;
   for ( y = uiHeight-1; y >= 0; y-- )
   {
@@ -513,7 +514,7 @@ Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPart
       pDst[x] = pSrc0[x] + pSrc1[x];
       if( bClip )
       {
-        pDst[x] = ClipY( ( pDst[x] + iOffSet ) >> iIFshift );
+        pDst[x] = Pel(ClipBD<Int>(Int( ( pDst[x] + iOffSet ) >> iIFshift ), clipbd));
       }
     }
     pSrc0 += iSrc0Stride;
@@ -522,22 +523,27 @@ Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPart
   }
 }
 
-Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool bClip )
+Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool bClip, const BitDepths &clipBitDepths )
 {
   Int x, y;
 
-  Pel* pSrcU0 = pcYuvSrc0->getCbAddr( uiAbsPartIdx );
-  Pel* pSrcU1 = pcYuvSrc1->getCbAddr( uiAbsPartIdx );
-  Pel* pSrcV0 = pcYuvSrc0->getCrAddr( uiAbsPartIdx );
-  Pel* pSrcV1 = pcYuvSrc1->getCrAddr( uiAbsPartIdx );
-  Pel* pDstU = getCbAddr( uiAbsPartIdx );
-  Pel* pDstV = getCrAddr( uiAbsPartIdx );
+  Pel* pSrcU0 = pcYuvSrc0->getAddr( COMPONENT_Cb, uiAbsPartIdx );
+  Pel* pSrcU1 = pcYuvSrc1->getAddr( COMPONENT_Cb, uiAbsPartIdx );
+  Pel* pSrcV0 = pcYuvSrc0->getAddr( COMPONENT_Cr, uiAbsPartIdx );
+  Pel* pSrcV1 = pcYuvSrc1->getAddr( COMPONENT_Cr, uiAbsPartIdx );
+  Pel* pDstU = getAddr( COMPONENT_Cb, uiAbsPartIdx );
+  Pel* pDstV = getAddr( COMPONENT_Cr, uiAbsPartIdx );
 
-  UInt  iSrc0Stride = pcYuvSrc0->getCStride();
-  UInt  iSrc1Stride = pcYuvSrc1->getCStride();
-  UInt  iDstStride  = getCStride();
+  UInt  iSrc0StrideCb = pcYuvSrc0->getStride(COMPONENT_Cb);
+  UInt  iSrc1StrideCb = pcYuvSrc1->getStride(COMPONENT_Cb);
+  UInt  iDstStrideCb  = getStride(COMPONENT_Cb);
 
-  Int iIFshift = IF_INTERNAL_PREC - g_bitDepthC;
+  UInt  iSrc0StrideCr = pcYuvSrc0->getStride(COMPONENT_Cr);
+  UInt  iSrc1StrideCr = pcYuvSrc1->getStride(COMPONENT_Cr);
+  UInt  iDstStrideCr  = getStride(COMPONENT_Cr);
+
+  const Int clipbd = clipBitDepths.recon[CHANNEL_TYPE_CHROMA];
+  Int iIFshift = IF_INTERNAL_PREC - clipbd;
   Int iOffSet  = ( 1 << ( iIFshift - 1 ) ) + IF_INTERNAL_OFFS;
 
   for ( y = uiHeight-1; y >= 0; y-- )
@@ -548,17 +554,17 @@ Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPa
       pDstV[x] = pSrcV0[x] + pSrcV1[x];
       if( bClip )
       {
-        pDstU[x] = ClipC( ( pDstU[x] + iOffSet ) >> iIFshift );
-        pDstV[x] = ClipC( ( pDstV[x] + iOffSet ) >> iIFshift );
+        pDstU[x] = Pel(ClipBD<Int>( Int( ( pDstU[x] + iOffSet ) >> iIFshift ), clipbd));
+        pDstV[x] = Pel(ClipBD<Int>( Int( ( pDstV[x] + iOffSet ) >> iIFshift ), clipbd));
       }
     }
 
-    pSrcU0 += iSrc0Stride;
-    pSrcU1 += iSrc1Stride;
-    pSrcV0 += iSrc0Stride;
-    pSrcV1 += iSrc1Stride;
-    pDstU  += iDstStride;
-    pDstV  += iDstStride;
+    pSrcU0 += iSrc0StrideCb;
+    pSrcU1 += iSrc1StrideCb;
+    pSrcV0 += iSrc0StrideCr;
+    pSrcV1 += iSrc1StrideCr;
+    pDstU  += iDstStrideCb;
+    pDstV  += iDstStrideCr;
   }
 }
 
@@ -566,21 +572,23 @@ Void TComYuv::subtractARP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPar
 {
   subtractARPLuma  ( pcYuvSrc0, pcYuvSrc1,  uiAbsPartIdx, uiWidth    , uiHeight    );
 
-  if (uiWidth > 8)
+  if (uiWidth > 8 && pcYuvSrc1->getNumberValidComponents() > 1)
+  {
     subtractARPChroma( pcYuvSrc0, pcYuvSrc1,  uiAbsPartIdx, uiWidth>>1 , uiHeight>>1 );
+}
 }
 
 Void TComYuv::subtractARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight )
 {
   Int x, y;
 
-  Pel* pSrc0 = pcYuvSrc0->getLumaAddr( uiAbsPartIdx );
-  Pel* pSrc1 = pcYuvSrc1->getLumaAddr( uiAbsPartIdx );
-  Pel* pDst  = getLumaAddr( uiAbsPartIdx );
+  Pel* pSrc0 = pcYuvSrc0->getAddr(COMPONENT_Y, uiAbsPartIdx );
+  Pel* pSrc1 = pcYuvSrc1->getAddr(COMPONENT_Y, uiAbsPartIdx );
+  Pel* pDst  = getAddr           (COMPONENT_Y, uiAbsPartIdx );
 
-  Int  iSrc0Stride = pcYuvSrc0->getStride();
-  Int  iSrc1Stride = pcYuvSrc1->getStride();
-  Int  iDstStride  = getStride();
+  Int  iSrc0Stride = pcYuvSrc0->getStride(COMPONENT_Y);
+  Int  iSrc1Stride = pcYuvSrc1->getStride(COMPONENT_Y);
+  Int  iDstStride  = getStride(COMPONENT_Y);
   for ( y = uiHeight-1; y >= 0; y-- )
   {
     for ( x = uiWidth-1; x >= 0; x-- )
@@ -597,16 +605,16 @@ Void TComYuv::subtractARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt ui
 {
   Int x, y;
 
-  Pel* pSrcU0 = pcYuvSrc0->getCbAddr( uiAbsPartIdx );
-  Pel* pSrcU1 = pcYuvSrc1->getCbAddr( uiAbsPartIdx );
-  Pel* pSrcV0 = pcYuvSrc0->getCrAddr( uiAbsPartIdx );
-  Pel* pSrcV1 = pcYuvSrc1->getCrAddr( uiAbsPartIdx );
-  Pel* pDstU  = getCbAddr( uiAbsPartIdx );
-  Pel* pDstV  = getCrAddr( uiAbsPartIdx );
+  Pel* pSrcU0 = pcYuvSrc0->getAddr(COMPONENT_Cb, uiAbsPartIdx );
+  Pel* pSrcU1 = pcYuvSrc1->getAddr(COMPONENT_Cb, uiAbsPartIdx );
+  Pel* pSrcV0 = pcYuvSrc0->getAddr(COMPONENT_Cr, uiAbsPartIdx );
+  Pel* pSrcV1 = pcYuvSrc1->getAddr(COMPONENT_Cr, uiAbsPartIdx );
+  Pel* pDstU  = getAddr(COMPONENT_Cb, uiAbsPartIdx );
+  Pel* pDstV  = getAddr(COMPONENT_Cr, uiAbsPartIdx );
 
-  Int  iSrc0Stride = pcYuvSrc0->getCStride();
-  Int  iSrc1Stride = pcYuvSrc1->getCStride();
-  Int  iDstStride  = getCStride();
+  Int  iSrc0Stride = pcYuvSrc0->getStride(COMPONENT_Cb);
+  Int  iSrc1Stride = pcYuvSrc1->getStride(COMPONENT_Cb);
+  Int  iDstStride  = getStride( COMPONENT_Cb );
   for ( y = uiHeight-1; y >= 0; y-- )
   {
     for ( x = uiWidth-1; x >= 0; x-- )
@@ -627,8 +635,10 @@ Void TComYuv::multiplyARP( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UC
 {
   multiplyARPLuma( uiAbsPartIdx , uiWidth , uiHeight , dW );
 
-  if (uiWidth > 8)
+  if ( uiWidth > 8 && getNumberValidComponents() > 1 )
+  {
     multiplyARPChroma( uiAbsPartIdx , uiWidth >> 1 , uiHeight >> 1 , dW );
+}
 }
 
 Void TComYuv::xxMultiplyLine( Pel* pSrcDst , UInt uiWidth , UChar dW )
@@ -640,8 +650,8 @@ Void TComYuv::xxMultiplyLine( Pel* pSrcDst , UInt uiWidth , UChar dW )
 
 Void TComYuv::multiplyARPLuma( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW )
 {
-  Pel* pDst  = getLumaAddr( uiAbsPartIdx );
-  Int  iDstStride  = getStride();
+  Pel* pDst  = getAddr(COMPONENT_Y, uiAbsPartIdx );
+  Int  iDstStride  = getStride(COMPONENT_Y);
   for ( Int y = uiHeight-1; y >= 0; y-- )
   {
     xxMultiplyLine( pDst , uiWidth , dW );
@@ -651,10 +661,10 @@ Void TComYuv::multiplyARPLuma( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight 
 
 Void TComYuv::multiplyARPChroma( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW )
 {
-  Pel* pDstU  = getCbAddr( uiAbsPartIdx );
-  Pel* pDstV  = getCrAddr( uiAbsPartIdx );
+  Pel* pDstU  = getAddr( COMPONENT_Cb, uiAbsPartIdx );
+  Pel* pDstV  = getAddr( COMPONENT_Cr, uiAbsPartIdx );
 
-  Int  iDstStride  = getCStride();
+  Int  iDstStride  = getStride( COMPONENT_Cb );
   for ( Int y = uiHeight-1; y >= 0; y-- )
   {
     xxMultiplyLine( pDstU , uiWidth , dW );

@@ -83,7 +83,7 @@ public:
 #endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if H_3D_ARP
+#if NH_3D_ARP
   virtual Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
 #if NH_3D_IC
@@ -93,7 +93,7 @@ public:
   virtual Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   virtual Void codeDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -172,7 +172,7 @@ public:
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if H_3D_ARP
+#if NH_3D_ARP
   Void encodeARPW         ( TComDataCU* pcCU, UInt uiAbspartIdx );
 #endif
 #if NH_3D_IC
@@ -182,7 +182,7 @@ public:
   Void encodeDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx );
   Void encodeSDCFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void encodeDBBPFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );

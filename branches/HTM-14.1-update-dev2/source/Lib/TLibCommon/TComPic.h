@@ -96,11 +96,11 @@ private:
 #if NH_3D_QTLPC
   Bool                  m_bReduceBitsQTL;
 #endif
-#if H_3D_NBDV
+#if NH_3D_NBDV
   UInt        m_uiRapRefIdx;
   RefPicList  m_eRapRefList;
   Int         m_iNumDdvCandPics;
-  Bool        m_abTIVRINCurrRL  [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
+  Bool        m_abTIVRINCurrRL [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
   Int         m_aiTexToDepRef  [2][MAX_NUM_REF];
 #endif
 
@@ -181,6 +181,9 @@ public:
   Bool          getPicOutputFlag()       { return m_bPicOutputFlag ;  }
 #endif
 #if NH_3D
+#if NH_3D_ARP
+  Void          getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
+#endif
   Void          compressMotion(Int scale); 
 #else   
   Void          compressMotion();
@@ -208,7 +211,7 @@ public:
 #if NH_MV
   Void          print( Bool legend );
 #endif
-#if H_3D_NBDV
+#if NH_3D_NBDV
   Int           getNumDdvCandPics()                    {return m_iNumDdvCandPics;   }
   Int           getDisCandRefPictures(Int iColPOC);
   Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
@@ -247,7 +250,7 @@ private:
 public: 
   Void        push_back( TComList<TComPic*>* list ) { m_lists.push_back( list );   }
   Int         size     ()                           { return (Int) m_lists.size(); } 
-#if H_3D_ARP
+#if NH_3D_ARP
   TComList<TComPic*>*  getPicList   ( Int layerIdInNuh );
 #endif
   TComPic*    getPic   ( Int layerIdInNuh,              Int poc );    

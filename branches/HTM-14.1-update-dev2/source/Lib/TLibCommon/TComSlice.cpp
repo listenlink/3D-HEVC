@@ -223,6 +223,7 @@ TComSlice::TComSlice()
     m_aaiCodedOffset[i].resize(MAX_NUM_LAYERS);
     m_aaiCodedScale [i].resize(MAX_NUM_LAYERS);
   }
+  
 #endif
 
 }
@@ -276,7 +277,7 @@ Void TComSlice::initSlice()
   {
     m_iSliceChromaQpDelta[component] = 0;
   }
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS_MEM;
 #else
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
@@ -1994,7 +1995,7 @@ TComVPS::TComVPS()
     {
       m_dimensionId[i][j] = 0;
     }
-#if H_3D_ARP
+#if NH_3D_ARP
 #endif
   }  
 #endif
@@ -2030,8 +2031,8 @@ Int TComVPS::getNumScalabilityTypes() const
 
 Int TComVPS::scalTypeToScalIdx( ScalabilityType scalType ) const
 {
-  assert( scalType >= 0 && scalType <= MAX_NUM_SCALABILITY_TYPES ); 
-  assert( scalType == MAX_NUM_SCALABILITY_TYPES || getScalabilityMaskFlag( scalType ) );
+  assert( (Int)scalType >= 0 && (Int)scalType <= MAX_NUM_SCALABILITY_TYPES );
+  assert( (Int)scalType == MAX_NUM_SCALABILITY_TYPES || getScalabilityMaskFlag( scalType ) );
   Int scalIdx = 0; 
   for( Int curScalType = 0; curScalType < scalType; curScalType++ )
   {
@@ -3583,23 +3584,25 @@ Int TComSlice::getRefPicLayerId( Int i ) const
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
 #endif
 }
-#if H_3D
-Void TComSlice::setDefaultRefView( )
+#if NH_3D_NBDV
+Void TComSlice::setDefaultRefView()
 {
-  setDefaultRefViewIdx( -1 );
-  setDefaultRefViewIdxAvailableFlag( false ); 
+  setDefaultRefViewIdx(-1);
+  setDefaultRefViewIdxAvailableFlag(false); 
 
   Int valid = 0;
   Int DefaultRefViewIdx = -1;
-  for( UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++ )
+
+  for(UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++)
   {
-    for( Int iRefListId = 0; ( iRefListId < (isInterB() ? 2 : 1) ) && !isIntra() && valid == 0; iRefListId++ )
+    for(Int iRefListId = 0; (iRefListId < (isInterB() ? 2 : 1)) && !isIntra() && valid == 0; iRefListId++)
     {
-      RefPicList eRefPicList = RefPicList( iRefListId );
-      Int        iNumRefPics = getNumRefIdx( eRefPicList );
-      for( Int i = 0; i < iNumRefPics; i++ )
+      RefPicList eRefPicList = RefPicList(iRefListId);
+      Int        iNumRefPics = getNumRefIdx(eRefPicList);
+
+      for(Int i = 0; i < iNumRefPics; i++)
       { 
-        if(getPOC() == getRefPic( eRefPicList, i )->getPOC() && curViewIdx == getRefPic( eRefPicList, i )->getViewIndex())
+        if(getPOC() == getRefPic(eRefPicList, i)->getPOC() && curViewIdx == getRefPic(eRefPicList, i)->getViewIndex())
         {
           valid = 1;
           DefaultRefViewIdx = curViewIdx;
@@ -3608,15 +3611,16 @@ Void TComSlice::setDefaultRefView( )
       }
     }
   }
-  if( valid )
+
+  if(valid)
   {
-    setDefaultRefViewIdx( DefaultRefViewIdx );
-    setDefaultRefViewIdxAvailableFlag( true );   
+    setDefaultRefViewIdx(DefaultRefViewIdx);
+    setDefaultRefViewIdxAvailableFlag(true);
   }
 }
 #endif
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 {
   Bool tempRefPicInListsFlag = false;
@@ -3683,6 +3687,19 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
         {
           m_arpRefPicAvailable[eRefPicList][layerIdInNuh] = false;
         }
+      }
+    }
+  }
+  if( m_nARPStepNum > 1)
+  {
+    for(Int i = 0; i < getNumActiveRefLayerPics(); i ++ )
+    {
+      Int  iLayerId = getRefPicLayerId( i );
+      Int  iViewIdx =   getVPS()->getViewIndex(iLayerId);
+      Bool bIsDepth = ( getVPS()->getDepthId  ( iLayerId ) == 1 );
+      if( iViewIdx<getViewIndex() && !bIsDepth )
+      {
+        setBaseViewRefPicList( ivPicLists->getPicList( iLayerId ), iViewIdx );
       }
     }
   }
@@ -3843,11 +3860,11 @@ Void TComSlice::setDepthToDisparityLUTs()
   
   setupLUT = setupLUT || getViewSynthesisPredFlag( ); 
 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   setupLUT = setupLUT || getDepthRefinementFlag( );
 #endif  
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   setupLUT = setupLUT || ( getIvMvPredFlag() && getIsDepth() );
 #endif
 

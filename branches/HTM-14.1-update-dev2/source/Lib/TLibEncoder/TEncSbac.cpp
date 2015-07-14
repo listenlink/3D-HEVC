@@ -67,7 +67,7 @@ TEncSbac::TEncSbac()
 #endif
 , m_cCUMergeFlagExtSCModel             ( 1,             1,                      NUM_MERGE_FLAG_EXT_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel              ( 1,             1,                      NUM_MERGE_IDX_EXT_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_ARP
+#if NH_3D_ARP
 , m_cCUPUARPWSCModel                   ( 1,             1,                      NUM_ARPW_CTX                         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif                                                                                                               
 #if NH_3D_IC                                                                                                          
@@ -113,7 +113,7 @@ TEncSbac::TEncSbac()
 #if H_3D_DIM_SDC
 , m_cSDCFlagSCModel                    ( 1,             1,                       NUM_SDC_FLAG_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
 #endif                                                                                                          
-#if H_3D_DBBP                                                                                                  
+#if NH_3D_DBBP
 , m_cDBBPFlagSCModel                   ( 1,             1,                       DBBP_NUM_FLAG_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 {
@@ -147,7 +147,7 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT);
   m_cCUMergeIdxExtSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
-#if H_3D_ARP
+#if NH_3D_ARP
   m_cCUPUARPWSCModel.initBuffer                   ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
 #if NH_3D_IC
@@ -193,7 +193,7 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
 #if H_3D_DIM_SDC                                 
   m_cSDCFlagSCModel.initBuffer                    ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
 #endif                                           
-#if H_3D_DBBP                                    
+#if NH_3D_DBBP
   m_cDBBPFlagSCModel.initBuffer                   ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
@@ -234,7 +234,7 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #endif
       curCost += m_cCUMergeFlagExtSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT);
       curCost += m_cCUMergeIdxExtSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_MERGE_IDX_EXT);
-#if H_3D_ARP
+#if NH_3D_ARP
       curCost += m_cCUPUARPWSCModel.calcCost                   ( curSliceType, qp, (UChar*)INIT_ARPW );
 #endif                                                     
 #if NH_3D_IC                                                
@@ -243,7 +243,7 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #if H_3D_DIM_SDC                                           
       curCost += m_cSDCFlagSCModel.calcCost                    ( curSliceType, qp, (UChar*)INIT_SDC_FLAG );
 #endif                                                     
-#if H_3D_DBBP                                              
+#if NH_3D_DBBP
       curCost += m_cDBBPFlagSCModel.calcCost                   ( curSliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
       curCost += m_cCUPartSizeSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
@@ -301,9 +301,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
   m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
   m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
 #endif
-#if H_3D_ARP
-  m_cCUPUARPWSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_ARPW );
-#endif
 #if H_3D_DIM
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
@@ -316,9 +313,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 #endif
 #if H_3D_DIM_SDC
   m_cSDCFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
-#endif
-#if H_3D_DBBP
-  m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
 
@@ -970,7 +964,7 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #endif
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   Int  iW = (Int)pcCU->getARPW( uiAbsPartIdx );
@@ -2646,7 +2640,7 @@ Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 #endif
 
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );

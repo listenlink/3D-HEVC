@@ -39,7 +39,7 @@
 #include "TComMotionInfo.h"
 #include "assert.h"
 #include <stdlib.h>
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
 #include "TComDataCU.h"
 #include "TComPic.h"
 #endif
@@ -327,10 +327,10 @@ Void TComCUMvField::setAllMvField( TComMvField const & mvField, PartSize eCUMode
   setAllRefIdx( mvField.getRefIdx(), eCUMode, iPartAddr, uiDepth, iPartIdx );
 }
 
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
 Void TComCUMvField::setMvFieldSP( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  )
 {
-  uiAbsPartIdx += pcCU->getZorderIdxInCU();
+  uiAbsPartIdx += pcCU->getZorderIdxInCtu();
   Int iStartPelX = g_auiRasterToPelX[g_auiZscanToRaster[uiAbsPartIdx]];
   Int iStartPelY = g_auiRasterToPelY[g_auiZscanToRaster[uiAbsPartIdx]];
   Int iEndPelX = iStartPelX + iWidth;
@@ -340,9 +340,9 @@ Void TComCUMvField::setMvFieldSP( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvFie
   {
     for (Int j=iStartPelX; j < iEndPelX; j += pcCU->getPic()->getMinCUWidth())
     {
-      Int iCurrRaster = i / pcCU->getPic()->getMinCUHeight() * pcCU->getPic()->getNumPartInWidth() + j/pcCU->getPic()->getMinCUWidth();
+      Int iCurrRaster = i / pcCU->getPic()->getMinCUHeight() * pcCU->getPic()->getNumPartInCtuWidth() + j/pcCU->getPic()->getMinCUWidth();
       Int uiPartAddr = g_auiRasterToZscan[iCurrRaster];
-      uiPartAddr -= pcCU->getZorderIdxInCU();  
+      uiPartAddr -= pcCU->getZorderIdxInCtu();  
 
       m_pcMv[uiPartAddr] = cMvField.getMv();
       m_piRefIdx[uiPartAddr] = cMvField.getRefIdx();
