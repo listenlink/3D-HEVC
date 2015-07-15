@@ -90,7 +90,9 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
 #if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
   incSymbolCounter(); 
+#endif
   DTRACE_CABAC_VL( g_nSymbolCounter );
 #else
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
