@@ -256,11 +256,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     uhInterDirNeighbours[ui] = 0;
   }
   Int numValidMergeCand = 0;
-#if !NH_3D
   Bool hasMergedCandList = false;
-#else
-  Bool isMerged = false;
-#endif
 
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
@@ -314,77 +310,86 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     if ( pcCU->getMergeFlag( uiSubPartIdx ) )
     {
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+#if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+      if (bDebugPredEnabled)
+      {
+        std::cout << "Coded merge flag, CU absPartIdx: " << uiAbsPartIdx << " PU(" << uiPartIdx << ") absPartIdx: " << uiSubPartIdx;
+        std::cout << " merge index: " << (UInt)pcCU->getMergeIndex(uiSubPartIdx) << std::endl;
+      }
+#endif
+
 #if NH_3D_DBBP
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 && pcCU->getDBBPFlag(uiAbsPartIdx) == false )
 #else
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 ) 
 #endif
       {
-        pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
-        if ( !isMerged )
+        if ( !hasMergedCandList )
         {
+          pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth ); // temporarily set.
+
+#if NH_3D_MLC
 #if NH_3D_VSP
           Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
           memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-#if H_3D_SPIVMP
+#endif
+#if NH_3D_SPIVMP
           memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
 #endif
           pcSubCU->initAvailableFlags();
+#endif
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
+#if NH_3D_MLC
           pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours
 #if NH_3D_SPIVMP
             , pcMvFieldSP, puhInterDirSP
 #endif
             , numValidMergeCand );
-          pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
+          pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
+#if NH_3D_VSP
+            , vspFlag
+#endif
 #if NH_3D_SPIVMP
             , bSPIVMPFlag
 #endif
             , numValidMergeCand );
+#if NH_3D_VSP
           pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
-#else
-#if H_3D
-          pcSubCU->initAvailableFlags();
-          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
-          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-
-#else
-          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 #endif
 #endif
-          isMerged = true;
+          pcSubCU->setPartSizeSubParts( ePartSize, 0, uiDepth ); // restore.
+          hasMergedCandList = true;
         }
-        pcSubCU->setPartSizeSubParts( ePartSize, 0, uiDepth );
       }
       else
       {
-        uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+#if NH_3D_MLC
 #if NH_3D_VSP
         Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
         memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-#if H_3D_SPIVMP
+#endif
+#if NH_3D_SPIVMP
         memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
 #endif
         pcSubCU->initAvailableFlags();
+#endif
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#if NH_3D_MLC
         pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours
 #if NH_3D_SPIVMP
           , pcMvFieldSP, puhInterDirSP
 #endif
           ,numValidMergeCand, uiMergeIndex );
-        pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
+        pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
+#if NH_3D_VSP
+          , vspFlag
+#endif
 #if NH_3D_SPIVMP
           , bSPIVMPFlag
 #endif
           ,numValidMergeCand );
+#if NH_3D_VSP
         pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
-#else
-#if H_3D
-        pcSubCU->initAvailableFlags();
-        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-#else
-        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
 #endif
 #endif
       }
@@ -419,7 +424,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
         }
       }
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
       pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );  
       if (bSPIVMPFlag[uiMergeIndex] != 0)
       {
@@ -450,6 +455,16 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
         {
           decodeMvsAMVP   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
+#if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+          if (bDebugPredEnabled)
+          {
+            std::cout << "refListIdx: " << uiRefListIdx << std::endl;
+            std::cout << "MVD horizontal: " << pcCU->getCUMvField(RefPicList(uiRefListIdx))->getMvd( uiAbsPartIdx ).getHor() << std::endl;
+            std::cout << "MVD vertical:   " << pcCU->getCUMvField(RefPicList(uiRefListIdx))->getMvd( uiAbsPartIdx ).getVer() << std::endl;
+            std::cout << "MVPIdxPU: " << pcCU->getMVPIdx(RefPicList( uiRefListIdx ), uiSubPartIdx) << std::endl;
+            std::cout << "InterDir: " << (UInt)pcCU->getInterDir(uiSubPartIdx) << std::endl;
+          }
+#endif
         }
       }
     }
