@@ -154,7 +154,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_isDepth              = pcTEncTop->getIsDepth();
 #endif
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_aICEnableCandidate   = pcTEncTop->getICEnableCandidate(); 
   m_aICEnableNum         = pcTEncTop->getICEnableNum(); 
 #endif
@@ -1442,7 +1442,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->checkInCompPredRefLayers(); 
     }   
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
     // This needs to be done after initialization of 3D tool parameters.
     pcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( pcSlice->getMpiFlag( ) || pcSlice->getIvMvPredFlag( ) || pcSlice->getViewSynthesisPredFlag( )   ) ? 1 : 0 ));
 #endif
@@ -1470,26 +1470,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
-#if H_3D
+#if NH_3D_NBDV
     pcSlice->setDefaultRefView();
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
     //GT: This seems to be broken when layerId in vps is not equal to layerId in nuh
     pcSlice->setARPStepNum(m_ivPicLists);
-    if(pcSlice->getARPStepNum() > 1)
-    {
-      for(Int iLayerId = 0; iLayerId < getLayerId(); iLayerId ++ )
-      {
-        Int  iViewIdx =   pcSlice->getVPS()->getViewIndex(iLayerId);
-        Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
-        if( iViewIdx<getViewIndex() && !bIsDepth )
-        {
-          pcSlice->setBaseViewRefPicList( m_ivPicLists->getPicList( iLayerId ), iViewIdx );
-        }
-      }
-    }
 #endif
-#if H_3D_IC
+#if NH_3D_IC
     pcSlice->setICEnableCandidate( m_aICEnableCandidate );         
     pcSlice->setICEnableNum( m_aICEnableNum );         
 #endif
@@ -1546,7 +1534,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPOCList();
 
     pcSlice->setList1IdxToList0Idx();
-#if H_3D_TMVP
+#if NH_3D_TMVP
     if(pcSlice->getLayerId())
       pcSlice->generateAlterRefforTMVP();
 #endif
@@ -1730,10 +1718,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     UInt uiNumSliceSegments = 1;
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {
-        Int iColPoc = pcSlice->getRefPOC(RefPicList(1-pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
+        Int iColPoc = pcSlice->getRefPOC(RefPicList(1 - pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
         pcPic->setNumDdvCandPics(pcPic->getDisCandRefPictures(iColPoc));
       }
 #endif
@@ -1742,7 +1730,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
 #endif
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {
         pcPic->checkTemporalIVRef();

@@ -571,7 +571,7 @@ public:
   Void      setMaxCUHeight                  ( UInt  u )      { m_maxCUHeight = u; }
   Void      setMaxTotalCUDepth              ( UInt  u )      { m_maxTotalCUDepth = u; }
   Void      setLog2DiffMaxMinCodingBlockSize( UInt  u )      { m_log2DiffMaxMinCodingBlockSize = u; }
-#if H_3D_IC
+#if NH_3D_IC
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
   Void       setUseICLowLatencyEnc          ( Bool bVal )    { m_bUseICLowLatencyEnc = bVal; }

@@ -225,7 +225,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
   rpcSlice->initSlice();
   rpcSlice->setPicOutputFlag( true );
   rpcSlice->setPOC( pocCurr );
-#if H_3D_IC
+#if NH_3D_IC
   rpcSlice->setApplyIC( false );
 #endif
   // depth computation based on GOP size
@@ -566,7 +566,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
   rpcSlice->setSliceArgument        ( m_pcCfg->getSliceArgument()        );
   rpcSlice->setSliceSegmentMode     ( m_pcCfg->getSliceSegmentMode()     );
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 #else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
 #endif
@@ -822,12 +822,12 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice )
   }
 #endif
 
-#if H_3D_IC
-  if ( pcEncTop->getViewIndex() && pcEncTop->getUseIC() &&
+#if NH_3D_IC
+  if ( m_pcCfg->getViewIndex() && m_pcCfg->getUseIC() &&
        !( ( pcSlice->getSliceType() == P_SLICE && pcSlice->getPPS()->getUseWP() ) || ( pcSlice->getSliceType() == B_SLICE && pcSlice->getPPS()->getWPBiPred() ) )
      )
   {
-    pcSlice ->xSetApplyIC(pcEncTop->getUseICLowLatencyEnc());
+    pcSlice ->xSetApplyIC(m_pcCfg->getUseICLowLatencyEnc());
     if ( pcSlice->getApplyIC() )
     {
       pcSlice->setIcSkipParseFlag( pcSlice->getPOC() % m_pcCfg->getIntraPeriod() != 0 );
@@ -1120,7 +1120,14 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 #if ENC_DEC_TRACE
   g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+  incSymbolCounter();
+#endif
+  DTRACE_CABAC_VL( g_nSymbolCounter );
+#else
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
+#endif
   DTRACE_CABAC_T( "\tPOC: " );
   DTRACE_CABAC_V( pcPic->getPOC() );
 #if H_MV_ENC_DEC_TRAC
@@ -1193,8 +1200,8 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
       }
     }
 
-#if H_3D_QTLPC
-    rpcPic->setReduceBitsFlag(true);
+#if NH_3D_QTLPC
+    pcPic->setReduceBitsFlag(true);
 #endif
     if ( pcSlice->getSPS()->getUseSAO() )
     {
@@ -1265,8 +1272,8 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
         pcSlice->addSubstreamSize( (pcSubstreams[uiSubStrm].getNumberOfWrittenBits() >> 3) + pcSubstreams[uiSubStrm].countStartCodeEmulations() );
       }
     }
-#if H_3D_QTLPC
-    rpcPic->setReduceBitsFlag(false);
+#if NH_3D_QTLPC
+    pcPic->setReduceBitsFlag(false);
 #endif
   } // CTU-loop
 

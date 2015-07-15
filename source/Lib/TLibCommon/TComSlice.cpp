@@ -139,7 +139,7 @@ TComSlice::TComSlice()
 , m_pocMsbVal                     (0)
 , m_pocMsbValRequiredFlag         (false)
 #endif
-#if H_3D_IC
+#if NH_3D_IC
 , m_bApplyIC                      (false)
 , m_icSkipParseFlag               (false)
 #endif
@@ -277,7 +277,7 @@ Void TComSlice::initSlice()
   {
     m_iSliceChromaQpDelta[component] = 0;
   }
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS_MEM;
 #else
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
@@ -288,7 +288,7 @@ Void TComSlice::initSlice()
   m_substreamSizes.clear();
   m_cabacInitFlag        = false;
   m_enableTMVPFlag = true;
-#if H_3D_TMVP
+#if NH_3D_TMVP
   m_aiAlterRefIdx[0]                  = -1;
   m_aiAlterRefIdx[1]                  = -1;
 #endif
@@ -823,8 +823,8 @@ Void TComSlice::initEqualRef()
     }
   }
 }
-#if H_3D
-#if H_3D_TMVP
+#if NH_3D
+#if NH_3D_TMVP
 Void TComSlice::generateAlterRefforTMVP()
 {
   for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
@@ -1170,7 +1170,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 #if NH_3D_DIS
   m_bApplyDIS = pSrc->m_bApplyDIS;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   m_bApplyIC = pSrc->m_bApplyIC;
   m_icSkipParseFlag = pSrc->m_icSkipParseFlag;
 #endif
@@ -1995,7 +1995,7 @@ TComVPS::TComVPS()
     {
       m_dimensionId[i][j] = 0;
     }
-#if H_3D_ARP
+#if NH_3D_ARP
 #endif
   }  
 #endif
@@ -3570,23 +3570,25 @@ Int TComSlice::getRefPicLayerId( Int i ) const
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
 #endif
 }
-#if H_3D
-Void TComSlice::setDefaultRefView( )
+#if NH_3D_NBDV
+Void TComSlice::setDefaultRefView()
 {
-  setDefaultRefViewIdx( -1 );
-  setDefaultRefViewIdxAvailableFlag( false ); 
+  setDefaultRefViewIdx(-1);
+  setDefaultRefViewIdxAvailableFlag(false); 
 
   Int valid = 0;
   Int DefaultRefViewIdx = -1;
-  for( UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++ )
+
+  for(UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++)
   {
-    for( Int iRefListId = 0; ( iRefListId < (isInterB() ? 2 : 1) ) && !isIntra() && valid == 0; iRefListId++ )
+    for(Int iRefListId = 0; (iRefListId < (isInterB() ? 2 : 1)) && !isIntra() && valid == 0; iRefListId++)
     {
-      RefPicList eRefPicList = RefPicList( iRefListId );
-      Int        iNumRefPics = getNumRefIdx( eRefPicList );
-      for( Int i = 0; i < iNumRefPics; i++ )
+      RefPicList eRefPicList = RefPicList(iRefListId);
+      Int        iNumRefPics = getNumRefIdx(eRefPicList);
+
+      for(Int i = 0; i < iNumRefPics; i++)
       { 
-        if(getPOC() == getRefPic( eRefPicList, i )->getPOC() && curViewIdx == getRefPic( eRefPicList, i )->getViewIndex())
+        if(getPOC() == getRefPic(eRefPicList, i)->getPOC() && curViewIdx == getRefPic(eRefPicList, i)->getViewIndex())
         {
           valid = 1;
           DefaultRefViewIdx = curViewIdx;
@@ -3595,15 +3597,16 @@ Void TComSlice::setDefaultRefView( )
       }
     }
   }
-  if( valid )
+
+  if(valid)
   {
-    setDefaultRefViewIdx( DefaultRefViewIdx );
-    setDefaultRefViewIdxAvailableFlag( true );   
+    setDefaultRefViewIdx(DefaultRefViewIdx);
+    setDefaultRefViewIdxAvailableFlag(true);
   }
 }
 #endif
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 {
   Bool tempRefPicInListsFlag = false;
@@ -3673,10 +3676,23 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
       }
     }
   }
+  if( m_nARPStepNum > 1)
+  {
+    for(Int i = 0; i < getNumActiveRefLayerPics(); i ++ )
+    {
+      Int  iLayerId = getRefPicLayerId( i );
+      Int  iViewIdx =   getVPS()->getViewIndex(iLayerId);
+      Bool bIsDepth = ( getVPS()->getDepthId  ( iLayerId ) == 1 );
+      if( iViewIdx<getViewIndex() && !bIsDepth )
+      {
+        setBaseViewRefPicList( ivPicLists->getPicList( iLayerId ), iViewIdx );
+      }
+    }
+  }
 }
 #endif
 
-#if H_3D_IC
+#if NH_3D_IC
 // This is an encoder only function and should be moved to TEncSlice or TEncSearch!!
 Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
 {
@@ -3765,20 +3781,18 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
     if ( pcRefPicYuvOrg != NULL )
     {
       // Histogram building - luminance
-      Int iMaxPelValue = ( 1 << g_bitDepthY ); 
+      Int iMaxPelValue = ( 1 << getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) ); 
       Int *aiRefOrgHist = (Int *) xMalloc( Int,iMaxPelValue );
       Int *aiCurrHist   = (Int *) xMalloc( Int,iMaxPelValue );
       memset( aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
       memset( aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
 
-      Int iWidth   = pcCurrPicYuv->getWidth();
-      Int iHeight  = pcCurrPicYuv->getHeight();
-
-      Pel* pCurrY   = pcCurrPicYuv ->getLumaAddr();
-      Pel* pRefOrgY = pcRefPicYuvOrg  ->getLumaAddr();
-      Int iCurrStride = pcCurrPicYuv->getStride();
-      Int iRefStride = pcRefPicYuvOrg->getStride();
-
+      Int iWidth   = pcCurrPicYuv->getWidth(COMPONENT_Y);
+      Int iHeight  = pcCurrPicYuv->getHeight(COMPONENT_Y);
+      Pel* pCurrY   = pcCurrPicYuv->getAddr(COMPONENT_Y);
+      Pel* pRefOrgY = pcRefPicYuvOrg->getAddr(COMPONENT_Y);
+      Int iCurrStride = pcCurrPicYuv->getStride(COMPONENT_Y);
+      Int iRefStride = pcRefPicYuvOrg->getStride(COMPONENT_Y);
       for ( Int y = 0; y < iHeight; y++ )
       {
         for ( Int x = 0; x < iWidth; x++ )
@@ -3832,11 +3846,11 @@ Void TComSlice::setDepthToDisparityLUTs()
   
   setupLUT = setupLUT || getViewSynthesisPredFlag( ); 
 
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
   setupLUT = setupLUT || getDepthRefinementFlag( );
 #endif  
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   setupLUT = setupLUT || ( getIvMvPredFlag() && getIsDepth() );
 #endif
 

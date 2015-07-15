@@ -82,10 +82,10 @@ public:
   virtual Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx ) = 0;
   virtual Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex ) = 0;
-#if H_3D_ARP
+#if NH_3D_ARP
   virtual Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   virtual Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
 #if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
@@ -94,7 +94,7 @@ public:
 #if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   virtual Void parseSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   virtual Void parseDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
   virtual Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -144,7 +144,7 @@ public:
   Void decodeRefFrmIdxPU  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList );
   Void decodeMvdPU        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList );
   Void decodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList );
-#if H_3D
+#if NH_3D
   Void decodeMvsAMVP      ( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiDepth, UInt uiPartIdx, 
 RefPicList eRefList );
 #endif
@@ -173,17 +173,17 @@ public:
   Void decodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
-#if H_3D_ARP
+#if NH_3D_ARP
   Void decodeARPW              ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void decodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
 #if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void decodeSDCFlag           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void decodeDBBPFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   Void decodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

@@ -147,10 +147,14 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bR
   m_pcEntropyCoderIf->codeMergeIndex( pcCU, uiAbsPartIdx );
 }
 
-#if H_3D_IC
+#if NH_3D_IC
 Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
+#if NH_3D_ARP
   if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() || pcCU->getARPW( uiAbsPartIdx ) > 0 )
+#else
+  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() )
+#endif
   {
     return;
   }
@@ -183,7 +187,7 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 }
 #endif
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TEncEntropy::encodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   if( !pcCU->getSlice()->getARPStepNum() || pcCU->isIntra( uiAbsPartIdx ) ) 
@@ -869,19 +873,20 @@ Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 }
 
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TEncEntropy::encodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  
   if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && 
     ( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || 
       pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && 
       pcCU->getWidth(uiAbsPartIdx) > 8 && 
       pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
   {
-    if( bRD )
-    {
-      uiAbsPartIdx = 0;
-    }
     m_pcEntropyCoderIf->codeDBBPFlag( pcCU, uiAbsPartIdx );
   }
 }

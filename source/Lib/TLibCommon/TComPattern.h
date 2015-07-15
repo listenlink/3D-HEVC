@@ -80,7 +80,7 @@ private:
   TComPatternParam  m_cPatternY;
 //  TComPatternParam  m_cPatternCb;
   //TComPatternParam  m_cPatternCr;
-#if H_3D_IC
+#if NH_3D_IC
   Bool              m_bICFlag;
 #endif
 #if H_3D_INTER_SDC
@@ -97,7 +97,7 @@ public:
   Int   getPatternLStride()       { return m_cPatternY.m_iPatternStride;  }
   Int   getBitDepthY()            { return m_cPatternY.m_bitDepth; }
 
-#if H_3D_IC
+#if NH_3D_IC
   Bool  getICFlag()               { return m_bICFlag; }
   Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
 #endif

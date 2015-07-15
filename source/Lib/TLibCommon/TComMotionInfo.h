@@ -49,7 +49,7 @@
 // Type definition
 // ====================================================================================================================
 
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
 class TComDataCU;
 #endif
 /// parameters for AMVP
@@ -59,11 +59,11 @@ typedef struct _AMVPInfo
   Int    iN;                                ///< number of motion vector predictor candidates
 } AMVPInfo;
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
 typedef struct _DisCand 
 {
   TComMv m_acNBDV;              // DV from NBDV
-#if H_3D_NBDV_REF 
+#if NH_3D_NBDV_REF 
   TComMv m_acDoNBDV;            // DV from DoNBDV
 #endif  
   Int    m_aVIdxCan;            // View order index (the same with the NBDV and the DoNBDV)
@@ -106,7 +106,7 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   Bool operator== ( const TComMvField& rcMv ) const
   {
     return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());
@@ -166,10 +166,10 @@ public:
   Void    setAllMvd    ( TComMv const & rcMvd,        PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllRefIdx ( Int iRefIdx,                 PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllMvField( TComMvField const & mvField, PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
-#if H_3D_SPIVMP
+#if NH_3D_SPIVMP
   Void    setMvFieldSP ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  );
 #endif
-#if H_3D_VSP
+#if NH_3D_VSP
   Void    setMv         ( Int iIdx, TComMv const & rcMv ) { m_pcMv[iIdx] = rcMv; }
   Void    setRefIdx     ( Int iIdx, Int iRefIdx )         { m_piRefIdx[iIdx] = iRefIdx; }
 #endif
@@ -191,27 +191,32 @@ public:
 
 //! \}
 
-#if H_3D_IV_MERGE
+#if NH_3D_MLC
+/// class for container of merge candidate
 class TComMotionCand
 {
 public:
   Bool                  m_bAvailable;
   TComMvField           m_cMvField[2];
   UChar                 m_uDir;
-#if H_3D_VSP
+#if NH_3D_VSP
   Int                   m_iVspFlag;
-#endif  
+#endif
+#if NH_3D_SPIVMP
   Bool                  m_bSPIVMPFlag;
+#endif
 
 public:
   TComMotionCand()
   {
     m_bAvailable = false;
     m_uDir = 0;
-#if H_3D_VSP
+#if NH_3D_VSP
     m_iVspFlag = 0;
 #endif
+#if NH_3D_SPIVMP
     m_bSPIVMPFlag = false;
+#endif
   }
 
   ~TComMotionCand()
@@ -225,46 +230,55 @@ public:
 
     m_bAvailable = false;
     m_uDir = 0;
-#if H_3D_VSP
+#if NH_3D_VSP
     m_iVspFlag = 0;
 #endif
+#if NH_3D_SPIVMP
     m_bSPIVMPFlag = false;
+#endif
     m_cMvField[0].setMvField(cZeroMv, NOT_VALID);
     m_cMvField[1].setMvField(cZeroMv, NOT_VALID);
   }
 
   Void setCand(TComMvField* pcMvFieldNeighbours, UChar uhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
     , Int vspFlag
 #endif
+#if NH_3D_SPIVMP
     , Bool bSPIVMPFlag
+#endif
     )
   {
     m_bAvailable = true;
     m_cMvField[0] = pcMvFieldNeighbours[0];
     m_cMvField[1] = pcMvFieldNeighbours[1];
     m_uDir = uhInterDirNeighbours;
-#if H_3D_VSP
+#if NH_3D_VSP
     m_iVspFlag = vspFlag;
 #endif
+#if NH_3D_SPIVMP
     m_bSPIVMPFlag = bSPIVMPFlag;
+#endif
   }
-
-
+  
   Void getCand(Int iCount, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours
-#if H_3D_VSP
+#if NH_3D_VSP
     , Int* vspFlag
 #endif
+#if NH_3D_SPIVMP
     , Bool* pbSPIVMPFlag
+#endif
     )
   {
     pcMvFieldNeighbours[iCount<<1] = m_cMvField[0];
     pcMvFieldNeighbours[(iCount<<1) + 1] = m_cMvField[1];
     puhInterDirNeighbours[iCount] = m_uDir;
-#if H_3D_VSP
+#if NH_3D_VSP
     vspFlag[iCount] = m_iVspFlag;
 #endif
+#if NH_3D_SPIVMP
     pbSPIVMPFlag[iCount] = m_bSPIVMPFlag;
+#endif
   }
 };
 #endif
