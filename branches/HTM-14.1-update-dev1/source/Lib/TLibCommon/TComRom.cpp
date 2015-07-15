@@ -545,7 +545,7 @@ Bool g_tracePU = false;
 Bool g_traceTU = false; 
 Bool g_disableNumbering = false; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter       = 937234; 
+UInt64 g_stopAtCounter       = 4660; 
 Bool g_traceCopyBack         = false; 
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
@@ -685,12 +685,12 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
               << std::endl; 
   }
   Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 0 && layerId == 2 )
+  if ( g_stopAtPos && poc == 16 && layerId == 1 )
   {
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 8 ) && ( cuHeight == 8 ); 
+      stopFlag = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 32 ) && ( cuHeight == 32 ); 
     }
     else
     {                     // Stop at specific position 
@@ -710,26 +710,31 @@ Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
-    if ( g_stopAtCounter == g_nSymbolCounter )
-    {
-      std::cout << "Break point here." << std::endl; 
-    }
+    incSymbolCounter();  
     if ( !g_disableNumbering )
     {  
-      fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+      fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter );
     }
     fprintf( g_hTrace, "%-50s       : %d\n", symbolName, val );     
-    fflush ( g_hTrace );
-    g_nSymbolCounter++; 
+    fflush ( g_hTrace );   
   }
+}
+UInt64 incSymbolCounter( )
+{
+  g_nSymbolCounter++;  
+  if ( g_stopAtCounter == g_nSymbolCounter )
+  {
+    std::cout << "Break point here." << std::endl; 
+  }  
+  return g_nSymbolCounter; 
 }
 Void writeToTraceFile( const Char* symbolName, Bool doIt )
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
+    incSymbolCounter(); 
     fprintf( g_hTrace, "%s", symbolName );    
-    fflush ( g_hTrace );
-    g_nSymbolCounter++; 
+    fflush ( g_hTrace );    
   }
 }
 #endif

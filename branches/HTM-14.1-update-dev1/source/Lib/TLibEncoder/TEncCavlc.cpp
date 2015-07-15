@@ -2125,7 +2125,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       xCodePredWeightTable( pcSlice );
     }
-#if H_3D_IC
+#if NH_3D_IC
     else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE )
       && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
       && getEncTop()->decProcAnnexI()       
@@ -2134,18 +2134,18 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
       if( pcSlice->getApplyIC() )
       {
-        WRITE_FLAG( pcSlice->getIcSkipParseFlag() ? 1 : 0, "ic_skip_mergeidx0" );
+        WRITE_FLAG( pcSlice->getIcSkipParseFlag() ? 1 : 0, "slice_ic_disabled_merge_zero_idx_flag" );
       }
     }
 #endif
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS_MEM);
 #else
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS);
 #endif
     if (!pcSlice->isIntra())
     {
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
       WRITE_UVLC( ( ( pcSlice->getMpiFlag( ) || pcSlice->getIvMvPredFlag( ) || pcSlice->getViewSynthesisPredFlag( ) ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
 #else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
@@ -2521,14 +2521,14 @@ Void TEncCavlc::codeMergeIndex    ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ 
   assert(0);
 }
 
-#if H_3D_ARP
+#if NH_3D_ARP
 Void TEncCavlc::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
 #endif
 
-#if H_3D_IC
+#if NH_3D_IC
 Void TEncCavlc::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -2837,7 +2837,7 @@ Void TEncCavlc::codeSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 #endif
     
-#if H_3D_DBBP
+#if NH_3D_DBBP
 Void TEncCavlc::codeDBBPFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

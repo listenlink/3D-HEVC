@@ -142,10 +142,10 @@ public:
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if H_3D_ARP
+#if NH_3D_ARP
   Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
@@ -154,7 +154,7 @@ public:
 #if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void codeDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -209,10 +209,10 @@ private:
 #endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-#if H_3D_ARP
+#if NH_3D_ARP
   ContextModel3DBuffer m_cCUPUARPWSCModel;
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   ContextModel3DBuffer m_cCUICFlagSCModel;
 #endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
@@ -260,7 +260,7 @@ private:
   ContextModel3DBuffer m_cSDCFlagSCModel;
   ContextModel3DBuffer m_cDdcFlagSCModel;
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   ContextModel3DBuffer m_cDBBPFlagSCModel;
 #endif
 

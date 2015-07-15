@@ -195,6 +195,7 @@ extern UInt64 g_nSymbolCounter;
  Void           tracePSHeader   ( const Char* psName, Int layerId ); 
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
+ incSymbolCounter incSymbolCounter();          
  Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );           
 #endif
 #else

@@ -121,21 +121,21 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic* pcPic)
     ppcSubstreams[ui] = pcBitstream->extractSubstream(ui+1 < uiNumSubstreams ? (pcSlice->getSubstreamSize(ui)<<3) : pcBitstream->getNumBitsLeft());
   }
 
-#if H_3D_NBDV 
+#if NH_3D_NBDV 
   if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
   {
-    Int iColPoc = pcSlice->getRefPOC(RefPicList(1-pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
-    rpcPic->setNumDdvCandPics(rpcPic->getDisCandRefPictures(iColPoc));
+    Int iColPoc = pcSlice->getRefPOC(RefPicList(1 - pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
+    pcPic->setNumDdvCandPics(pcPic->getDisCandRefPictures(iColPoc));
   }
 
   if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
   {
-    rpcPic->checkTemporalIVRef();
+    pcPic->checkTemporalIVRef();
   }
 
   if(pcSlice->getIsDepth())
   {
-    rpcPic->checkTextureRef();
+    pcPic->checkTextureRef();
   }
 #endif
 #if NH_3D

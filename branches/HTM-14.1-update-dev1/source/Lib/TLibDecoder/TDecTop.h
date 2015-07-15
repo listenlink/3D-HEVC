@@ -80,7 +80,7 @@ public:
   Bool  isInitialized() const     { return m_bInitialized; }
   Int**** getBaseViewShiftLUTI()  { return m_aiBaseViewShiftLUT;   }
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
   Void  copyCamParamForSlice( TComSlice* pcSlice );
 #endif
 

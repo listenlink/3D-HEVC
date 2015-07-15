@@ -128,17 +128,17 @@ public:
 #if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void  codeDeltaDC      ( TComDataCU* /*pcCU*/, UInt /*absPartIdx*/ ) { assert(0); };
 #endif
-#if H_3D_ARP
+#if NH_3D_ARP
   Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if H_3D_IC
+#if NH_3D_IC
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 
 #if NH_3D_SDC_INTRA || H_3D_INTER_SDC
   Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( ComponentID /*component*/, UInt /*code*/ ) {printf("Not supported\n"); assert(0);}

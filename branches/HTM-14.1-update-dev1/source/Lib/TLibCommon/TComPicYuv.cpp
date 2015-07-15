@@ -90,7 +90,10 @@ Void TComPicYuv::create ( const Int iPicWidth,                ///< picture width
   m_iPicWidth         = iPicWidth;
   m_iPicHeight        = iPicHeight;
 
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
+  m_iCuWidth        = uiMaxCUWidth;
+  m_iCuHeight       = uiMaxCUHeight;
+
   m_iNumCuInWidth   = m_iPicWidth / m_iCuWidth;
   m_iNumCuInWidth  += ( m_iPicWidth % m_iCuWidth ) ? 1 : 0;
 
@@ -291,8 +294,7 @@ Void TComPicYuv::dump (const Char* pFileName, const BitDepths &bitDepths, Bool b
 
   fclose(pFile);
 }
-#if H_3D
-#if H_3D_IV_MERGE
+#if NH_3D_IV_MERGE
 Void
 TComPicYuv::getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY )
 {
@@ -318,7 +320,10 @@ TComPicYuv::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorder
   Int iRastPartIdx    = iBaseY * iCuSizeInBases  + iBaseX;
   riAbsZorderIdx      = g_auiRasterToZscan[ iRastPartIdx ];
 }
+
 #endif
+
+#if H_3D
 Void TComPicYuv::setLumaTo( Pel pVal )
 {
   xSetPels( getLumaAddr(), getStride(), getWidth(), getHeight(), pVal );
