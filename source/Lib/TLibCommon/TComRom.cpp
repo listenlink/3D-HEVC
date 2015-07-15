@@ -737,7 +737,7 @@ Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
     fflush ( g_hTrace );   
   }
 }
-Int incSymbolCounter( )
+UInt64 incSymbolCounter( )
 {
   g_nSymbolCounter++;  
   if ( g_stopAtCounter == g_nSymbolCounter )
