@@ -1907,7 +1907,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
 #if NH_3D_ARP
   Int nARPWMax = rpcTempCU->getSlice()->getARPStepNum() - 1;
-#if H_3D_IC
+#if NH_3D_IC
   if( nARPWMax < 0 || bICFlag )
 #else
   if( nARPWMax < 0 )
@@ -2255,7 +2255,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if NH_3D_ARP
     Bool bFirstTime = true;
     Int nARPWMax    = rpcTempCU->getSlice()->getARPStepNum() - 1;
-#if H_3D_IC
+#if NH_3D_IC
     if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N || rpcTempCU->getICFlag(0) )
 #else
     if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N )
