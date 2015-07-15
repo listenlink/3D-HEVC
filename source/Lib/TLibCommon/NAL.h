@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,14 @@
 
 #pragma once
 
-#include <vector>
+#ifndef __NAL__
+#define __NAL__
+
 #include <sstream>
 #include "CommonDef.h"
+#if NH_MV
+#include <vector>
+#endif
 
 class TComOutputBitstream;
 
@@ -46,32 +51,31 @@ struct NALUnit
 {
   NalUnitType m_nalUnitType; ///< nal_unit_type
   UInt        m_temporalId;  ///< temporal_id
-#if H_MV
-  Int         m_layerId;     ///< layer id
+#if NH_MV
+  Int         m_nuhLayerId;     ///< layer id
 #else
-  UInt        m_reservedZero6Bits; ///< reserved_zero_6bits
+  UInt        m_nuhLayerId;  ///< nuh_layer_id
 #endif
 
+  NALUnit(const NALUnit &src)
+  :m_nalUnitType (src.m_nalUnitType)
+  ,m_temporalId  (src.m_temporalId)
+  ,m_nuhLayerId  (src.m_nuhLayerId)
+  { }
   /** construct an NALunit structure with given header values. */
   NALUnit(
     NalUnitType nalUnitType,
     Int         temporalId = 0,
-#if H_MV
-    Int         layerId = 0)
-#else
-    Int         reservedZero6Bits = 0)
-#endif
+    Int         nuhLayerId = 0)
     :m_nalUnitType (nalUnitType)
     ,m_temporalId  (temporalId)
-#if H_MV
-    ,m_layerId     (layerId)
-#else
-    ,m_reservedZero6Bits(reservedZero6Bits)
-#endif
+    ,m_nuhLayerId  (nuhLayerId)
   {}
 
-  /** default constructor - no initialization; must be perfomed by user */
+  /** default constructor - no initialization; must be performed by user */
   NALUnit() {}
+
+  virtual ~NALUnit() { }
 
   /** returns true if the NALunit is a slice NALunit */
   Bool isSlice()
@@ -95,7 +99,7 @@ struct NALUnit
   }
   Bool isSei()
   {
-    return m_nalUnitType == NAL_UNIT_PREFIX_SEI 
+    return m_nalUnitType == NAL_UNIT_PREFIX_SEI
         || m_nalUnitType == NAL_UNIT_SUFFIX_SEI;
   }
 
@@ -115,7 +119,7 @@ struct NALUnitEBSP : public NALUnit
   std::ostringstream m_nalUnitData;
 
   /**
-   * convert the OutputNALUnit #nalu# into EBSP format by writing out
+   * convert the OutputNALUnit nalu into EBSP format by writing out
    * the NALUnit header, then the rbsp_bytes including any
    * emulation_prevention_three_byte symbols.
    */
@@ -123,3 +127,5 @@ struct NALUnitEBSP : public NALUnit
 };
 //! \}
 //! \}
+
+#endif

@@ -41,7 +41,7 @@
 #include "../TLibCommon/TComPicYuv.h"
 #include "../TLibCommon/TypeDef.h"
 
-#if H_3D_VSO
+#if NH_3D_VSO
 
 class TRenModel
 {
@@ -74,7 +74,7 @@ public:
 #else
   Int64 getDist          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData  );
 #endif
-  Void  setData          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData  );
+  Void  setData          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData  );
 
   // Get Rendered View
 
@@ -156,6 +156,6 @@ private:
   Int*   m_aiOrgDepthStrides ;    // Dim1: ViewPosition
 };
 
-#endif // H_3D
+#endif // NH_3D
 #endif //__TRENMODEL__
 
