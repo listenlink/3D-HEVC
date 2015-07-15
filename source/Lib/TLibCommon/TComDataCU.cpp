@@ -3630,7 +3630,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
   ivMvPredFlag &= (nPSW + nPSH > 12);
   if ( ivMvPredFlag && cDisInfo.m_aVIdxCan!=-1)
   {
-#if H_3D_IC
+#if NH_3D_IC
     getInterViewMergeCands(uiPUIdx, ivCandRefIdx, ivCandMv, &cDisInfo, ivCandDir , bIsDepth, pcMvFieldSP, puhInterDirSP, bICFlag );
 #else
     getInterViewMergeCands(uiPUIdx, ivCandRefIdx, ivCandMv, &cDisInfo, ivCandDir , bIsDepth, pcMvFieldSP, puhInterDirSP, false );
