@@ -157,7 +157,7 @@ extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log
 #if NH_MV
 // Change later
 #ifndef ENC_DEC_TRACE
-#define ENC_DEC_TRACE 0
+#define ENC_DEC_TRACE 1
 #endif
 #endif
 #if ENC_DEC_TRACE
@@ -200,7 +200,7 @@ extern UInt64 g_nSymbolCounter;
  Void           tracePSHeader   ( const Char* psName, Int layerId ); 
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
- incSymbolCounter incSymbolCounter();          
+ UInt64         incSymbolCounter();          
  Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );           
 #endif
 #else

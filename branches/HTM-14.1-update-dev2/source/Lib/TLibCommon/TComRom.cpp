@@ -554,13 +554,13 @@ Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 FILE*  g_hTrace = NULL; // Set to NULL to open up a file. Set to stdout to use the current output
 const Bool g_bEncDecTraceEnable  = true;
 const Bool g_bEncDecTraceDisable = false;
-Bool   g_HLSTraceEnable = false;
+Bool   g_HLSTraceEnable = true;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
 #if H_MV_ENC_DEC_TRAC
-Bool g_traceCU = false; 
-Bool g_tracePU = false; 
-Bool g_traceTU = false; 
+Bool g_traceCU = true; 
+Bool g_tracePU = true; 
+Bool g_traceTU = true; 
 Bool g_disableNumbering = false; 
 Bool g_disableHLSTrace = false; 
 UInt64 g_stopAtCounter       = 4660; 
@@ -568,7 +568,7 @@ Bool g_traceCopyBack         = false;
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
 Bool g_decTracePicOutput     = false; 
-Bool g_stopAtPos             = false; 
+Bool g_stopAtPos             = true; 
 Bool g_outputPos             = false;   
 Bool g_traceCameraParameters = false; 
 Bool g_encNumberOfWrittenBits     = false; 
@@ -703,12 +703,12 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
               << std::endl; 
   }
   Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 16 && layerId == 1 )
+  if ( g_stopAtPos && poc == 6 && layerId == 2 )
   {
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 32 ) && ( cuHeight == 32 ); 
+      stopFlag = ( cuPelX  == 128 ) && ( cuPelY  == 160 ) && ( cuWidth == 32 ) && ( cuHeight == 32 ); 
     }
     else
     {                     // Stop at specific position 
