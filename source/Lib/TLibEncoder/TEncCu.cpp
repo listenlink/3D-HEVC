@@ -715,7 +715,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if NH_3D_DBBP
             if( rpcTempCU->getSlice()->getDepthBasedBlkPartFlag() && rpcTempCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
             {
-              xCheckRDCostInterDBBP( rpcBestCU, rpcTempCU, false );
+              xCheckRDCostInterDBBP( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), false );
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode  );
 #if NH_3D_VSP  || NH_3D_DBBP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -1917,6 +1917,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   }
   for( Int nARPW=nARPWMax; nARPW >= 0 ; nARPW-- )
   {
+#if NH_3D
+#if DEBUG_STRING
+    bestStr.clear(); 
+#endif
+#endif
 #if NH_3D_IV_MERGE
     memset( mergeCandBuffer, 0, MRG_MAX_NUM_CANDS_MEM*sizeof(Int) );
 #else
@@ -2587,8 +2592,9 @@ Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Pa
 #endif
 
 #if NH_3D_DBBP
-Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG )
+Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU  DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG )
 {
+  DEBUG_STRING_NEW(sTest)
   AOF( !rpcTempCU->getSlice()->getIsDepth() );
   
   UChar uhDepth = rpcTempCU->getDepth( 0 );
@@ -2659,7 +2665,7 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     m_pcRdCost->setUseMask(true);
     rpcTempCU->getDBBPTmpData()->eVirtualPartSize = eVirtualPartSize;
     rpcTempCU->getDBBPTmpData()->uiVirtualPartIndex = uiSegment;
-    m_pcPredSearch->predInterSearch( rpcTempCU, m_ppcOrigYuvDBBP[uhDepth], apPredYuv[uiSegment], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], false, bUseMRG );
+    m_pcPredSearch->predInterSearch( rpcTempCU, m_ppcOrigYuvDBBP[uhDepth], apPredYuv[uiSegment], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth] DEBUG_STRING_PASS_INTO(sTest), false, bUseMRG );
     m_pcRdCost->setUseMask(false);
     
     // extract motion parameters of full block for this segment
@@ -2718,10 +2724,10 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   // reconstruct final prediction signal by combining both segments
   Int bitDepthY = rpcTempCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA);
   m_pcPredSearch->combineSegmentsWithMask(apPredYuv, m_ppcPredYuvTemp[uhDepth], pMask, uiWidth, uiHeight, 0, eVirtualPartSize, bitDepthY);
-  m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false );
+  m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false DEBUG_STRING_PASS_INTO(sTest) );
   
   xCheckDQP( rpcTempCU );
-  xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+  xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth  DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest) );
 }
 #endif
 
