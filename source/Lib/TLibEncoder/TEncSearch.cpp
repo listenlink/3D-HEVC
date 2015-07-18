@@ -2776,7 +2776,6 @@ Void TEncSearch::estIntraPredDIS( TComDataCU* pcCU,
 
 
   pcCU->setDISTypeSubParts((UChar)uiBestDISType, 0, uiDepth);  
-  assert(uiBestDISType >= 0);
 
   //===== reset context models =====
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
