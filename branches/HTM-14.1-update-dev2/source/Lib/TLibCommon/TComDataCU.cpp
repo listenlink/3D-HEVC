@@ -3669,7 +3669,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
         {
           continue;
         }
-#if H_3D_FIX_PRUNING
+#if NH_3D_FIX_PRUNING
         if  (   ivCandDir[0] == m_mergCands[MRG_A1+i].m_uDir                                &&
             ( ( ivCandDir[0] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0]  ) &&
             ( ( ivCandDir[0] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1]  ) 
@@ -3685,7 +3685,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
     }
     if (bIsDepth)
     {
-#if H_3D_FIX_PRUNING
+#if NH_3D_FIX_PRUNING
       if  ( m_mergCands[MRG_T].m_bAvailable &&   ivCandDir[0] == m_mergCands[MRG_T].m_uDir  &&
         ( ( ivCandDir[0] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_T].m_cMvField[0]  ) &&
         ( ( ivCandDir[0] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_T].m_cMvField[1]  ) 
@@ -3788,7 +3788,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
       {
         continue;
       }
-#if H_3D_FIX_PRUNING
+#if NH_3D_FIX_PRUNING
       if  ( ivCandDir[1] == m_mergCands[MRG_A1+i].m_uDir  &&
         ( ( ivCandDir[1] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0]  ) &&
         ( ( ivCandDir[1] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1]  ) 
