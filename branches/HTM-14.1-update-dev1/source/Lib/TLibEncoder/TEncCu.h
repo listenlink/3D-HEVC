@@ -156,7 +156,7 @@ protected:
 #endif
 #if NH_3D_DBBP
   Void  xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTemp, Bool* pMask, UInt uiValidSegment );
-  Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG = false );
+  Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU  DEBUG_STRING_FN_DECLARE(sDebug),  Bool bUseMRG = false );
 #endif
 #if NH_3D_DIS
   Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
