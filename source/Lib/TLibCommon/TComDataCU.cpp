@@ -3564,7 +3564,14 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
         {
           continue;
         }
+#if NH_3D_FIX_PRUNING
+        if  (   ivCandDir[0] == m_mergCands[MRG_A1+i].m_uDir                                &&
+            ( ( ivCandDir[0] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0]  ) &&
+            ( ( ivCandDir[0] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1]  ) 
+           )
+#else
         if (ivCandDir[0] == m_mergCands[MRG_A1+i].m_uDir && tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0] && tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1])
+#endif
         {
           m_mergCands[MRG_A1+i].m_bAvailable = false;
           break;
@@ -3573,7 +3580,14 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
     }
     if (bIsDepth)
     {
+#if NH_3D_FIX_PRUNING
+      if  ( m_mergCands[MRG_T].m_bAvailable &&   ivCandDir[0] == m_mergCands[MRG_T].m_uDir  &&
+        ( ( ivCandDir[0] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_T].m_cMvField[0]  ) &&
+        ( ( ivCandDir[0] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_T].m_cMvField[1]  ) 
+        )
+#else
       if (m_mergCands[MRG_T].m_bAvailable && ivCandDir[0] == m_mergCands[MRG_T].m_uDir && tmpMV[0]==m_mergCands[MRG_T].m_cMvField[0] && tmpMV[1]==m_mergCands[MRG_T].m_cMvField[1])
+#endif
       {
         bRemoveSpa                      = true;
       }
@@ -3669,7 +3683,14 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
       {
         continue;
       }
+#if NH_3D_FIX_PRUNING
+      if  ( ivCandDir[1] == m_mergCands[MRG_A1+i].m_uDir  &&
+        ( ( ivCandDir[1] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0]  ) &&
+        ( ( ivCandDir[1] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1]  ) 
+        )
+#else
       if (ivCandDir[1] == m_mergCands[MRG_A1+i].m_uDir && tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0] && tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1])
+#endif
       {
         bRemoveSpa                      = true;
         break;
