@@ -157,7 +157,7 @@ extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log
 #if NH_MV
 // Change later
 #ifndef ENC_DEC_TRACE
-#define ENC_DEC_TRACE 1
+#define ENC_DEC_TRACE 0
 #endif
 #endif
 #if ENC_DEC_TRACE

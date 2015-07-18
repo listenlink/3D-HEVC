@@ -95,6 +95,7 @@
 
 #define NH_3D_NBDV_REF                    1
 #define NH_3D_MLC                         1
+#define NH_3D_FIX_PRUNING                 1
 #define NH_3D_VSP                         1
 #define NH_3D_IV_MERGE                    1
 #define NH_3D_SPIVMP                      1
