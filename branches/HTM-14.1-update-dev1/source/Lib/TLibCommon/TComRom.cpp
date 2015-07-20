@@ -685,12 +685,12 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
               << std::endl; 
   }
   Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 6 && layerId == 2 )
+  if ( g_stopAtPos && poc == 16 && layerId == 5 )
   {
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 128 ) && ( cuPelY  == 160 ) && ( cuWidth == 32 ) && ( cuHeight == 32 ); 
+      stopFlag = ( cuPelX  == 224 ) && ( cuPelY  == 128 ) && ( cuWidth == 16 ) && ( cuHeight == 16 ); 
     }
     else
     {                     // Stop at specific position 

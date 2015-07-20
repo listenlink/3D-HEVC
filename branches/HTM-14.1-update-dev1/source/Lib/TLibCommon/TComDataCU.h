@@ -652,7 +652,9 @@ public:
   Void          deriveLeftBottomIdx         ( UInt uiPartIdx, UInt& ruiPartIdxLB );
 
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
-
+#if NH_3D_FIX_PRUNING
+  Bool          hasEqualMotion              ( Int dirA, const TComMvField* mvFieldA,  Int dirB, const TComMvField* mvFieldB  );
+#endif
 #if NH_3D_MLC
   Bool          getAvailableFlagA1() { return m_bAvailableFlagA1;   }
   Bool          getAvailableFlagB1() { return m_bAvailableFlagB1;   }

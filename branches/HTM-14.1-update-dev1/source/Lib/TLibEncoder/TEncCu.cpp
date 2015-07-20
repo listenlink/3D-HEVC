@@ -2269,6 +2269,10 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
     for( Int nARPW = 0; nARPW <= nARPWMax; nARPW++ )
     {
+#if DEBUG_STRING && H_MV_ENC_DEC_TRAC
+      sTest.clear(); 
+#endif
+
       if( !bFirstTime && rpcTempCU->getSlice()->getIvResPredFlag() )
       {
         rpcTempCU->initEstData( rpcTempCU->getDepth(0), rpcTempCU->getQP(0),bTransquantBypassFlag );      
