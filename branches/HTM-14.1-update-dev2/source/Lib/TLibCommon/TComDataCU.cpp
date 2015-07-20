@@ -3040,6 +3040,16 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
   return true;
 }
 
+#if NH_3D_FIX_PRUNING
+Bool TComDataCU::hasEqualMotion( Int dirA, const TComMvField* mvFieldA, Int dirB, const TComMvField* mvFieldB )
+{
+  return  ( dirA == dirB  &&
+    ( ( dirA & 1 ) == 0 || mvFieldA[0] == mvFieldB[0]  ) &&
+    ( ( dirA & 2 ) == 0 || mvFieldA[1] == mvFieldB[1]  ) 
+    );
+}
+#endif
+
 #if NH_3D_VSP
 /** Add a VSP merging candidate
  * \Inputs
@@ -3142,7 +3152,11 @@ inline Bool TComDataCU::xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int* ivCandD
       Bool bRemove = false;      
       if( !iLoop && ivCandDir[0] > 0)
       {
+#if NH_3D_FIX_PRUNING
+        if( hasEqualMotion(tmpDir, tmpMV, m_mergCands[MRG_IVMC].m_uDir, m_mergCands[MRG_IVMC].m_cMvField )) 
+#else
         if(tmpDir == m_mergCands[MRG_IVMC].m_uDir && m_mergCands[MRG_IVMC].m_cMvField[0]==tmpMV[0] && m_mergCands[MRG_IVMC].m_cMvField[1]==tmpMV[1])
+#endif
         {
             bRemove                         = true;
         }
@@ -3591,11 +3605,15 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
       Int iCnloop = 0;
       for(iCnloop = 0; iCnloop < 2; iCnloop ++)
       {
-        if ( !m_mergCands[MRG_A1+iCnloop].m_bAvailable )  // prunning to A1, B1
+        if ( !m_mergCands[MRG_A1+iCnloop].m_bAvailable )  // pruning to A1, B1
         {
           continue;
         }
+#if NH_3D_FIX_PRUNING
+        if (hasEqualMotion( tmpDir, tmpMV, m_mergCands[MRG_A1+iCnloop].m_uDir, m_mergCands[MRG_A1+iCnloop].m_cMvField ) )
+#else
         if (tmpDir == m_mergCands[MRG_A1+iCnloop].m_uDir && tmpMV[0]==m_mergCands[MRG_A1+iCnloop].m_cMvField[0] && tmpMV[1]==m_mergCands[MRG_A1+iCnloop].m_cMvField[1])
+#endif
         {
           m_mergCands[MRG_A1+iCnloop].m_bAvailable = false;
           break;
@@ -3665,15 +3683,12 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
     {
       for(Int i = 0; i < 2; i ++)
       {
-        if ( !m_mergCands[MRG_A1 + i].m_bAvailable ) // prunning to A1, B1
+        if ( !m_mergCands[MRG_A1 + i].m_bAvailable ) // pruning to A1, B1
         {
           continue;
         }
 #if NH_3D_FIX_PRUNING
-        if  (   ivCandDir[0] == m_mergCands[MRG_A1+i].m_uDir                                &&
-            ( ( ivCandDir[0] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0]  ) &&
-            ( ( ivCandDir[0] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1]  ) 
-           )
+        if (hasEqualMotion(ivCandDir[0], tmpMV, m_mergCands[MRG_A1+i].m_uDir,  m_mergCands[MRG_A1+i].m_cMvField) )
 #else
         if (ivCandDir[0] == m_mergCands[MRG_A1+i].m_uDir && tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0] && tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1])
 #endif
@@ -3683,13 +3698,10 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
         }      
       }
     }
-    if (bIsDepth)
+    else
     {
 #if NH_3D_FIX_PRUNING
-      if  ( m_mergCands[MRG_T].m_bAvailable &&   ivCandDir[0] == m_mergCands[MRG_T].m_uDir  &&
-        ( ( ivCandDir[0] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_T].m_cMvField[0]  ) &&
-        ( ( ivCandDir[0] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_T].m_cMvField[1]  ) 
-        )
+      if( hasEqualMotion( ivCandDir[0], tmpMV, m_mergCands[MRG_T].m_uDir, m_mergCands[MRG_T].m_cMvField ) )
 #else
       if (m_mergCands[MRG_T].m_bAvailable && ivCandDir[0] == m_mergCands[MRG_T].m_uDir && tmpMV[0]==m_mergCands[MRG_T].m_cMvField[0] && tmpMV[1]==m_mergCands[MRG_T].m_cMvField[1])
 #endif
@@ -3789,10 +3801,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
         continue;
       }
 #if NH_3D_FIX_PRUNING
-      if  ( ivCandDir[1] == m_mergCands[MRG_A1+i].m_uDir  &&
-        ( ( ivCandDir[1] & 1 ) == 0 || tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0]  ) &&
-        ( ( ivCandDir[1] & 2 ) == 0 || tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1]  ) 
-        )
+      if ( hasEqualMotion(ivCandDir[1], tmpMV, m_mergCands[MRG_A1+i].m_uDir, m_mergCands[MRG_A1+i].m_cMvField) )
 #else
       if (ivCandDir[1] == m_mergCands[MRG_A1+i].m_uDir && tmpMV[0]==m_mergCands[MRG_A1+i].m_cMvField[0] && tmpMV[1]==m_mergCands[MRG_A1+i].m_cMvField[1])
 #endif
