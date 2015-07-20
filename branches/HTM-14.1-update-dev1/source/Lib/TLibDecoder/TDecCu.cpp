@@ -774,9 +774,6 @@ Void TDecCu::xReconDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   AOF( uiWidth == uiHeight );
   AOF( uiAbsPartIdx == 0 );
-
-  Bool  bAboveAvail = false;
-  Bool  bLeftAvail  = false;
   
   TComTURecurse rTu(pcCU, 0);
   const ChromaFormat chFmt     = rTu.GetChromaFormat();
