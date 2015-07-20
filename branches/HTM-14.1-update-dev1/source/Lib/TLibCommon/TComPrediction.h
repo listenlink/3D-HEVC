@@ -97,8 +97,7 @@ protected:
   Int*    m_pDepthBlock;         ///< Store a depth block, local variable, to prevent memory allocation every time
   TComYuv m_cYuvDepthOnVsp;
 #endif
-
-  Void xPredIntraAng            ( Int bitDepth, const Pel* pSrc, Int srcStride, Pel* pDst, Int dstStride, UInt width, UInt height, ChannelType channelType, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, const Bool bEnableEdgeFilters );
+  Void xPredIntraAng            ( Int bitDepth, const Pel* pSrc, Int srcStride, Pel* pDst, Int dstStride, UInt width, UInt height, ChannelType channelType, UInt dirMode, const Bool bEnableEdgeFilters );
   Void xPredIntraPlanar         ( const Pel* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height );
 
   // motion compensation functions
@@ -158,8 +157,9 @@ public:
   Void getMvPredAMVP              ( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, TComMv& rcMvPred );
 
   // Angular Intra
-  Void predIntraAng               ( const ComponentID compID, UInt uiDirMode, Pel *piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples, const Bool bUseLosslessDPCM = false );
+  Void predIntraAng               ( const ComponentID compID, UInt uiDirMode, Pel *piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, const Bool bUseFilteredPredSamples, const Bool bUseLosslessDPCM = false );
 
+  Pel  predIntraGetPredValDC      ( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight);
 #if NH_3D_DMM
   Void predIntraLumaDmm           ( TComDataCU* pcCU, UInt uiAbsPartIdx, DmmID dmmType, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight );
   Void predContourFromTex         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool* segPattern );
@@ -186,8 +186,6 @@ public:
   // This function is actually still in TComPattern.cpp
   /// set parameters from CU data for accessing intra data
   Void initIntraPatternChType ( TComTU &rTu,
-                              Bool&       bAbove,
-                              Bool&       bLeft,
                               const ComponentID compID, const Bool bFilterRefSamples
                               DEBUG_STRING_FN_DECLARE(sDebug)
                               );

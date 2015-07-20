@@ -186,7 +186,7 @@
 \maketitle
 \begin{abstract}
 This document is a user manual describing usage of reference software
-for the HEVC project. It applies to version 16.4
+for the HEVC project. It applies to version 16.6
 of the software.
 \end{abstract}
 
@@ -676,6 +676,24 @@ When 1, the Mean Square Error (MSE) values of each frame will also be output alo
 When 1, the Mean Square Error (MSE) values of the entire sequence will also be output alongside the default PSNR values.
 \\
 
+\Option{SummaryOutFilename} &
+%\ShortOption{\None} &
+\Default{false} &
+Filename to use for producing summary output file. If empty, do not produce a file.
+\\
+
+\Option{SummaryPicFilenameBase} &
+%\ShortOption{\None} &
+\Default{false} &
+Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended. If empty, do not produce a file.
+\\
+
+\Option{SummaryVerboseness} &
+%\ShortOption{\None} &
+\Default{false} &
+Specifies the level of the verboseness of the text output.
+\\
+
 \Option{CabacZeroWordPaddingEnabled} &
 %\ShortOption{\None} &
 \Default{false} &
@@ -750,6 +768,30 @@ When 1, indicates that field-based coding is to be applied.
 Indicates the order of the fields packed into the input frame. When 1, the top field is temporally first.
 \\
 
+\Option{ClipInputVideoToRec709Range} &
+%\ShortOption{\None} &
+\Default{0} &
+If 1 then clip input video to the Rec. 709 Range on loading when InternalBitDepth is less than MSBExtendedBitDepth.
+\\
+
+\Option{ClipOutputVideoToRec709Range} &
+%\ShortOption{\None} &
+\Default{0} &
+If 1 then clip output video to the Rec. 709 Range on saving when OutputBitDepth is less than InternalBitDepth.
+\\
+
+\Option{EfficientFieldIRAPEnabled} &
+%\ShortOption{\None} &
+\Default{1} &
+Enable to code fields in a specific, potentially more efficient, order.
+\\
+
+\Option{HarmonizeGopFirstFieldCoupleEnabled} &
+%\ShortOption{\None} &
+\Default{1} &
+Enables harmonization of Gop first field couple.
+\\
+
 \end{OptionTableNoShorthand}
 
 %%
@@ -809,6 +851,12 @@ For --profile=main-RExt, specifies the chroma-format to use for the general prof
 %\ShortOption{\None} &
 \Default{false} &
 For --profile=main-RExt, specifies the value of general_intra_constraint_flag to use for RExt profiles.
+\\
+
+\Option{OnePictureOnlyConstraintFlag} &
+%\ShortOption{\None} &
+\Default{false} &
+For --profile=main-RExt, specifies the value of general_one_picture_only_constraint_flag to use for RExt profiles.
 \\
 
 \Option{LowerBitRateConstraintFlag} &
@@ -977,6 +1025,18 @@ Specifies the search range used for bi-prediction refinement in motion
 estimation.
 \\
 
+\Option{ClipForBiPredMEEnabled} &
+%\ShortOption{\None} &
+\Default{0} &
+Enables clipping in the Bi-Pred ME, which prevents values over- or under-flowing. It is usually disabled to reduce encoder run-time.
+\\
+
+\Option{FastMEAssumingSmootherMVEnabled} &
+%\ShortOption{\None} &
+\Default{0} &
+Enables fast ME assuming a smoother MV.
+\\
+
 \Option{HadamardME} &
 %\ShortOption{\None} &
 \Default{true} &
@@ -1013,6 +1073,11 @@ $}
 Specifies the maximum number of merge candidates to use.
 \\
 
+\Option{DisableIntraInInter} &
+%\ShortOption{\None} &
+\Default{0} &
+Flag to disable intra PUs in inter slices.
+\\
 
 \end{OptionTableNoShorthand}
 
@@ -1338,14 +1403,6 @@ Enables or disables the use of in-loop filtering across slice
 boundaries.
 \\
 
-\Option{DeblockingFilterControlPresent}&
-%\ShortOption{\None}&
-\Default{false}&
-Enables or disables the presence of the deblocking filter control
-parameters in the picture parameter set and in the slice segment header.
-When disabled, the default deblocking filter parameters are used.
-\\
-
 \Option{LoopFilterOffsetInPPS}&
 %\ShortOption{\None}&
 \Default{false}&
@@ -1376,7 +1433,8 @@ shall be an integer number in the range $-6..6$.
 \Option{DeblockingFilterMetric}&
 %\ShortOption{\None}&
 \Default{false}&
-Enables or disables the use of a deblocking filter metric to evaluate the suitability of deblocking..
+Enables or disables the use of a deblocking filter metric to evaluate the suitability of deblocking. If enabled then
+LoopFilterOffsetInPPS and LoopFilterDisable must be 0.
 \\
 
 \Option{LFCrossSliceBoundaryFlag}&
@@ -1407,6 +1465,24 @@ Enables or disables the use of asymmetric motion partitions.
 Enables or disables the sample adaptive offset (SAO) filter.
 \\
 
+\Option{TestSAODisableAtPictureLevel} &
+%\ShortOption{\None} &
+\Default{false} &
+Enables the testing of disabling SAO at the picture level after having analysed all blocks.
+\\
+
+\Option{SaoEncodingRate} &
+%\ShortOption{\None} &
+\Default{0.75} &
+When >0 SAO early picture termination is enabled for luma and chroma.
+\\
+
+\Option{SaoEncodingRateChroma} &
+%\ShortOption{\None} &
+\Default{0.5} &
+The SAO early picture termination rate to use for chroma (when m_SaoEncodingRate is >0). If <=0, use results for luma.
+\\
+
 \Option{SAOLcuBoundary} &
 %\ShortOption{\None} &
 \Default{false} &
@@ -1420,6 +1496,24 @@ for LCU bottom and right boundary areas.
 Enables or disables constrained intra prediction.  Constrained intra
 prediction only permits samples from intra blocks in the same slice as the
 current block to be used for intra prediction.
+\\
+
+\Option{FastUDIUseMPMEnabled} &
+%\ShortOption{\None} &
+\Default{true} &
+If enabled, adapt intra direction search, accounting for MPM
+\\
+
+\Option{FastMEForGenBLowDelayEnabled} &
+%\ShortOption{\None} &
+\Default{true} &
+If enabled use a fast ME for generalised B Low Delay slices
+\\
+
+\Option{UseBLambdaForNonKeyLowDelayPictures} &
+%\ShortOption{\None} &
+\Default{true} &
+Enables use of B-Lambda for non-key low-delay pictures
 \\
 
 \Option{TransquantBypassEnableFlag} &
@@ -2513,33 +2607,9 @@ MAX_TLAYER &
 maximum number of temporal layers
 \\
 
-HB_LAMBDA_FOR_LDC &
-on &
-use of B-style lambda for non-key pictures in low-delay mode
-\\
-
-GPB_SIMPLE &
-on &
-Fast estimation of generalized B in low-delay mode
-\\
-
-GPB_SIMPLE_UNI &
-on &
-Fast estimation of generalized B in low-delay mode for uni-direction
-\\
-
-FASTME_SMOOTHER_MV &
-on &
-Fast ME using smoother MV assumption
-\\
-
 ADAPT_SR_SCALE &
 on &
 division factor for adaptive search range
-\\
-
-CLIP_TO_709_RANGE &
-off &
 \\
 
 EARLY_SKIP_THRES &
@@ -2686,6 +2756,12 @@ If no value is specified, no colour space conversion is applied. The list may ev
 \Option{SEINoDisplay} &
 \Default{false} &
 When true, do not output frames for which there is an SEI NoDisplay message.
+\\
+
+\Option{ClipOutputVideoToRec709Range} &
+%\ShortOption{\None} &
+\Default{0} &
+If 1 then clip output video to the Rec. 709 Range on saving when OutputBitDepth is less than InternalBitDepth.
 \\
 
 \end{OptionTableNoShorthand}

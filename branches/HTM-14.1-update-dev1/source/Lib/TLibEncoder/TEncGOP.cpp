@@ -1263,7 +1263,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // Do decoding refresh marking if any
     pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic, m_pcCfg->getEfficientFieldIRAPEnabled());
     m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
-    pcSlice->getRPS()->setNumberOfLongtermPictures(0);
     if (!m_pcCfg->getEfficientFieldIRAPEnabled())
     {
     if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -1756,7 +1755,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       for(UInt nextCtuTsAddr = 0; nextCtuTsAddr < numberOfCtusInFrame; )
       {
         m_pcSliceEncoder->precompressSlice( pcPic );
-        m_pcSliceEncoder->compressSlice   ( pcPic, false );
+        m_pcSliceEncoder->compressSlice   ( pcPic, false, false );
 
         const UInt curSliceSegmentEnd = pcSlice->getSliceSegmentCurEndCtuTsAddr();
         if (curSliceSegmentEnd < numberOfCtusInFrame)
@@ -2740,11 +2739,13 @@ Void TEncGOP::xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstre
 // and among the pictures with the same lsb, it arranges them in increasing delta_poc_msb_cycle_lt value
 Void TEncGOP::arrangeLongtermPicturesInRPS(TComSlice *pcSlice, TComList<TComPic*>& rcListPic)
 {
-  TComReferencePictureSet *rps = pcSlice->getRPS();
-  if(!rps->getNumberOfLongtermPictures())
+  if(pcSlice->getRPS()->getNumberOfLongtermPictures() == 0)
   {
     return;
   }
+  // we can only modify the local RPS!
+  assert (pcSlice->getRPSidx()==-1);
+  TComReferencePictureSet *rps = pcSlice->getLocalRPS();
 
   // Arrange long-term reference pictures in the correct order of LSB and MSB,
   // and assign values for pocLSBLT and MSB present flag

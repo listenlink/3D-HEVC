@@ -2478,9 +2478,9 @@ private:
   Int                        m_iLastIDR;
   Int                        m_iAssociatedIRAP;
   NalUnitType                m_iAssociatedIRAPType;
-  TComReferencePictureSet*   m_pcRPS;
-  TComReferencePictureSet    m_LocalRPS;
-  Int                        m_iBDidx;
+  const TComReferencePictureSet* m_pRPS;             //< pointer to RPS, either in the SPS or the local RPS in the same slice header
+  TComReferencePictureSet    m_localRPS;             //< RPS when present in slice header
+  Int                        m_rpsIdx;               //< index of used RPS in the SPS or -1 for local RPS in the slice header
   TComRefPicListModification m_RefPicListModification;
   NalUnitType                m_eNalUnitType;         ///< Nal unit type for the slice
   SliceType                  m_eSliceType;
@@ -2675,12 +2675,12 @@ public:
   Bool                        getPicOutputFlag() const                               { return m_PicOutputFlag;                                       }
   Void                        setSaoEnabledFlag(ChannelType chType, Bool s)          {m_saoEnabledFlag[chType] =s;                                   }
   Bool                        getSaoEnabledFlag(ChannelType chType) const            { return m_saoEnabledFlag[chType];                              }
-  Void                        setRPS( TComReferencePictureSet *pcRPS )               { m_pcRPS = pcRPS;                                              }
-  TComReferencePictureSet*    getRPS()                                               { return m_pcRPS;                                               }
-  TComReferencePictureSet*    getLocalRPS()                                          { return &m_LocalRPS;                                           }
+  Void                        setRPS( const TComReferencePictureSet *pcRPS )         { m_pRPS = pcRPS;                                               }
+  const TComReferencePictureSet* getRPS()                                            { return m_pRPS;                                                }
+  TComReferencePictureSet*    getLocalRPS()                                          { return &m_localRPS;                                           }
 
-  Void                        setRPSidx( Int iBDidx )                                { m_iBDidx = iBDidx;                                            }
-  Int                         getRPSidx() const                                      { return m_iBDidx;                                              }
+  Void                        setRPSidx( Int rpsIdx )                                { m_rpsIdx = rpsIdx;                                            }
+  Int                         getRPSidx() const                                      { return m_rpsIdx;                                              }
   TComRefPicListModification* getRefPicListModification()                            { return &m_RefPicListModification;                             }
   Void                        setLastIDR(Int iIDRPOC)                                { m_iLastIDR = iIDRPOC;                                         }
   Int                         getLastIDR() const                                     { return m_iLastIDR;                                            }

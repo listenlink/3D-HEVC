@@ -246,6 +246,7 @@ protected:
   UInt      m_uiDeltaQpRD;                                    ///< dQP range for multi-pass slice QP optimization
   Int       m_iMaxCuDQPDepth;                                 ///< Max. depth for a minimum CuDQPSize (0:default)
   Int       m_diffCuChromaQpOffsetDepth;                      ///< If negative, then do not apply chroma qp offsets.
+  Bool      m_bFastDeltaQP;                                   ///< Fast Delta QP (false:default)
 
   Int       m_cbQpOffset;                                     ///< Chroma Cb QP Offset (0:default)
   Int       m_crQpOffset;                                     ///< Chroma Cr QP Offset (0:default)

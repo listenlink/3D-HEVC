@@ -112,7 +112,7 @@ Void TComPattern::initPattern (Pel* piY,
 
 
 // TODO: move this function to TComPrediction.cpp.
-Void TComPrediction::initIntraPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLeft, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug))
+Void TComPrediction::initIntraPatternChType( TComTU &rTu, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug))
 {
   const ChannelType chType    = toChannelType(compID);
 
@@ -150,9 +150,6 @@ Void TComPrediction::initIntraPatternChType( TComTU &rTu, Bool& bAbove, Bool& bL
   iNumIntraNeighbor  += isAboveRightAvailable( pcCU, uiPartIdxLT, uiPartIdxRT, (bNeighborFlags + iLeftUnits + 1 + iTUWidthInUnits ) );
   iNumIntraNeighbor  += isLeftAvailable      ( pcCU, uiPartIdxLT, uiPartIdxLB, (bNeighborFlags + iLeftUnits - 1)                    );
   iNumIntraNeighbor  += isBelowLeftAvailable ( pcCU, uiPartIdxLT, uiPartIdxLB, (bNeighborFlags + iLeftUnits - 1 - iTUHeightInUnits) );
-
-  bAbove = true;
-  bLeft  = true;
 
   const UInt         uiROIWidth  = uiTuWidth2+1;
   const UInt         uiROIHeight = uiTuHeight2+1;

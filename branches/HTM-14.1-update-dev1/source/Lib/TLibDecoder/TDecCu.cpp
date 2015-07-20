@@ -84,12 +84,19 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaF
   m_ppcYuvRecoDBBP = new TComYuv*[m_uiMaxDepth-1];
 #endif
 
-  UInt uiNumPartitions;
   for ( UInt ui = 0; ui < m_uiMaxDepth-1; ui++ )
   {
-    uiNumPartitions = 1<<( ( m_uiMaxDepth - ui - 1 )<<1 );
+    UInt uiNumPartitions = 1<<( ( m_uiMaxDepth - ui - 1 )<<1 );
     UInt uiWidth  = uiMaxWidth  >> ui;
     UInt uiHeight = uiMaxHeight >> ui;
+
+    // The following arrays (m_ppcYuvResi, m_ppcYuvReco and m_ppcCU) are only required for CU depths
+    // although data is allocated for all possible depths of the CU/TU tree except the last.
+    // Since the TU tree will always include at least one additional depth greater than the CU tree,
+    // there will be enough entries for these arrays.
+    // (Section 7.4.3.2: "The CVS shall not contain data that result in (Log2MinTrafoSize) MinTbLog2SizeY
+    //                    greater than or equal to MinCbLog2SizeY")
+    // TODO: tidy the array allocation given the above comment.
 
     m_ppcYuvResi[ui] = new TComYuv;    m_ppcYuvResi[ui]->create( uiWidth, uiHeight, chromaFormatIDC );
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight, chromaFormatIDC );
@@ -777,14 +784,14 @@ Void TDecCu::xReconDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if ( pcCU->getDISType(uiAbsPartIdx) == 0 )
   {
     const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, VER_IDX, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getSpsRangeExtension().getIntraSmoothingDisabledFlag());
-    m_pcPrediction->initIntraPatternChType( rTu, bAboveAvail, bLeftAvail, COMPONENT_Y, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
-    m_pcPrediction->predIntraAng( COMPONENT_Y,   VER_IDX, 0 /* Decoder does not have an original image */, 0, piReco, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
+    m_pcPrediction->initIntraPatternChType( rTu, COMPONENT_Y, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
+    m_pcPrediction->predIntraAng( COMPONENT_Y,   VER_IDX, 0 /* Decoder does not have an original image */, 0, piReco, uiStride, rTu, bUseFilteredPredictions );
   }
   else if ( pcCU->getDISType(uiAbsPartIdx) == 1 )
   {
     const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, HOR_IDX, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getSpsRangeExtension().getIntraSmoothingDisabledFlag());
-    m_pcPrediction->initIntraPatternChType( rTu, bAboveAvail, bLeftAvail, COMPONENT_Y, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
-    m_pcPrediction->predIntraAng( COMPONENT_Y,   HOR_IDX, 0 /* Decoder does not have an original image */, 0, piReco, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
+    m_pcPrediction->initIntraPatternChType( rTu, COMPONENT_Y, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
+    m_pcPrediction->predIntraAng( COMPONENT_Y,   HOR_IDX, 0 /* Decoder does not have an original image */, 0, piReco, uiStride, rTu, bUseFilteredPredictions );
   }
   else if ( pcCU->getDISType(uiAbsPartIdx) == 2 )
   {
@@ -1030,9 +1037,6 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   const UInt uiChFinalMode = ((chFmt == CHROMA_422)       && !bIsLuma) ? g_chroma422IntraAngleMappingTable[uiChCodedMode] : uiChCodedMode;
 
   //===== init availability pattern =====
-  Bool  bAboveAvail = false;
-  Bool  bLeftAvail  = false;
-
   const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getSpsRangeExtension().getIntraSmoothingDisabledFlag());
 
 #if DEBUG_STRING
@@ -1040,7 +1044,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 #endif
 
   DEBUG_STRING_NEW(sTemp)
-  m_pcPrediction->initIntraPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
+  m_pcPrediction->initIntraPatternChType( rTu, compID, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
 
 
   //===== get prediction signal =====
@@ -1052,7 +1056,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   else
   {
 #endif
-  m_pcPrediction->predIntraAng( compID,   uiChFinalMode, 0 /* Decoder does not have an original image */, 0, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
+  m_pcPrediction->predIntraAng( compID,   uiChFinalMode, 0 /* Decoder does not have an original image */, 0, piPred, uiStride, rTu, bUseFilteredPredictions );
 #if NH_3D_DMM
   }
 #endif
@@ -1268,9 +1272,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     TComTURecurse tuRecurseCU(pcCU, 0);
     TComTURecurse tuRecurseWithPU(tuRecurseCU, false, TComTU::DONT_SPLIT);
 
-    Bool bAboveAvail = false;
-    Bool bLeftAvail  = false;
-    m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, false DEBUG_STRING_PASS_INTO(sTemp) );
+    m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, COMPONENT_Y, false DEBUG_STRING_PASS_INTO(sTemp) );
 
     // get partition
     pbMask       = new Bool[ uiWidth*uiHeight ];
@@ -1320,12 +1322,10 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       const Bool bUseFilter = TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiLumaPredMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
       
       //===== init pattern for luma prediction =====
-      Bool bAboveAvail = false;
-      Bool bLeftAvail  = false;
       
-      m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, bUseFilter  DEBUG_STRING_PASS_INTO(sTemp) );
+      m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, COMPONENT_Y, bUseFilter  DEBUG_STRING_PASS_INTO(sTemp) );
       
-      m_pcPrediction->predIntraAng( COMPONENT_Y, uiLumaPredMode, NULL, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
+      m_pcPrediction->predIntraAng( COMPONENT_Y, uiLumaPredMode, NULL, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bUseFilter );
       
       // copy for prediction of next part
       for( UInt uiY = 0; uiY < puRect.height; uiY++ )
