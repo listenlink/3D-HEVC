@@ -1265,11 +1265,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       // reset Model
       if( m_pcRdCost->getUseRenModel() )
       {
-        UInt  uiWidth     = m_ppcOrigYuv[uiDepth]->getWidth ( COMPONENT_Y );
-        UInt  uiHeight    = m_ppcOrigYuv[uiDepth]->getHeight( COMPONENT_Y );
-        Pel*  piSrc       = m_ppcOrigYuv[uiDepth]->getAddr  ( COMPONENT_Y, 0 );
-        UInt  uiSrcStride = m_ppcOrigYuv[uiDepth]->getStride( COMPONENT_Y  );
-        m_pcRdCost->setRenModelData( m_ppcBestCU[uiDepth], 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+        UInt  uiWidthOy     = m_ppcOrigYuv[uiDepth]->getWidth ( COMPONENT_Y );
+        UInt  uiHeightOy    = m_ppcOrigYuv[uiDepth]->getHeight( COMPONENT_Y );
+        Pel*  piSrc         = m_ppcOrigYuv[uiDepth]->getAddr  ( COMPONENT_Y, 0 );
+        UInt  uiSrcStride   = m_ppcOrigYuv[uiDepth]->getStride( COMPONENT_Y  );
+        m_pcRdCost->setRenModelData( m_ppcBestCU[uiDepth], 0, piSrc, uiSrcStride, uiWidthOy, uiHeightOy );
       }
 #endif
       UChar       uhNextDepth         = uiDepth+1;
@@ -1410,11 +1410,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if NH_3D_VSO // M12 
   if( m_pcRdCost->getUseRenModel() )
   {
-    UInt  uiWidth     = m_ppcRecoYuvBest[uiDepth]->getWidth   ( COMPONENT_Y );
-    UInt  uiHeight    = m_ppcRecoYuvBest[uiDepth]->getHeight  ( COMPONENT_Y );
+    UInt  uiWidthRy     = m_ppcRecoYuvBest[uiDepth]->getWidth   ( COMPONENT_Y );
+    UInt  uiHeightRy    = m_ppcRecoYuvBest[uiDepth]->getHeight  ( COMPONENT_Y );
     Pel*  piSrc       = m_ppcRecoYuvBest[uiDepth]->getAddr    ( COMPONENT_Y,  0 );
     UInt  uiSrcStride = m_ppcRecoYuvBest[uiDepth]->getStride  ( COMPONENT_Y );
-    m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+    m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidthRy, uiHeightRy );
   }
 #endif
 
