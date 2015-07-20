@@ -173,6 +173,7 @@ Void TEncTop::destroy ()
   m_cEncSAO.            destroy();
   m_cLoopFilter.        destroy();
   m_cRateCtrl.          destroy();
+  m_cSearch.            destroy();
   Int iDepth;
   for ( iDepth = 0; iDepth < m_maxTotalCUDepth+1; iDepth++ )
   {
@@ -952,6 +953,7 @@ Void TEncTop::xInitHrdParameters()
       hrd->setBitRateValueMinus1( i, j, 0, ( bitrateValue - 1 ) );
       hrd->setCpbSizeValueMinus1( i, j, 0, ( cpbSizeValue - 1 ) );
       hrd->setDuCpbSizeValueMinus1( i, j, 0, ( duCpbSizeValue - 1 ) );
+      hrd->setDuBitRateValueMinus1( i, j, 0, ( duBitRateValue - 1 ) );
       hrd->setCbrFlag( i, j, 0, false );
 
       hrd->setBitRateValueMinus1( i, j, 1, ( bitrateValue - 1) );
@@ -1322,10 +1324,8 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
     slice->setRPSidx(m_iGOPSize+m_extraRPSs);
   }
 
-  TComReferencePictureSet *rps=slice->getLocalRPS();
-  (*rps) = *(slice->getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
+  const TComReferencePictureSet *rps = (slice->getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
   slice->setRPS(rps);
-  slice->getRPS()->setNumberOfPictures(slice->getRPS()->getNumberOfNegativePictures()+slice->getRPS()->getNumberOfPositivePictures());
 #if NH_MV
   }
 #endif

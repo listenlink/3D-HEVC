@@ -87,6 +87,7 @@ private:
   
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
+  Bool                    m_bFastDeltaQP;
   Bool                    m_stillToCodeChromaQpOffsetFlag; //indicates whether chroma QP offset flag needs to coded at this particular CU granularity.
   Int                     m_cuChromaQpOffsetIdxPlus1; // if 0, then cu_chroma_qp_offset_flag will be 0, otherwise cu_chroma_qp_offset_flag will be 1.
 
@@ -131,12 +132,14 @@ public:
   UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
 
+  Void setFastDeltaQp       ( Bool b)                 { m_bFastDeltaQP = b;         }
+
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx );
 #if AMP_ENC_SPEEDUP
-  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug), PartSize eParentPartSize = NUMBER_OF_PART_SIZES );
+  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug), PartSize eParentPartSize = NUMBER_OF_PART_SIZES );
 #else
-  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
+  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth        );
 #endif
   Void  xEncodeCU           ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
 
@@ -179,6 +182,8 @@ protected:
 
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
+
+  Bool getFastDeltaQp       () const                  { return m_bFastDeltaQP;      }
 
   Bool getCodeChromaQpAdjFlag() { return m_stillToCodeChromaQpOffsetFlag; }
   Void setCodeChromaQpAdjFlag( Bool b ) { m_stillToCodeChromaQpOffsetFlag = b; }

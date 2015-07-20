@@ -679,7 +679,7 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
     setUpLambda(pcSlice, m_pdRdPicLambda[uiQpIdx], m_piRdPicQp    [uiQpIdx]);
 
     // try compress
-    compressSlice   ( pcPic, true );
+    compressSlice   ( pcPic, true, m_pcCfg->getFastDeltaQp());
 
 #if NH_3D_VSO
     Dist64 uiPicDist        = m_uiPicDist;
@@ -750,7 +750,7 @@ Void TEncSlice::calCostSliceI(TComPic* pcPic) // TODO: this only analyses the fi
 
 /** \param pcPic   picture class
  */
-Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice )
+Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, const Bool bFastDeltaQP )
 {
   // if bCompressEntireSlice is true, then the entire slice (not slice segment) is compressed,
   //   effectively disabling the slice-segment-mode.
@@ -780,6 +780,8 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice )
 
   TComBitCounter  tempBitCounter;
   const UInt      frameWidthInCtus = pcPic->getPicSym()->getFrameWidthInCtus();
+  
+  m_pcCuEncoder->setFastDeltaQp(bFastDeltaQP);
 
   //------------------------------------------------------------------------------
   //  Weighted Prediction parameters estimation.
