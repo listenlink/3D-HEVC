@@ -70,7 +70,7 @@
 #if NH_3D
 #define NH_3D_VSO                         1
 #define NH_3D_NBDV                        1
-#define NH_3D_TMVP                        0   // QC_TMVP_C0047 
+#define NH_3D_TMVP                        1   // QC_TMVP_C0047 
                                               // Sony_M23639
                                               // H_3D_TMVP_SCALING_FIX_K0053       1   // QC/CY for K0053
 #define NH_3D_IC                          1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
