@@ -89,7 +89,7 @@
 #define NH_3D_IC_FIX                      0   // Fix uninitialized value in cDtParam.bUseIC (it happened on intra block)
 #define NH_3D_FULL_PEL_DEPTH_MAP_MV_ACC   1   // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
 
-#define NH_3D_QTLPC                       0   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
+#define NH_3D_QTLPC                       1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
                                               // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
 
