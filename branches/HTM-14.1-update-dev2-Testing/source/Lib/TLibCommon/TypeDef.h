@@ -72,7 +72,7 @@
 #define NH_3D_TMVP                        0   // QC_TMVP_C0047 
                                               // Sony_M23639
                                               // H_3D_TMVP_SCALING_FIX_K0053       1   // QC/CY for K0053
-#define NH_3D_IC                          0   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
+#define NH_3D_IC                          1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // SHARP_ILLUCOMP_REFINE_E0046
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
@@ -85,7 +85,7 @@
                                               // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
                                               // LGE_CHROMA_IC_J0050_J0034
 
-#define NH_3D_IC_FIX                      0   // Fix uninitialized value in cDtParam.bUseIC (it happened on intra block)
+#define NH_3D_IC_FIX                      1   // Fix uninitialized value in cDtParam.bUseIC (it happened on intra block)
 #define NH_3D_FULL_PEL_DEPTH_MAP_MV_ACC   1   // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
 
 #define NH_3D_QTLPC                       1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
