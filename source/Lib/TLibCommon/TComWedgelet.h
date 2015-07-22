@@ -42,31 +42,29 @@
 
 #include <vector>
 
-#if H_3D_DIM
-#define DIM_OFFSET     (NUM_INTRA_MODE+1) // offset for DMM and RBC mode numbers (PM: not consistent with spec, but non-overlapping with chroma, see DM_CHROMA_IDX)
-#define DIM_MIN_SIZE                   4  // min. block size for DMM and RBC modes
-#define DIM_MAX_SIZE                  32  // max. block size for DMM and RBC modes
+#if NH_3D_DMM
+#define DMM_OFFSET     (NUM_INTRA_MODE+1) // offset for DMM and RBC mode numbers
+#define DMM_MIN_SIZE                   4  // min. block size for DMM and RBC modes
+#define DMM_MAX_SIZE                  32  // max. block size for DMM and RBC modes
 
-enum DIM_IDX
+enum DmmID
 {
   DMM1_IDX = 0,
   DMM4_IDX = 1,
+  NUM_DMM  = 2,
+  DMM_NO_IDX = MAX_UINT
 };
 
-#define DMM_NUM_TYPE   2
-#define DIM_NUM_TYPE   (DMM_NUM_TYPE)
-#define DIM_NO_IDX     MAX_UINT
-
-__inline UInt getDimType  ( Int intraMode ) 
+__inline DmmID getDmmType( Int intraMode ) 
 { 
-    Int dimType = intraMode-DIM_OFFSET; 
-    return (dimType >= 0 && dimType < DIM_NUM_TYPE) ? (UInt)dimType : DIM_NO_IDX; 
+    Int dmmType = intraMode-DMM_OFFSET; 
+    return (dmmType >= 0 && dmmType < NUM_DMM) ? (DmmID)dmmType : DMM_NO_IDX; 
 }
-__inline Bool isDimMode   ( Int intraMode ) { return (getDimType( intraMode ) < DIM_NUM_TYPE); }
-#endif
+__inline Bool isDmmMode( Int intraMode ) { return ((UInt)getDmmType( intraMode ) < NUM_DMM); }
 
-#if H_3D_DIM_DMM
-#define DMM_NO_WEDGEINDEX       MAX_UINT
+
+// Wedgelets
+#define DMM_NO_WEDGE_IDX       MAX_UINT
 #define DMM_NUM_WEDGE_REFINES   8
 
 enum WedgeResolution
@@ -89,7 +87,6 @@ private:
   UChar           m_uhOri;                      // orientation index
   WedgeResolution m_eWedgeRes;                  // start/end pos resolution
   Bool            m_bIsCoarse; 
-  UInt            m_uiAng;
 
   UInt  m_uiWidth;
   UInt  m_uiHeight;
@@ -120,16 +117,16 @@ public:
   UChar           getEndY    () { return m_uhYe; }
   UChar           getOri     () { return m_uhOri; }
   Bool            getIsCoarse() { return m_bIsCoarse; }
-  UInt            getAng     () { return m_uiAng; }
-  Bool*           getScaledPattern(UInt uiWidth);
 
   Void  generateWedgePatternByRotate(const TComWedgelet &rcWedge, Int rotate);
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse = false );
-  Void  findClosestAngle();
 
   Bool  checkNotPlain();
   Bool  checkIdentical( Bool* pbRefPattern );
   Bool  checkInvIdentical( Bool* pbRefPattern );
+
+  Bool* getPatternScaled    ( UInt dstSize );
+  Void  getPatternScaledCopy( UInt dstSize, Bool* dstBuf );
 
 };  // END CLASS DEFINITION TComWedgelet
 
@@ -161,8 +158,6 @@ public:
   Void  setWedgeRef( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UInt uiRefIdx ) { m_uhXs = uhXs; m_uhYs = uhYs; m_uhXe = uhXe; m_uhYe = uhYe; m_uiRefIdx = uiRefIdx; }
 };  // END CLASS DEFINITION TComWedgeRef
 
-// type definition wedgelet reference list
-typedef std::vector<TComWedgeRef> WedgeRefList;
 
 // ====================================================================================================================
 // Class definition TComWedgeNode
@@ -186,15 +181,6 @@ public:
 
 // type definition wedgelet node list
 typedef std::vector<TComWedgeNode> WedgeNodeList;
-#endif //H_3D_DIM_DMM
+#endif //NH_3D_DMM
 
-
-// ====================================================================================================================
-// Function definition roftoi (mathematically correct rounding of float to int)
-// ====================================================================================================================
-__inline Int roftoi( Double value )
-{
-  (value < -0.5) ? (value -= 0.5) : (value += 0.5);
-  return ( (Int)value );
-}
 #endif // __TCOMWEDGELET__

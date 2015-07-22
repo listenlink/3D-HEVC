@@ -36,7 +36,7 @@
 */
 
 #include "TExtrTop.h"
-#if H_MV
+#if NH_MV
 TExtrTop::TExtrTop()
 {
 }
@@ -55,12 +55,14 @@ Void TExtrTop::init()
 Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds )
 {
   //extraction now has to be done using layer_id
-  UInt uiLayerId      = nalu.m_layerId;
+  UInt uiLayerId      = nalu.m_nuhLayerId;
 
   
   // Initialize entropy decoder
   m_cEntropyDecoder.setEntropyDecoder( &m_cCavlcDecoder );
-  m_cEntropyDecoder.setBitstream     ( nalu.m_Bitstream );
+
+  TComInputBitstream inpBs = nalu.getBitstream(); 
+  m_cEntropyDecoder.setBitstream     ( &inpBs );
   
   if ( nalu.m_nalUnitType == NAL_UNIT_VPS )
   {

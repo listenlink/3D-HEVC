@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,14 +65,14 @@ class TEncSlice;
 class TEncCu
 {
 private:
-  
+
   TComDataCU**            m_ppcBestCU;      ///< Best CUs in each depth
   TComDataCU**            m_ppcTempCU;      ///< Temporary CUs in each depth
-#if H_3D_ARP
+#if NH_3D_ARP
   TComDataCU**            m_ppcWeightedTempCU;
 #endif
   UChar                   m_uhTotalDepth;
-  
+
   TComYuv**               m_ppcPredYuvBest; ///< Best Prediction Yuv for each depth
   TComYuv**               m_ppcResiYuvBest; ///< Best Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvBest; ///< Best Reconstruction Yuv for each depth
@@ -80,30 +80,31 @@ private:
   TComYuv**               m_ppcResiYuvTemp; ///< Temporary Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
-  
-#if H_3D_DBBP
+
+#if NH_3D_DBBP
   TComYuv**               m_ppcOrigYuvDBBP;
 #endif
   
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
-  
+  Bool                    m_bFastDeltaQP;
+  Bool                    m_stillToCodeChromaQpOffsetFlag; //indicates whether chroma QP offset flag needs to coded at this particular CU granularity.
+  Int                     m_cuChromaQpOffsetIdxPlus1; // if 0, then cu_chroma_qp_offset_flag will be 0, otherwise cu_chroma_qp_offset_flag will be 1.
+
   //  Access channel
   TEncCfg*                m_pcEncCfg;
   TEncSearch*             m_pcPredSearch;
   TComTrQuant*            m_pcTrQuant;
-  TComBitCounter*         m_pcBitCounter;
   TComRdCost*             m_pcRdCost;
-  
+
   TEncEntropy*            m_pcEntropyCoder;
-  TEncCavlc*              m_pcCavlcCoder;
-  TEncSbac*               m_pcSbacCoder;
   TEncBinCABAC*           m_pcBinCABAC;
-  
+
   // SBAC RD
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
   TEncRateCtrl*           m_pcRateCtrl;
+
 #if KWU_RC_MADPRED_E0227
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
@@ -113,84 +114,95 @@ private:
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
-  
+
   /// create internal buffers
-  Void  create              ( UChar uhTotalDepth, UInt iMaxWidth, UInt iMaxHeight );
-  
+  Void  create              ( UChar uhTotalDepth, UInt iMaxWidth, UInt iMaxHeight, ChromaFormat chromaFormat );
+
   /// destroy internal buffers
   Void  destroy             ();
-  
-  /// CU analysis function
-  Void  compressCU          ( TComDataCU*&  rpcCU );
-  
-  /// CU encoding function
-  Void  encodeCU            ( TComDataCU*    pcCU );
-  
-  Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
+
+  /// CTU analysis function
+  Void  compressCtu         ( TComDataCU*  pCtu );
+
+  /// CTU encoding function
+  Void  encodeCtu           ( TComDataCU*  pCtu );
+
+  Int   updateCtuDataISlice ( TComDataCU* pCtu, Int width, Int height );
 #if KWU_RC_MADPRED_E0227
   UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
-  Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
+
+  Void setFastDeltaQp       ( Bool b)                 { m_bFastDeltaQP = b;         }
+
 protected:
-  Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
+  Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx );
 #if AMP_ENC_SPEEDUP
-  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth, PartSize eParentPartSize = SIZE_NONE );
+  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug), PartSize eParentPartSize = NUMBER_OF_PART_SIZES );
 #else
-  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
+  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const UInt uiDepth        );
 #endif
   Void  xEncodeCU           ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
-  
+
   Int   xComputeQP          ( TComDataCU* pcCU, UInt uiDepth );
-  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
-  
-  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool *earlyDetectionSkipMode);
+  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sParent) DEBUG_STRING_FN_DECLARE(sTest) DEBUG_STRING_PASS_INTO(Bool bAddSizeInfo=true));
+
+  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode );
 
 #if AMP_MRG
 #if  H_3D_FAST_TEXTURE_ENCODING
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize,  Bool bFMD, Bool bUseMRG = false  ) ;
 #else
-  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
+  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG = false  );
 #endif
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
-#if H_3D_DBBP
+#if NH_3D_DBBP
   Void  xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTemp, Bool* pMask, UInt uiValidSegment );
-  Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG = false );
+  Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU  DEBUG_STRING_FN_DECLARE(sDebug),  Bool bUseMRG = false );
 #endif
-#if H_3D
+#if NH_3D_DIS
   Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
-#if H_3D_DIM
-  Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bOnlyIVP );
-#else
-  Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
+  Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
+                              TComDataCU *&rpcTempCU,
+                              Double      &cost,
+                              PartSize     ePartSize
+                              DEBUG_STRING_FN_DECLARE(sDebug)
+#if NH_3D_ENC_DEPTH
+                            , Bool bOnlyIVP
 #endif
+                            );
   Void  xCheckDQP           ( TComDataCU*  pcCU );
-  
+
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );
-  Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU, UInt uiLPelX, UInt uiTPelY );
+  Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth );
   Void  xCopyYuv2Tmp        ( UInt uhPartUnitIdx, UInt uiDepth );
 
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
 
+  Bool getFastDeltaQp       () const                  { return m_bFastDeltaQP;      }
+
+  Bool getCodeChromaQpAdjFlag() { return m_stillToCodeChromaQpOffsetFlag; }
+  Void setCodeChromaQpAdjFlag( Bool b ) { m_stillToCodeChromaQpOffsetFlag = b; }
+
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions
-  Void xLcuCollectARLStats(TComDataCU* rpcCU);
-  Int  xTuCollectARLStats(TCoeff* rpcCoeff, Int* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples );
+  Void xCtuCollectARLStats(TComDataCU* pCtu);
+  Int  xTuCollectARLStats(TCoeff* rpcCoeff, TCoeff* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples );
 #endif
 
-#if AMP_ENC_SPEEDUP 
+#if AMP_ENC_SPEEDUP
 #if AMP_MRG
-  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver);
+  Void deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver);
 #else
-  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver);
+  Void deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver);
 #endif
 #endif
 
-  Void  xFillPCMBuffer     ( TComDataCU*& pCU, TComYuv* pOrgYuv ); 
+  Void  xFillPCMBuffer     ( TComDataCU* pCU, TComYuv* pOrgYuv );
 };
 
 //! \}

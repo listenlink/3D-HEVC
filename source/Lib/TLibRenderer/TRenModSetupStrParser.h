@@ -38,7 +38,7 @@
 #include "../TLibCommon/TComPicYuv.h"
 #include "../TLibCommon/TypeDef.h"
 #include "../TAppCommon/TAppComCamPara.h"
-#if H_3D
+#if NH_3D
 
 
 
@@ -127,7 +127,7 @@ private:
   Void xGetNextChar       ( Char& rcNextChar );
 };
 
-#endif // H_3D
+#endif // NH_3D
 #endif //__TRENMODEL__
 
 

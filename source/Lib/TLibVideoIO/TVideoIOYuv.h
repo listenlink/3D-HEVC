@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,27 +55,36 @@ class TVideoIOYuv
 {
 private:
   fstream   m_cHandle;                                      ///< file handle
-  Int m_fileBitDepthY; ///< bitdepth of input/output video file luma component
-  Int m_fileBitDepthC; ///< bitdepth of input/output video file chroma component
-  Int m_bitDepthShiftY;  ///< number of bits to increase or decrease luma by before/after write/read
-  Int m_bitDepthShiftC;  ///< number of bits to increase or decrease chroma by before/after write/read
-  
+  Int       m_fileBitdepth[MAX_NUM_CHANNEL_TYPE]; ///< bitdepth of input/output video file
+  Int       m_MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE];  ///< bitdepth after addition of MSBs (with value 0)
+  Int       m_bitdepthShift[MAX_NUM_CHANNEL_TYPE];  ///< number of bits to increase or decrease image by before/after write/read
+
 public:
   TVideoIOYuv()           {}
   virtual ~TVideoIOYuv()  {}
-  
-  Void  open  ( Char* pchFile, Bool bWriteMode, Int fileBitDepthY, Int fileBitDepthC, Int internalBitDepthY, Int internalBitDepthC ); ///< open or create file
+
+  Void  open  ( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] ); ///< open or create file
   Void  close ();                                           ///< close file
 
-  void skipFrames(UInt numFrames, UInt width, UInt height);
-  
-  Bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2] );     ///< read  one YUV frame with padding parameter
-  Bool  write( TComPicYuv*    pPicYuv, Int confLeft=0, Int confRight=0, Int confTop=0, Int confBottom=0 );
-  Bool  write( TComPicYuv*    pPicYuv, TComPicYuv*    pPicYuv2, Int confLeft=0, Int confRight=0, Int confTop=0, Int confBottom=0  , bool isTff=false); 
-  
+  Void skipFrames(UInt numFrames, UInt width, UInt height, ChromaFormat format);
+
+  // if fileFormat<NUM_CHROMA_FORMAT, the format of the file is that format specified, else it is the format of the TComPicYuv.
+
+
+  // If fileFormat=NUM_CHROMA_FORMAT, use the format defined by pPicYuvTrueOrg
+  Bool  read  ( TComPicYuv* pPicYuv, TComPicYuv* pPicYuvTrueOrg, const InputColourSpaceConversion ipcsc, Int aiPad[2], ChromaFormat fileFormat=NUM_CHROMA_FORMAT, const Bool bClipToRec709=false );     ///< read one frame with padding parameter
+
+  // If fileFormat=NUM_CHROMA_FORMAT, use the format defined by pPicYuv
+  Bool  write ( TComPicYuv* pPicYuv, const InputColourSpaceConversion ipCSC, Int confLeft=0, Int confRight=0, Int confTop=0, Int confBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT, const Bool bClipToRec709=false );     ///< write one YUV frame with padding parameter
+
+  // If fileFormat=NUM_CHROMA_FORMAT, use the format defined by pPicYuvTop and pPicYuvBottom
+  Bool  write ( TComPicYuv* pPicYuvTop, TComPicYuv* pPicYuvBottom, const InputColourSpaceConversion ipCSC, Int confLeft=0, Int confRight=0, Int confTop=0, Int confBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT, const Bool isTff=false, const Bool bClipToRec709=false);
+  static Void ColourSpaceConvert(const TComPicYuv &src, TComPicYuv &dest, const InputColourSpaceConversion conversion, Bool bIsForwards);
+
   Bool  isEof ();                                           ///< check for end-of-file
   Bool  isFail();                                           ///< check for failure
-  
+
+
 };
 
 #endif // __TVIDEOIOYUV__

@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@
     \brief    Class for counting bits (header)
 */
 
-#ifndef __COMBITCOUNTER__
-#define __COMBITCOUNTER__
+#ifndef __TCOMBITCOUNTER__
+#define __TCOMBITCOUNTER__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -56,14 +56,16 @@ class TComBitCounter : public TComBitIf
 {
 protected:
   UInt  m_uiBitCounter;
-  
+
 public:
   TComBitCounter()            {}
   virtual ~TComBitCounter()   {}
-  
+
   Void        write                 ( UInt /*uiBits*/, UInt uiNumberOfBits )  { m_uiBitCounter += uiNumberOfBits; }
   Void        resetBits             ()                                    { m_uiBitCounter = 0;               }
   UInt getNumberOfWrittenBits() const { return m_uiBitCounter; }
+  Int         getNumBitsUntilByteAligned() const                              { return (8 - m_uiBitCounter) & 0x7;}
+
 };
 
 //! \}
