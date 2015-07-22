@@ -283,15 +283,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\SEIEncoder.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\SEIwrite.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\SyntaxElementWriter.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncAnalyze.cpp"
 				>
 			</File>
 			<File
@@ -365,6 +365,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\NALwrite.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\SEIEncoder.h"
 				>
 			</File>
 			<File

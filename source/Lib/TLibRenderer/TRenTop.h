@@ -38,7 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComPicYuv.h"
 
-#if H_3D
+#if NH_3D
 #include <list>
 #include <vector>
 
@@ -269,5 +269,5 @@ private:
   PelImage* m_pcTempImage       ;
 };
 
-#endif // H_3D
+#endif // NH_3D
 #endif //__TRENTOP__
