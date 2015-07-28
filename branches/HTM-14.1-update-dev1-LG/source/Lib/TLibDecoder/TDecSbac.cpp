@@ -110,13 +110,13 @@ TDecSbac::TDecSbac()
 , m_cNotDmmFlagSCModel                       ( 1,             1,                      NUM_NOTDMM_FLAG_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmModeSCModel                          ( 1,             1,                      NUM_DMM_MODE_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA
+#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
 , m_cDdcDataSCModel                          ( 1,             1,                      NUM_DDC_DATA_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCFlagSCModel                          ( 1,             1,                     NUM_SDC_FLAG_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if NH_3D_SDC_INTRA
 , m_cSDCResidualFlagSCModel                  ( 1,             1,                     SDC_NUM_RESIDUAL_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSDCResidualSCModel                      ( 1,             1,                     SDC_NUM_RESIDUAL_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cSDCFlagSCModel                          ( 1,             1,                     NUM_SDC_FLAG_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDdcFlagSCModel                          ( 1,             1,                     NUM_DDC_FLAG_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if NH_3D_DBBP
@@ -201,13 +201,13 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cNotDmmFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_NOTDMM_FLAG );
   m_cDmmModeSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_DMM_MODE );
 #endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA
+#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
   m_cDdcDataSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_DDC_DATA );
+  m_cSDCFlagSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_SDC_FLAG );
 #endif
 #if NH_3D_SDC_INTRA
   m_cSDCResidualFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
   m_cSDCResidualSCModel.initBuffer                ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL );
-  m_cSDCFlagSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_SDC_FLAG );
   m_cDdcFlagSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_DDC_FLAG );
 #endif
 #if NH_3D_DBBP
@@ -2318,10 +2318,10 @@ Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 #endif
 
-#if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
 Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
 {
-#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
   if( !(pcCU->getSDCFlag( absPartIdx )) )
 #endif
 #if NH_3D_DMM
@@ -2369,7 +2369,7 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
       }
 #endif
     }
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
     else
     {
       pcCU->setSDCSegmentDCOffset( valDeltaDC, segment, absPartIdx );
@@ -2488,7 +2488,7 @@ Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
   ruiTabIdx = uiIdx;
 }
 #endif
-#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
 Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol = 0;

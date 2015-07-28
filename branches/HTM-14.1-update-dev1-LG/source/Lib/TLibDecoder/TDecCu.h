@@ -129,7 +129,7 @@ protected:
 #if NH_3D_SDC_INTRA
   Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   Void xReconInterSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 

@@ -83,7 +83,7 @@ private:
 #if NH_3D_IC
   Bool              m_bICFlag;
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   Bool              m_bSDCMRSADFlag;
 #endif
 
@@ -101,7 +101,7 @@ public:
   Bool  getICFlag()               { return m_bICFlag; }
   Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   Bool  getSDCMRSADFlag()         { return m_bSDCMRSADFlag; }
   Void  setSDCMRSADFlag( Bool bSDCMRSADFlag )    { m_bSDCMRSADFlag = bSDCMRSADFlag; }
 #endif

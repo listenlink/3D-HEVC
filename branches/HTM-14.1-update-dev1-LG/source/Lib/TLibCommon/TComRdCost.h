@@ -93,7 +93,7 @@ public:
 #if NH_3D_IC
   Bool  bUseIC;
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   Bool  bUseSDCMRSAD;
 #endif
   Int   iRows;
@@ -128,7 +128,7 @@ public:
     pVirOrg = NULL;
     iStrideVir = 0;
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
     bUseSDCMRSAD = false;
 #endif
   }
@@ -255,7 +255,7 @@ private:
   static Distortion xGetSSE32         ( DistParam* pcDtParam );
   static Distortion xGetSSE64         ( DistParam* pcDtParam );
   static Distortion xGetSSE16N        ( DistParam* pcDtParam );
-#if NH_3D_IC || H_3D_INTER_SDC
+#if NH_3D_IC || NH_3D_SDC_INTER
   static UInt xGetSADic         ( DistParam* pcDtParam );
   static UInt xGetSAD4ic        ( DistParam* pcDtParam );
   static UInt xGetSAD8ic        ( DistParam* pcDtParam );
@@ -282,7 +282,7 @@ private:
   static UInt xGetVSD16N        ( DistParam* pcDtParam );
 #endif
 
-#if NH_3D_IC || H_3D_INTER_SDC
+#if NH_3D_IC || NH_3D_SDC_INTER
   static UInt xGetSAD12ic       ( DistParam* pcDtParam );
   static UInt xGetSAD24ic       ( DistParam* pcDtParam );
   static UInt xGetSAD48ic       ( DistParam* pcDtParam );
@@ -293,7 +293,7 @@ private:
   static Distortion xGetSAD48         ( DistParam* pcDtParam );
 
 
-#if NH_3D_IC || H_3D_INTER_SDC
+#if NH_3D_IC || NH_3D_SDC_INTER
   static UInt xGetHADsic          ( DistParam* pcDtParam );
 #endif
 
