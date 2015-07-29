@@ -2093,13 +2093,13 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
             rpcTempCU->setTrIdxSubParts(0, 0, uhDepth);
           }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
           TComDataCU *rpcTempCUPre = rpcTempCU;
 #endif
           Int orgQP = rpcTempCU->getQP( 0 );
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(bestStr) DEBUG_STRING_PASS_INTO(tmpStr));
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
           if( rpcTempCU->getSlice()->getInterSdcFlag() && !uiNoResidual )
           {
             Double dOffsetCost[3] = {MAX_DOUBLE,MAX_DOUBLE,MAX_DOUBLE};
@@ -2130,7 +2130,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
               rpcTempCU->setDISFlagSubParts( false, 0, uhDepth );
 #endif
               rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
-              rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
+              rpcTempCU->setCbfSubParts( 1, COMPONENT_Y, 0, uhDepth );
 #if NH_3D_VSO //M2
               if( m_pcRdCost->getUseRenModel() )
               { //Reset
@@ -2172,7 +2172,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
           if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
           {
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
             if( rpcTempCU->getSlice()->getInterSdcFlag() )
             {
               bestIsSkip = !rpcBestCU->getSDCFlag( 0 ) && ( rpcBestCU->getQtRootCbf(0) == 0 );
@@ -2181,7 +2181,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
             {
 #endif
             bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
             }
 #endif
           }
@@ -2376,13 +2376,13 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if DEBUG_STRING
   DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uhDepth]), *(m_ppcResiYuvBest[uhDepth]), *(m_ppcRecoYuvTemp[uhDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
       TComDataCU *rpcTempCUPre = rpcTempCU;
 #endif
 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
       if( rpcTempCU->getSlice()->getInterSdcFlag() && ePartSize == SIZE_2Nx2N)
       {
         Double dOffsetCost[3] = {MAX_DOUBLE,MAX_DOUBLE,MAX_DOUBLE};
@@ -2415,7 +2415,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
           rpcTempCU->setDISFlagSubParts( false, 0, uhDepth );
 #endif
           rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
-          rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
+          rpcTempCU->setCbfSubParts( 1, COMPONENT_Y, 0, uhDepth );
 #if NH_3D_VSO // M3
           if( m_pcRdCost->getUseRenModel() )
           {

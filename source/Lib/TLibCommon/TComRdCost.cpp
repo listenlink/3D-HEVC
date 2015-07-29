@@ -563,7 +563,7 @@ Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  P
 #if NH_3D_IC
   cDtParam.bUseIC       = false;
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   cDtParam.bUseSDCMRSAD = false;
 #endif
 
@@ -604,7 +604,7 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Int bitDep
 #if NH_3D_IC_FIX
   cDtParam.bUseIC       = false;
 #endif
-#if H_3D_INTER_SDC_FIX
+#if NH_3D_SDC_INTER
   cDtParam.bUseSDCMRSAD = false;
 #endif
 
@@ -775,7 +775,7 @@ Distortion TComRdCost::xGetSAD( DistParam* pcDtParam )
     return xGetSADic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSADic( pcDtParam );
@@ -817,7 +817,7 @@ Distortion TComRdCost::xGetSAD4( DistParam* pcDtParam )
     return xGetSAD4ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD4ic( pcDtParam );
@@ -862,7 +862,7 @@ Distortion TComRdCost::xGetSAD8( DistParam* pcDtParam )
     return xGetSAD8ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD8ic( pcDtParam );
@@ -911,7 +911,7 @@ Distortion TComRdCost::xGetSAD16( DistParam* pcDtParam )
     return xGetSAD16ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD16ic( pcDtParam );
@@ -967,7 +967,7 @@ Distortion TComRdCost::xGetSAD12( DistParam* pcDtParam )
     return xGetSAD12ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD12ic( pcDtParam );
@@ -1015,7 +1015,7 @@ Distortion TComRdCost::xGetSAD16N( DistParam* pcDtParam )
     return xGetSAD16Nic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD16Nic( pcDtParam );
@@ -1075,7 +1075,7 @@ Distortion TComRdCost::xGetSAD32( DistParam* pcDtParam )
     return xGetSAD32ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD32ic( pcDtParam );
@@ -1148,7 +1148,7 @@ Distortion TComRdCost::xGetSAD24( DistParam* pcDtParam )
     return xGetSAD24ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD24ic( pcDtParam );
@@ -1213,7 +1213,7 @@ Distortion TComRdCost::xGetSAD64( DistParam* pcDtParam )
     return xGetSAD64ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD64ic( pcDtParam );
@@ -1317,7 +1317,7 @@ Distortion TComRdCost::xGetSAD48( DistParam* pcDtParam )
     return xGetSAD48ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD48ic( pcDtParam );
@@ -1394,7 +1394,7 @@ Distortion TComRdCost::xGetSAD48( DistParam* pcDtParam )
 }
 
 
-#if NH_3D_IC || H_3D_INTER_SDC
+#if NH_3D_IC || NH_3D_SDC_INTER
 UInt TComRdCost::xGetSADic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
@@ -3339,7 +3339,7 @@ Distortion TComRdCost::xGetHADs( DistParam* pcDtParam )
     return xGetHADsic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetHADsic( pcDtParam );
@@ -3409,7 +3409,7 @@ Distortion TComRdCost::xGetHADs( DistParam* pcDtParam )
   return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8) );
 }
 
-#if NH_3D_IC || H_3D_INTER_SDC
+#if NH_3D_IC || NH_3D_SDC_INTER
 UInt TComRdCost::xGetHADsic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )

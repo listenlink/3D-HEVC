@@ -655,7 +655,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
     else
     {
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
       if( m_ppcCU[uiDepth]->getSDCFlag( 0 ) )
       {
         xReconInterSDC( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
@@ -664,7 +664,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
       {
 #endif
       xReconInter( m_ppcCU[uiDepth], uiDepth );
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
       }
 #endif
 #if NH_3D_DBBP
@@ -835,7 +835,7 @@ Void TDecCu::xReconDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
 }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
 Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   // inter prediction
@@ -846,9 +846,10 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   Pel  *pResi;
   UInt uiPelX, uiPelY;
-  UInt uiResiStride = m_ppcYuvResi[uiDepth]->getStride();
+  UInt uiResiStride = m_ppcYuvResi[uiDepth]->getStride( COMPONENT_Y );
+  Int  bitDepthC = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA);
 
-  pResi = m_ppcYuvResi[uiDepth]->getLumaAddr( 0 );
+  pResi = m_ppcYuvResi[uiDepth]->getAddr( COMPONENT_Y );
   for( uiPelY = 0; uiPelY < uiHeight; uiPelY++ )
   {
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
@@ -858,19 +859,19 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pResi += uiResiStride;
   }
 
-  m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
+  m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ), pcCU->getSlice()->getSPS()->getBitDepths() );
 
   // clear UV
-  UInt  uiStrideC     = m_ppcYuvReco[uiDepth]->getCStride();
-  Pel   *pRecCb       = m_ppcYuvReco[uiDepth]->getCbAddr();
-  Pel   *pRecCr       = m_ppcYuvReco[uiDepth]->getCrAddr();
+  UInt  uiStrideC     = m_ppcYuvReco[uiDepth]->getStride( COMPONENT_Cb );
+  Pel   *pRecCb       = m_ppcYuvReco[uiDepth]->getAddr( COMPONENT_Cb );
+  Pel   *pRecCr       = m_ppcYuvReco[uiDepth]->getAddr( COMPONENT_Cr );
 
   for (Int y = 0; y < uiHeight/2; y++)
   {
     for (Int x = 0; x < uiWidth/2; x++)
     {
-      pRecCb[x] = (Pel)( 1 << ( g_bitDepthC - 1 ) );
-      pRecCr[x] = (Pel)( 1 << ( g_bitDepthC - 1 ) );
+      pRecCb[x] = (Pel)( 1 << ( bitDepthC - 1 ) );
+      pRecCr[x] = (Pel)( 1 << ( bitDepthC - 1 ) );
     }
 
     pRecCb += uiStrideC;

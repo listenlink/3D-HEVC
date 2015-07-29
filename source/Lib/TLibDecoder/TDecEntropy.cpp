@@ -297,8 +297,9 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #if NH_3D_DBBP
   decodeDBBPFlag( pcCU, uiAbsPartIdx, uiDepth ); 
 #endif
-  //decodeSDCFlag ( pcCU, uiAbsPartIdx, uiDepth );
-
+#if NH_3D_SDC_INTER
+  decodeSDCFlag ( pcCU, uiAbsPartIdx, uiDepth );
+#endif
 #if NH_3D_ARP
   decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
 #endif
@@ -1091,7 +1092,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getCbf(uiAbsPartIdx, COMPONENT_Y) == 1 );
 }
 #endif
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   if( pcCU->getSDCFlag( uiAbsPartIdx ) && !pcCU->isIntra( uiAbsPartIdx) )
   {
     assert( !pcCU->isSkipped( uiAbsPartIdx ) );
@@ -1102,7 +1103,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #if NH_3D
   if( pcCU->getSlice()->getIsDepth() )
   {
-#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
     if( pcCU->getSDCFlag( uiAbsPartIdx ) )
     {
       m_pcEntropyDecoderIf->parseDeltaDC( pcCU, uiAbsPartIdx, uiDepth );
@@ -1160,7 +1161,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   xDecodeTransform( bCodeDQP, isChromaQpAdjCoded, tuRecurse, quadtreeTULog2MinSizeInCU );
 }
 
-#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
 Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setSDCFlagSubParts( false, uiAbsPartIdx, uiDepth );

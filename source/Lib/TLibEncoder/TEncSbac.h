@@ -114,7 +114,7 @@ private:
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange );
-#if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
   Void  xWriteExGolombLevelDdc( UInt uiSymbol );
   Void  xCodeDeltaDC         ( Pel valDeltaDC, UInt uiNumSeg );
 #endif
@@ -148,10 +148,10 @@ public:
 #if NH_3D_IC
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
   Void  codeDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx );
 #endif
-#if NH_3D_SDC_INTRA || H_3D_INTER_SDC
+#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
   Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if NH_3D_DBBP
@@ -251,13 +251,13 @@ private:
   ContextModel3DBuffer m_cNotDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
 #endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA
+#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
   ContextModel3DBuffer m_cDdcDataSCModel;
+  ContextModel3DBuffer m_cSDCFlagSCModel;
 #endif
 #if NH_3D_SDC_INTRA  
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
   ContextModel3DBuffer m_cSDCResidualSCModel;
-  ContextModel3DBuffer m_cSDCFlagSCModel;
   ContextModel3DBuffer m_cDdcFlagSCModel;
 #endif
 #if NH_3D_DBBP
