@@ -65,6 +65,12 @@
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
+#define NH_3D_DLT_FIX                     1 // Fixes numbers of parsed DLTs 
+#define H_MV_VER141_DEC_COMP_FLAG         1 // Makes decoding of this version compatible to HTM-14.1 by re-introducing HTM-14.1 bugs.
+#define NH_3D_ALIGN_SPIVMP_DBBP           1 // Further alignment of DBBP and SBP motion
+#define NH_3D_ALIGN_SPIVMP_RP             1 // Alignment of DBBP and RP
+#define NH_3D_FIX_VSP                     1 
+
 #define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
 #define H_MV_ENC_DEC_TRAC_FIX             1  // by SHARP
 
@@ -1148,7 +1154,4 @@ struct TComSEIMasteringDisplay
   UShort    whitePoint[2];
 };
 //! \}
-#if H_3D
-#define !!! REMOVE THIS !!! Log2( n ) ( log((double)n) / log(2.0) ) // Ed.(GT): This is very very bad and should be fixed to used integer arithmetics ( see gCeilLog2 ) moreover it should not be defined in the tool macro section! 
-#endif
 #endif

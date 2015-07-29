@@ -61,7 +61,7 @@ TComPic::TComPic()
 #if NH_MV
 , m_layerId                               (0)
 , m_viewId                                (0)
-#if H_3D
+#if NH_3D
 , m_viewIndex                             (0)
 , m_isDepth                               (false)
 , m_aaiCodedScale                         (0)

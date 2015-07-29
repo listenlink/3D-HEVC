@@ -550,7 +550,7 @@ Bool g_traceCopyBack         = false;
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
 Bool g_decTracePicOutput     = false; 
-Bool g_stopAtPos             = false; 
+Bool g_stopAtPos             = true; 
 Bool g_outputPos             = false;   
 Bool g_traceCameraParameters = false; 
 Bool g_encNumberOfWrittenBits     = false; 
@@ -685,12 +685,12 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
               << std::endl; 
   }
   Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 16 && layerId == 5 )
+  if ( g_stopAtPos && poc == 0 && layerId == 2 )
   {
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 224 ) && ( cuPelY  == 128 ) && ( cuWidth == 16 ) && ( cuHeight == 16 ); 
+      stopFlag = ( cuPelX  == 416 ) && ( cuPelY  == 632 ) && ( cuWidth == 8 ) && ( cuHeight == 8 ); 
     }
     else
     {                     // Stop at specific position 

@@ -3646,7 +3646,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
 #if NH_3D_ARP
       !bARPFlag &&
 #endif
-#if H_3D
+#if H_3D || NH_3D_FIX_VSP
       (nPSW + nPSH > 12) &&
 #endif
 #if NH_3D_DBBP
@@ -5626,7 +5626,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
     ////////////////////////////////
     if(!m_pcSlice->getIsDepth())
     {
-#if H_3D_DBBP
+#if H_3D_DBBP || NH_3D_ALIGN_SPIVMP_DBBP
       if (!getDBBPFlag(0))
 #else
       if (1)
@@ -5802,7 +5802,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
       iCurrPosX  += ( iWidth  >> 1 );
       iCurrPosY  += ( iHeight >> 1 );
     }
-#if H_3D_DBBP
+#if H_3D_DBBP || NH_3D_ALIGN_SPIVMP_DBBP
     for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
 #else
     for(Int iLoopCan = ( m_pcSlice->getIsDepth() ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
@@ -5877,7 +5877,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
       }
     }
 #if NH_3D_SPIVMP
-#if H_3D_DBBP
+#if H_3D_DBBP || NH_3D_ALIGN_SPIVMP_DBBP
     for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++)
 #else
     for(Int iLoopCan = ( m_pcSlice->getIsDepth()  ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++)

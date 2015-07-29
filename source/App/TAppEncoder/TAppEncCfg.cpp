@@ -1359,7 +1359,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DLT"                   ,                          m_useDLT                  , true                          , "Depth lookup table"                        )
   ("IlluCompEnable"        ,                          m_abUseIC                 , true                          , "Enable illumination compensation"          )
   ("IlluCompLowLatencyEnc" ,                          m_bUseLowLatencyICEnc     , false                         , "Enable low-latency illumination compensation encoding")
-#endif //H_3D
+#endif //NH_3D
     
   ;
 
@@ -3598,7 +3598,7 @@ Void TAppEncCfg::xPrintParameter()
     }    
   }
 #endif //HHI_VSO
-#endif //H_3D
+#endif //NH_3D
   printf("\n");
 #if NH_MV
   printf("TOOL CFG General: ");

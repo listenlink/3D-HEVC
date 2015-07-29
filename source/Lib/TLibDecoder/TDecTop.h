@@ -175,7 +175,7 @@ Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize )
   rpt = NULL;
 };
 
-#endif //H_3D
+#endif //NH_3D
 /// decoder class
 class TDecTop
 {

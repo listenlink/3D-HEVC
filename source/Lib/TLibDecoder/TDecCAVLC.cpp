@@ -506,12 +506,20 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
   if ( pcDLT->getDltPresentFlag() )
   {
     READ_CODE(6, uiCode, "pps_depth_layers_minus1");
+#if H_MV_VER141_DEC_COMP_FLAG
+    pcDLT->setNumDepthViews( uiCode );
+#else
     pcDLT->setNumDepthViews( uiCode+1 );
+#endif
     
     READ_CODE(4, uiCode, "pps_bit_depth_for_depth_layers_minus8");
     pcDLT->setDepthViewBitDepth( (uiCode+8) );
     
+#if NH_3D_DLT_FIX
+    for( Int i = 0; i <= pcDLT->getNumDepthViews()-1; i++ )
+#else
     for( Int i = 0; i <= pcDLT->getNumDepthViews(); i++ )
+#endif
     {
       Int layerId = pcDLT->getDepthIdxToLayerId(i);
       

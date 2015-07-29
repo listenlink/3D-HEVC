@@ -390,7 +390,7 @@ __inline T gCeilLog2( T val )
 #define LOG2_DISP_PREC_LUT           2           ///< log2 of disparity precision used in integer disparity LUTs
 #define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
 
-#endif // end of H_3D
+#endif // end of NH_3D
 //! \}
 
 #endif // end of #ifndef  __COMMONDEF__

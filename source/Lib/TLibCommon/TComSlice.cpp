@@ -2233,7 +2233,7 @@ Void TComVPS::createCamPars(Int iNumViews)
     }
   }
 }
-#endif // H_3D
+#endif // NH_3D
 
 
 Int TComVPS::xGetDimBitOffset( Int j ) const
@@ -2502,7 +2502,7 @@ Void TComVPS::printLayerDependencies() const
     dependencyId  .push_back( getDependencyId( i ) );
     auxId         .push_back( getAuxId       ( i ) );      
     viewId        .push_back( getViewId      ( getLayerIdInNuh( i ) ) );
-#if H_3D  
+#if NH_3D  
     depthId.push_back( getDepthId( i ) );
 #endif
   }

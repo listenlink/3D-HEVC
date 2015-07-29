@@ -2253,7 +2253,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
 
   // prior to this, rpcTempCU will have just been reset using rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if H_3D || NH_3D_ARP
+#if NH_3D_ARP
   const Bool bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
 #endif
 #if  H_3D_FAST_TEXTURE_ENCODING

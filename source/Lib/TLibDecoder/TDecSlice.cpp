@@ -129,10 +129,10 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       }
     }
   }
-#if  H_3D
+#if  NH_3D_DLT
   if( pcSlice->getPPS()->getDLT() != NULL )
   {
-      assert( pcSlice->getSPS()->getBitDepthY() == pcSlice->getPPS()->getDLT()->getDepthViewBitDepth() );
+      assert( pcSlice->getSPS()->getBitDepth( CHANNEL_TYPE_LUMA ) == pcSlice->getPPS()->getDLT()->getDepthViewBitDepth() );
   }
 #endif
 

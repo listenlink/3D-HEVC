@@ -1313,9 +1313,6 @@ Void TDecTop::xDecodePPS(const std::vector<UChar> &naluData)
 #if NH_MV
   pps->setLayerId( getLayerId() ); 
 #endif
-#if H_3D
-  // GT: Please don't add parsing dependency of SPS from VPS here again!!!
-#endif
 #if NH_3D_DLT
   // create mapping from depth layer indexes to layer ids
   Int j=0;

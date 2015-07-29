@@ -379,7 +379,11 @@ Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
     WRITE_CODE(pcPPS->getDLT()->getNumDepthViews() - 1, 6, "pps_depth_layers_minus1");
     WRITE_CODE((pcPPS->getDLT()->getDepthViewBitDepth() - 8), 4, "pps_bit_depth_for_depth_layers_minus8");
     
+#if NH_3D_DLT_FIX
+    for( Int i = 0; i <= pcPPS->getDLT()->getNumDepthViews()-1; i++ )
+#else
     for( Int i = 0; i <= pcPPS->getDLT()->getNumDepthViews(); i++ )
+#endif
     {
       Int layerId = pcPPS->getDLT()->getDepthIdxToLayerId(i);
       
