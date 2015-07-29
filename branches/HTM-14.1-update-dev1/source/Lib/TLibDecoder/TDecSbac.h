@@ -78,11 +78,7 @@ public:
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
   Void  parseVPS                  ( TComVPS* /*pcVPS*/ ) {}
   Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
-#if H_3D
-  Void  parsePPS                  ( TComPPS* /*pcPPS*/, TComVPS* /*pcVPS*/ ) {}
-#else
   Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}
-#endif
   Void  parseSliceHeader          ( TComSlice* /*pcSlice*/, ParameterSetManager* /*parameterSetManager*/, const Int /*prevTid0POC*/) {}
   Void  parseTerminatingBit       ( UInt& ruiBit );
   Void  parseRemainingBytes       ( Bool noTrailingBytesExpected);

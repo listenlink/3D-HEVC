@@ -583,7 +583,7 @@ Void TComPrediction::xGetSubPUAddrAndMerge(TComDataCU* pcCU, UInt uiPartAddr, In
     uiMergedSPH[i] = iSPHeight;
     pcCU->getSPAbsPartIdx(uiPartAddr, iSPWidth, iSPHeight, i, iNumSPInOneLine, uiSPAddr[i]);
   }
-#if H_3D_ARP // check this!
+#if H_3D_ARP || NH_3D_ALIGN_SPIVMP_RP // check this!
   if( pcCU->getARPW( uiPartAddr ) != 0 )
   {
     return;

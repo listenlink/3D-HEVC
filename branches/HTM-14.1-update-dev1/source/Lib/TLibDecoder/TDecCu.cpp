@@ -922,7 +922,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       pcCU->getMvField(pcCU, uiPartAddr, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList]);
     }
     
-#if H_3D
+#if NH_3D
     AOF( pcCU->getARPW(uiPartAddr) == 0 );
     AOF( pcCU->getICFlag(uiPartAddr) == false );
     AOF( pcCU->getSPIVMPFlag(uiPartAddr) == false );

@@ -323,12 +323,6 @@ TComPicYuv::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorder
 
 #endif
 
-#if H_3D
-Void TComPicYuv::setLumaTo( Pel pVal )
-{
-  xSetPels( getLumaAddr(), getStride(), getWidth(), getHeight(), pVal );
-}
-#endif
 #if NH_3D_VSO
 Void TComPicYuv::setChromaTo( Pel pVal )
 {

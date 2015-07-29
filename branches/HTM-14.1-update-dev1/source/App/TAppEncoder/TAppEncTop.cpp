@@ -301,7 +301,7 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT   : false );
     m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL  : false );
     m_cTEncTop.setSps3dExtension               ( m_sps3dExtension );
-#endif // H_3D
+#endif // NH_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
 #endif  // NH_MV

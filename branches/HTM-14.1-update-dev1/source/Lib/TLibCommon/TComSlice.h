@@ -3093,14 +3093,6 @@ public:
   // Inference 
   Bool                        inferPocMsbValPresentFlag();
 #endif
-#if H_3D
-  Int                         getDefaultRefViewIdx()                                 { return m_iDefaultRefViewIdx;                                  }
-  Void                        setDefaultRefViewIdx(Int iViewIdx)                     { m_iDefaultRefViewIdx = iViewIdx;                              }
-
-  Bool                        getDefaultRefViewIdxAvailableFlag()                    { return m_bDefaultRefViewIdxAvailableFlag;                     }
-  Void                        setDefaultRefViewIdxAvailableFlag(Bool bViewIdx)       { m_bDefaultRefViewIdxAvailableFlag = bViewIdx;                 }
-  Void                        setDefaultRefView( );
-#endif
 protected:
   TComPic*                    xGetRefPic        (TComList<TComPic*>& rcListPic, Int poc);
   TComPic*                    xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, Bool pocHasMsb);
