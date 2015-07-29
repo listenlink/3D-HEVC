@@ -134,8 +134,6 @@ TComDataCU::TComDataCU()
 #if NH_3D_IC
   m_pbICFlag             = NULL;
 #endif
-#if H_3D_INTER_SDC
-#endif
 #if NH_3D_DBBP
   m_pbDBBPFlag         = NULL;
 #endif

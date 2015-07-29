@@ -229,14 +229,14 @@ public:
                                   TComYuv*    pcYuvRec,
                                   Bool        bSkipResidual
                                   DEBUG_STRING_FN_DECLARE(sDebug) );
-#if H_3D_INTER_SDC
+#if NH_3D_SDC_INTER
   Void encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU,
-    TComYuv* pcOrg, 
-    TComYuv* pcPred, 
-    TComYuv* pcResi, 
-    TComYuv* pcRec, 
-    Int      uiOffset,
-    const UInt uiDepth );
+                                     TComYuv* pcOrg, 
+                                     TComYuv* pcPred, 
+                                     TComYuv* pcResi, 
+                                     TComYuv* pcRec, 
+                                     Int      uiOffset,
+                                     const UInt uiDepth );
 #endif
 
   /// set ME search range
