@@ -66,7 +66,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
 #define NH_3D_DLT_FIX                     1 // Fixes numbers of parsed DLTs 
-#define H_MV_VER141_DEC_COMP_FLAG         1 // Makes decoding of this version compatible to HTM-14.1 by re-introducing HTM-14.1 bugs.
+#define NH_3D_VER141_DEC_COMP_FLAG        0 // Makes decoding of this version compatible to HTM-14.1 by re-introducing HTM-14.1 bugs.
 #define NH_3D_ALIGN_SPIVMP_DBBP           1 // Further alignment of DBBP and SBP motion
 #define NH_3D_ALIGN_SPIVMP_RP             1 // Alignment of DBBP and RP
 #define NH_3D_FIX_VSP                     1 

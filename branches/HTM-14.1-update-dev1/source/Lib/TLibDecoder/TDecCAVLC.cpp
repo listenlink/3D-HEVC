@@ -506,7 +506,7 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
   if ( pcDLT->getDltPresentFlag() )
   {
     READ_CODE(6, uiCode, "pps_depth_layers_minus1");
-#if H_MV_VER141_DEC_COMP_FLAG
+#if NH_3D_VER141_DEC_COMP_FLAG
     pcDLT->setNumDepthViews( uiCode );
 #else
     pcDLT->setNumDepthViews( uiCode+1 );
