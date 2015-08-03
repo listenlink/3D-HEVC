@@ -210,10 +210,10 @@ public:
                                   TComYuv*    pcPredYuv,
                                   TComYuv*    pcResiYuv,
                                   TComYuv*    pcRecoYuv
-#if H_3D_FAST_TEXTURE_ENCODING
+                                  DEBUG_STRING_FN_DECLARE(sDebug),
+#if NH_3D_FAST_TEXTURE_ENCODING
                                   Bool        bFMD,
 #endif
-                                  DEBUG_STRING_FN_DECLARE(sDebug),
                                   Bool        bUseRes = false
 #if AMP_MRG
                                  ,Bool        bUseMRG = false

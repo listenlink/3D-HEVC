@@ -506,7 +506,7 @@ public:
 #if NH_3D_DIS
    Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
   Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);
 #endif
 #if NH_3D_SPIVMP
