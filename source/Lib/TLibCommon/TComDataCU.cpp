@@ -5440,7 +5440,7 @@ Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refi
   return false;
 }
 #endif 
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
 Void 
 TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge, Int& iIVFMaxD)
 {
@@ -5456,7 +5456,7 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
   getPartIndexAndSize( uiPartIdx, uiPartAddr, iWidth, iHeight );
 
   Int  iCurrPosX, iCurrPosY;
-  pcBaseRec->getTopLeftSamplePos( getAddr(), getZorderIdxInCU() + uiPartAddr, iCurrPosX, iCurrPosY );
+  pcBaseRec->getTopLeftSamplePos( this->getCtuRsAddr(), this->getZorderIdxInCtu() + uiPartAddr, iCurrPosX, iCurrPosY );
 
   iCurrPosX  += ( ( iWidth  - 1 ) >> 1 );
   iCurrPosY  += ( ( iHeight - 1 ) >> 1 );
@@ -5472,16 +5472,16 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
     cDv.setVer(0);
   }
 
-  Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
-  Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
-  Int         iBaseLPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX - (iWidth >> 1) + ( (cDv.getHor() + 2 ) >> 2 ) );
-  Int         iBaseLPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
-  Int         iBaseRPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + (iWidth >> 1) + 1 + ( (cDv.getHor() + 2 ) >> 2 ) );
-  Int         iBaseRPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
-  Int         iBaseUPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
-  Int         iBaseUPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY - (iHeight >> 1) + ( (cDv.getVer() + 2 ) >> 2 )); 
-  Int         iBaseDPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
-  Int         iBaseDPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + (iHeight >> 1) + 1 + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth (COMPONENT_Y) - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight(COMPONENT_Y) - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseLPosX   = Clip3( 0, pcBaseRec->getWidth (COMPONENT_Y) - 1, iCurrPosX - (iWidth >> 1) + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseLPosY   = Clip3( 0, pcBaseRec->getHeight(COMPONENT_Y) - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseRPosX   = Clip3( 0, pcBaseRec->getWidth (COMPONENT_Y) - 1, iCurrPosX + (iWidth >> 1) + 1 + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseRPosY   = Clip3( 0, pcBaseRec->getHeight(COMPONENT_Y) - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseUPosX   = Clip3( 0, pcBaseRec->getWidth (COMPONENT_Y) - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseUPosY   = Clip3( 0, pcBaseRec->getHeight(COMPONENT_Y) - 1, iCurrPosY - (iHeight >> 1) + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseDPosX   = Clip3( 0, pcBaseRec->getWidth (COMPONENT_Y) - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseDPosY   = Clip3( 0, pcBaseRec->getHeight(COMPONENT_Y) - 1, iCurrPosY + (iHeight >> 1) + 1 + ( (cDv.getVer() + 2 ) >> 2 )); 
 
   Int         iBaseCUAddr;
   Int         iBaseAbsPartIdx;
@@ -5498,11 +5498,11 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
   pcBaseRec->getCUAddrAndPartIdx( iBaseRPosX , iBaseRPosY , iBaseRCUAddr, iBaseRAbsPartIdx );
   pcBaseRec->getCUAddrAndPartIdx( iBaseUPosX , iBaseUPosY , iBaseUCUAddr, iBaseUAbsPartIdx );
   pcBaseRec->getCUAddrAndPartIdx( iBaseDPosX , iBaseDPosY , iBaseDCUAddr, iBaseDAbsPartIdx );
-  TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
-  TComDataCU* pcBaseLCU    = pcBasePic->getCU( iBaseLCUAddr );
-  TComDataCU* pcBaseRCU    = pcBasePic->getCU( iBaseRCUAddr );
-  TComDataCU* pcBaseUCU    = pcBasePic->getCU( iBaseUCUAddr );
-  TComDataCU* pcBaseDCU    = pcBasePic->getCU( iBaseDCUAddr );
+  TComDataCU* pcBaseCU     = pcBasePic->getCtu( iBaseCUAddr );
+  TComDataCU* pcBaseLCU    = pcBasePic->getCtu( iBaseLCUAddr );
+  TComDataCU* pcBaseRCU    = pcBasePic->getCtu( iBaseRCUAddr );
+  TComDataCU* pcBaseUCU    = pcBasePic->getCtu( iBaseUCUAddr );
+  TComDataCU* pcBaseDCU    = pcBasePic->getCtu( iBaseDCUAddr );
   bIVFMerge = pcBaseLCU->getMergeFlag( iBaseLAbsPartIdx ) && pcBaseCU->getMergeFlag( iBaseAbsPartIdx ) && pcBaseRCU->getMergeFlag( iBaseRAbsPartIdx ) && pcBaseUCU->getMergeFlag( iBaseUAbsPartIdx ) && pcBaseDCU->getMergeFlag( iBaseDAbsPartIdx );
   Int aiDepthL[5]; //depth level
   aiDepthL[0] = pcBaseCU->getDepth(iBaseAbsPartIdx);

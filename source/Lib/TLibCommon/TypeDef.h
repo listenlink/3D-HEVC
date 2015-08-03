@@ -133,6 +133,7 @@
                                               // HHI_DMM4_ENC_I0066
                                               // H_3D_FAST_DEPTH_INTRA
 #define NH_3D_DIS                         1
+#define NH_3D_FAST_TEXTURE_ENCODING       1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
 #endif
 
 #if H_3D

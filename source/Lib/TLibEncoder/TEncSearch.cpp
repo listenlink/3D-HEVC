@@ -4091,8 +4091,8 @@ Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvF
 
 //! search of the best candidate for inter prediction
 #if AMP_MRG
-#if  H_3D_FAST_TEXTURE_ENCODING
-Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv, Bool bFMD, Bool bUseRes, Bool bUseMRG )
+#if  NH_3D_FAST_TEXTURE_ENCODING
+Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bFMD, Bool bUseRes, Bool bUseMRG )
 #else
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseRes, Bool bUseMRG )
 #endif
@@ -4195,7 +4195,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 
 #if AMP_MRG
     Bool bTestNormalMC = true;
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
     if (bFMD||( bUseMRG && pcCU->getWidth( 0 ) > 8 && iNumPart == 2 ))
 #else            
     if ( bUseMRG && pcCU->getWidth( 0 ) > 8 && iNumPart == 2 )

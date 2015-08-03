@@ -516,14 +516,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   TComSlice * pcSlice = rpcTempCU->getPic()->getSlice(rpcTempCU->getPic()->getCurrSliceIdx());
 
   const Bool bBoundary = !( uiRPelX < sps.getPicWidthInLumaSamples() && uiBPelY < sps.getPicHeightInLumaSamples() );
-
-  if ( !bBoundary )
-  {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
     Bool bIVFMerge = false;
     Int  iIVFMaxD = 0;
     Bool bFMD = false;
+    Bool bSubBranch = true;
 #endif
+  if ( !bBoundary )
+  {
     for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
     {
       const Bool bIsLosslessMode = isAddLowestQP && (iQP == iMinQP);
@@ -649,7 +649,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
         }
       }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
       if(rpcTempCU->getSlice()->getViewIndex() && !rpcTempCU->getSlice()->getIsDepth() && rpcTempCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
       {
         PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
@@ -673,8 +673,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if NH_3D_IC
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
-          xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode  );//by Competition for inter_2Nx2N
+#if  NH_3D_FAST_TEXTURE_ENCODING
+          xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug), bFMD );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode  );//by Competition for inter_2Nx2N
 #else
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );//by Competition for inter_2Nx2N
@@ -688,7 +688,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
           bFMD = bIVFMerge && rpcBestCU->isSkipped(0);
 #endif
 
@@ -703,8 +703,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if NH_3D_IC
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
-            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug), bFMD );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 #else
 
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
@@ -793,8 +793,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
             {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN, bFMD  );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+              xCheckRDCostInter( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), SIZE_NxN, bFMD  );
 #else
 
               xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
@@ -813,8 +813,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
           {
-#if  H_3D_FAST_TEXTURE_ENCODING
-            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N, bFMD  );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N DEBUG_STRING_PASS_INTO(sDebug), bFMD  );
 #else
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N DEBUG_STRING_PASS_INTO(sDebug)  );
 #endif
@@ -834,8 +834,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
           {
-#if  H_3D_FAST_TEXTURE_ENCODING
-            xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN, bFMD  );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+            xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN DEBUG_STRING_PASS_INTO(sDebug), bFMD  );
 #else
 
             xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN DEBUG_STRING_PASS_INTO(sDebug)  );
@@ -875,8 +875,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFMD );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU DEBUG_STRING_PASS_INTO(sDebug), bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
@@ -895,8 +895,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFMD );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD DEBUG_STRING_PASS_INTO(sDebug), bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
@@ -921,8 +921,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFMD, true );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU DEBUG_STRING_PASS_INTO(sDebug), bFMD, true );
 #else
 
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU DEBUG_STRING_PASS_INTO(sDebug), true );
@@ -943,8 +943,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFMD, true );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD DEBUG_STRING_PASS_INTO(sDebug), bFMD, true );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD DEBUG_STRING_PASS_INTO(sDebug), true );
 #endif
@@ -970,8 +970,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFMD );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N DEBUG_STRING_PASS_INTO(sDebug), bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
@@ -991,8 +991,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFMD );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N DEBUG_STRING_PASS_INTO(sDebug), bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
@@ -1011,8 +1011,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFMD, true );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N DEBUG_STRING_PASS_INTO(sDebug), bFMD, true );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N DEBUG_STRING_PASS_INTO(sDebug), true );
 #endif
@@ -1031,8 +1031,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFMD, true );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N DEBUG_STRING_PASS_INTO(sDebug), bFMD, true );
 #else
 
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N DEBUG_STRING_PASS_INTO(sDebug), true );
@@ -1085,7 +1085,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
           }
         }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
         if(!bFMD)
         {
 #endif
@@ -1177,7 +1177,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           }
         }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
         }
 #endif
         if (bIsLosslessMode) // Restore loop variable if lossless mode was searched.
@@ -1204,7 +1204,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       rpcBestCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcBestCU->getTotalBits(), rpcBestCU->getTotalDistortion() );
       m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_NEXT_BEST]);
     }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
     if(rpcBestCU->getSlice()->getViewIndex() && !rpcBestCU->getSlice()->getIsDepth() && (uiDepth >=iIVFMaxD) && rpcBestCU->isSkipped(0))
     {
       bSubBranch = false;
@@ -1246,8 +1246,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   {
     iMaxQP = iMinQP; // If all TUs are forced into using transquant bypass, do not loop here.
   }
-
+#if  NH_3D_FAST_TEXTURE_ENCODING
+  bSubBranch = bSubBranch && (bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) ));
+#else
   const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
+#endif
 #if NH_3D_QTLPC
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary) && bTrySplitDQP )
 #else
@@ -2231,8 +2234,8 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
 
 #if AMP_MRG
-#if  H_3D_FAST_TEXTURE_ENCODING
-Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFMD, Bool bUseMRG)
+#if  NH_3D_FAST_TEXTURE_ENCODING
+Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bFMD, Bool bUseMRG)
 #else
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG)
 #endif
@@ -2256,7 +2259,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if NH_3D_ARP
   const Bool bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
   if(!(bFMD && (ePartSize == SIZE_2Nx2N)))  //have  motion estimation or merge check
   {
 #endif
@@ -2317,8 +2320,8 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
-#if  H_3D_FAST_TEXTURE_ENCODING
-        m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bFMD, false, bUseMRG );
+#if  NH_3D_FAST_TEXTURE_ENCODING
+        m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] DEBUG_STRING_PASS_INTO(sTest), bFMD, false, bUseMRG );
 #else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] DEBUG_STRING_PASS_INTO(sTest), false, bUseMRG );
 #endif
@@ -2457,7 +2460,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if NH_3D_ARP
     }
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  NH_3D_FAST_TEXTURE_ENCODING
   }
 #endif
 }
