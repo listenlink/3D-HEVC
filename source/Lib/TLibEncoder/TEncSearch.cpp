@@ -2204,7 +2204,16 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 #endif
 
   //===== determine distortion =====  
-#if NH_3D_VSO
+#if NH_3D_INTRA_SDC_RD_FIX
+#if NH_3D_VSO  
+  if( m_pcRdCost->getUseVSO() )
+  {
+    ruiDist = m_pcRdCost->getDistPartVSO( pcCU, uiAbsPartIdx, bitDepthY, piPred, uiStride, piOrg, uiStride, uiWidth, uiHeight, false );
+  }
+  else
+#endif
+#else
+#if NH_3D_VSO  
   if( m_pcRdCost->getUseVSO() )
   {
     if( m_pcRdCost->getUseEstimatedVSD() )
@@ -2217,6 +2226,7 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     }
   }
   else
+#endif
 #endif
   {
     ruiDist = m_pcRdCost->getDistPart( bitDepthY, piPred, uiStride, piOrg, uiStride, uiWidth, uiHeight, COMPONENT_Y, DF_SAD );
