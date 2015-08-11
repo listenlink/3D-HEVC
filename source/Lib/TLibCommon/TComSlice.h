@@ -2947,10 +2947,10 @@ public:
   Bool                        getIsDepth            () const                         { return m_isDepth;                                             }
   Void                        setCamparaSlice       ( Int** aaiScale = 0, Int** aaiOffset = 0 );      
 
-  IntAry1d                    getCodedScale         ()                               { return m_aaiCodedScale [0];                                   }
-  IntAry1d                    getCodedOffset        ()                               { return m_aaiCodedOffset[0];                                   }
-  IntAry1d                    getInvCodedScale      ()                               { return m_aaiCodedScale [1];                                   }
-  IntAry1d                    getInvCodedOffset     ()                               { return m_aaiCodedOffset[1];                                   }
+  IntAry1d                    getCodedScale         () const                         { return m_aaiCodedScale [0];                                   }
+  IntAry1d                    getCodedOffset        () const                         { return m_aaiCodedOffset[0];                                   }
+  IntAry1d                    getInvCodedScale      () const                         { return m_aaiCodedScale [1];                                   }
+  IntAry1d                    getInvCodedOffset     () const                         { return m_aaiCodedOffset[1];                                   }
                                                                                                                                                      
   Void                        setCpScale( Int j, Int  val )                          { m_aaiCodedScale[0][j] = val;                                  }
   Int                         getCpScale( Int j )                                    { return m_aaiCodedScale[0][j];                                 }

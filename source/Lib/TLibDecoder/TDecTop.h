@@ -75,15 +75,16 @@ public:
   Void  setCodeScaleOffsetFile( FILE* pCodedScaleOffsetFile ) { m_pCodedScaleOffsetFile = pCodedScaleOffsetFile; };     
 
   Void  uninit      ();
-  Void  setSlice    ( TComSlice* pcSlice );
+  Void setSlice ( const TComSlice* pcSlice );
 
   Bool  isInitialized() const     { return m_bInitialized; }
   Int**** getBaseViewShiftLUTI()  { return m_aiBaseViewShiftLUT;   }
 
+#if !NH_3D_FIX_TICKET_101
 #if NH_3D_IV_MERGE
   Void  copyCamParamForSlice( TComSlice* pcSlice );
 #endif
-
+#endif
 
 private:
   Void xResetReceivedIdc( Bool overWriteFlag ); 

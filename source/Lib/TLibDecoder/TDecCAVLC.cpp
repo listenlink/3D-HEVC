@@ -2897,7 +2897,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     if ( getDecTop()->decProcAnnexI() )
     {
       Int voiInVps = vps->getVoiInVps( pcSlice->getViewIndex() ); 
+#if NH_3D_FIX_TICKET_101
+      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) )
+#else
       if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) && !pcSlice->getIsDepth() )
+#endif
       {
         for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
         {

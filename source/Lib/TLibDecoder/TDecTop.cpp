@@ -219,8 +219,7 @@ CamParsCollector::uninit()
   m_bInitialized = false;
 }
 
-Void
-CamParsCollector::setSlice( TComSlice* pcSlice )
+Void CamParsCollector::setSlice( const TComSlice* pcSlice )
 {
   if( pcSlice == 0 )
   {
@@ -291,6 +290,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
 }
 
 
+#if !NH_3D_FIX_TICKET_101
 #if NH_3D_IV_MERGE
 Void
 CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
@@ -300,6 +300,7 @@ CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
     pcSlice->setCamparaSlice( m_aaiCodedScale, m_aaiCodedOffset );
   }
 }
+#endif
 #endif
 
 
@@ -1257,6 +1258,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cTrQuant.setUseScalingList(false);
   }
 
+#if !NH_3D_FIX_TICKET_101
 #if NH_3D_IV_MERGE
 #if H_3D_FCO
   if( !pcSlice->getIsDepth() && m_pcCamParsCollector )
@@ -1266,6 +1268,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     m_pcCamParsCollector->copyCamParamForSlice( pcSlice );
   }
+#endif
 #endif
   //  Decode a picture
   m_cGopDecoder.decompressSlice(&(nalu.getBitstream()), m_pcPic);
