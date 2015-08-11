@@ -65,6 +65,12 @@
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
+
+#define NH_MV_FIX_TICKET_105              1 // layer_set_idx_for_ols_minus1 length
+#define NH_3D_FIX_TICKET_98               1 // Writing of depth intra skip flag
+#define NH_MV_FIX_TICKET_100              1 // Extra slice header bits
+
+
 #define NH_3D_DIS_FIX                     1
 #define NH_3D_ENC_DEPTH_FIX               1 // Fix Intra TU coding. 
 #define NH_3D_INTRA_SDC_RD_FIX            1 // Fix in RD- decision of intra SDC.

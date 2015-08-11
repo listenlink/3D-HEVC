@@ -1055,7 +1055,11 @@ Void TEncTop::xInitPPS()
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
 #if NH_MV
+#if NH_MV_FIX_TICKET_100
+  m_cPPS.setNumExtraSliceHeaderBits( 2 ); 
+#else
   m_cPPS.setNumExtraSliceHeaderBits( 3 ); 
+#endif
 #endif
   m_cPPS.setSignHideFlag(getSignHideFlag());
   if ( getDeblockingFilterMetric() )
