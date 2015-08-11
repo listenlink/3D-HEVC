@@ -550,8 +550,8 @@ Bool g_traceCopyBack           = false;
 Bool g_decTraceDispDer         = false; 
 Bool g_decTraceMvFromMerge     = false; 
 Bool g_decTracePicOutput       = false; 
-Bool g_startStopTrace          = true; 
-Bool g_outputPos               = false;   
+Bool g_startStopTrace          = false; 
+Bool g_outputPos               = false;
 Bool g_traceCameraParameters   = false; 
 Bool g_encNumberOfWrittenBits  = false; 
 Bool g_traceEncFracBits        = false; 
@@ -690,7 +690,6 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
               << "\tCuHeight\t" << cuHeight
               << std::endl; 
   }
-
   Bool startTrace = false; 
   if ( g_startStopTrace && poc == 0 && layerId == 0 )
   {    
@@ -706,7 +705,6 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
     g_traceModeCheck         = true; 
     g_traceCopyBack          = false; 
   }  
-
   Bool stopTrace = false; 
   if ( g_startStopTrace && poc == 0 && layerId == 0 )
   {
@@ -766,7 +764,6 @@ Void printStrIndent( Bool b, std::string strStr )
     printStr( strStr );
   }
 }
-
 Void prinStrIncIndent( Bool b,  std::string strStr )
 {
   if ( b )
@@ -778,7 +775,6 @@ Void prinStrIncIndent( Bool b,  std::string strStr )
     }
   }  
 }
-
 Void decIndent( Bool b )
 {
   if (b && g_indent > 0)
@@ -786,7 +782,6 @@ Void decIndent( Bool b )
     g_indent--;  
   }  
 }
-
 #endif
 #endif
 #if NH_3D_DMM

@@ -66,6 +66,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
 
+#define NH_3D_FIX_TICKET_101              ( 1 && NH_3D_VER141_DEC_COMP_FLAG )  // Camera parameters for depth
 #define NH_MV_FIX_TICKET_105              1 // layer_set_idx_for_ols_minus1 length
 #define NH_3D_FIX_TICKET_98               1 // Writing of depth intra skip flag
 #define NH_MV_FIX_TICKET_100              1 // Extra slice header bits

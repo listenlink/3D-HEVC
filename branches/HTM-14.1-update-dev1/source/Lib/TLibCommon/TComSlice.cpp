@@ -3904,8 +3904,8 @@ Void TComSlice::setDepthToDisparityLUTs()
 #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
     if ( g_traceCameraParameters )
     {
-      std::cout << std::endl << "Cp: " << codScale   [ iInVoi ] << " " <<    codOffset[ iInVoi ] << " "
-                << invCodScale[ iInVoi ] << " " << invCodOffset[ iInVoi ] << " " << log2Div; 
+      std::cout << "Cp: " << codScale   [ iInVoi ] << " " <<    codOffset[ iInVoi ] << " "
+                << invCodScale[ iInVoi ] << " " << invCodOffset[ iInVoi ] << " " << log2Div << std::endl ; 
     }
 #endif
     for ( Int d = 0; d <= ( ( 1 << bitDepthY ) - 1 ); d++ )
