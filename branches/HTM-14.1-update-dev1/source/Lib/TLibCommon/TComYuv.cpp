@@ -124,13 +124,14 @@ Void TComYuv::copyToPicComponent  ( const ComponentID compID, TComPicYuv* pcPicY
   {
     ::memcpy( pDst, pSrc, sizeof(Pel)*iWidth);
 #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
-    if ( g_traceCopyBack && g_nSymbolCounter >= g_stopAtCounter )
+    if ( g_traceCopyBack && compID == COMPONENT_Y)
     { 
+      std::stringstream strStr; 
       for ( Int x = 0; x < iWidth; x++)
       {      
-        std::cout << pSrc[ x ] << " " ; 
+        strStr << pSrc[ x ] << " " ; 
       }
-      std::cout << std::endl;
+      printStrIndent( true, strStr.str() );
     }
 #endif
     pDst += iDstStride;
