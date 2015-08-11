@@ -59,19 +59,18 @@
 #endif
 #define NH_MV          ( HEVC_EXT != 0)
 #define NH_3D          ( HEVC_EXT == 2)
-
-
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-
-#define NH_3D_FIX_TICKET_101              ( 1 && NH_3D_VER141_DEC_COMP_FLAG )  // Camera parameters for depth
 #define NH_MV_FIX_TICKET_105              1 // layer_set_idx_for_ols_minus1 length
-#define NH_3D_FIX_TICKET_98               1 // Writing of depth intra skip flag
 #define NH_MV_FIX_TICKET_100              1 // Extra slice header bits
-
-
+#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define H_MV_ENC_DEC_TRAC_FIX             1  // by SHARP
+#if NH_3D
+// FIXES 
+#define NH_3D_FIX_TICKET_98               1 // Writing of depth intra skip flag
+#define NH_3D_FIX_TICKET_101              ( 1 && NH_3D_VER141_DEC_COMP_FLAG )  // Camera parameters for depth
 #define NH_3D_DIS_FIX                     1
 #define NH_3D_ENC_DEPTH_FIX               1 // Fix Intra TU coding. 
 #define NH_3D_INTRA_SDC_RD_FIX            1 // Fix in RD- decision of intra SDC.
@@ -80,11 +79,6 @@
 #define NH_3D_ALIGN_SPIVMP_DBBP           1 // Further alignment of DBBP and SBP motion
 #define NH_3D_ALIGN_SPIVMP_RP             1 // Alignment of DBBP and RP
 #define NH_3D_FIX_VSP                     1 
-
-#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
-#define H_MV_ENC_DEC_TRAC_FIX             1  // by SHARP
-
-#if NH_3D
 #define NH_3D_VSO                         1
 #define NH_3D_NBDV                        1
 #define NH_3D_TMVP                        1   // QC_TMVP_C0047 
@@ -102,14 +96,11 @@
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
                                               // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
                                               // LGE_CHROMA_IC_J0050_J0034
-
 #define NH_3D_IC_FIX                      1   // Fix uninitialized value in cDtParam.bUseIC (it happened on intra block)
 #define NH_3D_FULL_PEL_DEPTH_MAP_MV_ACC   1   // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-
 #define NH_3D_QTLPC                       1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
                                               // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
-
 #define NH_3D_NBDV_REF                    1
 #define NH_3D_MLC                         1
 #define NH_3D_FIX_PRUNING                 1
@@ -132,7 +123,6 @@
                                               // MTK_I0072_IVARP_SCALING_FIX
                                               // SEC_ARP_VIEW_REF_CHECK_J0037    Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
                                               // SEC_ARP_REM_ENC_RESTRICT_K0035    Removal of encoder restriction of ARP, JCT3V-K0035
-
 #define NH_3D_DMM                         1   // Depth modeling modes
 #define NH_3D_DLT                         1   // Depth Lookup Table
 #define NH_3D_SDC_INTRA                   1   // Segment-wise DC Coding method for INTRA
@@ -145,7 +135,6 @@
 #define NH_3D_DIS                         1
 #define NH_3D_FAST_TEXTURE_ENCODING       1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
 #endif
-
 #if H_3D
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
