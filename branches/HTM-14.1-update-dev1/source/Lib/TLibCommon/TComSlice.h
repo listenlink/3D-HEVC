@@ -1118,7 +1118,11 @@ public:
   
   Void    setLayerSetIdxForOlsMinus1( Int outLayerSetIdx, Int val )             { m_layerSetIdxForOlsMinus1[ outLayerSetIdx ]  = val; } 
   Int     getLayerSetIdxForOlsMinus1( Int outLayerSetIdx )           const      { return m_layerSetIdxForOlsMinus1[ outLayerSetIdx ]; } 
+#if NH_MV_FIX_TICKET_105
+  Int     getLayerSetIdxForOlsMinus1Len( Int outLayerSetIdx )        const      { return gCeilLog2( getNumLayerSets() - 1 ); } 
+#else
   Int     getLayerSetIdxForOlsMinus1Len( Int outLayerSetIdx )        const      { return gCeilLog2( getNumLayerSets() ); } 
+#endif
 
   Void    setOutputLayerFlag( Int outLayerSetIdx, Int i, Bool flag )            { m_outputLayerFlag[ outLayerSetIdx ][ i ] = flag; } 
   Bool    getOutputLayerFlag( Int outLayerSetIdx, Int i )            const      { return m_outputLayerFlag[ outLayerSetIdx ][ i ]; } 
