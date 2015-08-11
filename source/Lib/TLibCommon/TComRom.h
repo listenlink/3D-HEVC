@@ -231,7 +231,6 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_X(x)
 #define DTRACE_CABAC_R( x,y )
 #define DTRACE_CABAC_N
-#if H_MV_ENC_DEC_TRAC
 #define DTRACE_CU(x,y) ;             
 #define DTRACE_PU(x,y) ;            
 #define DTRACE_TU(x,y) ;            
@@ -243,7 +242,6 @@ extern UInt64 g_nSymbolCounter;
 #define D_PRINT_INC_INDENT( b, str );
 #define D_PRINT_INDENT( b, str );
 
-#endif
 #endif
 const Char* nalUnitTypeToString(NalUnitType type);
 extern const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
