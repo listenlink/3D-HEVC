@@ -545,15 +545,21 @@ Bool g_tracePU = false;
 Bool g_traceTU = false; 
 Bool g_disableNumbering = false; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter       = 4660; 
-Bool g_traceCopyBack         = false; 
-Bool g_decTraceDispDer       = false; 
-Bool g_decTraceMvFromMerge   = false; 
-Bool g_decTracePicOutput     = false; 
-Bool g_stopAtPos             = false; 
-Bool g_outputPos             = false;   
-Bool g_traceCameraParameters = false; 
-Bool g_encNumberOfWrittenBits     = false; 
+UInt64 g_stopAtCounter         = 4660; 
+Bool g_traceCopyBack           = false; 
+Bool g_decTraceDispDer         = false; 
+Bool g_decTraceMvFromMerge     = false; 
+Bool g_decTracePicOutput       = false; 
+Bool g_startStopTrace          = true; 
+Bool g_outputPos               = false;   
+Bool g_traceCameraParameters   = false; 
+Bool g_encNumberOfWrittenBits  = false; 
+Bool g_traceEncFracBits        = false; 
+Bool g_traceIntraSearchCost    = false; 
+Bool g_traceRDCost             = false; 
+Bool g_traceSAOCost            = false; 
+Bool g_traceModeCheck          = false; 
+UInt g_indent                  = false; 
 #endif
 #endif
 // ====================================================================================================================
@@ -684,26 +690,37 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
               << "\tCuHeight\t" << cuHeight
               << std::endl; 
   }
-  Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 0 && layerId == 2 )
-  {
-    Bool stopAtCU = true; 
-    if ( stopAtCU )        // Stop at CU with specific size
-    {    
-      stopFlag = ( cuPelX  == 416 ) && ( cuPelY  == 632 ) && ( cuWidth == 8 ) && ( cuHeight == 8 ); 
-    }
-    else
-    {                     // Stop at specific position 
-      Int xPos = 888; 
-      Int yPos = 248; 
-      Int cuPelXEnd = cuPelX + cuWidth  - 1; 
-      Int cuPelYEnd = cuPelY + cuHeight - 1; 
-      stopFlag = (cuPelX <= xPos ) && (cuPelXEnd >= xPos ) && (cuPelY <= yPos ) && (cuPelYEnd >= yPos ); 
-    }
+
+  Bool startTrace = false; 
+  if ( g_startStopTrace && poc == 0 && layerId == 0 )
+  {    
+    startTrace = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 64 ) && ( cuHeight == 64 ); 
   }
-  if ( stopFlag )
-  { // Set breakpoint here. 
-    std::cout << "Stop position. Break point here." << std::endl; 
+  if ( startTrace )
+  { 
+    g_outputPos              = true; 
+    g_traceEncFracBits       = false;   
+    g_traceIntraSearchCost   = false;     
+    g_encNumberOfWrittenBits = false;     
+    g_traceRDCost            = true; 
+    g_traceModeCheck         = true; 
+    g_traceCopyBack          = false; 
+  }  
+
+  Bool stopTrace = false; 
+  if ( g_startStopTrace && poc == 0 && layerId == 0 )
+  {
+    stopTrace = ( cuPelX  == 128 ) && ( cuPelY  == 0 ) && ( cuWidth == 64 ) && ( cuHeight == 64 ); 
+  }
+  if ( stopTrace )
+  { 
+    g_outputPos              = false; 
+    g_traceModeCheck         = false; 
+    g_traceEncFracBits       = false; 
+    g_traceIntraSearchCost   = false;        
+    g_encNumberOfWrittenBits = false; 
+    g_traceRDCost            = false; 
+    g_traceCopyBack          = false;     
   }  
 }
 Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
@@ -737,6 +754,39 @@ Void writeToTraceFile( const Char* symbolName, Bool doIt )
     fflush ( g_hTrace );    
   }
 }
+Void printStr( std::string str )
+{
+  std::cout << str << std::endl; 
+}
+Void printStrIndent( Bool b, std::string strStr )
+{
+  if ( b )
+  {  
+    std::cout << std::string(g_indent, ' ');
+    printStr( strStr );
+  }
+}
+
+Void prinStrIncIndent( Bool b,  std::string strStr )
+{
+  if ( b )
+  {
+    printStrIndent( true,  strStr );
+    if (g_indent < 50)
+    {
+      g_indent++;
+    }
+  }  
+}
+
+Void decIndent( Bool b )
+{
+  if (b && g_indent > 0)
+  {
+    g_indent--;  
+  }  
+}
+
 #endif
 #endif
 #if NH_3D_DMM

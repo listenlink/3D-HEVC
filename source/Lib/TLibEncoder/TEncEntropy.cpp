@@ -794,6 +794,11 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
 Void TEncEntropy::encodeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID)
 {
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+  Bool oldTraceFracBits = g_traceEncFracBits; 
+  g_traceEncFracBits = false; 
+#endif
+
   TComDataCU *pcCU = rTu.getCU();
 
   if (pcCU->getCbf(rTu.GetAbsPartIdxTU(), compID, rTu.GetTransformDepthRel()) != 0)
@@ -821,6 +826,9 @@ Void TEncEntropy::encodeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID
       m_pcEntropyCoderIf->codeCoeffNxN(rTu, pcCoef, compID);
     }
   }
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+  g_traceEncFracBits = oldTraceFracBits; 
+#endif
 }
 
 Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, const ChannelType chType)

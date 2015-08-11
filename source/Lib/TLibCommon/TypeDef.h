@@ -65,7 +65,9 @@
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-#define NH_3D_INTRA_SDC_RD_FIX            1 // Fix in RD- decsion of intra sdc.
+#define NH_3D_DIS_FIX                     1
+#define NH_3D_ENC_DEPTH_FIX               1 // Fix Intra TU coding. 
+#define NH_3D_INTRA_SDC_RD_FIX            1 // Fix in RD- decision of intra SDC.
 #define NH_3D_DLT_FIX                     1 // Fixes numbers of parsed DLTs 
 #define NH_3D_VER141_DEC_COMP_FLAG        0 // Makes decoding of this version compatible to HTM-14.1 by re-introducing HTM-14.1 bugs.
 #define NH_3D_ALIGN_SPIVMP_DBBP           1 // Further alignment of DBBP and SBP motion

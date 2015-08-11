@@ -182,21 +182,46 @@ extern UInt64 g_nSymbolCounter;
  extern Bool   g_decTraceDispDer;       // Trace derived disparity vectors (decoder only) 
  extern Bool   g_decTraceMvFromMerge;   // Trace motion vectors obtained from merge (decoder only) 
  extern Bool   g_decTracePicOutput;     // Trace output of pictures
- extern Bool   g_stopAtPos;             // Stop at position
+ extern Bool   g_startStopTrace;             // Stop at position
  extern Bool   g_outputPos;             // Output position
  extern Bool   g_traceCameraParameters; // Trace camera parameters
  extern Bool   g_encNumberOfWrittenBits;// Trace number of written bits
+ extern Bool   g_traceEncFracBits;      // Trace fractional bits
+ extern Bool   g_traceIntraSearchCost;  // Trace intra mode cost
+ extern Bool   g_traceRDCost;          
+ extern Bool   g_traceModeCheck; 
+ extern Bool   g_traceSAOCost; 
+ extern UInt   g_indent; 
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );
 #define DTRACE_TU(x,y)             writeToTraceFile( x,y, g_traceTU );
 #define DTRACE_CU_S(x)             writeToTraceFile( x,   g_traceCU );
 #define DTRACE_PU_S(x)             writeToTraceFile( x,   g_tracePU );
 #define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
+
+#define D_DEC_INDENT( b )            decIndent        ( b );
+#define D_PRINT_INC_INDENT( b, str ) prinStrIncIndent( b, str );
+#define D_PRINT_INDENT( b, str )     printStrIndent   ( b, str);
+
  Void           tracePSHeader   ( const Char* psName, Int layerId ); 
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
  UInt64         incSymbolCounter();          
  Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );           
+
+ Void           printStr         ( std::string str );
+ Void           printStrIndent   ( Bool b, std::string str );
+ Void           prinStrIncIndent ( Bool b, std::string str );
+ Void           decIndent        ( Bool b );
+
+ template <typename T>
+ std::string n2s ( T Number )
+ {
+   std::ostringstream ss;
+   ss << Number;
+   return ss.str();
+ };
+
 #endif
 #else
 #define DTRACE_CABAC_F(x)
@@ -213,6 +238,11 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CU_S(x) ;            
 #define DTRACE_PU_S(x) ;            
 #define DTRACE_TU_S(x) ;            
+
+#define D_DEC_INDENT( b ) ;
+#define D_PRINT_INC_INDENT( b, str );
+#define D_PRINT_INDENT( b, str );
+
 #endif
 #endif
 const Char* nalUnitTypeToString(NalUnitType type);

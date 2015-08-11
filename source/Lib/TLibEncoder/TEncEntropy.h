@@ -138,14 +138,8 @@ public:
   Void    setEntropyCoder           ( TEncEntropyIf* e );
   Void    setBitstream              ( TComBitIf* p )          { m_pcEntropyCoderIf->setBitstream(p);  }
   Void    resetBits                 ()                        { m_pcEntropyCoderIf->resetBits();      }
-  UInt    getNumberOfWrittenBits    ()
-                        {
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
-    Bool oldJustDoIt = g_bJustDoIt;
-    g_bJustDoIt = true; 
-    writeToTraceFile( "NumberOfWrittenBits", m_pcEntropyCoderIf->getNumberOfWrittenBits(), g_encNumberOfWrittenBits );
-    g_bJustDoIt = oldJustDoIt; 
-#endif
+  UInt    getNumberOfWrittenBits    ()                        {
+      D_PRINT_INDENT(g_encNumberOfWrittenBits,  "NumBits: " +  n2s( m_pcEntropyCoderIf->getNumberOfWrittenBits() ))
  return m_pcEntropyCoderIf->getNumberOfWrittenBits(); }
   Void    resetEntropy              (const TComSlice *pSlice) { m_pcEntropyCoderIf->resetEntropy(pSlice);  }
   SliceType determineCabacInitIdx   (const TComSlice *pSlice) { return m_pcEntropyCoderIf->determineCabacInitIdx(pSlice); }

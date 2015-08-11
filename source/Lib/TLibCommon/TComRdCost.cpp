@@ -132,6 +132,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
     }
   }
 
+  D_PRINT_INDENT( g_traceRDCost,  "Dist: " + n2s(uiDistortion) + " Bits: " + n2s(uiBits) + " RD Cost: " + n2s(dRdCost)); 
   return dRdCost;
 }
 
@@ -3682,6 +3683,8 @@ Double TComRdCost::calcRdCostVSO( UInt uiBits, Dist uiDistortion, Bool bFlag, DF
 #endif
     }
   }
+
+  D_PRINT_INDENT( g_traceRDCost, "VSO Dist: " + n2s(uiDistortion) + " Bits: " + n2s(uiBits) + " RD Cost: " + n2s(dRdCost)); 
 
   return dRdCost;
 }
