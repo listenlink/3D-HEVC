@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,22 +32,35 @@
  */
 
 /** \file     CommonDef.h
-    \brief    Defines constants, macros and tool parameters
+    \brief    Defines version information, constants and small in-line functions
 */
 
 #ifndef __COMMONDEF__
 #define __COMMONDEF__
 
 #include <algorithm>
+#include <iostream>
+#include <assert.h>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
 #pragma warning( disable : 4018 )
-// disable bool coercion "performance warning"
+// disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
+// NH_MV
+// disabled decorated name length warning issued for IntAry5d
+#pragma warning(disable : 4503)
+// 
 #endif // _MSC_VER > 1000
+
+
 #include "TypeDef.h"
-#if H_MV
+#ifdef _MSC_VER
+#if _MSC_VER <= 1500
+inline Int64 abs (Int64 x) { return _abs64(x); };
+#endif
+#endif
+#if NH_MV
 #include <assert.h>
 #endif
 
@@ -57,14 +70,12 @@
 // ====================================================================================================================
 // Version information
 // ====================================================================================================================
-
-#if H_MV
+#if NH_MV
 #define NV_VERSION        "14.1"                ///< Current software version
-#define HM_VERSION        "15.0"                ///< 
+#define HM_VERSION        "16.6"                ///< 
 #else
-#define NV_VERSION        "15.0"                 ///< Current software version
+#define NV_VERSION        "16.6"                 ///< Current software version
 #endif
-
 // ====================================================================================================================
 // Platform information
 // ====================================================================================================================
@@ -100,7 +111,7 @@
 #define NVM_ONOS "[Unk-OS]"
 #endif
 
-#define NVM_BITS          "[%d bit] ", (sizeof(void*) == 8 ? 64 : 32) ///< used for checking 64-bit O/S
+#define NVM_BITS          "[%d bit] ", (sizeof(Void*) == 8 ? 64 : 32) ///< used for checking 64-bit O/S
 
 #ifndef NULL
 #define NULL              0
@@ -110,38 +121,180 @@
 // Common constants
 // ====================================================================================================================
 
-#define _SUMMARY_OUT_               0           ///< print-out PSNR results of all slices to summary.txt
-#define _SUMMARY_PIC_               0           ///< print-out PSNR results for each slice type to summary.txt
+static const UInt   MAX_UINT =                            0xFFFFFFFFU; ///< max. value of unsigned 32-bit integer
+static const Int    MAX_INT =                              2147483647; ///< max. value of signed 32-bit integer
+#if NH_MV
+static const Int    MIN_INT =                         (- MAX_INT - 1); ///< max. value of signed 32-bit integer
+#endif
+static const Double MAX_DOUBLE =                             1.7e+308; ///< max. value of Double-type value
 
-#define MAX_GOP                     64          ///< max. value of hierarchical GOP size
+// ====================================================================================================================
+// Coding tool configuration
+// ====================================================================================================================
+// Most of these should not be changed - they resolve the meaning of otherwise magic numbers.
 
-#define MAX_NUM_REF_PICS            16          ///< max. number of pictures used for reference
-#define MAX_NUM_REF                 16          ///< max. number of entries in picture reference list
+static const Int MAX_GOP =                                         64; ///< max. value of hierarchical GOP size
+static const Int MAX_NUM_REF_PICS =                                16; ///< max. number of pictures used for reference
+static const Int MAX_NUM_REF =                                     16; ///< max. number of entries in picture reference list
+static const Int MAX_QP =                                          51;
+static const Int NOT_VALID =                                       -1;
 
-#define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
-#define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
-#define MIN_INT                     (-2147483647-1) // < min. value of signed 32-bit integer
+static const Int AMVP_MAX_NUM_CANDS =                               2; ///< AMVP: advanced motion vector prediction - max number of final candidates
+static const Int AMVP_MAX_NUM_CANDS_MEM =                           3; ///< AMVP: advanced motion vector prediction - max number of candidates
+static const Int AMVP_DECIMATION_FACTOR =                           4;
+static const Int MRG_MAX_NUM_CANDS =                                5; ///< MERGE
 
-#define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
-#define MAX_DOUBLE                  1.7e+308    ///< max. value of double-type value
 
-#define MIN_QP                      0
-#define MAX_QP                      51
+static const Int MAX_TLAYER =                                       7; ///< Explicit temporal layer QP offset - max number of temporal layer
 
-#define NOT_VALID                   -1
+static const Int ADAPT_SR_SCALE =                                   1; ///< division factor for adaptive search range
+
+static const Int MAX_NUM_PICS_IN_SOP =                           1024;
+
+static const Int MAX_NESTING_NUM_OPS =                           1024;
+static const Int MAX_NESTING_NUM_LAYER =                           64;
+
+#if NH_MV
+static const Int MAX_VPS_NUM_HRD_PARAMETERS =                    1024;
+#else
+static const Int MAX_VPS_NUM_HRD_PARAMETERS =                       1;
+#endif
+static const Int MAX_VPS_OP_SETS_PLUS1 =                         1024;
+#if NH_MV
+static const Int MAX_VPS_NUH_LAYER_ID_PLUS1 =                      63;                
+#else
+static const Int MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 =         1;
+#endif
+
+static const Int MAXIMUM_INTRA_FILTERED_WIDTH =                    16;
+static const Int MAXIMUM_INTRA_FILTERED_HEIGHT =                   16;
+
+static const Int MAX_CPB_CNT =                                     32; ///< Upper bound of (cpb_cnt_minus1 + 1)
+#if NH_MV
+static const Int MAX_NUM_LAYER_IDS =                               63;
+#else
+static const Int MAX_NUM_LAYER_IDS =                               64;
+#endif
+
+static const Int COEF_REMAIN_BIN_REDUCTION =                        3; ///< indicates the level at which the VLC transitions from Golomb-Rice to TU+EG(k)
+
+static const Int CU_DQP_TU_CMAX =                                   5; ///< max number bins for truncated unary
+static const Int CU_DQP_EG_k =                                      0; ///< expgolomb order
+
+static const Int SBH_THRESHOLD =                                    4; ///< value of the fixed SBH controlling threshold
+
+static const Int C1FLAG_NUMBER =                                    8; // maximum number of largerThan1 flag coded in one chunk:  16 in HM5
+static const Int C2FLAG_NUMBER =                                    1; // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
+
+static const Int MAX_NUM_VPS =                                     16;
+static const Int MAX_NUM_SPS =                                     16;
+static const Int MAX_NUM_PPS =                                     64;
+
+
+static const Int MLS_GRP_NUM =                                     64; ///< Max number of coefficient groups, max(16, 64)
+static const Int MLS_CG_LOG2_WIDTH =                                2;
+static const Int MLS_CG_LOG2_HEIGHT =                               2;
+static const Int MLS_CG_SIZE =                                      4; ///< Coefficient group size of 4x4; = MLS_CG_LOG2_WIDTH + MLS_CG_LOG2_HEIGHT
+
+#if ADAPTIVE_QP_SELECTION
+static const Int ARL_C_PRECISION =                                  7; ///< G382: 7-bit arithmetic precision
+static const Int LEVEL_RANGE =                                     30; ///< G382: max coefficient level in statistics collection
+#endif
+
+static const Int RVM_VCEGAM10_M =                                   4;
+
+static const Int FAST_UDI_MAX_RDMODE_NUM =                         35; ///< maximum number of RD comparison in fast-UDI estimation loop
+
+static const Int NUM_INTRA_MODE =                                  36;
+static const Int PLANAR_IDX =                                       0;
+static const Int VER_IDX =                                         26; ///< index for intra VERTICAL   mode
+static const Int HOR_IDX =                                         10; ///< index for intra HORIZONTAL mode
+static const Int DC_IDX =                                           1; ///< index for intra DC mode
+static const Int NUM_CHROMA_MODE =                                  5; ///< total number of chroma modes
+static const Int DM_CHROMA_IDX =                                   36; ///< chroma mode index for derived from luma intra mode
+
+static const Int MDCS_ANGLE_LIMIT =                                 4; ///< 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
+static const Int MDCS_MAXIMUM_WIDTH =                               8; ///< (measured in pixels) TUs with width greater than this can only use diagonal scan
+static const Int MDCS_MAXIMUM_HEIGHT =                              8; ///< (measured in pixels) TUs with height greater than this can only use diagonal scan
+
+
+static const Int LOG2_MAX_NUM_COLUMNS_MINUS1 =                      7;
+static const Int LOG2_MAX_NUM_ROWS_MINUS1 =                         7;
+
+static const Int CABAC_INIT_PRESENT_FLAG =                          1;
+
+static const Int LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS =   4;
+static const Int CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS = 8;
+
+static const Int MAX_NUM_LONG_TERM_REF_PICS =                      33;
+static const Int NUM_LONG_TERM_REF_PIC_SPS =                        0;
+
+
+static const Int MAX_QP_OFFSET_LIST_SIZE =                          6; ///< Maximum size of QP offset list is 6 entries
+
+// Cost mode support
+static const Int LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP =      0; ///< QP to use for lossless coding.
+static const Int LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME =4; ///< QP' to use for mixed_lossy_lossless coding.
+
+static const Int RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS =     4;
+static const Int RExt__GOLOMB_RICE_INCREMENT_DIVISOR =              4;
+
+static const Int RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION = 0; ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
+
+static const Int MAX_TIMECODE_SEI_SETS =                            3; ///< Maximum number of time sets
+
+static const Int MAX_CU_DEPTH =                                     6; ///< log2(CTUSize)
+static const Int MAX_CU_SIZE =                                     64; ///< = 1<<(MAX_CU_DEPTH)
+static const Int MIN_PU_SIZE =                                      4;
+static const Int MIN_TU_SIZE =                                      4;
+static const Int MAX_TU_SIZE =                                     32;
+static const Int MAX_NUM_PART_IDXS_IN_CTU_WIDTH = MAX_CU_SIZE/MIN_PU_SIZE; ///< maximum number of partition indices across the width of a CTU (or height of a CTU)
+static const Int SCALING_LIST_REM_NUM =                             6;
+
+static const Int QUANT_SHIFT =                                     14; ///< Q(4) = 2^14
+static const Int IQUANT_SHIFT =                                     6;
+static const Int SCALE_BITS =                                      15; ///< For fractional bit estimates in RDOQ
+
+static const Int SCALING_LIST_NUM = MAX_NUM_COMPONENT * NUMBER_OF_PREDICTION_MODES; ///< list number for quantization matrix
+
+static const Int SCALING_LIST_START_VALUE =                        8 ; ///< start value for dpcm mode
+static const Int MAX_MATRIX_COEF_NUM =                            64 ; ///< max coefficient number for quantization matrix
+static const Int MAX_MATRIX_SIZE_NUM =                             8 ; ///< max size number for quantization matrix
+static const Int SCALING_LIST_BITS =                               8 ; ///< bit depth of scaling list entries
+static const Int LOG2_SCALING_LIST_NEUTRAL_VALUE =                 4 ; ///< log2 of the value that, when used in a scaling list, has no effect on quantisation
+static const Int SCALING_LIST_DC =                                16 ; ///< default DC value
+
+static const Int CONTEXT_STATE_BITS =                              6 ;
+static const Int LAST_SIGNIFICANT_GROUPS =                        10 ;
+
+#if NH_MV
+static const Int  MAX_VPS_NUM_ADD_LAYER_SETS =                  1024 ;
+static const Int  MAX_NUM_SCALABILITY_TYPES =                     16 ;
+static const Int  ENC_CFG_CONSOUT_SPACE =                         34 ;           
+static const Int  MAX_NUM_LAYERS =                                63 ;
+static const Int  MAX_VPS_PROFILE_TIER_LEVEL =                    64 ;
+static const Int  MAX_VPS_ADD_OUTPUT_LAYER_SETS =               1024 ;
+static const Int  MAX_VPS_OUTPUTLAYER_SETS =  MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 + MAX_VPS_OP_SETS_PLUS1 ;
+static const Int  MAX_NUM_VIDEO_SIGNAL_INFO =                     16 ;
+static const Int  MAX_NUM_SCALED_REF_LAYERS =     MAX_NUM_LAYERS - 1 ; 
+#endif
 
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
-extern Int g_bitDepthY;
-extern Int g_bitDepthC;
 
-/** clip x, such that 0 <= x <= #g_maxLumaVal */
-template <typename T> inline T ClipY(T x) { return std::min<T>(T((1 << g_bitDepthY)-1), std::max<T>( T(0), x)); }
-template <typename T> inline T ClipC(T x) { return std::min<T>(T((1 << g_bitDepthC)-1), std::max<T>( T(0), x)); }
+template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
 
-/** clip a, such that minVal <= a <= maxVal */
-template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline Void Check3( T minVal, T maxVal, T a)
+{
+  if ((a > maxVal) || (a < minVal))
+  {
+    std::cerr << "ERROR: Range check " << minVal << " >= " << a << " <= " << maxVal << " failed" << std::endl;
+    assert(false);
+    exit(1);
+  }
+}  ///< general min/max clip
 
 #define DATA_ALIGN                  1                                                                 ///< use 32-bit aligned malloc/free
 #if     DATA_ALIGN && _WIN32 && ( _MSC_VER > 1300 )
@@ -158,7 +311,18 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
   exit(EXITCODE);                                             \
 }
 
-#if H_MV
+template <typename ValueType> inline ValueType leftShift       (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ( value                                   >> -shift); }
+template <typename ValueType> inline ValueType rightShift      (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  >> shift) : ( value                                   << -shift); }
+template <typename ValueType> inline ValueType leftShift_round (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ((value + (ValueType(1) << (-shift - 1))) >> -shift); }
+template <typename ValueType> inline ValueType rightShift_round(const ValueType value, const Int shift) { return (shift >= 0) ? ((value + (ValueType(1) << (shift - 1))) >> shift) : ( value                                   << -shift); }
+#if O0043_BEST_EFFORT_DECODING
+// when shift = 0, returns value
+// when shift = 1, (value + 0 + value[1]) >> 1
+// when shift = 2, (value + 1 + value[2]) >> 2
+// when shift = 3, (value + 3 + value[3]) >> 3
+template <typename ValueType> inline ValueType rightShiftEvenRounding(const ValueType value, const UInt shift) { return (shift == 0) ? value : ((value + (1<<(shift-1))-1 + ((value>>shift)&1)) >> shift) ; }
+#endif
+#if NH_MV
 
 #define AOF( exp )                  \
 {                                   \
@@ -194,147 +358,39 @@ __inline T gCeilLog2( T val )
   return ceilLog2;
 }
 
-#define RemoveBitIncrement( exp ) ( exp >> ( g_bitDepthY - 8 ) )
+#define RemoveBitIncrement( exp ) ( exp >> ( REN_BIT_DEPTH - 8 ) )
 
 #endif
 
-// ====================================================================================================================
-// Coding tool configuration
-// ====================================================================================================================
-
-// AMVP: advanced motion vector prediction
-#define AMVP_MAX_NUM_CANDS          2           ///< max number of final candidates
-#define AMVP_MAX_NUM_CANDS_MEM      3           ///< max number of candidates
-// MERGE
-#define MRG_MAX_NUM_CANDS           5
-#if H_3D_IV_MERGE
+#if NH_3D_MLC  || NH_3D_ARP
 #define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
 #endif
-// Reference memory management
-#define DYN_REF_FREE                0           ///< dynamic free of reference memories
-
-// Explicit temporal layer QP offset
-#define MAX_TLAYER                  7           ///< max number of temporal layer
-#define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
-
-// Fast estimation of generalized B in low-delay mode
-#define GPB_SIMPLE                  1           ///< Simple GPB mode
-#if     GPB_SIMPLE
-#define GPB_SIMPLE_UNI              1           ///< Simple mode for uni-direction
-#endif
-
-// Fast ME using smoother MV assumption
-#define FASTME_SMOOTHER_MV          1           ///< reduce ME time using faster option
-
-// Adaptive search range depending on POC difference
-#define ADAPT_SR_SCALE              1           ///< division factor for adaptive search range
-
-#define CLIP_TO_709_RANGE           0
-
-// Early-skip threshold (encoder)
-#define EARLY_SKIP_THRES            1.50        ///< if RD < thres*avg[BestSkipRD]
 
 
-#define MAX_CHROMA_FORMAT_IDC      3
-
-// TODO: Existing names used for the different NAL unit types can be altered to better reflect the names in the spec.
-//       However, the names in the spec are not yet stable at this point. Once the names are stable, a cleanup 
-//       effort can be done without use of macros to alter the names used to indicate the different NAL unit types.
-enum NalUnitType
-{
-  NAL_UNIT_CODED_SLICE_TRAIL_N = 0,   // 0
-  NAL_UNIT_CODED_SLICE_TRAIL_R,   // 1
-  
-  NAL_UNIT_CODED_SLICE_TSA_N,     // 2
-  NAL_UNIT_CODED_SLICE_TSA_R,       // 3
-  
-  NAL_UNIT_CODED_SLICE_STSA_N,    // 4
-  NAL_UNIT_CODED_SLICE_STSA_R,    // 5
-
-  NAL_UNIT_CODED_SLICE_RADL_N,    // 6
-  NAL_UNIT_CODED_SLICE_RADL_R,      // 7
-  
-  NAL_UNIT_CODED_SLICE_RASL_N,    // 8
-  NAL_UNIT_CODED_SLICE_RASL_R,      // 9
-
-  NAL_UNIT_RESERVED_VCL_N10,
-  NAL_UNIT_RESERVED_VCL_R11,
-  NAL_UNIT_RESERVED_VCL_N12,
-  NAL_UNIT_RESERVED_VCL_R13,
-  NAL_UNIT_RESERVED_VCL_N14,
-  NAL_UNIT_RESERVED_VCL_R15,
-
-  NAL_UNIT_CODED_SLICE_BLA_W_LP,    // 16
-  NAL_UNIT_CODED_SLICE_BLA_W_RADL,  // 17
-  NAL_UNIT_CODED_SLICE_BLA_N_LP,  // 18
-  NAL_UNIT_CODED_SLICE_IDR_W_RADL,  // 19
-  NAL_UNIT_CODED_SLICE_IDR_N_LP,  // 20
-  NAL_UNIT_CODED_SLICE_CRA,       // 21
-  NAL_UNIT_RESERVED_IRAP_VCL22,
-  NAL_UNIT_RESERVED_IRAP_VCL23,
-
-  NAL_UNIT_RESERVED_VCL24,
-  NAL_UNIT_RESERVED_VCL25,
-  NAL_UNIT_RESERVED_VCL26,
-  NAL_UNIT_RESERVED_VCL27,
-  NAL_UNIT_RESERVED_VCL28,
-  NAL_UNIT_RESERVED_VCL29,
-  NAL_UNIT_RESERVED_VCL30,
-  NAL_UNIT_RESERVED_VCL31,
-
-  NAL_UNIT_VPS,                   // 32
-  NAL_UNIT_SPS,                   // 33
-  NAL_UNIT_PPS,                   // 34
-  NAL_UNIT_ACCESS_UNIT_DELIMITER, // 35
-  NAL_UNIT_EOS,                   // 36
-  NAL_UNIT_EOB,                   // 37
-  NAL_UNIT_FILLER_DATA,           // 38
-  NAL_UNIT_PREFIX_SEI,              // 39
-  NAL_UNIT_SUFFIX_SEI,              // 40
-  NAL_UNIT_RESERVED_NVCL41,
-  NAL_UNIT_RESERVED_NVCL42,
-  NAL_UNIT_RESERVED_NVCL43,
-  NAL_UNIT_RESERVED_NVCL44,
-  NAL_UNIT_RESERVED_NVCL45,
-  NAL_UNIT_RESERVED_NVCL46,
-  NAL_UNIT_RESERVED_NVCL47,
-  NAL_UNIT_UNSPECIFIED_48,
-  NAL_UNIT_UNSPECIFIED_49,
-  NAL_UNIT_UNSPECIFIED_50,
-  NAL_UNIT_UNSPECIFIED_51,
-  NAL_UNIT_UNSPECIFIED_52,
-  NAL_UNIT_UNSPECIFIED_53,
-  NAL_UNIT_UNSPECIFIED_54,
-  NAL_UNIT_UNSPECIFIED_55,
-  NAL_UNIT_UNSPECIFIED_56,
-  NAL_UNIT_UNSPECIFIED_57,
-  NAL_UNIT_UNSPECIFIED_58,
-  NAL_UNIT_UNSPECIFIED_59,
-  NAL_UNIT_UNSPECIFIED_60,
-  NAL_UNIT_UNSPECIFIED_61,
-  NAL_UNIT_UNSPECIFIED_62,
-  NAL_UNIT_UNSPECIFIED_63,
-  NAL_UNIT_INVALID,
-};
-
-#if H_3D
+#if NH_3D
 //PICYUV
 #define PICYUV_PAD         16
 
 //RENDERER
-#define REN_LUMA_MARGIN   ( g_uiMaxCUWidth + PICYUV_PAD )
+
+
+#define REN_BIT_DEPTH     8
+#define REN_LUMA_MARGIN   ( PICYUV_PAD + 1 ) // + g_uiMaxCuWidth instead of 1 ???
 #define REN_VDWEIGHT_PREC  8
 #define REN_IS_FILLED     ( 1 << REN_VDWEIGHT_PREC )
-#define REN_USED_PEL       ( (1 << g_bitDepthY) - 1 )
+#define REN_USED_PEL       ( (1 << REN_BIT_DEPTH) - 1 )
 #define REN_UNUSED_PEL     0
 #define REN_IS_HOLE        0
+#if NH_3D_VSO
+#define ENC_INTERNAL_BIT_DEPTH  REN_BIT_DEPTH // consider making this a variable
+#endif
 
 
 // CAMERA PARAMETERS
 #define LOG2_DISP_PREC_LUT           2           ///< log2 of disparity precision used in integer disparity LUTs
 #define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
 
-#endif // end of H_3D
+#endif // end of NH_3D
 //! \}
 
 #endif // end of #ifndef  __COMMONDEF__

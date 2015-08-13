@@ -33,8 +33,8 @@
 
 
 #include <time.h>
-#include "../../Lib/TLibCommon/TypeDef.h"
-#if H_3D
+#include "../../Lib/TLibCommon/CommonDef.h"
+#if NH_3D
 #include "TAppRendererTop.h"
 // ====================================================================================================================
 // Main function
@@ -88,5 +88,5 @@ int main(int argc, char* argv[])
   return 1; 
 }
 
-#endif // H_3D
+#endif // NH_3D
 

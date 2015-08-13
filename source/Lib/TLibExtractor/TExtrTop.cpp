@@ -36,7 +36,7 @@
 */
 
 #include "TExtrTop.h"
-#if H_MV
+#if NH_MV
 TExtrTop::TExtrTop()
 {
 }
@@ -55,12 +55,14 @@ Void TExtrTop::init()
 Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds )
 {
   //extraction now has to be done using layer_id
-  UInt uiLayerId      = nalu.m_layerId;
+  UInt uiLayerId      = nalu.m_nuhLayerId;
 
   
   // Initialize entropy decoder
   m_cEntropyDecoder.setEntropyDecoder( &m_cCavlcDecoder );
-  m_cEntropyDecoder.setBitstream     ( nalu.m_Bitstream );
+
+  TComInputBitstream inpBs = nalu.getBitstream(); 
+  m_cEntropyDecoder.setBitstream     ( &inpBs );
   
   if ( nalu.m_nalUnitType == NAL_UNIT_VPS )
   {
@@ -71,12 +73,7 @@ Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds 
   if ( nalu.m_nalUnitType == NAL_UNIT_SPS )
   {
      TComSPS     cSPS;
-#if H_3D
-
      m_cEntropyDecoder   .decodeSPS( &cSPS );
-#else
-     m_cEntropyDecoder   .decodeSPS( &cSPS );
-#endif
      m_acSPSBuffer       .push_back( cSPS );
   }
 
@@ -108,9 +105,7 @@ Void TExtrTop::dumpVpsInfo( std::ostream& rcVpsInfoHandle )
     rcVpsInfoHandle << "LayerIdxInVps  = " << layerIdxInVps                       << std::endl; 
     rcVpsInfoHandle << "LayerIdInNuh   = " << layerId                             << std::endl; 
     rcVpsInfoHandle << "ViewOrderIndex = " << m_cVPS.getViewIndex     ( layerId ) << std::endl;     
-#if H_3D    
     rcVpsInfoHandle << "DepthFlag      = " << m_cVPS.getDepthId       ( layerId ) << std::endl;     
-#endif
     rcVpsInfoHandle << "ViewId         = " << m_cVPS.getViewId        ( layerId ) << std::endl;     
   }
 }

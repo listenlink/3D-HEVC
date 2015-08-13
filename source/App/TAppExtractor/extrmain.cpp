@@ -40,7 +40,7 @@
 #include <time.h>
 #include "TAppExtrTop.h"
 
-#if H_MV
+#if NH_MV
 // ====================================================================================================================
 // Main function
 // ====================================================================================================================
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 #include <iostream>
 int main(int argc, char* argv[])
 {
-  std::cout << "Set H_MV equal to 1 in TypeDef.h to build bitstream extractor. " << std::endl; 
+  std::cout << "Set NH_MV equal to 1 in TypeDef.h to build bitstream extractor. " << std::endl; 
   return 1; 
 }
 
