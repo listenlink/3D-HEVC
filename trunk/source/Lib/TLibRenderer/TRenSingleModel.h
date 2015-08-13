@@ -50,7 +50,7 @@
 #include <cstdio>
 #include <cstring>
 
-#if H_3D_VSO
+#if NH_3D_VSO
 using namespace std;
 
 #if H_3D_VSO_RM_ASSERTIONS
@@ -81,19 +81,19 @@ public:
 
   // Set Data
 #if H_3D_VSO_EARLY_SKIP
-  virtual Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel* piOrgData, Int iOrgStride )  = 0;
+  virtual Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel* piOrgData, Int iOrgStride )  = 0;
 #else
-  virtual Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )  = 0;
+  virtual Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData )  = 0;
 #endif
-  virtual Void   setVideo  ( Int iViewPos,     Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData ) = 0;
+  virtual Void   setVideo  ( Int iViewPos,     Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData ) = 0;
 
   // Get Distortion
 #if H_3D_VSO_EARLY_SKIP
-  virtual RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel * piOrgData , Int iOrgStride)=0;
+  virtual RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel * piOrgData , Int iOrgStride)=0;
 #else
-  virtual RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData ) = 0;
+  virtual RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData ) = 0;
 #endif
-  virtual RMDist getDistVideo  ( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData ) = 0;
+  virtual RMDist getDistVideo  ( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData ) = 0;
 
   virtual Void   getSynthVideo  ( Int iViewPos, TComPicYuv* pcPicYuv ) = 0;  
   virtual Void   getSynthDepth  ( Int iViewPos, TComPicYuv* pcPicYuv ) = 0;
@@ -171,19 +171,19 @@ public:
   Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference );
 
 #if H_3D_VSO_EARLY_SKIP
-  Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel* piOrgData, Int iOrgStride );
-#else
-  Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
-#endif
-  Void   setVideo  ( Int iViewPos,     Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
-
-  // Get Distortion
-#if H_3D_VSO_EARLY_SKIP
-  RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel * piOrgData , Int iOrgStride);
-#else
-  RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
-#endif
-  RMDist getDistVideo  ( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
+  Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel* piOrgData, Int iOrgStride );
+#else                                                                                                                    
+  Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData );
+#endif                                                                                                                   
+  Void   setVideo  ( Int iViewPos,     Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData );
+                                                                                                                         
+  // Get Distortion                                                                                                      
+#if H_3D_VSO_EARLY_SKIP                                                                                                  
+  RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel * piOrgData , Int iOrgStride);
+#else                                                                                                                    
+  RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData );
+#endif                                                                                                                   
+  RMDist getDistVideo  ( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData );
 
   Void   getSynthVideo  ( Int iViewPos, TComPicYuv* pcPicYuv );  
   Void   getSynthDepth  ( Int iViewPos, TComPicYuv* pcPicYuv );
@@ -197,13 +197,13 @@ private:
   /////  Rendering /////
   // Left to Right
 #if H_3D_VSO_EARLY_SKIP
-                      __inline Bool   xDetectEarlySkipL   ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData,Pel* piOrgData, Int iOrgStride );
-                      __inline Bool   xDetectEarlySkipR   ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData,Pel* piOrgData, Int iOrgStride );
-  template<Bool bSet> __inline RMDist xRenderL            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Bool bFast );
-  template<Bool bSet> __inline RMDist xRenderR            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Bool bFast );
+                      __inline Bool   xDetectEarlySkipL   ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel* piOrgData, Int iOrgStride );
+                      __inline Bool   xDetectEarlySkipR   ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel* piOrgData, Int iOrgStride );
+  template<Bool bSet> __inline RMDist xRenderL            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, Bool bFast );
+  template<Bool bSet> __inline RMDist xRenderR            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, Bool bFast );
 #else
-  template<Bool bSet> __inline RMDist xRenderR            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
-  template<Bool bSet> __inline RMDist xRenderL            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
+  template<Bool bSet> __inline RMDist xRenderR            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData );
+  template<Bool bSet> __inline RMDist xRenderL            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData );
 #endif
                       __inline Void   xInitRenderPartL    ( Int iEndChangePos, Int iLastSPos  );
   template<Bool bSet> __inline Void   xRenderRangeL       ( Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist& riError );
@@ -352,7 +352,7 @@ private:
 
   Int   m_iCurViewPos;                 // Current View Position 0: Left, 1: Right
   Int   m_iOtherViewPos;               // Other View Position 0: Left, 1: Right
-  Pel*  m_piNewDepthData;              // Pointer to new depth data
+  const Pel*  m_piNewDepthData;              // Pointer to new depth data
   Int   m_iStartChangePosX;            // Start Position of new data
   Int   m_iNewDataWidth;               // Width of new data
   Pel   m_iCurDepth;                   // Current Depth Value
@@ -388,7 +388,7 @@ private:
 #endif
 };
 
-#endif // H_3D
+#endif // NH_3D
 #endif //__TRENSINGLEMODEL__
 
 

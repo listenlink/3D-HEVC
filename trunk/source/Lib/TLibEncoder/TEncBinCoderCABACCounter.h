@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@
     \brief    binary entropy encoder of CABAC
 */
 
-#ifndef __TENC_BIN_CODER_CABAC_COUNTER__
-#define __TENC_BIN_CODER_CABAC_COUNTER__
+#ifndef __TENCBINCODERCABACCOUNTER__
+#define __TENCBINCODERCABACCOUNTER__
 
 
 #include "TEncBinCoderCABAC.h"
@@ -52,7 +52,7 @@ class TEncBinCABACCounter : public TEncBinCABAC
 public:
   TEncBinCABACCounter ();
   virtual ~TEncBinCABACCounter();
-  
+
   Void  finish            ();
   UInt  getNumWrittenBits ();
 
@@ -60,7 +60,9 @@ public:
   Void  encodeBinEP       ( UInt  binValue                            );
   Void  encodeBinsEP      ( UInt  binValues, Int numBins              );
   Void  encodeBinTrm      ( UInt  binValue                            );
-  
+
+  Void  align             ();
+
 private:
 };
 

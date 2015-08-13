@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,15 @@
  * \brief Declaration of TComInterpolationFilter class
  */
 
-#ifndef __HM_TCOMINTERPOLATIONFILTER_H__
-#define __HM_TCOMINTERPOLATIONFILTER_H__
+#ifndef __TCOMINTERPOLATIONFILTER__
+#define __TCOMINTERPOLATIONFILTER__
 
-#include "TypeDef.h"
+#include "CommonDef.h"
 
 //! \ingroup TLibCommon
 //! \{
 
-#if H_3D_ARP
+#if NH_3D_ARP
 #define NTAPS_LUMA_ARP    2 ///< Number of taps for luma
 #define NTAPS_CHROMA_ARP  2 ///< Number of taps for chroma
 #endif
@@ -60,46 +60,37 @@
  */
 class TComInterpolationFilter
 {
-  static const Short m_lumaFilter[4][NTAPS_LUMA];     ///< Luma filter taps
-  static const Short m_chromaFilter[8][NTAPS_CHROMA]; ///< Chroma filter taps
-#if H_3D_ARP
+  static const TFilterCoeff m_lumaFilter[LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_LUMA];     ///< Luma filter taps
+  static const TFilterCoeff m_chromaFilter[CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_CHROMA]; ///< Chroma filter taps
+#if NH_3D_ARP
   static const Short m_lumaFilterARP  [4][NTAPS_LUMA_ARP];     ///< Luma filter taps for ARP
   static const Short m_chromaFilterARP[8][NTAPS_CHROMA_ARP];   ///< Chroma filter taps for ARP
 #endif
-  static Void filterCopy(Int bitDepth, const Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast);
-  
+
+  static Void filterCopy(Int bitDepth, const Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast);
+
   template<Int N, Bool isVertical, Bool isFirst, Bool isLast>
-  static Void filter(Int bitDepth, Pel const *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Short const *coeff);
+  static Void filter(Int bitDepth, Pel const *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, TFilterCoeff const *coeff);
 
   template<Int N>
-  static Void filterHor(Int bitDepth, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height,               Bool isLast, Short const *coeff);
+  static Void filterHor(Int bitDepth, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height,               Bool isLast, TFilterCoeff const *coeff);
   template<Int N>
-  static Void filterVer(Int bitDepth, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast, Short const *coeff);
+  static Void filterVer(Int bitDepth, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast, TFilterCoeff const *coeff);
 
 public:
   TComInterpolationFilter() {}
   ~TComInterpolationFilter() {}
 
-  Void filterHorLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast 
-#if H_3D_ARP
+  Void filterHor(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast, const ChromaFormat fmt, const Int bitDepth 
+#if NH_3D_ARP
     , Bool filterType = false
 #endif
-    );
-  Void filterVerLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast 
-#if H_3D_ARP
+);
+  Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth 
+#if NH_3D_ARP
     , Bool filterType = false
 #endif
-    );
-  Void filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast 
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
-    );
-  Void filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast 
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
-    );
+);
 };
 
 //! \}

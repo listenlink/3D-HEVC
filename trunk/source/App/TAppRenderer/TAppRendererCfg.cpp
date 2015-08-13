@@ -43,7 +43,7 @@
 #include "TAppRendererCfg.h"
 #include "../../Lib/TAppCommon/program_options_lite.h"
 
-#if H_3D
+#if NH_3D
 
 using namespace std;
 namespace po = df::program_options_lite;
@@ -130,13 +130,13 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     ("DepthInputFile_%d,d_%d",  m_pchDepthInputFileList ,    (Char *) 0, MAX_INPUT_VIEW_NUM , "Original Yuv depth input file name %d")
     ("SynthOutputFile_%d,s_%d", m_pchSynthOutputFileList,    (Char *) 0, MAX_OUTPUT_VIEW_NUM, "Synthesized Yuv output file name %d")
 
-    ("InputBitDepth",           m_inputBitDepthY,                     8, "Bit-depth of input file")
-    ("OutputBitDepth",          m_outputBitDepthY,                    0, "Bit-depth of output file (default:InternalBitDepth)")
-    ("InternalBitDepth",        m_internalBitDepthY,                  0, "Bit-depth the renderer operates at. (default:InputBitDepth)"                                                                          "If different to InputBitDepth, source data will be converted")
+    ("InputBitDepth",           m_inputBitDepth[0],                     8, "Bit-depth of input file")
+    ("OutputBitDepth",          m_outputBitDepth[0],                    0, "Bit-depth of output file (default:InternalBitDepth)")
+    ("InternalBitDepth",        m_internalBitDepth[0],                  0, "Bit-depth the renderer operates at. (default:InputBitDepth)"                                                                          "If different to InputBitDepth, source data will be converted")
 
-    ("InputBitDepthC",        m_inputBitDepthC,    0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
-    ("OutputBitDepthC",       m_outputBitDepthC,   0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
-    ("InternalBitDepthC",     m_internalBitDepthC, 0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
+    ("InputBitDepthC",        m_inputBitDepth[1],    0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
+    ("OutputBitDepthC",       m_outputBitDepth[1],   0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
+    ("InternalBitDepthC",     m_internalBitDepth[1], 0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
 
     /* Source Specification */
     ("SourceWidth,-wdt",        m_iSourceWidth,                       0, "Source picture width")
@@ -185,13 +185,11 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
   */
 
   /* rules for input, output and internal bitdepths as per help text */
-  if (!m_internalBitDepthY) { m_internalBitDepthY = m_inputBitDepthY; }
-  if (!m_internalBitDepthC) { m_internalBitDepthC = m_internalBitDepthY; }
-  if (!m_inputBitDepthC)    { m_inputBitDepthC    = m_inputBitDepthY; }
-  if (!m_outputBitDepthY)   { m_outputBitDepthY   = m_internalBitDepthY; }
-  if (!m_outputBitDepthC)   { m_outputBitDepthC   = m_internalBitDepthC; }
-
-  xSetGlobal();
+  if (!m_internalBitDepth[0]) { m_internalBitDepth[0] = m_inputBitDepth[0]; }
+  if (!m_internalBitDepth[1]) { m_internalBitDepth[1] = m_internalBitDepth[0]; }
+  if (!m_inputBitDepth[1])    { m_inputBitDepth[1]    = m_inputBitDepth[0]; }
+  if (!m_outputBitDepth[0])   { m_outputBitDepth[0]   = m_internalBitDepth[0]; }
+  if (!m_outputBitDepth[1])   { m_outputBitDepth[1]   = m_internalBitDepth[1]; }
 
   UInt  uiInputBitDepth   = 8;
   UInt  uiCamParPrecision = 5;
@@ -274,9 +272,9 @@ Void TAppRendererCfg::xCheckParameter()
   xConfirmPara( m_iFramesToBeRendered <  0,                   "Total Number Of Frames rendered must be more than 1" );
 
   // bit depth 
-  xConfirmPara( m_internalBitDepthC != m_internalBitDepthY,  "InternalBitDepth for luma and chroma must be equal. "); 
-  xConfirmPara( m_inputBitDepthY < 8,                        "InputBitDepth must be at least 8" );
-  xConfirmPara( m_inputBitDepthC < 8,                        "InputBitDepthC must be at least 8" );
+  xConfirmPara( m_internalBitDepth[0] != m_internalBitDepth[1],  "InternalBitDepth for luma and chroma must be equal. "); 
+  xConfirmPara( m_inputBitDepth[0] < 8,                        "InputBitDepth must be at least 8" );
+  xConfirmPara( m_inputBitDepth[1] < 8,                        "InputBitDepthC must be at least 8" );
 
   // camera specification
   xConfirmPara( m_iNumberOfInputViews  > MAX_INPUT_VIEW_NUM , "NumberOfInputViews must be less than of equal to MAX_INPUT_VIEW_NUM");
@@ -307,13 +305,13 @@ Void TAppRendererCfg::xCheckParameter()
   xConfirmPara( m_iPostProcMode       < 0 || m_iPostProcMode       >  2, "PostProcMode       must be more than or equal to 0 and less than 3"  );
 
   Int iNumNonNULL;
-  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchDepthInputFileList[iNumNonNULL]; iNumNonNULL++);  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
-  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchVideoInputFileList[iNumNonNULL]; iNumNonNULL++);  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
+  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchDepthInputFileList[iNumNonNULL]; iNumNonNULL++) {};  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
+  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchVideoInputFileList[iNumNonNULL]; iNumNonNULL++) {};  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
 
 
   if ( !m_bSweep )
   {
-  for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfOutputViews) && m_pchSynthOutputFileList[iNumNonNULL]; iNumNonNULL++); xConfirmPara( iNumNonNULL < m_iNumberOfOutputViews, "Number of SynthOutputFiles must be greater than or equal to number of SynthViewNumbers" );
+    for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfOutputViews) && m_pchSynthOutputFileList[iNumNonNULL]; iNumNonNULL++) {}; xConfirmPara( iNumNonNULL < m_iNumberOfOutputViews, "Number of SynthOutputFiles must be greater than or equal to number of SynthViewNumbers" );
   }
   else
   {
@@ -503,7 +501,7 @@ Void TAppRendererCfg::xAddNumberToFileName( Char* pchSourceFileName, Char*& rpch
   rpchTargetFileName[iInLength+iAddLength-1] = '\0';
 }
 
-Void TAppRendererCfg::xGetMaxPrecision( std::vector< Int > aiIn, Int& iPrecBefore, Int& iPrecAfter )
+Void TAppRendererCfg::xGetMaxPrecision( IntAry1d aiIn, Int& iPrecBefore, Int& iPrecAfter )
 {
   iPrecBefore = 0;
   iPrecAfter  = 0;
@@ -522,13 +520,6 @@ Void TAppRendererCfg::xGetMaxPrecision( std::vector< Int > aiIn, Int& iPrecBefor
     iCurPrec = LOG10_VIEW_NUM_PREC - std::min((Int) LOG10_VIEW_NUM_PREC, iCurPrec-1 );
     iPrecAfter = max(iPrecAfter, iCurPrec );
   }
-}
-
-Void TAppRendererCfg::xSetGlobal()
-{
-  // set max CU width & height  
-  g_uiMaxCUWidth   = 0;
-  g_uiMaxCUHeight  = 0;  
 }
 
 #endif

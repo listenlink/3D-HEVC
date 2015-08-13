@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,46 +65,19 @@ private:
   TDecEntropy*    m_pcEntropyDecoder;
   TDecCu*         m_pcCuDecoder;
 
-  TDecSbac*       m_pcBufferSbacDecoders;   ///< line to store temporary contexts, one per column of tiles.
-  TDecBinCABAC*   m_pcBufferBinCABACs;
-  TDecSbac*       m_pcBufferLowLatSbacDecoders;   ///< dependent tiles: line to store temporary contexts, one per column of tiles.
-  TDecBinCABAC*   m_pcBufferLowLatBinCABACs;
-  std::vector<TDecSbac*> CTXMem;
-  
+  TDecSbac        m_lastSliceSegmentEndContextState;    ///< context storage for state at the end of the previous slice-segment (used for dependent slices only).
+  TDecSbac        m_entropyCodingSyncContextState;      ///< context storate for state of contexts at the wavefront/WPP/entropy-coding-sync second CTU of tile-row
+
 public:
   TDecSlice();
   virtual ~TDecSlice();
-  
+
   Void  init              ( TDecEntropy* pcEntropyDecoder, TDecCu* pcMbDecoder );
   Void  create            ();
   Void  destroy           ();
-  
-  Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
-  Void      initCtxMem(  UInt i );
-  Void      setCtxMem( TDecSbac* sb, Int b )   { CTXMem[b] = sb; }
-  Int       getCtxMemSize( )                   { return (Int)CTXMem.size(); }
+
+  Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic* pcPic, TDecSbac* pcSbacDecoder );
 };
-
-
-class ParameterSetManagerDecoder:public ParameterSetManager
-{
-public:
-  ParameterSetManagerDecoder();
-  virtual ~ParameterSetManagerDecoder();
-  Void     storePrefetchedVPS(TComVPS *vps)  { m_vpsBuffer.storePS( vps->getVPSId(), vps); };
-  TComVPS* getPrefetchedVPS  (Int vpsId);
-  Void     storePrefetchedSPS(TComSPS *sps)  { m_spsBuffer.storePS( sps->getSPSId(), sps); };
-  TComSPS* getPrefetchedSPS  (Int spsId);
-  Void     storePrefetchedPPS(TComPPS *pps)  { m_ppsBuffer.storePS( pps->getPPSId(), pps); };
-  TComPPS* getPrefetchedPPS  (Int ppsId);
-  Void     applyPrefetchedPS();
-
-private:
-  ParameterSetMap<TComVPS> m_vpsBuffer;
-  ParameterSetMap<TComSPS> m_spsBuffer; 
-  ParameterSetMap<TComPPS> m_ppsBuffer;
-};
-
 
 //! \}
 
