@@ -825,8 +825,9 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
         }
       }
 
+#if NH_MV
       D_PRINT_INDENT( g_traceSAOCost, "SAO mode " + n2s( mode ) + " Cost:  " + n2s( modeCost) );
-
+#endif
       if(modeCost < minCost)
       {
         minCost = modeCost;

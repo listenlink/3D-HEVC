@@ -155,7 +155,9 @@ Void TEncBinCABAC::copyState( const TEncBinIf* pcTEncBinIf )
   m_numBufferedBytes = pcTEncBinCABAC->m_numBufferedBytes;
 #if FAST_BIT_EST
   m_fracBits = pcTEncBinCABAC->m_fracBits;
+#if NH_MV
   D_PRINT_INDENT(g_traceEncFracBits,  "CopyState " + n2s(m_fracBits) );    
+#endif
 #endif
 }
 
@@ -170,9 +172,13 @@ Void TEncBinCABAC::resetBits()
     m_uiBinsCoded = 0;
   }
 #if FAST_BIT_EST
+#if NH_MV
   D_PRINT_INDENT( g_traceEncFracBits, "Reset Bits Before" + n2s(m_fracBits) );
+#endif
   m_fracBits &= 32767;
+#if NH_MV
   D_PRINT_INDENT( g_traceEncFracBits, "Reset Bits " + n2s(m_fracBits) );  
+#endif
 #endif
 }
 

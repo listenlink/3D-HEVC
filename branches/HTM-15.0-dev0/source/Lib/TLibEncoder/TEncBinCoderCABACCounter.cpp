@@ -58,7 +58,9 @@ Void TEncBinCABACCounter::finish()
 {
   m_pcTComBitIf->write(0, UInt(m_fracBits >> 15) );
   m_fracBits &= 32767;
+#if NH_MV
   D_PRINT_INDENT( g_traceEncFracBits, "Finish " + n2s(m_fracBits) );    
+#endif
 }
 
 UInt TEncBinCABACCounter::getNumWrittenBits()
@@ -80,7 +82,9 @@ Void TEncBinCABACCounter::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 
   m_uiBinsCoded += m_binCountIncrement;
   m_fracBits += rcCtxModel.getEntropyBits( binValue );
+#if NH_MV
   D_PRINT_INDENT( g_traceEncFracBits, "EncodeBin " + n2s(m_fracBits) );    
+#endif
 
   rcCtxModel.update( binValue );
 
@@ -112,7 +116,9 @@ Void TEncBinCABACCounter::encodeBinEP( UInt /*binValue*/ )
 {
   m_uiBinsCoded += m_binCountIncrement;
   m_fracBits += 32768;
-    D_PRINT_INDENT( g_traceEncFracBits , "EncodeBinEP " + n2s(m_fracBits) );    
+#if NH_MV
+  D_PRINT_INDENT( g_traceEncFracBits , "EncodeBinEP " + n2s(m_fracBits) );
+#endif
 }
 
 /**
@@ -125,7 +131,9 @@ Void TEncBinCABACCounter::encodeBinsEP( UInt /*binValues*/, Int numBins )
 {
   m_uiBinsCoded += numBins & -m_binCountIncrement;
   m_fracBits += 32768 * numBins;
+#if NH_MV
   D_PRINT_INDENT( g_traceEncFracBits , "EncodeBinsEP " + n2s(m_fracBits) );    
+#endif
 }
 
 /**
@@ -137,13 +145,17 @@ Void TEncBinCABACCounter::encodeBinTrm( UInt binValue )
 {
   m_uiBinsCoded += m_binCountIncrement;
   m_fracBits += ContextModel::getEntropyBitsTrm( binValue );
+#if NH_MV
   D_PRINT_INDENT( g_traceEncFracBits , "EncodeBinTrm " + n2s(m_fracBits) );    
+#endif
 }
 
 Void TEncBinCABACCounter::align()
 {
   m_fracBits = (m_fracBits + 32767) & (~32767);
+#if NH_MV
   D_PRINT_INDENT( g_traceEncFracBits, "Align " + n2s(m_fracBits) );    
+#endif
 }
 
 //! \}

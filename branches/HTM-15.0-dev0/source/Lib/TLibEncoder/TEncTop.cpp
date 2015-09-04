@@ -82,7 +82,7 @@ TEncTop::TEncTop()
   m_aICEnableCandidate = NULL;
   m_aICEnableNum = NULL;
 #endif
-#if NH_3D
+#if NH_MV
   m_cCavlcCoder.setEncTop(this); 
 #endif
 
@@ -349,9 +349,7 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
   {
     m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcPicCurr ) );
   }
-#if NH_MV
   pcPicCurr->setLayerId( getLayerId()); 
-#endif
 #if NH_3D
   pcPicCurr->setScaleOffset( m_cameraParameters->getCodedScale(), m_cameraParameters->getCodedOffset() );
 #endif
@@ -360,9 +358,10 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
 
 Void TEncTop::deletePicBuffer()
 {
+
+#if !NH_MV
   TComList<TComPic*>::iterator iterPic = m_cListPic.begin();
   Int iSize = Int( m_cListPic.size() );
-
   for ( Int i = 0; i < iSize; i++ )
   {
     TComPic* pcPic = *(iterPic++);
@@ -371,6 +370,7 @@ Void TEncTop::deletePicBuffer()
     delete pcPic;
     pcPic = NULL;
   }
+#endif
 }
 
 /**
@@ -403,7 +403,7 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvT
 #if NH_MV
   if( gopId == 0)
   {
-    m_cGOPEncoder.initGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut);  
+    m_cGOPEncoder.initGOP(m_iPOCLast, m_iNumPicRcvd, *(m_ivPicLists->getSubDpb( getLayerId(), false )), rcListPicYuvRecOut, accessUnitsOut);  
 #else
   if (pcPicYuvOrg != NULL)
   {
@@ -433,7 +433,7 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvT
   }
 #if NH_MV
   }
-  m_cGOPEncoder.compressPicInGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, false, false, snrCSC, m_printFrameMSE, gopId);
+  m_cGOPEncoder.compressPicInGOP(m_iPOCLast, m_iNumPicRcvd, *(m_ivPicLists->getSubDpb(getLayerId(), false) ), rcListPicYuvRecOut, accessUnitsOut, false, false, snrCSC, m_printFrameMSE, gopId);
 
   if( gopId + 1 == m_cGOPEncoder.getGOPSize() )
   {
@@ -573,13 +573,25 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
 {
   // At this point, the SPS and PPS can be considered activated - they are copied to the new TComPic.
 
+#if NH_MV
+  TComList<TComPic*>& cListPic = *(m_ivPicLists->getSubDpb(getLayerId(), false) );
+  TComSlice::sortPicList(cListPic);
+#else
   TComSlice::sortPicList(m_cListPic);
+#endif
 
 
+#if NH_MV
+  if (cListPic.size() >= (UInt)(m_iGOPSize + getMaxDecPicBuffering(MAX_TLAYER-1) + 2) )
+  {
+    TComList<TComPic*>::iterator iterPic  = cListPic.begin();
+    Int iSize = Int( cListPic.size() );
+#else
   if (m_cListPic.size() >= (UInt)(m_iGOPSize + getMaxDecPicBuffering(MAX_TLAYER-1) + 2) )
   {
     TComList<TComPic*>::iterator iterPic  = m_cListPic.begin();
     Int iSize = Int( m_cListPic.size() );
+#endif
     for ( Int i = 0; i < iSize; i++ )
     {
       rpcPic = *(iterPic++);
@@ -603,7 +615,11 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
       rpcPic->create( m_cSPS, m_cPPS, false );
     }
 
+#if NH_MV
+    cListPic.pushBack( rpcPic );
+#else
     m_cListPic.pushBack( rpcPic );
+#endif
   }
   rpcPic->setReconMark (false);
 
@@ -1055,11 +1071,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
 #if NH_MV
-#if NH_MV_FIX_TICKET_100
   m_cPPS.setNumExtraSliceHeaderBits( 2 ); 
-#else
-  m_cPPS.setNumExtraSliceHeaderBits( 3 ); 
-#endif
 #endif
   m_cPPS.setSignHideFlag(getSignHideFlag());
   if ( getDeblockingFilterMetric() )

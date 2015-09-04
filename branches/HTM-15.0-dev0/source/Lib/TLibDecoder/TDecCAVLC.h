@@ -63,7 +63,11 @@ public:
 
 protected:
 
+#if NH_MV
+  Void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComStRefPicSet* pcRPS, Int stRpsIdx );
+#else
   Void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
+#endif
 
 #if NH_MV
   TDecTop*  m_decTop;
@@ -103,7 +107,13 @@ public:
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
   Void  parseProfileTier    (ProfileTierLevel *ptl, const Bool bIsSubLayer);
   Void  parseHrdParameters  (TComHRD *hrd, Bool cprms_present_flag, UInt tempLevelHigh);
+#if NH_MV
+  Void  parseFirstSliceSegmentInPicFlag( TComSlice* pcSlice );
+  Void  parseSliceHeader    ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager );
+#else
   Void  parseSliceHeader    ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager, const Int prevTid0POC);
+#endif
+
   Void  parseTerminatingBit ( UInt& ruiBit );
   Void  parseRemainingBytes ( Bool noTrailingBytesExpected );
 

@@ -277,6 +277,8 @@ static const Int  MAX_VPS_ADD_OUTPUT_LAYER_SETS =               1024 ;
 static const Int  MAX_VPS_OUTPUTLAYER_SETS =  MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 + MAX_VPS_OP_SETS_PLUS1 ;
 static const Int  MAX_NUM_VIDEO_SIGNAL_INFO =                     16 ;
 static const Int  MAX_NUM_SCALED_REF_LAYERS =     MAX_NUM_LAYERS - 1 ; 
+static const Int  MAX_NUM_PICS_RPS          =                     16 ; 
+static const Int  MAX_NUM_REF_LAYERS        =                     63 ;  
 #endif
 
 // ====================================================================================================================
@@ -366,6 +368,75 @@ __inline T gCeilLog2( T val )
 #define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
 #endif
 
+#if NH_MV
+static const std::string NALU_TYPE_STR[] = {  
+    "CODED_SLICE_TRAIL_N   ",  // 0
+    "CODED_SLICE_TRAIL_R   ",  // 1
+    "CODED_SLICE_TSA_N     ",  // 2
+    "CODED_SLICE_TSA_R     ",  // 3
+    "CODED_SLICE_STSA_N    ",  // 4
+    "CODED_SLICE_STSA_R    ",  // 5
+    "CODED_SLICE_RADL_N    ",  // 6
+    "CODED_SLICE_RADL_R    ",  // 7
+    "CODED_SLICE_RASL_N    ",  // 8
+    "CODED_SLICE_RASL_R    ",  // 9
+    "RESERVED_VCL_N10      ",
+    "RESERVED_VCL_R11      ",
+    "RESERVED_VCL_N12      ",
+    "RESERVED_VCL_R13      ",
+    "RESERVED_VCL_N14      ",
+    "RESERVED_VCL_R15      ",
+    "CODED_SLICE_BLA_W_LP  ",  // 16
+    "CODED_SLICE_BLA_W_RADL",  // 17
+    "CODED_SLICE_BLA_N_LP  ",  // 18
+    "CODED_SLICE_IDR_W_RADL",  // 19
+    "CODED_SLICE_IDR_N_LP  ",  // 20
+    "CODED_SLICE_CRA       ",  // 21
+    "RESERVED_IRAP_VCL22   ",
+    "RESERVED_IRAP_VCL23   ",
+    "RESERVED_VCL24        ",
+    "RESERVED_VCL25        ",
+    "RESERVED_VCL26        ",
+    "RESERVED_VCL27        ",
+    "RESERVED_VCL28        ",
+    "RESERVED_VCL29        ",
+    "RESERVED_VCL30        ",
+    "RESERVED_VCL31        ",
+    "VPS                   ",   // 32
+    "SPS                   ",   // 33
+    "PPS                   ",   // 34
+    "ACCESS_UNIT_DELIMITER ",   // 35
+    "EOS                   ",   // 36
+    "EOB                   ",   // 37
+    "FILLER_DATA           ",   // 38
+    "PREFIX_SEI            ",   // 39
+    "SUFFIX_SEI            ",   // 40
+    "RESERVED_NVCL41       ",
+    "RESERVED_NVCL42       ",
+    "RESERVED_NVCL43       ",
+    "RESERVED_NVCL44       ",
+    "RESERVED_NVCL45       ",
+    "RESERVED_NVCL46       ",
+    "RESERVED_NVCL47       ",
+    "UNSPECIFIED_48        ",
+    "UNSPECIFIED_49        ",
+    "UNSPECIFIED_50        ",
+    "UNSPECIFIED_51        ",
+    "UNSPECIFIED_52        ",
+    "UNSPECIFIED_53        ",
+    "UNSPECIFIED_54        ",
+    "UNSPECIFIED_55        ",
+    "UNSPECIFIED_56        ",
+    "UNSPECIFIED_57        ",
+    "UNSPECIFIED_58        ",
+    "UNSPECIFIED_59        ",
+    "UNSPECIFIED_60        ",
+    "UNSPECIFIED_61        ",
+    "UNSPECIFIED_62        ",
+    "UNSPECIFIED_63        ",
+    "INVALID               "               
+  };
+#endif
 
 #if NH_3D
 //PICYUV

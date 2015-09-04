@@ -162,7 +162,7 @@ protected:
   Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU  DEBUG_STRING_FN_DECLARE(sDebug),  Bool bUseMRG = false );
 #endif
 #if NH_3D_DIS
-  Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
+  Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug) );
 #endif
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
                               TComDataCU *&rpcTempCU,

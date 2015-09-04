@@ -763,7 +763,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
     rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
     if( rpcBestCU->getSlice()->getDepthIntraSkipFlag() )
     {
-      xCheckRDCostDIS( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
+      xCheckRDCostDIS( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
       rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
     }
 #endif
@@ -794,7 +794,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 )
             {
 #if  NH_3D_FAST_TEXTURE_ENCODING
-              xCheckRDCostInter( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), SIZE_NxN, bFMD  );
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug), bFMD  );
 #else
 
               xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
@@ -1095,10 +1095,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         Double intraCost = 0.0;
 
         if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
-           ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && ( // avoid very complex intra if it is unlikely
+           ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && (
            (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
-          ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr)) 
+          ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))   // avoid very complex intra if it is unlikely
  #if NH_3D_ENC_DEPTH
             || rpcBestCU->getSlice()->getIsDepth()
 #endif
@@ -1784,7 +1784,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
     return;   // never check merge in fast deltaqp mode
   }
 
+#if NH_MV
   D_PRINT_INC_INDENT( g_traceModeCheck, "xCheckRDCostMerge2Nx2N" );
+#endif
 
 #if NH_3D_MLC
   TComMvField  cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
@@ -1969,7 +1971,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
   for( UInt uiNoResidual = 0; uiNoResidual < iteration; ++uiNoResidual )
   {
+#if NH_MV
     D_PRINT_INC_INDENT ( g_traceModeCheck, "uiNoResidual: " + n2s( uiNoResidual) );
+#endif
 
     for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
     {
@@ -1982,7 +1986,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
         }
       }
 #endif
+#if NH_MV
       D_PRINT_INC_INDENT ( g_traceModeCheck, "uiMergeCand: "+  n2s(uiMergeCand) );
+#endif
 
       if(!(uiNoResidual==1 && mergeCandBuffer[uiMergeCand]==1))
       {
@@ -2172,7 +2178,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
               }
 
               xCheckDQP( rpcTempCU );
-              xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth );
+              xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(bestStr) DEBUG_STRING_PASS_INTO(tmpStr) );
             }
           }
 #endif
@@ -2196,7 +2202,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           }
         }
       }
+#if NH_MV
       D_DEC_INDENT( g_traceModeCheck ); 
+#endif
     }
 
     if(uiNoResidual == 0 && m_pcEncCfg->getUseEarlySkipDetection())
@@ -2228,7 +2236,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
         }
       }
     }
+#if NH_MV
     D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   }
   DEBUG_STRING_APPEND(sDebug, bestStr)
 #if NH_3D_ARP
@@ -2238,7 +2248,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
  delete[] pcMvFieldSP;
  delete[] puhInterDirSP;
 #endif
+#if NH_MV
  D_DEC_INDENT( g_traceModeCheck );
+#endif
 }
 
 
@@ -2264,7 +2276,9 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
     }
   }
 
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck,   "xCheckRDCostInter; ePartSize:" + n2s( ePartSize) );
+#endif
 
 
   // prior to this, rpcTempCU will have just been reset using rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
@@ -2353,16 +2367,18 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   if ( !rpcTempCU->getMergeAMP() )
   {
 #if NH_3D_ARP
-    if( nARPWMax )
-    {
-      continue;
-    }
-    else
+        if( nARPWMax )
+        {
+          continue;
+        }
+        else
 #endif
     {
-      D_DEC_INDENT( g_traceModeCheck ); 
-      return;
-    }
+#if NH_MV
+        D_DEC_INDENT( g_traceModeCheck ); 
+#endif
+    return;
+  }
   }
 #endif
 #if KWU_RC_MADPRED_E0227
@@ -2467,7 +2483,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
           }
 
           xCheckDQP( rpcTempCU );
-          xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+          xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
         }
 
       }
@@ -2478,7 +2494,9 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if  NH_3D_FAST_TEXTURE_ENCODING
   }
 #endif
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 }
 
 #if NH_3D_DBBP
@@ -2682,15 +2700,18 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
 }
 #endif
 #if NH_3D_DIS
-Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize )
+Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize DEBUG_STRING_FN_DECLARE(sDebug) )
 {
+  DEBUG_STRING_NEW(sTest)
   UInt uiDepth = rpcTempCU->getDepth( 0 );
   if( !rpcBestCU->getSlice()->getIsDepth() || (eSize != SIZE_2Nx2N))
   {
     return;
   }
 
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck, "xCheckRDCostDIS" );
+#endif
 
 #if NH_3D_VSO // M5
   if( m_pcRdCost->getUseRenModel() )
@@ -2752,7 +2773,9 @@ Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Pa
 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth  DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest) );
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck );  
+#endif
 }
 #endif
 Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
@@ -2776,8 +2799,10 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
       return; // only check necessary 2Nx2N Intra in fast deltaqp mode
     }
   }
+#if NH_MV
   D_PRINT_INC_INDENT (g_traceModeCheck, "xCheckRDCostIntra; eSize: " + n2s(eSize) );
-  
+#endif
+
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 #if NH_3D_VSO // M5
   if( m_pcRdCost->getUseRenModel() )
@@ -2829,31 +2854,26 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
   {
     m_pcEntropyCoder->encodeCUTransquantBypassFlag( rpcTempCU, 0,          true );
   }
-#if NH_3D_DIS && !NH_3D_DIS_FIX
-  m_pcEntropyCoder->encodeDIS( rpcTempCU, 0,          true );
-  if(!rpcTempCU->getDISFlag(0))
-  {
-#endif
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-#if NH_3D_DIS_FIX
+#if NH_3D_DIS
   m_pcEntropyCoder->encodeDIS( rpcTempCU, 0,          true );
   if(!rpcTempCU->getDISFlag(0))
   {
 #endif
-  m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
-  m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
-  m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0 );
-  m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
+    m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
+    m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
+    m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0 );
+    m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
 #if NH_3D_SDC_INTRA
     m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
 #endif
 
-  // Encode Coefficients
-  Bool bCodeDQP = getdQPFlag();
-  Bool codeChromaQpAdjFlag = getCodeChromaQpAdjFlag();
-  m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, bCodeDQP, codeChromaQpAdjFlag );
-  setCodeChromaQpAdjFlag( codeChromaQpAdjFlag );
-  setdQPFlag( bCodeDQP );
+    // Encode Coefficients
+    Bool bCodeDQP = getdQPFlag();
+    Bool codeChromaQpAdjFlag = getCodeChromaQpAdjFlag();
+    m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, bCodeDQP, codeChromaQpAdjFlag );
+    setCodeChromaQpAdjFlag( codeChromaQpAdjFlag );
+    setdQPFlag( bCodeDQP );
 #if NH_3D_DIS
   }
 #endif
@@ -2876,8 +2896,10 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
 
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
 
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
-  }
+#endif
+}
 
 
 /** Check R-D costs for a CU with PCM mode.
@@ -2911,7 +2933,6 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
     m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
   }
 #endif
-
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
 #if NH_3D_DIS
   rpcTempCU->setDISFlagSubParts( false, 0, uiDepth );

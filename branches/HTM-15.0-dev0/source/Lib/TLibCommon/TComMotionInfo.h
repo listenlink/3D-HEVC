@@ -42,6 +42,7 @@
 #include <memory.h>
 #include "CommonDef.h"
 #include "TComMv.h"
+
 //! \ingroup TLibCommon
 //! \{
 
@@ -187,6 +188,9 @@ public:
   }
   
   Void compress(Char* pePredMode, Int scale); 
+#if NH_MV
+  Void print   (Char* pePredMode);
+#endif
 };
 
 //! \}
@@ -280,7 +284,13 @@ public:
     pbSPIVMPFlag[iCount] = m_bSPIVMPFlag;
 #endif
   }
+
+
+  Void print( Int i );
+
 };
+
+
 #endif
 
 

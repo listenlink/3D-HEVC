@@ -52,6 +52,7 @@
 class TComPic;
 class TComTrQuant;
 #if NH_MV
+class TComDecodedRps;
 class TComPicLists; 
 class TComVPS; 
 class TComSPS; 
@@ -67,6 +68,116 @@ static const UInt REF_PIC_LIST_NUM_IDX=32;
 // ====================================================================================================================
 
 /// Reference Picture Set class
+
+#if NH_MV
+class TComStRefPicSet 
+{
+  // This class is currently only used by the decoder. 
+  // TBD: Modify encoder to use also it.
+
+private: 
+
+  // Syntax elements: 
+
+  Bool m_interRefPicSetPredictionFlag;
+  Int  m_deltaIdxMinus1;
+  Bool m_deltaRpsSign;
+  Int  m_absDeltaRpsMinus1;
+  Bool m_usedByCurrPicFlag  [ MAX_NUM_PICS_RPS ];
+  Bool m_useDeltaFlag       [ MAX_NUM_PICS_RPS ];
+  Int  m_numNegativePics;   
+  Int  m_numPositivePics;   
+  Int  m_deltaPocS0Minus1   [ MAX_NUM_PICS_RPS ];
+  Bool m_usedByCurrPicS0Flag[ MAX_NUM_PICS_RPS ];
+  Int  m_deltaPocS1Minus1   [ MAX_NUM_PICS_RPS ];
+  Bool m_usedByCurrPicS1Flag[ MAX_NUM_PICS_RPS ];
+
+  // Semantic variables: 
+  Int m_deltaPocS0Var       [ MAX_NUM_PICS_RPS ];
+  Int m_deltaPocS1Var       [ MAX_NUM_PICS_RPS ];
+  Int m_usedByCurrPicS0Var  [ MAX_NUM_PICS_RPS ];
+  Int m_usedByCurrPicS1Var  [ MAX_NUM_PICS_RPS ];
+  Int m_numNegativePicsVar  ;
+  Int m_numPositivePicsVar  ;
+
+public:
+
+  TComStRefPicSet( )
+  {
+    // Set default inheritance values: 
+    setInterRefPicSetPredictionFlag( false ); 
+    setDeltaIdxMinus1( 0 );
+    for (Int j = 0; j < MAX_NUM_PICS_RPS; j++)
+    {
+      setUseDeltaFlag( j, true  ); 
+    }    
+  }
+
+  // Syntax elements: 
+  Void  setInterRefPicSetPredictionFlag( Bool flag )           { m_interRefPicSetPredictionFlag = flag; }
+  Bool  getInterRefPicSetPredictionFlag(  ) const              { return m_interRefPicSetPredictionFlag; }
+
+  Void  setDeltaIdxMinus1( Int  val )                          { m_deltaIdxMinus1 = val;                }
+  Int   getDeltaIdxMinus1(  ) const                            { return m_deltaIdxMinus1;               }
+
+  Void  setDeltaRpsSign( Bool flag )                           { m_deltaRpsSign = flag;                 }
+  Bool  getDeltaRpsSign(  ) const                              { return m_deltaRpsSign;                 }
+
+  Void  setAbsDeltaRpsMinus1( Int  val )                       { m_absDeltaRpsMinus1 = val;             }
+  Int   getAbsDeltaRpsMinus1(  ) const                         { return m_absDeltaRpsMinus1;            }
+
+  Void  setUsedByCurrPicFlag( Int j, Bool flag )               { m_usedByCurrPicFlag[j] = flag;         }
+  Bool  getUsedByCurrPicFlag( Int j ) const                    { return m_usedByCurrPicFlag[j];         }
+
+  Void  setUseDeltaFlag( Int j, Bool flag )                    { m_useDeltaFlag[j] = flag;              }
+  Bool  getUseDeltaFlag( Int j ) const                         { return m_useDeltaFlag[j];              }
+
+  Void  setNumNegativePics( Int  val )                         { m_numNegativePics = val;               }
+  Int   getNumNegativePics(  ) const                           { return m_numNegativePics;              }
+
+  Void  setNumPositivePics( Int  val )                         { m_numPositivePics = val;               }
+  Int   getNumPositivePics(  ) const                           { return m_numPositivePics;              }
+
+  Void  setDeltaPocS0Minus1( Int i, Int  val )                 { m_deltaPocS0Minus1[i] = val;           }
+  Int   getDeltaPocS0Minus1( Int i ) const                     { return m_deltaPocS0Minus1[i];          }
+
+  Void  setUsedByCurrPicS0Flag( Int i, Bool flag )             { m_usedByCurrPicS0Flag[i] = flag;       }
+  Bool  getUsedByCurrPicS0Flag( Int i ) const                  { return m_usedByCurrPicS0Flag[i];       }
+
+  Void  setDeltaPocS1Minus1( Int i, Int  val )                 { m_deltaPocS1Minus1[i] = val;           }
+  Int   getDeltaPocS1Minus1( Int i ) const                     { return m_deltaPocS1Minus1[i];          }
+
+  Void  setUsedByCurrPicS1Flag( Int i, Bool flag )             { m_usedByCurrPicS1Flag[i] = flag;       }
+  Bool  getUsedByCurrPicS1Flag( Int i ) const                  { return m_usedByCurrPicS1Flag[i];       }
+
+  // Semantics variables: 
+  Int   getRefRpsIdx(Int stRpsIdx ) const                      { return ( stRpsIdx - (getDeltaIdxMinus1() +  1) ); }
+  Int   getDeltaRps()  const                                   { return (  ( 1 - 2 * getDeltaRpsSign() ) * ( getAbsDeltaRpsMinus1() + 1 ) ); }
+  Int   getNumDeltaPocs() const                                { return ( getNumNegativePicsVar() + getNumPositivePicsVar());    }
+
+  Void  setNumNegativePicsVar( Int  val )                      { m_numNegativePicsVar = val;            }
+  Int   getNumNegativePicsVar(  ) const                        { return m_numNegativePicsVar;           }
+
+  Void  setNumPositivePicsVar( Int  val )                      { m_numPositivePicsVar = val;            }
+  Int   getNumPositivePicsVar(  ) const                        { return m_numPositivePicsVar;           }
+
+  Void  setDeltaPocS0Var( Int i, Int  val )                    { m_deltaPocS0Var[i] = val;              }
+  Int   getDeltaPocS0Var( Int i ) const                        { return m_deltaPocS0Var[i];             }
+
+  Void  setUsedByCurrPicS0Var( Int i, Bool flag )              { m_usedByCurrPicS0Var[i] = flag;       }
+  Bool  getUsedByCurrPicS0Var( Int i ) const                   { return m_usedByCurrPicS0Var[i];       }
+
+  Void  setDeltaPocS1Var( Int i, Int  val )                    { m_deltaPocS1Var[i] = val;             }
+  Int   getDeltaPocS1Var( Int i ) const                        { return m_deltaPocS1Var[i];            }
+
+  Void  setUsedByCurrPicS1Var( Int i, Bool flag )              { m_usedByCurrPicS1Var[i] = flag;       }
+  Bool  getUsedByCurrPicS1Var( Int i ) const                   { return m_usedByCurrPicS1Var[i];       }
+
+  Void  inferRps( Int stRpsIdx, TComSPS* sps, Bool encoder );
+};
+
+#endif
+
 class TComReferencePictureSet
 {
 private:
@@ -301,9 +412,15 @@ public:
 class TComPTL
 {
   ProfileTierLevel m_generalPTL;
+#if !NH_MV
   ProfileTierLevel m_subLayerPTL    [MAX_TLAYER-1];      // max. value of max_sub_layers_minus1 is MAX_TLAYER-1 (= 6)
   Bool m_subLayerProfilePresentFlag [MAX_TLAYER-1];
   Bool m_subLayerLevelPresentFlag   [MAX_TLAYER-1];
+#else
+  ProfileTierLevel m_subLayerPTL    [MAX_TLAYER];        // However, highest index is 6, so we need one more. 
+  Bool m_subLayerProfilePresentFlag [MAX_TLAYER];
+  Bool m_subLayerLevelPresentFlag   [MAX_TLAYER];
+#endif
 
 public:
                           TComPTL();
@@ -803,7 +920,8 @@ public:
   Int           getMaxVpsNumReorderPics( Int i, Int j ) const                        { return m_maxVpsNumReorderPics[i][j];                       }
 
   Void          setMaxVpsLatencyIncreasePlus1( Int i, Int j, Int  val )              { m_maxVpsLatencyIncreasePlus1[i][j] = val;                  }
-  Int           getMaxVpsLatencyIncreasePlus1( Int i, Int j ) const                  { return m_maxVpsLatencyIncreasePlus1[i][j];                 }
+  Int           getMaxVpsLatencyIncreasePlus1( Int i, Int j ) const                  { return m_maxVpsLatencyIncreasePlus1[i][j];                 } 
+  Int           getVpsMaxLatencyPictures     ( Int i, Int j ) const;
 };
 #endif
 
@@ -900,14 +1018,9 @@ private:
   Bool        m_defaultDirectDependencyFlag;
   Int         m_defaultDirectDependencyType;
   
-#if H_MV_HLS7_GEN
-  Int         m_directDependencyType     [MAX_NUM_LAYERS] [MAX_NUM_LAYERS];
-#endif
   Bool        m_vpsVuiPresentFlag;
   TComVPSVUI  m_vpsVUI; 
-#if !H_MV_HLS7_GEN
   Int         m_directDependencyType     [MAX_NUM_LAYERS] [MAX_NUM_LAYERS];
-#endif
 
   // VPS EXTENSION SEMANTICS VARIABLES
   Int         m_layerIdInVps             [MAX_NUM_LAYERS   ];
@@ -1118,11 +1231,7 @@ public:
   
   Void    setLayerSetIdxForOlsMinus1( Int outLayerSetIdx, Int val )             { m_layerSetIdxForOlsMinus1[ outLayerSetIdx ]  = val; } 
   Int     getLayerSetIdxForOlsMinus1( Int outLayerSetIdx )           const      { return m_layerSetIdxForOlsMinus1[ outLayerSetIdx ]; } 
-#if NH_MV_FIX_TICKET_105
   Int     getLayerSetIdxForOlsMinus1Len( Int outLayerSetIdx )        const      { return gCeilLog2( getNumLayerSets() - 1 ); } 
-#else
-  Int     getLayerSetIdxForOlsMinus1Len( Int outLayerSetIdx )        const      { return gCeilLog2( getNumLayerSets() ); } 
-#endif
 
   Void    setOutputLayerFlag( Int outLayerSetIdx, Int i, Bool flag )            { m_outputLayerFlag[ outLayerSetIdx ][ i ] = flag; } 
   Bool    getOutputLayerFlag( Int outLayerSetIdx, Int i )            const      { return m_outputLayerFlag[ outLayerSetIdx ][ i ]; } 
@@ -1802,6 +1911,9 @@ private:
   Window           m_conformanceWindow;
 
   TComRPSList      m_RPSList;
+#if NH_MV
+  std::vector<TComStRefPicSet> m_stRefPicSets; 
+#endif
   Bool             m_bLongTermRefsPresent;
   Bool             m_TMVPFlagsPresent;
   Int              m_numReorderPics[MAX_TLAYER];
@@ -1824,6 +1936,9 @@ private:
 
   UInt             m_uiBitsForPOC;
   UInt             m_numLongTermRefPicSPS;
+#if NH_MV
+  Int              m_numShortTermRefPicSets;
+#endif
   UInt             m_ltRefPicPocLsbSps[MAX_NUM_LONG_TERM_REF_PICS];
   Bool             m_usedByCurrPicLtSPSFlag[MAX_NUM_LONG_TERM_REF_PICS];
   // Max physical transform size
@@ -1837,7 +1952,12 @@ private:
   Bool             m_scalingListPresentFlag;
   TComScalingList  m_scalingList;
   UInt             m_uiMaxDecPicBuffering[MAX_TLAYER];
+#if NH_MV
+  UInt             m_uiSpsMaxLatencyIncreasePlus1[MAX_TLAYER];  
+  // Calling a member m_uiMaxLatencyIncrease although it is m_uiMaxLatencyIncreasePlus1 is really bad style.  
+#else
   UInt             m_uiMaxLatencyIncrease[MAX_TLAYER];  // Really max latency increase plus 1 (value 0 expresses no limit)
+#endif
 
   Bool             m_useStrongIntraSmoothing;
 
@@ -1910,6 +2030,10 @@ public:
   const Window&          getConformanceWindow() const                                                    { return  m_conformanceWindow;                                         }
   Void                   setConformanceWindow(Window& conformanceWindow )                                { m_conformanceWindow = conformanceWindow;                             }
 
+#if NH_MV
+  UInt                   getNumLongTermRefPicsSps() const                                                 { return m_numLongTermRefPicSPS;                                       }
+#endif
+  
   UInt                   getNumLongTermRefPicSPS() const                                                 { return m_numLongTermRefPicSPS;                                       }
   Void                   setNumLongTermRefPicSPS(UInt val)                                               { m_numLongTermRefPicSPS = val;                                        }
 
@@ -1938,6 +2062,10 @@ public:
   UInt                   getPCMLog2MinSize() const                                                       { return  m_uiPCMLog2MinSize;                                          }
   Void                   setBitsForPOC( UInt u )                                                         { m_uiBitsForPOC = u;                                                  }
   UInt                   getBitsForPOC() const                                                           { return m_uiBitsForPOC;                                               }
+#if NH_MV
+  UInt                   getMaxPicOrderCntLsb() const                                                    { return (1 << ( getLog2MaxPicOrderCntLsbMinus4() + 4) );  }
+  Int                    getLog2MaxPicOrderCntLsbMinus4() const                                          { return (getBitsForPOC() - 4);  }
+#endif
   Bool                   getUseAMP() const                                                               { return m_useAMP;                                                     }
   Void                   setUseAMP( Bool b )                                                             { m_useAMP = b;                                                        }
   Void                   setQuadtreeTULog2MaxSize( UInt u )                                              { m_uiQuadtreeTULog2MaxSize = u;                                       }
@@ -1953,10 +2081,21 @@ public:
   Void                   createRPSList( Int numRPS );
   const TComRPSList*     getRPSList() const                                                              { return &m_RPSList;                                                   }
   TComRPSList*           getRPSList()                                                                    { return &m_RPSList;                                                   }
+#if NH_MV
+  Void                   initStRefPicSets( )                                                             { m_stRefPicSets.resize( getNumShortTermRefPicSets() );                }
+  TComStRefPicSet*       getStRefPicSet( Int i )                                                         { return &(m_stRefPicSets[i]);                                         }
+  const TComStRefPicSet* getStRefPicSet( Int i ) const                                                   { return &(m_stRefPicSets[i]);                                         }
+  Bool                   getLongTermRefPicsPresentFlag() const                                           { return m_bLongTermRefsPresent;                                       }
+  Void                   setLongTermRefPicsPresentFlag(Bool b)                                           { m_bLongTermRefsPresent=b;                                            }
+#else
   Bool                   getLongTermRefsPresent() const                                                  { return m_bLongTermRefsPresent;                                       }
   Void                   setLongTermRefsPresent(Bool b)                                                  { m_bLongTermRefsPresent=b;                                            }
+#endif
   Bool                   getTMVPFlagsPresent() const                                                     { return m_TMVPFlagsPresent;                                           }
   Void                   setTMVPFlagsPresent(Bool b)                                                     { m_TMVPFlagsPresent=b;                                                }
+#if NH_MV
+  Bool                   getSpsTemporalMvpEnabledFlag() const                                            { return m_TMVPFlagsPresent;                                           }
+#endif
   // physical transform
   Void                   setMaxTrSize( UInt u )                                                          { m_uiMaxTrSize = u;                                                   }
   UInt                   getMaxTrSize() const                                                            { return  m_uiMaxTrSize;                                               }
@@ -1987,7 +2126,10 @@ public:
   Void                   setPCMBitDepth(ChannelType type, UInt u)                                        { m_pcmBitDepths[type] = u;                                            }
   Void                   setPCMFilterDisableFlag( Bool bValue )                                          { m_bPCMFilterDisableFlag = bValue;                                    }
   Bool                   getPCMFilterDisableFlag() const                                                 { return m_bPCMFilterDisableFlag;                                      }
-
+#if NH_MV
+  Void                  setNumShortTermRefPicSets( Int  val )                                            { m_numShortTermRefPicSets = val; } 
+  Int                   getNumShortTermRefPicSets(  )const                                               { return m_numShortTermRefPicSets; } 
+#endif
   Bool                   getScalingListFlag() const                                                      { return m_scalingListEnabledFlag;                                     }
   Void                   setScalingListFlag( Bool b )                                                    { m_scalingListEnabledFlag  = b;                                       }
   Bool                   getScalingListPresentFlag() const                                               { return m_scalingListPresentFlag;                                     }
@@ -1997,8 +2139,19 @@ public:
   const TComScalingList& getScalingList() const                                                          { return m_scalingList;                                                }
   UInt                   getMaxDecPicBuffering(UInt tlayer) const                                        { return m_uiMaxDecPicBuffering[tlayer];                               }
   Void                   setMaxDecPicBuffering( UInt ui, UInt tlayer )                                   { assert(tlayer < MAX_TLAYER); m_uiMaxDecPicBuffering[tlayer] = ui;    }
+#if NH_MV
+  UInt                   getSpsMaxDecPicBufferingMinus1(UInt tlayer) const                               { return m_uiMaxDecPicBuffering[tlayer] -1 ;                           }
+  UInt                   getSpsMaxLatencyIncreasePlus1(UInt tlayer) const                                { return m_uiSpsMaxLatencyIncreasePlus1[tlayer];                       }
+  Void                   setSpsMaxLatencyIncreasePlus1( UInt ui , UInt tlayer)                           { m_uiSpsMaxLatencyIncreasePlus1[tlayer] = ui;                         }
+  Int                    getSpsMaxLatencyPictures( Int i )  const                                       { return ( getSpsMaxNumReorderPics(i) + getSpsMaxLatencyIncreasePlus1(i)-1); }
+#else
   UInt                   getMaxLatencyIncrease(UInt tlayer) const                                        { return m_uiMaxLatencyIncrease[tlayer];                               }
   Void                   setMaxLatencyIncrease( UInt ui , UInt tlayer)                                   { m_uiMaxLatencyIncrease[tlayer] = ui;                                 }
+#endif
+
+#if NH_MV
+  Int                    getSpsMaxNumReorderPics(Int i ) const                                           { return getNumReorderPics( i );                                       }
+#endif
 
   Void                   setUseStrongIntraSmoothing(Bool bVal)                                           { m_useStrongIntraSmoothing = bVal;                                    }
   Bool                   getUseStrongIntraSmoothing() const                                              { return m_useStrongIntraSmoothing;                                    }
@@ -2132,11 +2285,21 @@ public:
   UInt    getRefPicSetIdxL1(UInt idx) const              { assert(idx<REF_PIC_LIST_NUM_IDX); return m_RefPicSetIdxL1[idx];         }
   Void    setRefPicSetIdxL1(UInt idx, UInt refPicSetIdx) { assert(idx<REF_PIC_LIST_NUM_IDX); m_RefPicSetIdxL1[idx] = refPicSetIdx; }
 #if NH_MV
-  // Why not a listIdx for all members, would avoid code duplication?? 
+  
   Void    setRefPicSetIdxL(UInt li, UInt idx, UInt refPicSetIdx) {( li==0 ? m_RefPicSetIdxL0[idx] : m_RefPicSetIdxL1[idx] ) = refPicSetIdx;              }
   UInt    getRefPicSetIdxL(UInt li, UInt idx )                   { return ( li == 0 ) ? m_RefPicSetIdxL0[idx] : m_RefPicSetIdxL1[idx] ;                  }
   Void    setRefPicListModificationFlagL(UInt li, Bool flag)     { ( li==0  ? m_refPicListModificationFlagL0 : m_refPicListModificationFlagL1 ) = flag;  }
   Bool    getRefPicListModificationFlagL(UInt li )               { return ( li== 0) ? m_refPicListModificationFlagL0 : m_refPicListModificationFlagL1;   }
+
+  Int     getListEntryL0( Int i) const                           { assert(i<REF_PIC_LIST_NUM_IDX); return m_RefPicSetIdxL0[i];         }
+  Int     getListEntryL1( Int i) const                           { assert(i<REF_PIC_LIST_NUM_IDX); return m_RefPicSetIdxL1[i];         }
+
+  Int     getListEntryLXLen( Int numPicTotalCur ) const          { return gCeilLog2( numPicTotalCur );                                 }  
+
+  Void    setListEntryL0( Int i, Int  val )                      { m_RefPicSetIdxL0[i] = val;                                          } 
+  Void    setListEntryL1( Int i, Int  val )                      { m_RefPicSetIdxL1[i] = val;                                          } 
+
+
 #endif
 };
 
@@ -2469,11 +2632,25 @@ class TComSlice
 
 private:
   //  Bitstream writing
+#if NH_MV
+  Bool                       m_firstSliceSegmentInPicFlag; 
+#endif
   Bool                       m_saoEnabledFlag[MAX_NUM_CHANNEL_TYPE];
   Int                        m_iPPSId;               ///< picture parameter set ID
   Bool                       m_PicOutputFlag;        ///< pic_output_flag
 #if NH_MV
   Int                        m_slicePicOrderCntLsb;   
+  Bool                       m_shortTermRefPicSetSpsFlag;
+  Int                        m_shortTermRefPicSetIdx;
+  Int                        m_numLongTermSps;
+  Int                        m_numLongTermPics;
+  Int                        m_ltIdxSps                     [MAX_NUM_PICS_RPS];
+  Int                        m_pocLsbLt                     [MAX_NUM_PICS_RPS];
+  Bool                       m_usedByCurrPicLtFlag          [MAX_NUM_PICS_RPS];
+  Bool                       m_deltaPocMsbPresentFlag       [MAX_NUM_PICS_RPS];
+  Int                        m_deltaPocMsbCycleLt           [MAX_NUM_PICS_RPS];
+  Bool                       m_sliceTemporalMvpEnabledFlag;
+  TComStRefPicSet            m_stRefPicSet; 
 #endif  
   Int                        m_iPOC;
 #if NH_MV
@@ -2509,7 +2686,7 @@ private:
   TComPic*                   m_apcRefPicList [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Int                        m_aiRefPOCList  [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
 #if NH_MV
-  Int         m_aiRefLayerIdList[2][MAX_NUM_REF+1];
+  Int                        m_aiRefLayerIdList[2][MAX_NUM_REF+1];
 #endif
   Bool                       m_bIsUsedAsLongTerm[NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Int                        m_iDepth;
@@ -2569,10 +2746,7 @@ private:
 
   SliceType                  m_encCABACTableIdx;           // Used to transmit table selection across slices.
 #if NH_MV
-  Bool       m_availableForTMVPRefFlag;
-#endif
 
-#if NH_MV
   std::vector<TComPic*>* m_refPicSetInterLayer0; 
   std::vector<TComPic*>* m_refPicSetInterLayer1; 
   Int        m_layerId; 
@@ -2583,9 +2757,8 @@ private:
 #endif
 
 // Additional slice header syntax elements 
-#if !H_MV_HLS7_GEN
   Bool       m_pocResetFlag; 
-#endif
+
   Bool       m_crossLayerBlaFlag;
   Bool       m_discardableFlag;
   Bool       m_interLayerPredEnabledFlag;
@@ -2595,10 +2768,14 @@ private:
   Int        m_sliceSegmentHeaderExtensionLength;
   Int        m_pocResetIdc;
   Int        m_pocResetPeriodId;
+
+  Bool       m_hasPocResetPeriodIdPresent; 
+  DecodingProcess m_decodingProcess; 
+  DecodingProcess m_decProcPocAndRps; 
   Bool       m_fullPocResetFlag;
   Int        m_pocLsbVal;
-  Bool       m_pocMsbValPresentFlag;
-  Int        m_pocMsbVal;
+  Bool       m_pocMsbCycleValPresentFlag;
+  Int        m_pocMsbCycleVal;
   Bool       m_pocMsbValRequiredFlag;
 
 #if NH_3D
@@ -2675,6 +2852,9 @@ public:
 #if NH_MV
   Void                        setSlicePicOrderCntLsb( Int i )                        { m_slicePicOrderCntLsb = i;                                    }
   Int                         getSlicePicOrderCntLsb(  )  const                      { return m_slicePicOrderCntLsb;                                 }
+
+  Bool                        getFirstSliceSegementInPicFlag() const                 {  return m_firstSliceSegmentInPicFlag;                         }
+  Void                        setFirstSliceSegementInPicFlag(Bool val)               { m_firstSliceSegmentInPicFlag = val;                           }
 #endif
   Bool                        getPicOutputFlag() const                               { return m_PicOutputFlag;                                       }
   Void                        setSaoEnabledFlag(ChannelType chType, Bool s)          {m_saoEnabledFlag[chType] =s;                                   }
@@ -2733,6 +2913,8 @@ public:
 #if NH_3D_ARP                                                                                                                                         
   Void                        setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic; }                  
   Void                        setARPStepNum( TComPicLists*ivPicLists );                                                                              
+  Void                        setPocsInCurrRPSs( );
+
   TComPic*                    getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )     { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
   UInt                        getARPStepNum( )                                       { return m_nARPStepNum;                                         }  
 #endif
@@ -2745,6 +2927,9 @@ public:
   Bool                        getCheckLDC() const                                    { return m_bCheckLDC;                                           }
   Bool                        getMvdL1ZeroFlag() const                               { return m_bLMvdL1Zero;                                         }
   Int                         getNumRpsCurrTempList() const;
+#if NH_MV
+  Int                         getNumPicTotalCurr() const;
+#endif
   Int                         getList1IdxToList0Idx( Int list1Idx ) const            { return m_list1IdxToList0Idx[list1Idx];                        }
   Void                        setReferenced(Bool b)                                  { m_bRefenced = b;                                              }
   Bool                        isReferenced() const                                   { return m_bRefenced;                                           }
@@ -2752,9 +2937,41 @@ public:
   Void                        setPOC( Int i )                                        { m_iPOC              = i; }
   Void                        setNalUnitType( NalUnitType e )                        { m_eNalUnitType      = e;                                      }
   NalUnitType                 getNalUnitType() const                                 { return m_eNalUnitType;                                        }
+#if NH_MV
+  std::string                 getNalUnitTypeString(    )                             { return NALU_TYPE_STR[ getNalUnitType() ]; };
+#endif
   Bool                        getRapPicFlag() const;
   Bool                        getIdrPicFlag() const                                  { return getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP; }
   Bool                        isIRAP() const                                         { return (getNalUnitType() >= 16) && (getNalUnitType() <= 23);  }
+#if NH_MV  
+  Bool                        isBla() const                                          { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP   )  || ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP ) || ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL ); }
+  Bool                        isIdr() const                                          { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL )  || ( getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP ); }
+  Bool                        isCra() const                                          { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA ); }
+
+  Bool                        isSlnr() const                                         { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_N  ||    
+                                                                                                getNalUnitType() == NAL_UNIT_CODED_SLICE_TSA_N    ||    
+                                                                                                getNalUnitType() == NAL_UNIT_CODED_SLICE_STSA_N   ||    
+                                                                                                getNalUnitType() == NAL_UNIT_CODED_SLICE_RADL_N   ||    
+                                                                                                getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N   ||    
+                                                                                                getNalUnitType() == NAL_UNIT_RESERVED_VCL_N10     ||
+                                                                                                getNalUnitType() == NAL_UNIT_RESERVED_VCL_N12     ||            
+                                                                                                getNalUnitType() == NAL_UNIT_RESERVED_VCL_N14     );  }
+  
+  Bool                        isRasl() const                                          { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_R )  || ( getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N ); }
+  Bool                        isRadl() const                                          { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_RADL_R )  || ( getNalUnitType() == NAL_UNIT_CODED_SLICE_RADL_N ); }
+  Bool                        isStsa() const                                          { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_STSA_R )  || ( getNalUnitType() == NAL_UNIT_CODED_SLICE_STSA_N ); }
+  Bool                        isTsa()  const                                          { return ( getNalUnitType() == NAL_UNIT_CODED_SLICE_TSA_R )   || ( getNalUnitType() == NAL_UNIT_CODED_SLICE_TSA_N ); }
+
+  Bool                        decProcClause8() const                                  { return ( m_decodingProcess == CLAUSE_8  ); }    
+  Bool                        decProcAnnexF()  const                                  { return ( decProcAnnexG()  || decProcAnnexH() || decProcAnnexI() ) ; }
+  Bool                        decProcAnnexG()  const                                  { return ( m_decodingProcess == ANNEX_G || decProcAnnexI()  ); }    
+  Bool                        decProcAnnexH()  const                                  { return ( m_decodingProcess == ANNEX_H  ); }    
+  Bool                        decProcAnnexI()  const                                  { return ( m_decodingProcess == ANNEX_I  ); }    
+  Int                         getCurrRpsIdx() const                                   { return ( getShortTermRefPicSetSpsFlag() ? getShortTermRefPicSetIdx() : getSPS()->getNumShortTermRefPicSets() ) ;}
+
+#endif
+
+
   Void                        checkCRA(const TComReferencePictureSet *pReferencePictureSet, Int& pocCRA, NalUnitType& associatedIRAPType, TComList<TComPic *>& rcListPic);
   Void                        decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic, const bool bEfficientFieldIRAPEnabled);
   Void                        setSliceType( SliceType e )                            { m_eSliceType        = e;                                      }
@@ -2773,6 +2990,10 @@ public:
   Void                        setRefPic( TComPic* p, RefPicList e, Int iRefIdx )     { m_apcRefPicList[e][iRefIdx] = p;                              }
   Void                        setRefPOC( Int i, RefPicList e, Int iRefIdx )          { m_aiRefPOCList[e][iRefIdx] = i;                               }
   Void                        setNumRefIdx( RefPicList e, Int i )                    { m_aiNumRefIdx[e]    = i;                                      }
+#if NH_MV
+  Int                         getNumRefIdxL0ActiveMinus1() const                     { return ( getNumRefIdx(REF_PIC_LIST_0) -1);                    }
+  Int                         getNumRefIdxL1ActiveMinus1() const                     { return ( getNumRefIdx(REF_PIC_LIST_1) -1);                    }
+#endif
   Void                        setPic( TComPic* p )                                   { m_pcPic             = p;                                      }
   Void                        setDepth( Int iDepth )                                 { m_iDepth            = iDepth;                                 }
 #if NH_MV
@@ -2826,7 +3047,7 @@ public:
   UInt                        getTLayer() const                                      { return m_uiTLayer;                                            }
   Void                        setTLayer( UInt uiTLayer )                             { m_uiTLayer = uiTLayer;                                        }
 #if NH_MV
-  Int                         getTemporalId          ( )                             { return (Int) m_uiTLayer;                                      }
+  Int                         getTemporalId( ) const                                 { return (Int) m_uiTLayer;                                      }
 #endif
 
   Void                        setTLayerInfo( UInt uiTLayer );
@@ -2835,6 +3056,9 @@ public:
   Void                        applyReferencePictureSet( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *RPSList);
 #if NH_MV
   Void                        createInterLayerReferencePictureSet( TComPicLists* ivPicLists, std::vector<TComPic*>& refPicSetInterLayer0, std::vector<TComPic*>& refPicSetInterLayer1 );
+  Void                        f834decProcForRefPicListConst();
+  Void                        cl834DecProcForRefPicListConst();
+
   static Void                 markIvRefPicsAsShortTerm    ( std::vector<TComPic*> refPicSetInterLayer0, std::vector<TComPic*> refPicSetInterLayer1 );
   static Void                 markCurrPic                 ( TComPic* currPic );
   Void                        printRefPicList();
@@ -2851,6 +3075,7 @@ public:
 
   Void                        setNoRaslOutputFlag( Bool val )                        { m_noRaslOutputFlag = val;                                     }
   Bool                        getNoRaslOutputFlag() const                            { return m_noRaslOutputFlag;                                    }
+
 
   Void                        setHandleCraAsBlaFlag( Bool val )                      { m_handleCraAsBlaFlag = val;                                   }
   Bool                        getHandleCraAsBlaFlag() const                          { return m_handleCraAsBlaFlag;                                  }
@@ -2914,6 +3139,45 @@ public:
   Void                        setLFCrossSliceBoundaryFlag( Bool   val )              { m_LFCrossSliceBoundaryFlag = val;                             }
   Bool                        getLFCrossSliceBoundaryFlag()                          { return m_LFCrossSliceBoundaryFlag;                            }
 
+#if NH_MV
+  Void                        setShortTermRefPicSetSpsFlag( Bool flag )              { m_shortTermRefPicSetSpsFlag = flag;                           }
+  Bool                        getShortTermRefPicSetSpsFlag(  ) const                 { return m_shortTermRefPicSetSpsFlag;                           }
+
+  Int                         getShortTermRefPicSetIdxLen() const                    { return gCeilLog2( getSPS()->getNumShortTermRefPicSets() );    }
+  Void                        setShortTermRefPicSetIdx( Int  val )                   { m_shortTermRefPicSetIdx = val;                                }
+  Int                         getShortTermRefPicSetIdx(  ) const                     { return m_shortTermRefPicSetIdx;                               }
+  
+  Void                        setNumLongTermSps( Int  val )                          { m_numLongTermSps = val;                                       }
+  Int                         getNumLongTermSps(  ) const                            { return m_numLongTermSps;                                      }
+
+  Void                        setNumLongTermPics( Int  val )                         { m_numLongTermPics = val;                                      }
+  Int                         getNumLongTermPics(  ) const                           { return m_numLongTermPics;                                     }
+  
+  Int                         getLtIdxSpsLen() const                                 { return gCeilLog2( getSPS()->getNumLongTermRefPicsSps() );     }
+  Void                        setLtIdxSps( Int i, Int  val )                         { m_ltIdxSps[i] = val;                                          }
+  Int                         getLtIdxSps( Int i ) const                             { return m_ltIdxSps[i];                                         }
+
+  Int                         getPocLsbLtLen() const                                 { return (getSPS()->getLog2MaxPicOrderCntLsbMinus4()+ 4);       }
+  Void                        setPocLsbLt( Int i, Int  val )                         { m_pocLsbLt[i] = val;                                          }
+  Int                         getPocLsbLt( Int i ) const                             { return m_pocLsbLt[i];                                         }
+
+  Void                        setUsedByCurrPicLtFlag( Int i, Bool flag )             { m_usedByCurrPicLtFlag[i] = flag;                              }
+  Bool                        getUsedByCurrPicLtFlag( Int i ) const                  { return m_usedByCurrPicLtFlag[i];                              }
+
+  Void                        setDeltaPocMsbPresentFlag( Int i, Bool flag )          { m_deltaPocMsbPresentFlag[i] = flag;                           }
+  Bool                        getDeltaPocMsbPresentFlag( Int i ) const               { return m_deltaPocMsbPresentFlag[i];                           }
+
+  Void                        setDeltaPocMsbCycleLt( Int i, Int  val )               { m_deltaPocMsbCycleLt[i] = val;                                }
+  Int                         getDeltaPocMsbCycleLt( Int i ) const                   { return m_deltaPocMsbCycleLt[i];                               }
+
+  Void                        setSliceTemporalMvpEnabledFlag( Bool flag )            { m_enableTMVPFlag = flag;                         }
+  Bool                        getSliceTemporalMvpEnabledFlag(  ) const               { return m_enableTMVPFlag;                         }
+
+  TComStRefPicSet*            getLocalStRps( )                                       { return &m_stRefPicSet; };
+  const TComStRefPicSet*      getStRps( Int stRpsIdx ) const                         { return ( (stRpsIdx == getSPS()->getNumShortTermRefPicSets()) ? &m_stRefPicSet : getSPS()->getStRefPicSet( stRpsIdx ) ); };
+
+#endif
+
   Void                        setEnableTMVPFlag( Bool   b )                          { m_enableTMVPFlag = b;                                         }
   Bool                        getEnableTMVPFlag()                                    { return m_enableTMVPFlag;                                      }
 
@@ -2921,9 +3185,6 @@ public:
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }
 
 #if NH_MV
-  Void                        setAvailableForTMVPRefFlag( Bool   b )                 { m_availableForTMVPRefFlag = b;                                }
-  Bool                        getAvailableForTMVPRefFlag()                           { return m_availableForTMVPRefFlag;                             }
-
   Void                        setLayerId     ( Int layerId )                         { m_layerId      = layerId;                                     }
   Int                         getLayerId     ()                 const                { return m_layerId;                                             }
   Int                         getLayerIdInVps()                 const                { return getVPS()->getLayerIdInVps( m_layerId );                }
@@ -2931,6 +3192,10 @@ public:
   Int                         getViewId      ()                 const                { return m_viewId;                                              }
   Void                        setViewIndex   ( Int viewIndex )                       { m_viewIndex = viewIndex;                                      }
   Int                         getViewIndex   ()                 const                { return m_viewIndex;                                           }
+
+  Void                        setDecodingProcess ( DecodingProcess decProc )         { m_decodingProcess = decProc;                                  }
+
+
 #if NH_3D
 #if NH_3D_TMVP
   Void                        generateAlterRefforTMVP ();   
@@ -2985,7 +3250,7 @@ public:
   Bool                        getCrossLayerBlaFlag(  ) const                         { return m_crossLayerBlaFlag;                                   }
   Void                        checkCrossLayerBlaFlag ( ) const ;
 
-#if !H_MV_HLS7_GEN
+#if NH_MV
   Void                        setPocResetFlag( Bool flag )                           { m_pocResetFlag = flag;                                        }
   Bool                        getPocResetFlag(  ) const                              { return m_pocResetFlag;                                        }
 #endif
@@ -3009,6 +3274,7 @@ public:
   Int                         getPocResetIdc(  ) const                               { return m_pocResetIdc;                                         }
   Void                        checkPocResetIdc( ) const                              { assert( !(getVPS()->getPocLsbNotPresentFlag( getLayerIdInVps() ) )  || !(getSlicePicOrderCntLsb() > 0 ) || !( getPocResetIdc() == 2) ); }
 
+  
   Void                        setPocResetPeriodId( Int  val )                        { m_pocResetPeriodId = val;                                     }
   Int                         getPocResetPeriodId(  ) const                          { return m_pocResetPeriodId;                                    }
 
@@ -3019,16 +3285,33 @@ public:
   Int                         getPocLsbVal(  )  const                                { return m_pocLsbVal;                                           }
   Void                        checkPocLsbVal( ) const                                { assert( !(getVPS()->getPocLsbNotPresentFlag( getLayerIdInVps() ) )  || !getFullPocResetFlag() || ( getPocLsbVal() == 0 ) ); }
 
+#if NH_MV
+  Void                        setHasPocResetPeriodIdPresent( Bool  val )              { m_hasPocResetPeriodIdPresent = val;                                }
+  Bool                        getHasPocResetPeriodIdPresent(  ) const                { return m_hasPocResetPeriodIdPresent;                               }
+
+  Void                        setPocMsbCycleValPresentFlag( Bool flag )              { m_pocMsbCycleValPresentFlag = flag;                                }
+  Bool                        getPocMsbCycleValPresentFlag(  )          const        { return m_pocMsbCycleValPresentFlag;                                }
+
+  Void                        setPocMsbCycleVal( Int  val )                          { m_pocMsbCycleVal = val;                                            }
+  Int                         getPocMsbCycleVal(  )         const                    { return m_pocMsbCycleVal;                                           }
+  
+  Int                         getPocLsbLtVar(Int i);
+  Bool                        getUsedByCurrPicLtVar(Int i) const;
+  Int                         getDeltaPocMsbCycleLtVar( Int i ) const;
+
+#else
   Void                        setPocMsbValPresentFlag( Bool flag )                   { m_pocMsbValPresentFlag = flag;                                }
   Bool                        getPocMsbValPresentFlag(  )          const             { return m_pocMsbValPresentFlag;                                }
 
   Void                        setPocMsbVal( Int  val )                               { m_pocMsbVal = val;                                            }
   Int                         getPocMsbVal(  )         const                         { return m_pocMsbVal;                                           }
+#endif
+
 
   Bool                        getCraOrBlaPicFlag()       const                       { return ( getCraPicFlag() || getBlaPicFlag() );                }
   Bool                        getPocMsbValRequiredFlag() const                       { return ( getCraOrBlaPicFlag() && ( getVPS()->getVpsPocLsbAlignedFlag() || getVPS()->getNumDirectRefLayers( getLayerIdInVps() ) == 0 ) );  }
 
-  UInt                        getPocLsbValLen() const                                { return getSPS()->getBitsForPOC();                             }; //log2_max_pic_order_cnt_lsb_minus4 + 4
+  UInt                        getPocLsbValLen() const                                { return getSPS()->getBitsForPOC();                             }; //log2_max_pic_order_cnt_lsb_minus4 + 4  
 
   Bool getBlaPicFlag() const
   {
@@ -3068,7 +3351,7 @@ public:
   // 3D-HEVC tool parameters
   Void                        deriveInCmpPredAndCpAvailFlag( );
   Void                        init3dToolParameters();
-  Void                        checkInCompPredRefLayers();;
+  Void                        checkInCompPredRefLayers();
 
   Bool                        getIvMvPredFlag           ( )                          { return m_ivMvPredFlag           ;                             };
   Bool                        getIvMvScalingFlag        ( )                          { return m_ivMvScalingFlag        ;                             };
@@ -3094,8 +3377,16 @@ public:
   Void                        setDefaultRefView( );
 #endif
 #endif
+#if NH_MV
+ TComPic*                     getRefPicSetInterLayer( Int setIdc, Int i ) const; 
+#endif
+
   // Inference 
+#if NH_MV
+  Bool                        inferPocMsbCycleValPresentFlag();
+#else
   Bool                        inferPocMsbValPresentFlag();
+#endif
 #endif
 protected:
   TComPic*                    xGetRefPic        (TComList<TComPic*>& rcListPic, Int poc);

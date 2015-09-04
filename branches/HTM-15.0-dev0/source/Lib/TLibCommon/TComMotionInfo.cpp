@@ -43,7 +43,9 @@
 #include "TComDataCU.h"
 #include "TComPic.h"
 #endif
-
+#if NH_MV
+#include <iomanip>
+#endif
 //! \ingroup TLibCommon
 //! \{
 
@@ -376,4 +378,67 @@ Void TComCUMvField::compress(Char* pePredMode, Int scale)
     }
   }
 }
+
+#if NH_MV
+Void TComCUMvField::print(Char* pePredMode)
+{
+  for ( Int uiPartIdx = 0; uiPartIdx < m_uiNumPartition; uiPartIdx += 1 )
+  {
+    PredMode predMode = static_cast<PredMode>( pePredMode[ uiPartIdx ] );
+
+    if ( predMode == MODE_INTRA)
+    {
+      std::cout << std::setfill(' ') << "(" 
+        << std::setw(3) <<  "   "    << ","
+        << std::setw(3) <<  "   "    << ","
+        << std::setw(3) <<  "   "    << ")";
+    }
+    else
+    {
+      ;
+      std::cout << std::setfill(' ') << "(" 
+        << std::setw(3) <<  (Int) m_piRefIdx[ uiPartIdx ]        << ","
+        << std::setw(3) <<  m_pcMv[ uiPartIdx ].getHor()   << ","
+        << std::setw(3) <<  m_pcMv[ uiPartIdx ].getVer()   << ")";
+    }    
+  }
+}
+
+#if NH_3D_MLC
+Void TComMotionCand::print( Int i )
+{
+  if (i == 0  )
+  {
+
+    std::cout << std::setfill(' ')                          << std::setw( 15 )
+      << "Num"                                              << std::setw( 15 )
+      << "Avai"                                             << std::setw( 15 )
+      << "Dir "                                             << std::setw( 15 )
+      <<  "L0 RefIdx"                                       << std::setw( 15 )
+      <<  "L0 Hor"                                          << std::setw( 15 )
+      <<  "L0 Ver"                                          << std::setw( 15 )
+      <<  "L1 RefIdx"                                       << std::setw( 15 )
+      <<  "L1 Hor"                                          << std::setw( 15 )
+      <<  "L1 Ver"                                          << std::setw( 15 )
+      << "VspFlag"                                          << std::setw( 15 )
+      << "SPIVMPFlag"                                       
+      << std::endl; 
+  }
+
+  std::cout << std::setfill(' ')                                  << std::setw( 15 )
+    << i                                                          << std::setw( 15 )
+    << m_bAvailable                                               << std::setw( 15 )
+    << (UInt) m_uDir                                              << std::setw( 15 )
+    << ((m_uDir & 1) ? m_cMvField[0].getRefIdx()       : MIN_INT) << std::setw( 15 )
+    << ((m_uDir & 1) ? m_cMvField[0].getMv().getHor()  : MIN_INT) << std::setw( 15 )
+    << ((m_uDir & 1) ? m_cMvField[0].getMv().getVer()  : MIN_INT) << std::setw( 15 )
+    << ((m_uDir & 2) ? m_cMvField[1].getRefIdx()       : MIN_INT) << std::setw( 15 )
+    << ((m_uDir & 2) ? m_cMvField[1].getMv().getHor()  : MIN_INT) << std::setw( 15 )
+    << ((m_uDir & 2) ? m_cMvField[1].getMv().getVer()  : MIN_INT) << std::setw( 15 )
+    << m_iVspFlag                                                 << std::setw( 15 )
+    << m_bSPIVMPFlag                                              << std::setw( 15 )
+    << std::endl;
+}
+#endif
+#endif
 //! \}

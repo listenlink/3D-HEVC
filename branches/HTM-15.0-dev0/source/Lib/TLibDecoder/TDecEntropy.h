@@ -66,7 +66,12 @@ public:
   virtual Void  parseVPS                  ( TComVPS* pcVPS )     = 0;
   virtual Void  parseSPS                  ( TComSPS* pcSPS )     = 0;
   virtual Void  parsePPS                  ( TComPPS* pcPPS )     = 0;
-  virtual Void parseSliceHeader          ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager, const Int prevTid0POC)       = 0;
+#if NH_MV
+  virtual Void  parseFirstSliceSegmentInPicFlag( TComSlice* pcSlice ) = 0;
+  virtual Void  parseSliceHeader          ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager )       = 0;
+#else
+  virtual Void  parseSliceHeader          ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager, const Int prevTid0POC)       = 0;
+#endif
 
   virtual Void parseTerminatingBit       ( UInt& ruilsLast )                                     = 0;
   virtual Void parseRemainingBytes( Bool noTrailingBytesExpected ) = 0;
@@ -155,7 +160,14 @@ RefPicList eRefList );
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
   Void    decodeSPS                   ( TComSPS* pcSPS ) { m_pcEntropyDecoderIf->parseSPS(pcSPS); }
   Void    decodePPS                   ( TComPPS* pcPPS ) { m_pcEntropyDecoderIf->parsePPS(pcPPS); }
+#if NH_MV
+  Void    decodeFirstSliceSegmentInPicFlag ( TComSlice* pcSlice )  { m_pcEntropyDecoderIf->parseFirstSliceSegmentInPicFlag( pcSlice );         }
+#endif
+#if NH_MV
+  Void    decodeSliceHeader           ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager )  { m_pcEntropyDecoderIf->parseSliceHeader(pcSlice, parameterSetManager);         }
+#else
   Void    decodeSliceHeader           ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager, const Int prevTid0POC)  { m_pcEntropyDecoderIf->parseSliceHeader(pcSlice, parameterSetManager, prevTid0POC);         }
+#endif
   Void    decodeTerminatingBit        ( UInt& ruiIsLast )       { m_pcEntropyDecoderIf->parseTerminatingBit(ruiIsLast);     }
   Void    decodeRemainingBytes( Bool noTrailingBytesExpected ) { m_pcEntropyDecoderIf->parseRemainingBytes(noTrailingBytesExpected); }
 

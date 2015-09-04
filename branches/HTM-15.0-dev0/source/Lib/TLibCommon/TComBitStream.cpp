@@ -40,7 +40,9 @@
 #include "TComBitStream.h"
 #include <string.h>
 #include <memory.h>
-
+#if NH_MV
+#include "TComRom.h" // This is only here, since ENC_DEC_TRACE is currently there. Consider removing when this has changed.
+#endif
 using namespace std;
 
 //! \ingroup TLibCommon
@@ -256,6 +258,16 @@ Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
   assert( uiNumberOfBits <= 32 );
 
   m_numBitsRead += uiNumberOfBits;
+
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+  if ( g_traceBitsRead )
+  {
+      Bool oldJustDoIt = g_bJustDoIt;
+      g_bJustDoIt = true; 
+      writeToTraceFile( "Bits: ", m_numBitsRead, true );
+      g_bJustDoIt = oldJustDoIt; 
+  }
+#endif
 
   /* NB, bits are extracted from the MSB of each byte. */
   UInt retval = 0;

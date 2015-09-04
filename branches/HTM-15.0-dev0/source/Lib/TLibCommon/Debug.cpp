@@ -151,12 +151,12 @@ EnvVar DebugOptionList::DebugRQT              ("DEBUG_RQT",         "0", "Output
 EnvVar DebugOptionList::DebugPred             ("DEBUG_PRED",        "0", "Output prediction debug"                                                                        );
 EnvVar DebugOptionList::ForceLumaMode         ("FORCE_LUMA_MODE",   "0", "Force a particular intra direction for Luma (0-34)"                                             );
 EnvVar DebugOptionList::ForceChromaMode       ("FORCE_CHROMA_MODE", "0", "Force a particular intra direction for chroma (0-5)"                                            );
-
-#if DEBUG_STRING
-EnvVar DebugOptionList::DebugString_Structure ("DEBUG_STRUCTURE",   "3", "Produce output on chosen structure                        bit0=intra, bit1=inter");
-EnvVar DebugOptionList::DebugString_Pred      ("DEBUG_PRED",        "3", "Produce output on prediction data.                        bit0=intra, bit1=inter");
-EnvVar DebugOptionList::DebugString_Resi      ("DEBUG_RESI",        "3", "Produce output on residual data.                          bit0=intra, bit1=inter");
-EnvVar DebugOptionList::DebugString_Reco      ("DEBUG_RECO",        "3", "Produce output on reconstructed data.                     bit0=intra, bit1=inter");
+                                                                      
+#if DEBUG_STRING                                                      
+EnvVar DebugOptionList::DebugString_Structure ("DEBUG_STRUCTURE",   "0", "Produce output on chosen structure                        bit0=intra, bit1=inter");
+EnvVar DebugOptionList::DebugString_Pred      ("DEBUG_PRED",        "0", "Produce output on prediction data.                        bit0=intra, bit1=inter");
+EnvVar DebugOptionList::DebugString_Resi      ("DEBUG_RESI",        "0", "Produce output on residual data.                          bit0=intra, bit1=inter");
+EnvVar DebugOptionList::DebugString_Reco      ("DEBUG_RECO",        "0", "Produce output on reconstructed data.                     bit0=intra, bit1=inter");
 EnvVar DebugOptionList::DebugString_InvTran   ("DEBUG_INV_QT",      "0", "Produce output on inverse-quantiser and transform stages. bit0=intra, bit1=inter");
 #endif
 
