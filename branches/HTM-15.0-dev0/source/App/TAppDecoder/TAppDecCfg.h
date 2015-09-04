@@ -86,8 +86,8 @@ protected:
   Int           m_auOutputFlag; 
   Int           m_maxLayerId;                           ///< maximum nuh_layer_id decoded
   std::ifstream m_bitstreamFile; 
-  Bool          m_targetDecLayerIdSetFileEmpty;       ///< indication if target layers are given by file
   Int           m_highestTid;
+  Bool          m_targetDecLayerIdSetFileEmpty;       ///< indication if target layers are given by file
 
   Bool          m_printVpsInfo;                      ///< Output VPS information 
   Bool          m_printPicOutput;                     ///< Print information on picture output
