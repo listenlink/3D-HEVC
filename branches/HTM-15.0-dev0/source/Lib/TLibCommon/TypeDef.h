@@ -63,6 +63,7 @@
 ///////////////////////////////////   FIXES           ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
+#define NH_MV_FIX_TICKET_106                      1 // Identical motion check. 
 #define NH_MV_FIX_NO_REF_PICS_CHECK               1 // !!SPEC!! 
 #define NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS  1 // Derivation of NumActiveRefLayerPIcs. !!SPEC!! 
 #define NH_MV_FIX_NUM_POC_TOTAL_CUR               1 // Derivation of NumPocTotalCur for IDR pictures. !!SPEC!!

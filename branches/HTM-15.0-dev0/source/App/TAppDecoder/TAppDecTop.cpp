@@ -2029,7 +2029,6 @@ Void TAppDecTop::xF813ComDecProcForACodedPic( DecProcPart curPart, Bool picPosIn
           }
         }
 
-
         if (nonOutputLayerPictures.size() != 0 )
         {
           // -  When the list nonOutputLayerPictures is not empty,
@@ -2150,7 +2149,6 @@ Void TAppDecTop::xF813ComDecProcForACodedPic( DecProcPart curPart, Bool picPosIn
 
       // The variable PicLatencyCount that is associated with the current access unit is set equal to 0.
       m_curAu.setPicLatencyCount( 0 );
-
 
       if ( m_auOutputFlag )
       {
