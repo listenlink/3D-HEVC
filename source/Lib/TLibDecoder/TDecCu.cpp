@@ -530,6 +530,39 @@ if(!pcCU->getSlice()->isIntra())
         pcCU->getCUMvField( REF_PIC_LIST_0 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx], iSPWidth, iSPHeight);
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
       }
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+      if ( g_traceSubPBMotion )
+      {
+        std::cout << std::setfill(' ')                          << std::setw( 15 )
+          << "Num"                                              << std::setw( 15 )
+          << "Dir "                                             << std::setw( 15 )
+          <<  "L0 RefIdx"                                       << std::setw( 15 )
+          <<  "L0 Hor"                                          << std::setw( 15 )
+          <<  "L0 Ver"                                          << std::setw( 15 )
+          <<  "L1 RefIdx"                                       << std::setw( 15 )
+          <<  "L1 Hor"                                          << std::setw( 15 )
+          <<  "L1 Ver"                                          << std::setw( 15 )
+          << std::endl; 
+
+        for (Int iPartitionIdx = 0; iPartitionIdx < iNumSP; iPartitionIdx++)
+        {
+          UChar        dir = puhInterDirSP[iPartitionIdx]; 
+          TComMvField& mv0 = pcMvFieldSP  [2*iPartitionIdx];
+          TComMvField& mv1 = pcMvFieldSP  [2*iPartitionIdx+1];
+
+          std::cout << std::setfill(' ')                                  << std::setw( 15 )
+            << iPartitionIdx                                              << std::setw( 15 )
+            << (UInt) dir                                                 << std::setw( 15 )
+            << ((dir & 1) ? mv0.getRefIdx()       : MIN_INT)              << std::setw( 15 )
+            << ((dir & 1) ? mv0.getMv().getHor()  : MIN_INT)              << std::setw( 15 )
+            << ((dir & 1) ? mv0.getMv().getVer()  : MIN_INT)              << std::setw( 15 )
+            << ((dir & 2) ? mv1.getRefIdx()       : MIN_INT)              << std::setw( 15 )
+            << ((dir & 2) ? mv1.getMv().getHor()  : MIN_INT)              << std::setw( 15 )
+            << ((dir & 2) ? mv1.getMv().getVer()  : MIN_INT)              << std::setw( 15 )
+            << std::endl;
+        }
+      }
+#endif
     }
     delete[] pcMvFieldSP;
     delete[] puhInterDirSP;
@@ -778,6 +811,7 @@ Void TDecCu::xReconDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   TComTURecurse rTu(pcCU, 0);
   const ChromaFormat chFmt     = rTu.GetChromaFormat();
 
+  DEBUG_STRING_NEW(sTemp)
   if ( pcCU->getDISType(uiAbsPartIdx) == 0 )
   {
     const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, VER_IDX, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getSpsRangeExtension().getIntraSmoothingDisabledFlag());
@@ -1270,6 +1304,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     TComTURecurse tuRecurseCU(pcCU, 0);
     TComTURecurse tuRecurseWithPU(tuRecurseCU, false, TComTU::DONT_SPLIT);
 
+    DEBUG_STRING_NEW(sTemp)
     m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, COMPONENT_Y, false DEBUG_STRING_PASS_INTO(sTemp) );
 
     // get partition
@@ -1320,7 +1355,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       const Bool bUseFilter = TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiLumaPredMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
       
       //===== init pattern for luma prediction =====
-      
+      DEBUG_STRING_NEW(sTemp)
       m_pcPrediction->initIntraPatternChType( tuRecurseWithPU, COMPONENT_Y, bUseFilter  DEBUG_STRING_PASS_INTO(sTemp) );
       
       m_pcPrediction->predIntraAng( COMPONENT_Y, uiLumaPredMode, NULL, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bUseFilter );

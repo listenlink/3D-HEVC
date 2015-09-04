@@ -600,6 +600,7 @@ public:
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
 #if NH_3D
   Void          compressMV            ( Int scale );
+  Void          printMV               ( );
 #else            
   Void          compressMV            ();
 #endif  
@@ -643,7 +644,7 @@ public:
   Void          deriveLeftBottomIdx         ( UInt uiPartIdx, UInt& ruiPartIdxLB );
 
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
-#if NH_3D_FIX_PRUNING
+#if NH_3D
   Bool          hasEqualMotion              ( Int dirA, const TComMvField* mvFieldA,  Int dirB, const TComMvField* mvFieldB  );
 #endif
 #if NH_3D_MLC

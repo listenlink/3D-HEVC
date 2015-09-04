@@ -583,7 +583,7 @@ Void TComPrediction::xGetSubPUAddrAndMerge(TComDataCU* pcCU, UInt uiPartAddr, In
     uiMergedSPH[i] = iSPHeight;
     pcCU->getSPAbsPartIdx(uiPartAddr, iSPWidth, iSPHeight, i, iNumSPInOneLine, uiSPAddr[i]);
   }
-#if H_3D_ARP || NH_3D_ALIGN_SPIVMP_RP // check this!
+#if NH_3D_ARP
   if( pcCU->getARPW( uiPartAddr ) != 0 )
   {
     return;
@@ -1301,6 +1301,17 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
+
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+  if ( g_traceMotionInfoBeforUniPred  )
+  {
+    std::cout << "RefPic POC     : " << pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()     << std::endl; 
+    std::cout << "RefPic Layer Id: " << pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getLayerId() << std::endl; 
+    std::cout << "RefIdx         : " << iRefIdx                                                           << std::endl; 
+    std::cout << "RefPIcList     : " << eRefPicList                                                        << std::endl; 
+  }
+#endif
+
 #if NH_MV
   pcCU->checkMvVertRest(cMv, eRefPicList, iRefIdx );
 #endif
@@ -1308,31 +1319,32 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   if(  pcCU->getARPW( uiPartAddr ) > 0 )
   {
     if( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()== pcCU->getSlice()->getPOC() )
-  {
+    {
       xPredInterUniARPviewRef( pcCU , uiPartAddr , iWidth , iHeight , eRefPicList , pcYuvPred , bi ); 
-  }
-  else
-  {
-      xPredInterUniARP( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, bi );
-    }      
     }
     else
     {
-#endif
-  for (UInt comp=COMPONENT_Y; comp<pcYuvPred->getNumberValidComponents(); comp++)
+      xPredInterUniARP( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, bi );
+    }      
+  }
+  else
   {
-    const ComponentID compID=ComponentID(comp);
+#endif
+
+    for (UInt comp=COMPONENT_Y; comp<pcYuvPred->getNumberValidComponents(); comp++)
+    {
+      const ComponentID compID=ComponentID(comp);
 #if NH_3D_IC
-    Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getViewIndex() != pcCU->getSlice()->getViewIndex() ) && ( isLuma(compID) || (iWidth > 8) );
+      Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getViewIndex() != pcCU->getSlice()->getViewIndex() ) && ( isLuma(compID) || (iWidth > 8) );
       xPredInterBlk(compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID))
 #if NH_3D_ARP
         , false
 #endif
         , bICFlag );
 #else
-    xPredInterBlk  (compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) );
+      xPredInterBlk  (compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) );
 #endif
-  }
+    }
 #if NH_3D_ARP
   }
 #endif
@@ -1812,6 +1824,9 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 #endif
 )
 {
+#if NH_MV
+  assert( refPic->getBorderExtension() ); 
+#endif
   Int     refStride  = refPic->getStride(compID);
   Int     dstStride  = dstPic->getStride(compID);
   Int shiftHor=(2+refPic->getComponentScaleX(compID));

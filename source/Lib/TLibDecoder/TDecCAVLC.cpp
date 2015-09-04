@@ -65,6 +65,12 @@ Void  xTracePPSHeader ()
 {
   fprintf( g_hTrace, "=========== Picture Parameter Set  ===========\n");
 }
+
+Void  xTraceSliceHeader ()
+{
+  fprintf( g_hTrace, "=========== Slice ===========\n");
+}
+
 #endif
 #endif
 // ====================================================================================================================
@@ -84,6 +90,49 @@ TDecCavlc::~TDecCavlc()
 // Public member functions
 // ====================================================================================================================
 
+#if NH_MV
+Void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComStRefPicSet* stRps, Int stRpsIdx )
+{
+  UInt uiCode;  
+  if( stRpsIdx  !=  0 )
+  {
+    READ_FLAG( uiCode, "inter_ref_pic_set_prediction_flag" ); stRps->setInterRefPicSetPredictionFlag( uiCode == 1 );
+  }
+  if( stRps->getInterRefPicSetPredictionFlag() )
+  {
+    if( stRpsIdx  ==  sps->getNumShortTermRefPicSets() )
+    {
+      READ_UVLC( uiCode, "delta_idx_minus1" ); stRps->setDeltaIdxMinus1( uiCode );
+    }
+    READ_FLAG( uiCode, "delta_rps_sign" ); stRps->setDeltaRpsSign( uiCode == 1 );
+    READ_UVLC( uiCode, "abs_delta_rps_minus1" ); stRps->setAbsDeltaRpsMinus1( uiCode );
+    for( Int j = 0; j  <=  sps->getStRefPicSet( stRps->getRefRpsIdx( stRpsIdx ) )->getNumDeltaPocs() ; j++ )
+    {
+      READ_FLAG( uiCode, "used_by_curr_pic_flag" ); stRps->setUsedByCurrPicFlag( j, uiCode == 1 );
+      if( !stRps->getUsedByCurrPicFlag( j ) )
+      {
+        READ_FLAG( uiCode, "use_delta_flag" ); stRps->setUseDeltaFlag( j, uiCode == 1 );
+      }
+    }
+  }
+  else
+  {
+    READ_UVLC( uiCode, "num_negative_pics" ); stRps->setNumNegativePics( uiCode );
+    READ_UVLC( uiCode, "num_positive_pics" ); stRps->setNumPositivePics( uiCode );
+    for( Int i = 0; i < stRps->getNumNegativePics( ); i++ )
+    {
+      READ_UVLC( uiCode, "delta_poc_s0_minus1" ); stRps->setDeltaPocS0Minus1( i, uiCode );
+      READ_FLAG( uiCode, "used_by_curr_pic_s0_flag" ); stRps->setUsedByCurrPicS0Flag( i, uiCode == 1 );
+    }
+    for( Int i = 0; i < stRps->getNumPositivePics( ); i++ )
+    {
+      READ_UVLC( uiCode, "delta_poc_s1_minus1" ); stRps->setDeltaPocS1Minus1( i, uiCode );
+      READ_FLAG( uiCode, "used_by_curr_pic_s1_flag" ); stRps->setUsedByCurrPicS1Flag( i, uiCode == 1 );
+    }
+  }
+  stRps->inferRps( stRpsIdx, sps, false );
+}
+#else
 Void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* rps, Int idx )
 {
   UInt code;
@@ -179,6 +228,7 @@ Void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* 
   rps->printDeltaPOC();
 #endif
 }
+#endif
 
 Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 {
@@ -506,20 +556,12 @@ Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
   if ( pcDLT->getDltPresentFlag() )
   {
     READ_CODE(6, uiCode, "pps_depth_layers_minus1");
-#if NH_3D_VER141_DEC_COMP_FLAG
-    pcDLT->setNumDepthViews( uiCode );
-#else
     pcDLT->setNumDepthViews( uiCode+1 );
-#endif
     
     READ_CODE(4, uiCode, "pps_bit_depth_for_depth_layers_minus8");
     pcDLT->setDepthViewBitDepth( (uiCode+8) );
     
-#if NH_3D_DLT_FIX
     for( Int i = 0; i <= pcDLT->getNumDepthViews()-1; i++ )
-#else
-    for( Int i = 0; i <= pcDLT->getNumDepthViews(); i++ )
-#endif
     {
       Int layerId = pcDLT->getDepthIdxToLayerId(i);
       
@@ -865,7 +907,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   parsePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
 #if NH_MV
     pcSPS->getPTL()->inferGeneralValues ( true, 0, NULL ); 
-    pcSPS->getPTL()->inferSubLayerValues( pcSPS->getMaxTLayers() - 1, 0, NULL );
+    pcSPS->getPTL()->inferSubLayerValues( pcSPS->getSpsMaxSubLayersMinus1(), 0, NULL );
   }
 #endif
   READ_UVLC(     uiCode, "sps_seq_parameter_set_id" );           pcSPS->setSPSId( uiCode );
@@ -971,7 +1013,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     READ_UVLC ( uiCode, "sps_max_num_reorder_pics[i]" );
     pcSPS->setNumReorderPics(uiCode, i);
     READ_UVLC ( uiCode, "sps_max_latency_increase_plus1[i]");
+#if NH_MV
+    pcSPS->setSpsMaxLatencyIncreasePlus1( uiCode, i );
+#else
     pcSPS->setMaxLatencyIncrease( uiCode, i );
+#endif
 
     if (!subLayerOrderingInfoPresentFlag)
     {
@@ -979,7 +1025,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       {
         pcSPS->setMaxDecPicBuffering(pcSPS->getMaxDecPicBuffering(0), i);
         pcSPS->setNumReorderPics(pcSPS->getNumReorderPics(0), i);
+#if NH_MV
+        pcSPS->setSpsMaxLatencyIncreasePlus1(pcSPS->getSpsMaxLatencyIncreasePlus1(0), i);
+#else
         pcSPS->setMaxLatencyIncrease(pcSPS->getMaxLatencyIncrease(0), i);
+#endif
       }
       break;
     }
@@ -1052,7 +1102,20 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_UVLC( uiCode, "num_short_term_ref_pic_sets" );
+
   assert(uiCode <= 64);
+#if NH_MV
+  pcSPS->setNumShortTermRefPicSets( uiCode );  
+  pcSPS->initStRefPicSets();
+
+  for(Int i=0; i< pcSPS->getNumShortTermRefPicSets(); i++ )
+  {
+    parseShortTermRefPicSet(pcSPS,pcSPS->getStRefPicSet(i),i);
+  }
+
+  READ_FLAG( uiCode, "long_term_ref_pics_present_flag" );          pcSPS->setLongTermRefPicsPresentFlag(uiCode);
+  if (pcSPS->getLongTermRefPicsPresentFlag() )
+#else
   pcSPS->createRPSList(uiCode);
 
   TComRPSList* rpsList = pcSPS->getRPSList();
@@ -1063,8 +1126,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     rps = rpsList->getReferencePictureSet(i);
     parseShortTermRefPicSet(pcSPS,rps,i);
   }
+
   READ_FLAG( uiCode, "long_term_ref_pics_present_flag" );          pcSPS->setLongTermRefsPresent(uiCode);
   if (pcSPS->getLongTermRefsPresent())
+#endif
   {
     READ_UVLC( uiCode, "num_long_term_ref_pics_sps" );
     pcSPS->setNumLongTermRefPicSPS(uiCode);
@@ -2148,15 +2213,32 @@ Void TDecCavlc::parseVps3dExtension( TComVPS* pcVPS )
 #endif
 #endif
 
-Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *parameterSetManager, const Int prevTid0POC)
+#if NH_MV
+Void TDecCavlc::parseFirstSliceSegmentInPicFlag(TComSlice* pcSlice )
 {
-  UInt  uiCode;
-  Int   iCode;
-
 #if ENC_DEC_TRACE
 #if NH_MV
   tracePSHeader( "Slice", pcSlice->getLayerId() ); 
 #else
+  xTraceSliceHeader();
+#endif
+#endif
+
+  UInt uiCode;
+  READ_FLAG( uiCode, "first_slice_segment_in_pic_flag" );
+  pcSlice->setFirstSliceSegementInPicFlag( uiCode ); 
+}
+
+Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *parameterSetManager )
+#else
+Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *parameterSetManager, const Int prevTid0POC)
+#endif
+{
+  UInt  uiCode;
+  Int   iCode;
+
+#if !NH_MV
+#if ENC_DEC_TRACE
   xTraceSliceHeader();
 #endif
 #endif
@@ -2166,8 +2248,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
   TComVPS* vps = NULL;
 #endif
 
+#if NH_MV
+  // This has been parsed before in parseFirstSliceSegmentFlag(TComSlice* pcSlice )
+  UInt firstSliceSegmentInPic = pcSlice->getFirstSliceSegementInPicFlag();   
+#else
   UInt firstSliceSegmentInPic;
   READ_FLAG( firstSliceSegmentInPic, "first_slice_segment_in_pic_flag" );
+#endif
   if( pcSlice->getRapPicFlag())
   {
     READ_FLAG( uiCode, "no_output_of_prior_pics_flag" );  //ignored -- updated already
@@ -2183,7 +2270,15 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
 #if NH_MV  
   vps = parameterSetManager->getVPS(sps->getVPSId());
   assert( vps != NULL );  
+  
   m_decTop->initFromActiveVps( vps );
+  
+  if ( !m_decTop->getIsInOwnTargetDecLayerIdList() )
+  {
+    return; 
+  }
+
+  pcSlice->setDecodingProcess( m_decTop->getDecodingProcess() ); 
   Int targetOlsIdx = m_decTop->getTargetOlsIdx(); 
 
   // Do inference 
@@ -2240,10 +2335,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
   //set uiCode to equal slice start address (or dependent slice start address)
   pcSlice->setSliceSegmentCurStartCtuTsAddr( sliceSegmentAddress );// this is actually a Raster-Scan (RS) address, but we do not have the RS->TS conversion table defined yet.
   pcSlice->setSliceSegmentCurEndCtuTsAddr(numCTUs);                // Set end as the last CTU of the picture.
-
-#if NH_MV
-    UInt slicePicOrderCntLsb = 0;
-#endif
 
 
   if (!pcSlice->getDependentSliceSegmentFlag())
@@ -2302,255 +2393,231 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     //   (separate_colour_plane_flag == 1) is not supported in this version of the standard.
 
 #if NH_MV
-    Int iPOClsb = slicePicOrderCntLsb;  // Needed later
     if ( (pcSlice->getLayerId() > 0 && !vps->getPocLsbNotPresentFlag( pcSlice->getLayerIdInVps())) || !pcSlice->getIdrPicFlag() )
     {
-      READ_CODE(sps->getBitsForPOC(), slicePicOrderCntLsb, "slice_pic_order_cnt_lsb");        
-    }    
-    pcSlice->setSlicePicOrderCntLsb( slicePicOrderCntLsb ); 
-
-    Bool picOrderCntMSBZeroFlag = false;     
-
-    // as in HM code. However are all cases for IRAP picture with NoRaslOutputFlag equal to 1 covered??
-    picOrderCntMSBZeroFlag = picOrderCntMSBZeroFlag || ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP   ); 
-    picOrderCntMSBZeroFlag = picOrderCntMSBZeroFlag || ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL ); 
-    picOrderCntMSBZeroFlag = picOrderCntMSBZeroFlag || ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP   ); 
-    picOrderCntMSBZeroFlag = picOrderCntMSBZeroFlag ||   pcSlice->getIdrPicFlag(); 
-
-    // TBD picOrderCntMSBZeroFlag = picOrderCntMSBZeroFlag || ( rpcSlice->getLayerId() > 0 &&   !rpcSlice->getFirstPicInLayerDecodedFlag() ); 
-
-    Int picOrderCntMSB = 0; 
-
-    if ( !picOrderCntMSBZeroFlag )
+      READ_CODE(sps->getBitsForPOC(), uiCode, "slice_pic_order_cnt_lsb"); pcSlice->setSlicePicOrderCntLsb( uiCode );
+    } 
+    else
     {
-      Int prevPicOrderCnt    = prevTid0POC;
-      Int maxPicOrderCntLsb  = 1 << sps->getBitsForPOC();
-      Int prevPicOrderCntLsb = prevPicOrderCnt & (maxPicOrderCntLsb - 1);
-      Int prevPicOrderCntMsb = prevPicOrderCnt - prevPicOrderCntLsb;
-            
-      if( ( slicePicOrderCntLsb  <  prevPicOrderCntLsb ) && ( ( prevPicOrderCntLsb - slicePicOrderCntLsb )  >=  ( maxPicOrderCntLsb / 2 ) ) )
-      {
-        picOrderCntMSB = prevPicOrderCntMsb + maxPicOrderCntLsb;
-      }
-      else if( (slicePicOrderCntLsb  >  prevPicOrderCntLsb )  && ( (slicePicOrderCntLsb - prevPicOrderCntLsb )  >  ( maxPicOrderCntLsb / 2 ) ) ) 
-      {
-        picOrderCntMSB = prevPicOrderCntMsb - maxPicOrderCntLsb;
-      }
-      else
-      {
-        picOrderCntMSB = prevPicOrderCntMsb;
-      }   
+      pcSlice->setSlicePicOrderCntLsb( 0 );
     }
-      
-    pcSlice->setPOC( picOrderCntMSB + slicePicOrderCntLsb );
-    if ( pcSlice->getPocResetFlag() )  
-    {
-      pcSlice->setPocBeforeReset   ( pcSlice->getPOC() ); 
-      pcSlice->setPOC              ( 0 );
-    }      
-#endif
 
-    if( pcSlice->getIdrPicFlag() )
+    if( pcSlice->getNalUnitType()  != NAL_UNIT_CODED_SLICE_IDR_W_RADL  &&  pcSlice->getNalUnitType() !=  NAL_UNIT_CODED_SLICE_IDR_N_LP )
+    {      
+      READ_FLAG( uiCode, "short_term_ref_pic_set_sps_flag" ); pcSlice->setShortTermRefPicSetSpsFlag( uiCode == 1 );
+      if( !pcSlice->getShortTermRefPicSetSpsFlag() )
+      {
+        parseShortTermRefPicSet( sps, pcSlice->getLocalStRps( ), sps->getNumShortTermRefPicSets() );
+      }
+      else if( sps->getNumShortTermRefPicSets() > 1 )
+      {
+        READ_CODE( pcSlice->getShortTermRefPicSetIdxLen() , uiCode, "short_term_ref_pic_set_idx" ); pcSlice->setShortTermRefPicSetIdx( uiCode );
+      }
+      if( sps->getLongTermRefPicsPresentFlag() )
+      {
+        if( sps->getNumLongTermRefPicsSps() > 0 )
+        {
+          READ_UVLC( uiCode, "num_long_term_sps" ); pcSlice->setNumLongTermSps( uiCode );
+        }
+        READ_UVLC( uiCode, "num_long_term_pics" ); pcSlice->setNumLongTermPics( uiCode );
+        for( Int i = 0; i < pcSlice->getNumLongTermSps() + pcSlice->getNumLongTermPics( ); i++ )
+        {
+          if( i < pcSlice->getNumLongTermSps() )
+          {
+            if( sps->getNumLongTermRefPicsSps() > 1 )
+            {
+              READ_CODE( pcSlice->getLtIdxSpsLen() , uiCode, "lt_idx_sps" ); pcSlice->setLtIdxSps( i, uiCode );
+            }
+          }
+          else
+          {
+            READ_CODE( pcSlice->getPocLsbLtLen() , uiCode, "poc_lsb_lt" ); pcSlice->setPocLsbLt( i, uiCode );
+            READ_FLAG( uiCode, "used_by_curr_pic_lt_flag" ); pcSlice->setUsedByCurrPicLtFlag( i, uiCode == 1 );
+          }
+          READ_FLAG( uiCode, "delta_poc_msb_present_flag" ); pcSlice->setDeltaPocMsbPresentFlag( i, uiCode == 1 );
+          if( pcSlice->getDeltaPocMsbPresentFlag( i ) )
+          {
+            READ_UVLC( uiCode, "delta_poc_msb_cycle_lt" ); pcSlice->setDeltaPocMsbCycleLt( i, uiCode );
+          }
+        }
+      }
+      if( sps->getSpsTemporalMvpEnabledFlag() )
+      {
+        READ_FLAG( uiCode, "slice_temporal_mvp_enabled_flag" ); pcSlice->setSliceTemporalMvpEnabledFlag( uiCode == 1 );
+      }
+    }
+#else
+if( pcSlice->getIdrPicFlag() )
+{
+  pcSlice->setPOC(0);
+  TComReferencePictureSet* rps = pcSlice->getLocalRPS();
+  (*rps)=TComReferencePictureSet();
+  pcSlice->setRPS(rps);
+}
+else
+{
+  READ_CODE(sps->getBitsForPOC(), uiCode, "slice_pic_order_cnt_lsb");
+  Int iPOClsb = uiCode;
+  Int iPrevPOC = prevTid0POC;
+  Int iMaxPOClsb = 1<< sps->getBitsForPOC();
+  Int iPrevPOClsb = iPrevPOC & (iMaxPOClsb - 1);
+  Int iPrevPOCmsb = iPrevPOC-iPrevPOClsb;
+  Int iPOCmsb;
+  if( ( iPOClsb  <  iPrevPOClsb ) && ( ( iPrevPOClsb - iPOClsb )  >=  ( iMaxPOClsb / 2 ) ) )
+  {
+    iPOCmsb = iPrevPOCmsb + iMaxPOClsb;
+  }
+  else if( (iPOClsb  >  iPrevPOClsb )  && ( (iPOClsb - iPrevPOClsb )  >  ( iMaxPOClsb / 2 ) ) )
+  {
+    iPOCmsb = iPrevPOCmsb - iMaxPOClsb;
+  }
+  else
+  {
+    iPOCmsb = iPrevPOCmsb;
+  }
+  if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+    || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+    || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP )
+  {
+    // For BLA picture types, POCmsb is set to 0.
+    iPOCmsb = 0;
+  }
+  pcSlice->setPOC              (iPOCmsb+iPOClsb);
+
+  TComReferencePictureSet* rps;
+  rps = pcSlice->getLocalRPS();
+  (*rps)=TComReferencePictureSet();
+
+  pcSlice->setRPS(rps);
+  READ_FLAG( uiCode, "short_term_ref_pic_set_sps_flag" );
+  if(uiCode == 0) // use short-term reference picture set explicitly signalled in slice header
+  {
+    parseShortTermRefPicSet(sps,rps, sps->getRPSList()->getNumberOfReferencePictureSets());
+  }
+  else // use reference to short-term reference picture set in PPS
+  {
+    Int numBits = 0;
+    while ((1 << numBits) < sps->getRPSList()->getNumberOfReferencePictureSets())
     {
-#if !NH_MV
-      pcSlice->setPOC(0);
-#endif
-      TComReferencePictureSet* rps = pcSlice->getLocalRPS();
-      (*rps)=TComReferencePictureSet();
-      pcSlice->setRPS(rps);
-#if NH_MV
-      pcSlice->setEnableTMVPFlag(false);
-#endif
+      numBits++;
+    }
+    if (numBits > 0)
+    {
+      READ_CODE( numBits, uiCode, "short_term_ref_pic_set_idx");
     }
     else
     {
-#if !NH_MV
-      READ_CODE(sps->getBitsForPOC(), uiCode, "slice_pic_order_cnt_lsb");
-      Int iPOClsb = uiCode;
-      Int iPrevPOC = prevTid0POC;
-      Int iMaxPOClsb = 1<< sps->getBitsForPOC();
-      Int iPrevPOClsb = iPrevPOC & (iMaxPOClsb - 1);
-      Int iPrevPOCmsb = iPrevPOC-iPrevPOClsb;
-      Int iPOCmsb;
-      if( ( iPOClsb  <  iPrevPOClsb ) && ( ( iPrevPOClsb - iPOClsb )  >=  ( iMaxPOClsb / 2 ) ) )
+      uiCode = 0;       
+    }
+    *rps = *(sps->getRPSList()->getReferencePictureSet(uiCode));
+  }
+  if(sps->getLongTermRefsPresent())
+  {
+    Int offset = rps->getNumberOfNegativePictures()+rps->getNumberOfPositivePictures();
+    UInt numOfLtrp = 0;
+    UInt numLtrpInSPS = 0;
+    if (sps->getNumLongTermRefPicSPS() > 0)
+    {
+      READ_UVLC( uiCode, "num_long_term_sps");
+      numLtrpInSPS = uiCode;
+      numOfLtrp += numLtrpInSPS;
+      rps->setNumberOfLongtermPictures(numOfLtrp);
+    }
+    Int bitsForLtrpInSPS = 0;
+    while (sps->getNumLongTermRefPicSPS() > (1 << bitsForLtrpInSPS))
+    {
+      bitsForLtrpInSPS++;
+    }
+    READ_UVLC( uiCode, "num_long_term_pics");             rps->setNumberOfLongtermPictures(uiCode);
+    numOfLtrp += uiCode;
+    rps->setNumberOfLongtermPictures(numOfLtrp);
+    Int maxPicOrderCntLSB = 1 << sps->getBitsForPOC();
+    Int prevDeltaMSB = 0, deltaPocMSBCycleLT = 0;
+    for(Int j=offset+rps->getNumberOfLongtermPictures()-1, k = 0; k < numOfLtrp; j--, k++)
+    {
+      Int pocLsbLt;
+      if (k < numLtrpInSPS)
       {
-        iPOCmsb = iPrevPOCmsb + iMaxPOClsb;
-      }
-      else if( (iPOClsb  >  iPrevPOClsb )  && ( (iPOClsb - iPrevPOClsb )  >  ( iMaxPOClsb / 2 ) ) )
-      {
-        iPOCmsb = iPrevPOCmsb - iMaxPOClsb;
+        uiCode = 0;
+        if (bitsForLtrpInSPS > 0)
+        {
+          READ_CODE(bitsForLtrpInSPS, uiCode, "lt_idx_sps[i]");
+        }
+        Bool usedByCurrFromSPS=sps->getUsedByCurrPicLtSPSFlag(uiCode);
+
+        pocLsbLt = sps->getLtRefPicPocLsbSps(uiCode);
+        rps->setUsed(j,usedByCurrFromSPS);
       }
       else
       {
-        iPOCmsb = iPrevPOCmsb;
+        READ_CODE(sps->getBitsForPOC(), uiCode, "poc_lsb_lt"); pocLsbLt= uiCode;
+        READ_FLAG( uiCode, "used_by_curr_pic_lt_flag");     rps->setUsed(j,uiCode);
       }
-      if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
-        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
-        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP )
+      READ_FLAG(uiCode,"delta_poc_msb_present_flag");
+      Bool mSBPresentFlag = uiCode ? true : false;
+      if(mSBPresentFlag)
       {
-        // For BLA picture types, POCmsb is set to 0.
-        iPOCmsb = 0;
-      }
-      pcSlice->setPOC              (iPOCmsb+iPOClsb);
-#endif
-      TComReferencePictureSet* rps;
-      rps = pcSlice->getLocalRPS();
-      (*rps)=TComReferencePictureSet();
-
-      pcSlice->setRPS(rps);
-      READ_FLAG( uiCode, "short_term_ref_pic_set_sps_flag" );
-      if(uiCode == 0) // use short-term reference picture set explicitly signalled in slice header
-      {
-        parseShortTermRefPicSet(sps,rps, sps->getRPSList()->getNumberOfReferencePictureSets());
-#if NH_MV
-        if ( !rps->getInterRPSPrediction( ) )
-        { // check sum of num_positive_pics and num_negative_pics
-          rps->checkMaxNumPics( 
-            vps->getVpsExtensionFlag(), 
-            MAX_INT,  // To be replaced by MaxDbpSize
-            pcSlice->getLayerId(), 
-            sps->getMaxDecPicBuffering( sps->getSpsMaxSubLayersMinus1() ) - 1 );
-        }
-#endif
-
-      }
-      else // use reference to short-term reference picture set in PPS
-      {
-        Int numBits = 0;
-        while ((1 << numBits) < sps->getRPSList()->getNumberOfReferencePictureSets())
+        READ_UVLC( uiCode, "delta_poc_msb_cycle_lt[i]" );
+        Bool deltaFlag = false;
+        //            First LTRP                               || First LTRP from SH
+        if( (j == offset+rps->getNumberOfLongtermPictures()-1) || (j == offset+(numOfLtrp-numLtrpInSPS)-1) )
         {
-          numBits++;
+          deltaFlag = true;
         }
-        if (numBits > 0)
+        if(deltaFlag)
         {
-          READ_CODE( numBits, uiCode, "short_term_ref_pic_set_idx");
+          deltaPocMSBCycleLT = uiCode;
         }
         else
         {
-          uiCode = 0;
-       
+          deltaPocMSBCycleLT = uiCode + prevDeltaMSB;
         }
-        *rps = *(sps->getRPSList()->getReferencePictureSet(uiCode));
-      }
-      if(sps->getLongTermRefsPresent())
-      {
-        Int offset = rps->getNumberOfNegativePictures()+rps->getNumberOfPositivePictures();
-        UInt numOfLtrp = 0;
-        UInt numLtrpInSPS = 0;
-        if (sps->getNumLongTermRefPicSPS() > 0)
-        {
-          READ_UVLC( uiCode, "num_long_term_sps");
-          numLtrpInSPS = uiCode;
-          numOfLtrp += numLtrpInSPS;
-          rps->setNumberOfLongtermPictures(numOfLtrp);
-        }
-        Int bitsForLtrpInSPS = 0;
-        while (sps->getNumLongTermRefPicSPS() > (1 << bitsForLtrpInSPS))
-        {
-          bitsForLtrpInSPS++;
-        }
-        READ_UVLC( uiCode, "num_long_term_pics");             rps->setNumberOfLongtermPictures(uiCode);
-        numOfLtrp += uiCode;
-        rps->setNumberOfLongtermPictures(numOfLtrp);
-        Int maxPicOrderCntLSB = 1 << sps->getBitsForPOC();
-        Int prevDeltaMSB = 0, deltaPocMSBCycleLT = 0;
-        for(Int j=offset+rps->getNumberOfLongtermPictures()-1, k = 0; k < numOfLtrp; j--, k++)
-        {
-          Int pocLsbLt;
-          if (k < numLtrpInSPS)
-          {
-            uiCode = 0;
-            if (bitsForLtrpInSPS > 0)
-            {
-              READ_CODE(bitsForLtrpInSPS, uiCode, "lt_idx_sps[i]");
-            }
-            Bool usedByCurrFromSPS=sps->getUsedByCurrPicLtSPSFlag(uiCode);
 
-            pocLsbLt = sps->getLtRefPicPocLsbSps(uiCode);
-            rps->setUsed(j,usedByCurrFromSPS);
-          }
-          else
-          {
-            READ_CODE(sps->getBitsForPOC(), uiCode, "poc_lsb_lt"); pocLsbLt= uiCode;
-            READ_FLAG( uiCode, "used_by_curr_pic_lt_flag");     rps->setUsed(j,uiCode);
-          }
-          READ_FLAG(uiCode,"delta_poc_msb_present_flag");
-          Bool mSBPresentFlag = uiCode ? true : false;
-          if(mSBPresentFlag)
-          {
-            READ_UVLC( uiCode, "delta_poc_msb_cycle_lt[i]" );
-            Bool deltaFlag = false;
-            //            First LTRP                               || First LTRP from SH
-            if( (j == offset+rps->getNumberOfLongtermPictures()-1) || (j == offset+(numOfLtrp-numLtrpInSPS)-1) )
-            {
-              deltaFlag = true;
-            }
-            if(deltaFlag)
-            {
-              deltaPocMSBCycleLT = uiCode;
-            }
-            else
-            {
-              deltaPocMSBCycleLT = uiCode + prevDeltaMSB;
-            }
-
-            Int pocLTCurr = pcSlice->getPOC() - deltaPocMSBCycleLT * maxPicOrderCntLSB
-                                        - iPOClsb + pocLsbLt;
-            rps->setPOC     (j, pocLTCurr);
-            rps->setDeltaPOC(j, - pcSlice->getPOC() + pocLTCurr);
-            rps->setCheckLTMSBPresent(j,true);
-          }
-          else
-          {
-            rps->setPOC     (j, pocLsbLt);
-            rps->setDeltaPOC(j, - pcSlice->getPOC() + pocLsbLt);
-            rps->setCheckLTMSBPresent(j,false);
-
-            // reset deltaPocMSBCycleLT for first LTRP from slice header if MSB not present
-            if( j == offset+(numOfLtrp-numLtrpInSPS)-1 )
-            {
-              deltaPocMSBCycleLT = 0;
-            }
-          }
-          prevDeltaMSB = deltaPocMSBCycleLT;
-        }
-        offset += rps->getNumberOfLongtermPictures();
-        rps->setNumberOfPictures(offset);
-      }
-#if NH_MV
-      if ( !rps->getInterRPSPrediction( ) )
-      { // check sum of NumPositivePics, NumNegativePics, num_long_term_sps and num_long_term_pics 
-        rps->checkMaxNumPics( 
-          vps->getVpsExtensionFlag(), 
-            MAX_INT,  // To be replaced by MaxDbpsize
-          pcSlice->getLayerId(), 
-          sps->getMaxDecPicBuffering( sps->getSpsMaxSubLayersMinus1() ) - 1 );
-      }
-#endif
-
-      if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
-        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
-        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP )
-      {
-        // In the case of BLA picture types, rps data is read from slice header but ignored
-        rps = pcSlice->getLocalRPS();
-        (*rps)=TComReferencePictureSet();
-        pcSlice->setRPS(rps);
-      }
-      if (sps->getTMVPFlagsPresent())
-      {
-#if NH_MV
-        READ_FLAG( uiCode, "slice_temporal_mvp_enabled_flag" );
-#else
-        READ_FLAG( uiCode, "slice_temporal_mvp_enabled_flag" );
-#endif
-        pcSlice->setEnableTMVPFlag( uiCode == 1 ? true : false );
+        Int pocLTCurr = pcSlice->getPOC() - deltaPocMSBCycleLT * maxPicOrderCntLSB
+          - iPOClsb + pocLsbLt;
+        rps->setPOC     (j, pocLTCurr);
+        rps->setDeltaPOC(j, - pcSlice->getPOC() + pocLTCurr);
+        rps->setCheckLTMSBPresent(j,true);
       }
       else
       {
-        pcSlice->setEnableTMVPFlag(false);
+            rps->setPOC     (j, pocLsbLt);
+            rps->setDeltaPOC(j, - pcSlice->getPOC() + pocLsbLt);
+        rps->setCheckLTMSBPresent(j,false);
+
+        // reset deltaPocMSBCycleLT for first LTRP from slice header if MSB not present
+        if( j == offset+(numOfLtrp-numLtrpInSPS)-1 )
+        {
+          deltaPocMSBCycleLT = 0;
+        }
       }
+      prevDeltaMSB = deltaPocMSBCycleLT;
     }
+    offset += rps->getNumberOfLongtermPictures();
+    rps->setNumberOfPictures(offset);
+  }
+
+  if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+    || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+    || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP )
+  {
+    // In the case of BLA picture types, rps data is read from slice header but ignored
+    rps = pcSlice->getLocalRPS();
+    (*rps)=TComReferencePictureSet();
+    pcSlice->setRPS(rps);
+  }
+  if (sps->getTMVPFlagsPresent())
+  {
+    READ_FLAG( uiCode, "slice_temporal_mvp_enabled_flag" );
+    pcSlice->setEnableTMVPFlag( uiCode == 1 ? true : false );
+  }
+  else
+  {
+    pcSlice->setEnableTMVPFlag(false);
+  }
+}
+#endif
+
 #if NH_MV
     Bool interLayerPredLayerIdcPresentFlag = false; 
     Int layerId       = pcSlice->getLayerId(); 
@@ -2648,6 +2715,37 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
       }
     }
     // }
+#if NH_MV
+    
+    const Int numPicTotalCurr = pcSlice->getNumPicTotalCurr(); 
+    if( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE )
+    {
+      if( pps->getListsModificationPresentFlag() && numPicTotalCurr > 1 )
+      {
+        TComRefPicListModification* rplMod = pcSlice->getRefPicListModification();
+        READ_FLAG( uiCode, "ref_pic_list_modification_flag_l0" ); rplMod->setRefPicListModificationFlagL0( uiCode == 1 );
+        if( rplMod->getRefPicListModificationFlagL0() )
+        {
+          for( Int i = 0; i  <=  pcSlice->getNumRefIdxL0ActiveMinus1( ); i++ )
+          {
+            READ_CODE( rplMod->getListEntryLXLen( numPicTotalCurr ) , uiCode, "list_entry_l0" ); rplMod->setListEntryL0( i, uiCode );
+          }
+        }
+
+        if( pcSlice->getSliceType() == B_SLICE )
+        {
+          READ_FLAG( uiCode, "ref_pic_list_modification_flag_l1" ); rplMod->setRefPicListModificationFlagL1( uiCode == 1 );
+          if( rplMod->getRefPicListModificationFlagL1() )
+          {
+            for( Int i = 0; i  <=  pcSlice->getNumRefIdxL1ActiveMinus1( ); i++ )
+            {
+              READ_CODE( rplMod->getListEntryLXLen( numPicTotalCurr ), uiCode, "list_entry_l1" ); rplMod->setListEntryL1( i, uiCode );
+            }
+          }
+        }
+      }
+    }
+#else
     TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
     if(!pcSlice->isIntra())
     {
@@ -2734,6 +2832,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     {
       refPicListModification->setRefPicListModificationFlagL1(0);
     }
+#endif
+
     if (pcSlice->isInterB())
     {
       READ_FLAG( uiCode, "mvd_l1_zero_flag" );       pcSlice->setMvdL1ZeroFlag( (uiCode ? true : false) );
@@ -2897,11 +2997,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     if ( getDecTop()->decProcAnnexI() )
     {
       Int voiInVps = vps->getVoiInVps( pcSlice->getViewIndex() ); 
-#if NH_3D_FIX_TICKET_101
       if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) )
-#else
-      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) && !pcSlice->getIsDepth() )
-#endif
       {
         for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
         {
@@ -2951,19 +3047,28 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     }
     pcSlice->checkPocResetIdc(); 
 
+#if NH_MV
+    if ( pcSlice->getVPS()->getPocLsbNotPresentFlag(pcSlice->getLayerId()) && pcSlice->getSlicePicOrderCntLsb() > 0 )
+#else
     if ( pcSlice->getVPS()->getPocLsbNotPresentFlag(pcSlice->getLayerId()) && slicePicOrderCntLsb > 0 )
+#endif
     {
       assert( pcSlice->getPocResetIdc() != 2 );
     }
 
     if( pcSlice->getPocResetIdc() !=  0 )
     {
-      READ_CODE( 6, uiCode, "poc_reset_period_id" ); pcSlice->setPocResetPeriodId( uiCode );
+      READ_CODE( 6, uiCode, "poc_reset_period_id" ); pcSlice->setPocResetPeriodId( uiCode );      
+      pcSlice->setHasPocResetPeriodIdPresent( true );
     }
     else
     {
       // TODO Copy poc_reset_period from earlier picture
+#if NH_MV
+      pcSlice->setHasPocResetPeriodIdPresent( false);
+#else
       pcSlice->setPocResetPeriodId( 0 );
+#endif
     }
     
     if( pcSlice->getPocResetIdc() ==  3 ) 
@@ -2971,23 +3076,37 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
       READ_FLAG( uiCode, "full_poc_reset_flag" ); pcSlice->setFullPocResetFlag( uiCode == 1 );
       READ_CODE( pcSlice->getPocLsbValLen() , uiCode, "poc_lsb_val" ); pcSlice->setPocLsbVal( uiCode );
     }          
-    pcSlice->checkPocLsbVal(); 
-
-    // Derive the value of PocMs8bValRequiredFlag
+    pcSlice->checkPocLsbVal();        
 
     if( !pcSlice->getPocMsbValRequiredFlag() && pcSlice->getVPS()->getVpsPocLsbAlignedFlag() )
     {
+#if NH_MV
+      READ_FLAG( uiCode, "poc_msb_cycle_val_present_flag" ); pcSlice->setPocMsbCycleValPresentFlag( uiCode == 1 );
+#else
       READ_FLAG( uiCode, "poc_msb_val_present_flag" ); pcSlice->setPocMsbValPresentFlag( uiCode == 1 );
+#endif
     }
     else
     {
+#if NH_MV
+      pcSlice->setPocMsbCycleValPresentFlag( pcSlice->inferPocMsbCycleValPresentFlag( ) ); 
+#else
       pcSlice->setPocMsbValPresentFlag( pcSlice->inferPocMsbValPresentFlag( ) ); 
+#endif
     }
 
     
+#if NH_MV
+    if( pcSlice->getPocMsbCycleValPresentFlag() )
+#else
     if( pcSlice->getPocMsbValPresentFlag() )
+#endif
     {
+#if NH_MV
+      READ_UVLC( uiCode, "poc_msb_val" ); pcSlice->setPocMsbCycleVal( uiCode );
+#else
       READ_UVLC( uiCode, "poc_msb_val" ); pcSlice->setPocMsbVal( uiCode );
+#endif
     }
 
     while( ( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) < pcSlice->getSliceSegmentHeaderExtensionLength() * 8 )

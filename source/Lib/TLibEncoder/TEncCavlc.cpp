@@ -39,7 +39,7 @@
 #include "TEncCavlc.h"
 #include "SEIwrite.h"
 
-#if NH_3D
+#if NH_MV
 #include "TEncTop.h"
 #endif
 
@@ -52,6 +52,7 @@
 Void  xTraceVPSHeader ()
 {
   fprintf( g_hTrace, "=========== Video Parameter Set     ===========\n" );
+}
 
 Void  xTraceSPSHeader ()
 {
@@ -379,11 +380,7 @@ Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
     WRITE_CODE(pcPPS->getDLT()->getNumDepthViews() - 1, 6, "pps_depth_layers_minus1");
     WRITE_CODE((pcPPS->getDLT()->getDepthViewBitDepth() - 8), 4, "pps_bit_depth_for_depth_layers_minus8");
     
-#if NH_3D_DLT_FIX
     for( Int i = 0; i <= pcPPS->getDLT()->getNumDepthViews()-1; i++ )
-#else
-    for( Int i = 0; i <= pcPPS->getDLT()->getNumDepthViews(); i++ )
-#endif
     {
       Int layerId = pcPPS->getDLT()->getDepthIdxToLayerId(i);
       
@@ -747,7 +744,11 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   {
     WRITE_UVLC( pcSPS->getMaxDecPicBuffering(i) - 1,       "sps_max_dec_pic_buffering_minus1[i]" );
     WRITE_UVLC( pcSPS->getNumReorderPics(i),               "sps_max_num_reorder_pics[i]" );
+#if NH_MV
+    WRITE_UVLC( pcSPS->getSpsMaxLatencyIncreasePlus1(i),   "sps_max_latency_increase_plus1[i]" );
+#else
     WRITE_UVLC( pcSPS->getMaxLatencyIncrease(i),           "sps_max_latency_increase_plus1[i]" );
+#endif
     if (!subLayerOrderingInfoPresentFlag)
     {
       break;
@@ -813,8 +814,13 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
     const TComReferencePictureSet*rps = rpsList->getReferencePictureSet(i);
     codeShortTermRefPicSet( rps,false, i);
   }
+#if NH_MV
+  WRITE_FLAG( pcSPS->getLongTermRefPicsPresentFlag() ? 1 : 0,         "long_term_ref_pics_present_flag" );
+  if (pcSPS->getLongTermRefPicsPresentFlag())
+#else
   WRITE_FLAG( pcSPS->getLongTermRefsPresent() ? 1 : 0,         "long_term_ref_pics_present_flag" );
   if (pcSPS->getLongTermRefsPresent())
+#endif
   {
     WRITE_UVLC(pcSPS->getNumLongTermRefPicSPS(), "num_long_term_ref_pics_sps" );
     for (UInt k = 0; k < pcSPS->getNumLongTermRefPicSPS(); k++)
@@ -1746,8 +1752,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
   //write slice address
   const Int sliceSegmentRsAddress = pcSlice->getPic()->getPicSym()->getCtuTsToRsAddrMap(ctuTsAddress);
-
+#if NH_MV
+  // This should actually be done somewhere else and not in writing process.
+  pcSlice->setFirstSliceSegementInPicFlag( sliceSegmentRsAddress==0 ); 
+  WRITE_FLAG( pcSlice->getFirstSliceSegementInPicFlag() , "first_slice_segment_in_pic_flag" );
+#else
   WRITE_FLAG( sliceSegmentRsAddress==0, "first_slice_segment_in_pic_flag" );
+#endif
   if ( pcSlice->getRapPicFlag() )
   {
     WRITE_FLAG( pcSlice->getNoOutputPriorPicsFlag() ? 1 : 0, "no_output_of_prior_pics_flag" );
@@ -1759,7 +1770,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
   else
 #endif
-
   WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "slice_pic_parameter_set_id" );
   if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentRsAddress!=0) )
   {
@@ -1771,7 +1781,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
   if ( !pcSlice->getDependentSliceSegmentFlag() )
   {
-
 #if NH_MV    
     Int esb = 0;  //Don't use i, otherwise will shadow something below
 
@@ -1860,7 +1869,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           WRITE_CODE( pcSlice->getRPSidx(), numBits, "short_term_ref_pic_set_idx" );
         }
       }
+#if NH_MV
+      if(pcSlice->getSPS()->getLongTermRefPicsPresentFlag())
+#else
       if(pcSlice->getSPS()->getLongTermRefsPresent())
+#endif
       {
         Int numLtrpInSH = rps->getNumberOfLongtermPictures();
         Int ltrpInSPS[MAX_NUM_REF_PICS];
@@ -2195,7 +2208,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (chromaEnabled && pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA)));
     Bool isDBFEnabled = (!pcSlice->getDeblockingFilterDisable());
 
-    if(pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))
+      if(pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))
     {
       WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
     }
@@ -2203,11 +2216,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (getEncTop()->decProcAnnexI() )
     {
       Int voiInVps = vps->getVoiInVps( pcSlice->getViewIndex() ); 
-#if NH_3D_FIX_TICKET_101
       if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) )
-#else
-      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) && !pcSlice->getIsDepth() )
-#endif
       {
         for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
         {
@@ -2256,20 +2265,20 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       if( pcSlice->getPocMsbValRequiredFlag() )
       {
-        pcSlice->setPocMsbValPresentFlag( true );
+        pcSlice->setPocMsbCycleValPresentFlag( true );
       }
       else
       {
-        pcSlice->setPocMsbValPresentFlag( false );
+        pcSlice->setPocMsbCycleValPresentFlag( false );
       }
     }
 
-    if( pcSlice->getPocMsbValPresentFlag() )
+    if( pcSlice->getPocMsbCycleValPresentFlag() )
     {
 //      Int iMaxPOClsb = 1<< pcSlice->getSPS()->getBitsForPOC(); currently unused
 
       UInt lengthVal = 1;
-      UInt tempVal = pcSlice->getPocMsbVal() + 1;
+      UInt tempVal = pcSlice->getPocMsbCycleVal() + 1;
       assert ( tempVal );
       while( 1 != tempVal )
       {
@@ -2313,16 +2322,16 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
     if( !pcSlice->getPocMsbValRequiredFlag() &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag()  )
     {
-      WRITE_FLAG( pcSlice->getPocMsbValPresentFlag( ) ? 1 : 0 , "poc_msb_val_present_flag" );
+      WRITE_FLAG( pcSlice->getPocMsbCycleValPresentFlag( ) ? 1 : 0 , "poc_msb_cycle_val_present_flag" );
     }
     else
     {
-      assert( pcSlice->getPocMsbValPresentFlag() ==  pcSlice->inferPocMsbValPresentFlag( ) ); 
+      assert( pcSlice->getPocMsbCycleValPresentFlag() ==  pcSlice->inferPocMsbCycleValPresentFlag( ) ); 
     }
     
-    if( pcSlice->getPocMsbValPresentFlag() )
+    if( pcSlice->getPocMsbCycleValPresentFlag() )
     {
-      WRITE_UVLC( pcSlice->getPocMsbVal( ), "poc_msb_val" );
+      WRITE_UVLC( pcSlice->getPocMsbCycleVal( ), "poc_msb_cycle_val" );
     }
     
     while( ( m_pcBitIf->getNumberOfWrittenBits() - posFollSliceSegHeaderExtLen ) < pcSlice->getSliceSegmentHeaderExtensionLength() * 8 )
@@ -2346,11 +2355,7 @@ Void TEncCavlc::codePTL( const TComPTL* pcPTL, Bool profilePresentFlag, Int maxN
 
   for (Int i = 0; i < maxNumSubLayersMinus1; i++)
   {
-#if !NH_MV
-#endif
     WRITE_FLAG( pcPTL->getSubLayerProfilePresentFlag(i), "sub_layer_profile_present_flag[i]" );
-#if !NH_MV
-#endif
     WRITE_FLAG( pcPTL->getSubLayerLevelPresentFlag(i),   "sub_layer_level_present_flag[i]" );
   }
 
