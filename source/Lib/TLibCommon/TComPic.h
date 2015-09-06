@@ -406,6 +406,7 @@ private:
   const TComVPS*              m_vps; 
 #endif
 public: 
+  TComPicLists() { m_printPicOutput = false; };
   ~TComPicLists();
 
   // Add and remove single pictures

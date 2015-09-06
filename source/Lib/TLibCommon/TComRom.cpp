@@ -563,6 +563,7 @@ UInt g_indent                  = false;
 Bool g_decNumBitsRead          = false; 
 Bool g_traceMotionInfoBeforUniPred = false; 
 Bool g_traceMergeCandListConst = false; 
+Bool g_traceBitsRead          = false; 
 Bool g_traceSubPBMotion       = false; 
 #endif
 #endif
@@ -755,6 +756,36 @@ Void writeToTraceFile( const Char* symbolName, Bool doIt )
     fprintf( g_hTrace, "%s", symbolName );    
     fflush ( g_hTrace );    
   }
+}
+Void printStr( std::string str )
+{
+  std::cout << str << std::endl; 
+}
+Void printStrIndent( Bool b, std::string strStr )
+{
+  if ( b )
+  {  
+    std::cout << std::string(g_indent, ' ');
+    printStr( strStr );
+  }
+}
+Void prinStrIncIndent( Bool b,  std::string strStr )
+{
+  if ( b )
+  {
+    printStrIndent( true,  strStr );
+    if (g_indent < 50)
+    {
+      g_indent++;
+    }
+  }  
+}
+Void decIndent( Bool b )
+{
+  if (b && g_indent > 0)
+  {
+    g_indent--;  
+  }  
 }
 #endif
 #endif
