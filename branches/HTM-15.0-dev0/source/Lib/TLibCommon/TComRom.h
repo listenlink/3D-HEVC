@@ -94,7 +94,6 @@ extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
 // ====================================================================================================================
 // Depth coding modes
 // ====================================================================================================================
-
 extern const WedgeResolution                                 g_dmmWedgeResolution [6];
 extern const UChar                                           g_dmm1TabIdxBits     [6];
 extern Bool                                                  g_wedgePattern[32*32];
@@ -196,28 +195,25 @@ extern UInt64 g_nSymbolCounter;
 extern Bool   g_traceMotionInfoBeforUniPred; 
  extern Bool   g_traceMergeCandListConst; 
  extern Bool   g_traceSubPBMotion; 
+ extern Bool   g_traceBitsRead;
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );
 #define DTRACE_TU(x,y)             writeToTraceFile( x,y, g_traceTU );
 #define DTRACE_CU_S(x)             writeToTraceFile( x,   g_traceCU );
 #define DTRACE_PU_S(x)             writeToTraceFile( x,   g_tracePU );
 #define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
-
 #define D_DEC_INDENT( b )            decIndent        ( b );
 #define D_PRINT_INC_INDENT( b, str ) prinStrIncIndent( b, str );
 #define D_PRINT_INDENT( b, str )     printStrIndent   ( b, str);
-
  Void           tracePSHeader   ( const Char* psName, Int layerId ); 
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
  UInt64         incSymbolCounter();          
  Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );           
-
  Void           printStr         ( std::string str );
  Void           printStrIndent   ( Bool b, std::string str );
  Void           prinStrIncIndent ( Bool b, std::string str );
  Void           decIndent        ( Bool b );
-
  template <typename T>
  std::string n2s ( T Number )
  {
@@ -225,7 +221,6 @@ extern Bool   g_traceMotionInfoBeforUniPred;
    ss << Number;
    return ss.str();
  };
-
 #endif
 #else
 #define DTRACE_CABAC_F(x)
@@ -242,7 +237,6 @@ extern Bool   g_traceMotionInfoBeforUniPred;
 #define DTRACE_CU_S(x) ;            
 #define DTRACE_PU_S(x) ;            
 #define DTRACE_TU_S(x) ;            
-
 #define D_DEC_INDENT( b ) ;
 #define D_PRINT_INC_INDENT( b, str );
 #define D_PRINT_INDENT( b, str );
