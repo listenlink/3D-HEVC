@@ -118,11 +118,7 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 #if NH_3D_DIS
 Void TEncEntropy::encodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-#if NH_3D_FIX_TICKET_98  
   if( !pcCU->getSlice()->getDepthIntraSkipFlag() )
-#else
-  if ( !pcCU->getSlice()->getIsDepth() )
-#endif
   {
     return;
   }

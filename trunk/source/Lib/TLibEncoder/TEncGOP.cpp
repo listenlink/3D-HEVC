@@ -1427,11 +1427,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {
           if ( gopNum == MAX_GOP)
           {
-            printf( "\nError: FrameI_l%d cannot enable inter-component prediction.\n", pcSlice->getVPS()->getLayerIdInVps( getLayerId() ) );
+            printf( "\nError: FrameI_l%d cannot enable inter-component prediction on slice level. All reference layers need to be available and at least one tool using inter-component prediction must be enabled in the SPS. \n", pcSlice->getVPS()->getLayerIdInVps( getLayerId() ) );
           }
           else
           {
-            printf( "\nError: Frame%d_l%d cannot enable inter-component prediction.\n", gopNum, pcSlice->getVPS()->getLayerIdInVps( getLayerId() ) );
+            printf( "\nError: Frame%d_l%d cannot enable inter-component prediction on slice level. All reference layers need to be available and at least one tool using inter-component prediction must be enabled in the SPS. \n", gopNum, pcSlice->getVPS()->getLayerIdInVps( getLayerId() ) );
           }
           
           exit(EXIT_FAILURE);
@@ -1440,7 +1440,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->init3dToolParameters(); 
       pcSlice->checkInCompPredRefLayers(); 
     }   
-
 #if NH_3D_IV_MERGE
     // This needs to be done after initialization of 3D tool parameters.
     pcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( pcSlice->getMpiFlag( ) || pcSlice->getIvMvPredFlag( ) || pcSlice->getViewSynthesisPredFlag( )   ) ? 1 : 0 ));

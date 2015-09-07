@@ -132,7 +132,9 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
     }
   }
 
+#if NH_MV
   D_PRINT_INDENT( g_traceRDCost,  "Dist: " + n2s(uiDistortion) + " Bits: " + n2s(uiBits) + " RD Cost: " + n2s(dRdCost)); 
+#endif
   return dRdCost;
 }
 
@@ -602,9 +604,7 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Int bitDep
 
   cDtParam.bitDepth   = bitDepth;
 
-#if NH_3D_IC_FIX
   cDtParam.bUseIC       = false;
-#endif
 #if NH_3D_SDC_INTER
   cDtParam.bUseSDCMRSAD = false;
 #endif
@@ -3684,7 +3684,9 @@ Double TComRdCost::calcRdCostVSO( UInt uiBits, Dist uiDistortion, Bool bFlag, DF
     }
   }
 
+#if NH_MV
   D_PRINT_INDENT( g_traceRDCost, "VSO Dist: " + n2s(uiDistortion) + " Bits: " + n2s(uiBits) + " RD Cost: " + n2s(dRdCost)); 
+#endif
 
   return dRdCost;
 }

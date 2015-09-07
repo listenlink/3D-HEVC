@@ -65,7 +65,7 @@ public:
   virtual ~TEncCavlc();
 
 protected:
-#if NH_3D
+#if NH_MV
   TEncTop*      m_encTop; 
 #endif
 
@@ -178,7 +178,7 @@ public:
 
   Void codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID );
 
-#if NH_3D
+#if NH_MV
   TEncTop* getEncTop()               { return m_encTop; };
   Void     setEncTop( TEncTop* et )  {  m_encTop = et; };
 #endif

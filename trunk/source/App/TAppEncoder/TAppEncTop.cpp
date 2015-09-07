@@ -259,10 +259,18 @@ Void TAppEncTop::xInitLibCfg()
   for(Int layerIdInVps = 0; layerIdInVps < m_numberOfLayers; layerIdInVps++)
   {
     m_cListPicYuvRec            .push_back(new TComList<TComPicYuv*>) ;
+
+#if !NH_MV
     m_ivPicLists.push_back( m_acTEncTopList[ layerIdInVps ]->getListPic()  ); 
+#endif
+
     TEncTop& m_cTEncTop = *m_acTEncTopList[ layerIdInVps ];  // It is not a member, but this name helps avoiding code duplication !!!
 
-    Int layerId = vps.getLayerIdInNuh( layerIdInVps );
+    Int layerId = vps.getLayerIdInNuh          ( layerIdInVps );
+#if NH_MV
+    m_ivPicLists.getSubDpb( layerId, true ); 
+#endif
+
     m_cTEncTop.setLayerIdInVps                 ( layerIdInVps ); 
     m_cTEncTop.setLayerId                      ( layerId );    
     m_cTEncTop.setViewId                       ( vps.getViewId      (  layerId ) );
@@ -1215,7 +1223,7 @@ Void TAppEncTop::xDeleteBuffer( )
     delete pcPicYuvRec; pcPicYuvRec = NULL;
   }
 #if NH_MV
-    }
+}
   }
 #endif  
 
@@ -1765,7 +1773,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
 
       // check if all inter layer reference pictures specified in the gop entry are valid reference layer pictures when allRefLayerActiveFlag is equal to 1 
       // (Should actually always be true) 
-      Bool maxTidIlRefAndSubLayerMaxVaildFlag = true; 
+      Bool maxTidIlRefAndSubLayerMaxValidFlag = true; 
       for( Int l = 0; l < ge.m_numActiveRefLayerPics; l++ )
       {   
         Bool referenceLayerFoundFlag = false; 
@@ -1783,9 +1791,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
             referenceLayerFoundFlag = referenceLayerFoundFlag || ( ge.m_interLayerPredLayerIdc[l] == k ); 
           }          
         }
-       maxTidIlRefAndSubLayerMaxVaildFlag = maxTidIlRefAndSubLayerMaxVaildFlag && referenceLayerFoundFlag;  
+       maxTidIlRefAndSubLayerMaxValidFlag = maxTidIlRefAndSubLayerMaxValidFlag && referenceLayerFoundFlag;  
       }
-      assert ( maxTidIlRefAndSubLayerMaxVaildFlag ); // Something wrong with MaxTidIlRefPicsPlus1 or SubLayersVpsMaxMinus1
+      assert ( maxTidIlRefAndSubLayerMaxValidFlag ); // Something wrong with MaxTidIlRefPicsPlus1 or SubLayersVpsMaxMinus1
     }            
   }
 

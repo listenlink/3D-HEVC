@@ -221,11 +221,11 @@ Void initROM()
   }
 #if NH_MV
 #if H_MV_HLS_PTL_LIMITS 
- g_generalTierAndLevelLimits[ Level::LEVEL1   ] = TComGeneralTierAndLevelLimits(    36864,     350,  INT_MIN,   16,   1,   1 );
- g_generalTierAndLevelLimits[ Level::LEVEL2   ] = TComGeneralTierAndLevelLimits(   122880,    1500,  INT_MIN,   16,   1,   1 );
- g_generalTierAndLevelLimits[ Level::LEVEL2_1 ] = TComGeneralTierAndLevelLimits(   245760,    3000,  INT_MIN,   20,   1,   1 );
- g_generalTierAndLevelLimits[ Level::LEVEL3   ] = TComGeneralTierAndLevelLimits(   552960,    6000,  INT_MIN,   30,   2,   2 );
- g_generalTierAndLevelLimits[ Level::LEVEL3_1 ] = TComGeneralTierAndLevelLimits(   983040,   10000,  INT_MIN,   40,   3,   3 );
+ g_generalTierAndLevelLimits[ Level::LEVEL1   ] = TComGeneralTierAndLevelLimits(    36864,     350,  MIN_INT,   16,   1,   1 );
+ g_generalTierAndLevelLimits[ Level::LEVEL2   ] = TComGeneralTierAndLevelLimits(   122880,    1500,  MIN_INT,   16,   1,   1 );
+ g_generalTierAndLevelLimits[ Level::LEVEL2_1 ] = TComGeneralTierAndLevelLimits(   245760,    3000,  MIN_INT,   20,   1,   1 );
+ g_generalTierAndLevelLimits[ Level::LEVEL3   ] = TComGeneralTierAndLevelLimits(   552960,    6000,  MIN_INT,   30,   2,   2 );
+ g_generalTierAndLevelLimits[ Level::LEVEL3_1 ] = TComGeneralTierAndLevelLimits(   983040,   10000,  MIN_INT,   40,   3,   3 );
  g_generalTierAndLevelLimits[ Level::LEVEL4   ] = TComGeneralTierAndLevelLimits(  2228224,   12000,    30000,   75,   5,   5 );
  g_generalTierAndLevelLimits[ Level::LEVEL4_1 ] = TComGeneralTierAndLevelLimits(  2228224,   20000,    50000,   75,   5,   5 );
  g_generalTierAndLevelLimits[ Level::LEVEL5   ] = TComGeneralTierAndLevelLimits(  8912896,   25000,   100000,  200,  11,  10 );
@@ -545,21 +545,26 @@ Bool g_tracePU = false;
 Bool g_traceTU = false; 
 Bool g_disableNumbering = false; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter         = 4660; 
-Bool g_traceCopyBack           = false; 
-Bool g_decTraceDispDer         = false; 
-Bool g_decTraceMvFromMerge     = false; 
-Bool g_decTracePicOutput       = false; 
+UInt64 g_stopAtCounter       = 4660; 
+Bool g_traceCopyBack         = false; 
+Bool g_decTraceDispDer       = false; 
+Bool g_decTraceMvFromMerge   = false; 
+Bool g_decTracePicOutput     = false; 
 Bool g_startStopTrace          = false; 
-Bool g_outputPos               = false;
-Bool g_traceCameraParameters   = false; 
-Bool g_encNumberOfWrittenBits  = false; 
+Bool g_outputPos             = false;   
+Bool g_traceCameraParameters = false; 
+Bool g_encNumberOfWrittenBits     = false; 
 Bool g_traceEncFracBits        = false; 
 Bool g_traceIntraSearchCost    = false; 
 Bool g_traceRDCost             = false; 
 Bool g_traceSAOCost            = false; 
 Bool g_traceModeCheck          = false; 
 UInt g_indent                  = false; 
+Bool g_decNumBitsRead          = false; 
+Bool g_traceMotionInfoBeforUniPred = false; 
+Bool g_traceMergeCandListConst = false; 
+Bool g_traceBitsRead          = false; 
+Bool g_traceSubPBMotion       = false; 
 #endif
 #endif
 // ====================================================================================================================
@@ -692,9 +697,9 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
   }
   Bool startTrace = false; 
   if ( g_startStopTrace && poc == 0 && layerId == 0 )
-  {    
+  {
     startTrace = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 64 ) && ( cuHeight == 64 ); 
-  }
+    }
   if ( startTrace )
   { 
     g_outputPos              = true; 
@@ -704,7 +709,7 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
     g_traceRDCost            = true; 
     g_traceModeCheck         = true; 
     g_traceCopyBack          = false; 
-  }  
+    }
   Bool stopTrace = false; 
   if ( g_startStopTrace && poc == 0 && layerId == 0 )
   {

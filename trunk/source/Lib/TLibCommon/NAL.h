@@ -97,6 +97,37 @@ struct NALUnit
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL_N
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL_R;
   }
+#if NH_MV
+  Bool isIrap()
+  {
+   return  m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA;
+  }
+
+  Bool isIdr()
+  {
+    return  m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+         || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP;
+  }
+
+  Bool isBla()
+  {
+    return  m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP
+         || m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+         || m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP;
+  }
+
+  Bool isCra()
+  {
+   return  m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA; 
+  }
+
+
+#endif
   Bool isSei()
   {
     return m_nalUnitType == NAL_UNIT_PREFIX_SEI
@@ -107,6 +138,12 @@ struct NALUnit
   {
     return ( (UInt)m_nalUnitType < 32 );
   }
+#if NH_MV
+  Void print( )
+  {
+    std::cout << "Type: " << NALU_TYPE_STR[m_nalUnitType] << " LayerId: " << m_nuhLayerId << " TemporalId: " << m_temporalId; 
+  }
+#endif
 };
 
 struct OutputNALUnit;

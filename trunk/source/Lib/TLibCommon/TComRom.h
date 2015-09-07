@@ -90,10 +90,10 @@ extern const UInt   g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ];
 extern const UChar  g_aucIntraModeNumFast_UseMPM[MAX_CU_DEPTH];
 extern const UChar  g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH];
 extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
+#if NH_3D_DMM
 // ====================================================================================================================
 // Depth coding modes
 // ====================================================================================================================
-#if NH_3D_DMM
 extern const WedgeResolution                                 g_dmmWedgeResolution [6];
 extern const UChar                                           g_dmm1TabIdxBits     [6];
 extern Bool                                                  g_wedgePattern[32*32];
@@ -192,28 +192,28 @@ extern UInt64 g_nSymbolCounter;
  extern Bool   g_traceModeCheck; 
  extern Bool   g_traceSAOCost; 
  extern UInt   g_indent; 
+extern Bool   g_traceMotionInfoBeforUniPred; 
+ extern Bool   g_traceMergeCandListConst; 
+ extern Bool   g_traceSubPBMotion; 
+ extern Bool   g_traceBitsRead;
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );
 #define DTRACE_TU(x,y)             writeToTraceFile( x,y, g_traceTU );
 #define DTRACE_CU_S(x)             writeToTraceFile( x,   g_traceCU );
 #define DTRACE_PU_S(x)             writeToTraceFile( x,   g_tracePU );
 #define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
-
 #define D_DEC_INDENT( b )            decIndent        ( b );
 #define D_PRINT_INC_INDENT( b, str ) prinStrIncIndent( b, str );
 #define D_PRINT_INDENT( b, str )     printStrIndent   ( b, str);
-
  Void           tracePSHeader   ( const Char* psName, Int layerId ); 
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
  UInt64         incSymbolCounter();          
  Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );           
-
  Void           printStr         ( std::string str );
  Void           printStrIndent   ( Bool b, std::string str );
  Void           prinStrIncIndent ( Bool b, std::string str );
  Void           decIndent        ( Bool b );
-
  template <typename T>
  std::string n2s ( T Number )
  {
@@ -221,7 +221,6 @@ extern UInt64 g_nSymbolCounter;
    ss << Number;
    return ss.str();
  };
-
 #endif
 #else
 #define DTRACE_CABAC_F(x)
@@ -231,17 +230,17 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_X(x)
 #define DTRACE_CABAC_R( x,y )
 #define DTRACE_CABAC_N
+#if NH_MV
 #define DTRACE_CU(x,y) ;             
 #define DTRACE_PU(x,y) ;            
 #define DTRACE_TU(x,y) ;            
 #define DTRACE_CU_S(x) ;            
 #define DTRACE_PU_S(x) ;            
 #define DTRACE_TU_S(x) ;            
-
 #define D_DEC_INDENT( b ) ;
 #define D_PRINT_INC_INDENT( b, str );
 #define D_PRINT_INDENT( b, str );
-
+#endif
 #endif
 const Char* nalUnitTypeToString(NalUnitType type);
 extern const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];

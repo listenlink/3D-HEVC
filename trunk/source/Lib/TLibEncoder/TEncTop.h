@@ -75,7 +75,9 @@ private:
   Int                     m_iPOCLast;                     ///< time index (POC)
   Int                     m_iNumPicRcvd;                  ///< number of received pictures
   UInt                    m_uiNumAllPicCoded;             ///< number of coded pictures
+#if !NH_MV
   TComList<TComPic*>      m_cListPic;                     ///< dynamic list of pictures
+#endif
 
 #if NH_MV
   TComPicLists*           m_ivPicLists;                   ///< access to picture lists of other layers 
@@ -169,7 +171,11 @@ public:
   // member access functions
   // -------------------------------------------------------------------------------------------------------------------
 
+#if NH_MV
+  TComList<TComPic*>*     getListPic            () { return  m_ivPicLists->getSubDpb( getLayerId(), false);             }
+#else
   TComList<TComPic*>*     getListPic            () { return  &m_cListPic;             }
+#endif
   TEncSearch*             getPredSearch         () { return  &m_cSearch;              }
 
   TComTrQuant*            getTrQuant            () { return  &m_cTrQuant;             }
