@@ -481,18 +481,12 @@ TEncRCPic::TEncRCPic()
   m_pixelsLeft    = 0;
 
   m_LCUs         = NULL;
-#if KWU_RC_MADPRED_E0227
-  m_lastIVPicture = NULL;
-#endif
 
   m_picActualHeaderBits = 0;
   m_picActualBits       = 0;
   m_picQP               = 0;
   m_picLambda           = 0.0;
 
-#if KWU_RC_MADPRED_E0227
-  m_IVtotalMAD            = 0.0;
-#endif
 }
 
 TEncRCPic::~TEncRCPic()
@@ -566,24 +560,8 @@ Void TEncRCPic::addToPictureLsit( list<TEncRCPic*>& listPreviousPictures )
   listPreviousPictures.push_back( this );
 }
 
-#if KWU_RC_MADPRED_E0227
-Void TEncRCPic::addToPictureLsitIV( list<TEncRCPic*>& listPreviousPictures )
-{
-  m_lastIVPicture = NULL;
-  m_lastIVPicture = this;
-}
 
-Void TEncRCPic::setIVPic( TEncRCPic* BaseRCPic )
-{
-  m_lastIVPicture = BaseRCPic;
-}
-#endif
-
-#if KWU_RC_MADPRED_E0227
-Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures, Int layerID )
-#else
 Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures )
-#endif
 {
   destroy();
   m_encRCSeq = encRCSeq;
@@ -632,11 +610,6 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
       Int currHeight = ( (j == picHeightInLCU-1) ? picHeight - LCUHeight*(picHeightInLCU-1) : LCUHeight );
       m_LCUs[LCUIdx].m_numberOfPixel = currWidth * currHeight;
 
-#if KWU_RC_MADPRED_E0227
-      m_LCUs[LCUIdx].m_CUWidth = currWidth;
-      m_LCUs[LCUIdx].m_CUHeight = currHeight;
-      m_LCUs[LCUIdx].m_IVMAD = -1.0;
-#endif
     }
   }
   m_picActualHeaderBits = 0;
@@ -645,38 +618,8 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
   m_picLambda           = 0.0;
 
 
-#if KWU_RC_MADPRED_E0227
-  m_LayerID = layerID;
-  m_lastIVPicture = NULL;
-  m_IVtotalMAD            = 0.0;
-#endif
 
 
-#if KWU_RC_MADPRED_E0227
-  list<TEncRCPic*>::reverse_iterator it;
-  if( m_LayerID != 0)
-  {
-    m_lastIVPicture = NULL;
-    for ( it = listPreviousPictures.rbegin(); it != listPreviousPictures.rend(); it++ )
-    {
-      if ( (*it)->getLayerID() == 0 )
-      {
-        m_lastIVPicture = (*it);
-        break;
-      }
-    }
-  }
-
-  m_lastPicture = NULL;
-  for ( it = listPreviousPictures.rbegin(); it != listPreviousPictures.rend(); it++ )
-  {
-    if ( (*it)->getFrameLevel() == m_frameLevel )
-    {
-      m_lastPicture = (*it);
-      break;
-    }
-  }
-#endif
 }
 
 Void TEncRCPic::destroy()
@@ -824,70 +767,6 @@ Int TEncRCPic::estimatePicQP( Double lambda, list<TEncRCPic*>& listPreviousPictu
 }
 
 
-#if KWU_RC_MADPRED_E0227
-Double TEncRCPic::estimatePicLambdaIV( list<TEncRCPic*>& listPreviousPictures, Int CurPOC )
-{
-  Double alpha         = m_encRCSeq->getPicPara( m_frameLevel ).m_alpha;
-  Double beta          = m_encRCSeq->getPicPara( m_frameLevel ).m_beta;
-  Double bpp       = (Double)m_targetBits/(Double)m_numberOfPixel;
-  Double estLambda = alpha * pow( bpp, beta );
-  Double lastLevelLambda = -1.0;
-  Double lastPicLambda   = -1.0;
-  Double lastValidLambda = -1.0;
-  list<TEncRCPic*>::iterator it;
-
-  if(listPreviousPictures.size() == 0 || CurPOC%8 == 0)
-  {
-    lastLevelLambda = m_lastIVPicture->getPicActualLambda();
-    lastPicLambda     = m_lastIVPicture->getPicActualLambda();
-  }
-  else
-  {
-    for ( it = listPreviousPictures.begin(); it != listPreviousPictures.end(); it++ )
-    {
-      if ( (*it)->getFrameLevel() == m_frameLevel )
-      {
-        lastLevelLambda = (*it)->getPicActualLambda();
-      }
-      lastPicLambda     = (*it)->getPicActualLambda();
-
-      if ( lastPicLambda > 0.0 )
-      {
-        lastValidLambda = lastPicLambda;
-      }
-    }
-  }
-
-  if ( lastLevelLambda > 0.0 )
-  {
-    lastLevelLambda = Clip3( 0.1, 10000.0, lastLevelLambda );
-    estLambda = Clip3( lastLevelLambda * pow( 2.0, -3.0/3.0 ), lastLevelLambda * pow( 2.0, 3.0/3.0 ), estLambda );
-  }
-
-  if ( lastPicLambda > 0.0 )
-  {
-    lastPicLambda = Clip3( 0.1, 2000.0, lastPicLambda );
-    estLambda = Clip3( lastPicLambda * pow( 2.0, -10.0/3.0 ), lastPicLambda * pow( 2.0, 10.0/3.0 ), estLambda );
-  }
-  else if ( lastValidLambda > 0.0 )
-  {
-    lastValidLambda = Clip3( 0.1, 2000.0, lastValidLambda );
-    estLambda = Clip3( lastValidLambda * pow(2.0, -10.0/3.0), lastValidLambda * pow(2.0, 10.0/3.0), estLambda );
-  }
-  else
-  {
-    estLambda = Clip3( 0.1, 10000.0, estLambda );
-  }
-
-  if ( estLambda < 0.1 )
-  {
-    estLambda = 0.1;
-  }
-
-  m_estPicLambda = estLambda;
-  return estLambda;
-}
-#endif
 
 
 Double TEncRCPic::getLCUTargetBpp(SliceType eSliceType)
@@ -936,118 +815,6 @@ Double TEncRCPic::getLCUTargetBpp(SliceType eSliceType)
 }
 
 
-#if KWU_RC_MADPRED_E0227
-Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPictures, TComDataCU* pcCU, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction, Int* disparity )
-{
-  Int   LCUIdx    = getLCUCoded();
-  Double bpp      = -1.0;
-  Int avgBits     = 0;
-#if !M0036_RC_IMPROVEMENT
-  Double totalMAD = -1.0;
-  Double MAD      = -1.0;
-#endif
-
-  Double totalMAD = -1.0;
-  Double MAD      = -1.0;
-
-  Double IVMAD      = -1.0;
-  Double SAD = 0.0;
-  Int     x, y;
-  Int Sum = 0;
-
-  {
-    Pel*  pOrg    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
-    Pel*  pRec    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), 0);
-    Pel*  pDep    = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
-    Int   iStride = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getStride();
-
-    Int   width  = m_LCUs[ LCUIdx ].m_CUWidth;
-    Int   height = m_LCUs[ LCUIdx ].m_CUHeight;
-
-    for( y = 0 ; y < pcCU->getSlice()->getSPS()->getMaxCUHeight() ; y+=8)
-    {
-      for( x = 0 ; x < pcCU->getSlice()->getSPS()->getMaxCUWidth() ; x+=8)
-      {
-        Sum += pDep[x];
-      }
-      pDep += iStride;
-    }
-
-    Double AvgDepth = (Double)Sum/((pcCU->getSlice()->getSPS()->getMaxCUHeight()/8)*(pcCU->getSlice()->getSPS()->getMaxCUWidth()/8));
-
-    Double fL = focalLen * abs( basePos - curPos );
-    Double z  = abs( 1.0 / znear - 1.0 / zfar ) * ((Double)(AvgDepth) / (( 1 << g_bitDepthY ) - 1) ) + abs(1.0 / zfar);
-    *disparity = (Int)(direction*fL * z);
-    Int shift = DISTORTION_PRECISION_ADJUSTMENT(g_bitDepthY-8);
-
-    Int disp = *disparity;
-    Int posX, posY;
-    pcCU->getPosInPic(0, posX, posY);
-    if((posX + *disparity) < 0 || (posX + *disparity + width) >= pcCU->getSlice()->getSPS()->getMaxCUWidth())
-    {
-      disp = 0;
-    }
-
-    for( y = 0; y < height; y++ )
-    {
-      for( x = 0; x < width; x++ )
-      {
-        SAD += abs( pOrg[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + disp)]
-                  - pRec[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + disp)] )>>shift;
-      }
-      pOrg += iStride;
-      pRec += iStride;
-    }
-    IVMAD = SAD / (Double)(height * width);
-    IVMAD = IVMAD * IVMAD;
-
-    m_LCUs[ LCUIdx ].m_IVMAD = IVMAD;
-    if(m_lastPicture)
-    {
-      m_LCUs[ LCUIdx ].m_MAD = m_lastPicture->getLCU(LCUIdx).m_MAD;
-    }
-
-    MAD = m_LCUs[ LCUIdx ].m_IVMAD;
-
-    if(m_lastPicture)
-    {
-      totalMAD = m_lastPicture->getTotalMAD();      // get total MAD of temporal frame
-      for ( Int i=0; i<LCUIdx; i++ )
-      {
-        totalMAD -= m_lastPicture->getLCU(i).m_MAD;
-      }
-    }
-    else
-    {
-      totalMAD = m_lastIVPicture->getTotalMAD();      // get total MAD of inter-view frame
-      for ( Int i=0; i<LCUIdx; i++ )
-      {
-        totalMAD -= m_lastIVPicture->getLCU(i).m_MAD;
-      }
-    }
-
-
-    if ( totalMAD > 0.1 )
-    {
-      avgBits = Int( (m_bitsLeft * MAD) / totalMAD );
-    }
-    else
-    {
-      avgBits = Int( (m_bitsLeft) / m_LCULeft );
-    }
-  }
-
-  if ( avgBits < 5 )
-  {
-    avgBits = 5;
-  }
-
-  bpp = ( Double )avgBits/( Double )m_LCUs[ LCUIdx ].m_numberOfPixel;
-  m_LCUs[ LCUIdx ].m_targetBits = avgBits;
-
-  return bpp;
-}
-#endif
 
 
 
@@ -1260,13 +1027,6 @@ Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, D
     m_picQP             = g_RCInvalidQPValue;
   }
   m_picLambda           = averageLambda;
-#if KWU_RC_MADPRED_E0227
-  m_totalMAD = 0;
-  for ( Int i=0; i<m_numberOfLCU; i++ )
-  {
-    m_totalMAD += m_LCUs[i].m_MAD;
-  }
-#endif
 
   Double alpha = m_encRCSeq->getPicPara( m_frameLevel ).m_alpha;
   Double beta  = m_encRCSeq->getPicPara( m_frameLevel ).m_beta;
@@ -1445,11 +1205,7 @@ Void TEncRateCtrl::destroy()
   }
 }
 
-#if KWU_RC_MADPRED_E0227
-Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry  GOPList[MAX_GOP], Int layerID )
-#else
 Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Int keepHierBits, Bool useLCUSeparateModel, GOPEntry  GOPList[MAX_GOP] )
-#endif
 {
   destroy();
 
@@ -1639,9 +1395,6 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
     m_encRCSeq->initLCUPara();
   }
 
-#if KWU_RC_MADPRED_E0227
-  setLayerID(layerID);
-#endif
 
   delete[] bitsRatio;
   delete[] GOPID2Level;
@@ -1650,11 +1403,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
 Void TEncRateCtrl::initRCPic( Int frameLevel )
 {
   m_encRCPic = new TEncRCPic;
-#if KWU_RC_MADPRED_E0227
-  m_encRCPic->create( m_encRCSeq, m_encRCGOP, frameLevel, m_listRCPictures, m_LayerID );
-#else
   m_encRCPic->create( m_encRCSeq, m_encRCGOP, frameLevel, m_listRCPictures );
-#endif
 }
 
 Void TEncRateCtrl::initRCGOP( Int numberOfPictures )

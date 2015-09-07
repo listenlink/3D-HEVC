@@ -86,13 +86,7 @@ Void TAppEncTop::xInitLibCfg()
   TComVPS vps;
 #endif
   
-#if NH_3D
-  vps.createCamPars(m_iNumberOfViews);  
-#endif
 
-#if NH_3D_DLT
-  TComDLT dlt = TComDLT();
-#endif
 
 #if NH_MV
   Int maxTempLayer = -1; 
@@ -144,13 +138,6 @@ Void TAppEncTop::xInitLibCfg()
   xSetLayerSets            ( vps ); 
   xSetDpbSize              ( vps ); 
   xSetVPSVUI               ( vps ); 
-#if NH_3D
-  xSetCamPara              ( vps ); 
-  m_ivPicLists.setVPS      ( &vps );
-#endif
-#if NH_3D_DLT
-  xDeriveDltArray          ( vps, &dlt );
-#endif
   if ( m_targetEncLayerIdList.size() == 0 )
   {
     for (Int i = 0; i < m_numberOfLayers; i++ )
@@ -181,32 +168,6 @@ Void TAppEncTop::xInitLibCfg()
     vps.printPTL(); 
   }
 
-#if NH_3D
-  // Set 3d tool parameters
-  for (Int d = 0; d < 2; d++)
-  {  
-    m_sps3dExtension.setIvMvPredFlag          ( d, m_ivMvPredFlag[d]       );
-    m_sps3dExtension.setIvMvScalingFlag       ( d, m_ivMvScalingFlag[d]    );
-    if (d == 0 )
-    {    
-      m_sps3dExtension.setLog2SubPbSizeMinus3   ( d, m_log2SubPbSizeMinus3   );
-      m_sps3dExtension.setIvResPredFlag         ( d, m_ivResPredFlag         );
-      m_sps3dExtension.setDepthRefinementFlag   ( d, m_depthRefinementFlag   );
-      m_sps3dExtension.setViewSynthesisPredFlag ( d, m_viewSynthesisPredFlag );
-      m_sps3dExtension.setDepthBasedBlkPartFlag ( d, m_depthBasedBlkPartFlag );
-    }
-    else
-    {    
-      m_sps3dExtension.setMpiFlag               ( d, m_mpiFlag               );
-      m_sps3dExtension.setLog2MpiSubPbSizeMinus3( d, m_log2MpiSubPbSizeMinus3);
-      m_sps3dExtension.setIntraContourFlag      ( d, m_intraContourFlag      );
-      m_sps3dExtension.setIntraSdcWedgeFlag     ( d, m_intraSdcFlag || m_intraWedgeFlag     );
-      m_sps3dExtension.setQtPredFlag            ( d, m_qtPredFlag            );
-      m_sps3dExtension.setInterSdcFlag          ( d, m_interSdcFlag          );
-      m_sps3dExtension.setDepthIntraSkipFlag    ( d, m_depthIntraSkipFlag    );  
-    }
-  }
-#endif
 
 
   /// Create encoders and set profiles profiles
@@ -216,43 +177,6 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList             .push_back(new TEncTop); 
     m_acTVideoIOYuvInputFileList.push_back(new TVideoIOYuv);
     m_acTVideoIOYuvReconFileList.push_back(new TVideoIOYuv);
-#if NH_3D    
-    Int profileIdc = -1; 
-    for (Int olsIdx = 0; olsIdx < vps.getNumOutputLayerSets(); olsIdx++ )
-    {   
-      Int lsIdx = vps.olsIdxToLsIdx( olsIdx );
-      for(Int i = 0; i < vps.getNumLayersInIdList( lsIdx ); i++ )
-      {
-        if( vps.getLayerIdInNuh( layerIdInVps) == vps.getLayerSetLayerIdList(lsIdx, i) )
-        {
-          Int ptlIdx = vps.getProfileTierLevelIdx( olsIdx, i );
-          if ( ptlIdx != -1 )
-          {
-            Int curProfileIdc = vps.getPTL(ptlIdx)->getGeneralPTL()->getProfileIdc(); 
-            if (profileIdc == -1)   
-            {
-              profileIdc = curProfileIdc; 
-            }
-            else
-            {   
-              if ( profileIdc != curProfileIdc )
-              {              
-                fprintf(stderr, "Error: ProfileIdc for layer with index %d in VPS not equal in all OLSs. \n", layerIdInVps );
-                exit(EXIT_FAILURE);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (profileIdc == -1 )
-    {
-      fprintf(stderr, "Error: No profile given for layer with index %d in VPS not equal in all OLS. \n", layerIdInVps );
-      exit(EXIT_FAILURE);
-    }
-    m_acTEncTopList[ layerIdInVps ]->setProfileIdc( profileIdc ); 
-#endif
   }
 
 
@@ -275,49 +199,11 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setLayerId                      ( layerId );    
     m_cTEncTop.setViewId                       ( vps.getViewId      (  layerId ) );
     m_cTEncTop.setViewIndex                    ( vps.getViewIndex   (  layerId ) );
-#if NH_3D
-    Bool isDepth = ( vps.getDepthId     ( layerId ) != 0 ) ;
-    m_cTEncTop.setIsDepth                      ( isDepth );
-    //====== Camera Parameters =========
-    m_cTEncTop.setCameraParameters             ( &m_cCameraData );     
-#if NH_3D_VSO
-    //====== VSO =========
-    m_cTEncTop.setRenderModelParameters        ( &m_cRenModStrParser ); 
-    m_cTEncTop.setForceLambdaScaleVSO          ( isDepth ? m_bForceLambdaScaleVSO : false );
-    m_cTEncTop.setLambdaScaleVSO               ( isDepth ? m_dLambdaScaleVSO      : 1     );
-    m_cTEncTop.setVSOMode                      ( isDepth ? m_uiVSOMode            : 0     );
-
-    m_cTEncTop.setAllowNegDist                 ( isDepth ? m_bAllowNegDist        : false );
-
-    // SAIT_VSO_EST_A0033
-    m_cTEncTop.setUseEstimatedVSD              ( isDepth ? m_bUseEstimatedVSD     : false );
-
-    // LGE_WVSO_A0119
-    m_cTEncTop.setUseWVSO                      ( isDepth ? m_bUseWVSO             : false );   
-    m_cTEncTop.setVSOWeight                    ( isDepth ? m_iVSOWeight           : 0     );
-    m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
-    m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
-#endif // H_3D_VSO
-#if NH_3D_IC
-    m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
-    m_cTEncTop.setUseICLowLatencyEnc           ( m_bUseLowLatencyICEnc );
-#endif
-
-    
-    m_cTEncTop.setUseDMM                       ( isDepth ? m_intraWedgeFlag   : false );
-    m_cTEncTop.setUseSDC                       ( isDepth ? m_intraSdcFlag     : false );
-    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT   : false );
-    m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL  : false );
-    m_cTEncTop.setSps3dExtension               ( m_sps3dExtension );
-#endif // NH_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
 #endif  // NH_MV
   m_cTEncTop.setVPS(&vps);
 
-#if NH_3D_DLT
-  m_cTEncTop.setDLT(dlt);
-#endif
 
 #if NH_MV
   m_cTEncTop.setProfile                                           ( m_profiles[0]);
@@ -424,11 +310,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setChromaCbQpOffset                                  ( m_cbQpOffset     );
   m_cTEncTop.setChromaCrQpOffset                                  ( m_crQpOffset  );
 
-#if NH_3D
-  m_cTEncTop.setChromaFormatIdc                                   ( isDepth ? CHROMA_400 : m_chromaFormatIDC );
-#else
   m_cTEncTop.setChromaFormatIdc                                   ( m_chromaFormatIDC  );
-#endif
 
 #if ADAPTIVE_QP_SELECTION
   m_cTEncTop.setUseAdaptQpSelect                                  ( m_bUseAdaptQpSelect   );
@@ -642,93 +524,13 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseScalingListId                                  ( m_useScalingListId  );
   m_cTEncTop.setScalingListFile                                   ( m_scalingListFile   );
   m_cTEncTop.setSignHideFlag                                      ( m_signHideFlag);
-#if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
-  if(!m_cTEncTop.getIsDepth())    //only for texture
-  {
-    m_cTEncTop.setUseRateCtrl                                     ( m_RCEnableRateControl );
-  }                                                          
-  else                                                       
-  {                                                          
-    m_cTEncTop.setUseRateCtrl                                     ( 0 );
-  }
-#else
   m_cTEncTop.setUseRateCtrl                                       ( m_RCEnableRateControl );
-#endif
-#if !KWU_RC_VIEWRC_E0227
   m_cTEncTop.setTargetBitrate                                     ( m_RCTargetBitrate );
-#endif
   m_cTEncTop.setKeepHierBit                                       ( m_RCKeepHierarchicalBit );
   m_cTEncTop.setLCULevelRC                                        ( m_RCLCULevelRC );
   m_cTEncTop.setUseLCUSeparateModel                               ( m_RCUseLCUSeparateModel );
   m_cTEncTop.setInitialQP                                         ( m_RCInitialQP );
   m_cTEncTop.setForceIntraQP                                      ( m_RCForceIntraQP );
-#if KWU_RC_MADPRED_E0227
-  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
-  {
-    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_depthMADPred       : 0);
-    if(m_cTEncTop.getUseDepthMADPred())
-    {
-      m_cTEncTop.setCamParam(&m_cCameraData);
-    }
-  }
-#endif
-#if KWU_RC_VIEWRC_E0227
-  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
-  {
-    m_cTEncTop.setUseViewWiseRateCtrl(m_viewWiseRateCtrl);
-    if(m_iNumberOfViews == 1)
-    {
-      if(m_viewWiseRateCtrl)
-      {
-        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
-      }
-      else
-      {
-        m_cTEncTop.setTargetBitrate       ( m_RCTargetBitrate );
-      }
-    }
-    else
-    {
-      if(m_viewWiseRateCtrl)
-      {
-        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
-      }
-      else
-      {
-        if(m_iNumberOfViews == 2)
-        {
-          if(m_cTEncTop.getViewId() == 0)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*80)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 1)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*20)/100 );
-          }
-        }
-        else if(m_iNumberOfViews == 3)
-        {
-          if(m_cTEncTop.getViewId() == 0)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*66)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 1)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*17)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 2)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*17)/100 );
-          }
-        }
-        else
-        {
-          m_cTEncTop.setTargetBitrate              ( m_RCTargetBitrate );
-        }
-      }
-    }
-  }
-#endif
   m_cTEncTop.setTransquantBypassEnableFlag                        ( m_TransquantBypassEnableFlag );
   m_cTEncTop.setCUTransquantBypassFlagForceValue                  ( m_CUTransquantBypassFlagForce );
   m_cTEncTop.setCostMode                                          ( m_costMode );
@@ -775,43 +577,6 @@ Void TAppEncTop::xInitLibCfg()
 #if NH_MV
   }
 #endif
-#if NH_3D_VSO
-  if ( m_bUseVSO )
-  {
-    if ( m_uiVSOMode == 4 )
-    {
-#if H_3D_VSO_EARLY_SKIP
-      m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_uiMaxCUHeight , LOG2_DISP_PREC_LUT, 0, m_bVSOEarlySkip );
-#else
-      m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_uiMaxCUHeight , LOG2_DISP_PREC_LUT, 0 );
-#endif
-      for ( Int layer = 0; layer < m_numberOfLayers ; layer++ )
-      {
-        TEncTop* pcEncTop =  m_acTEncTopList[ layer ]; 
-        Int iViewNum      = pcEncTop->getViewIndex(); 
-        Int iContent      = pcEncTop->getIsDepth() ? 1 : 0; 
-        Int iNumOfModels  = m_cRenModStrParser.getNumOfModelsForView(iViewNum, iContent);
-
-        Bool bUseVSO      = (iNumOfModels != 0);
-
-        pcEncTop->setUseVSO( bUseVSO );
-        pcEncTop->getRdCost()->setRenModel( bUseVSO ? &m_cRendererModel : NULL );
-
-        for (Int iCurModel = 0; iCurModel < iNumOfModels; iCurModel++ )
-        {
-          Int iModelNum; Int iLeftViewNum; Int iRightViewNum; Int iDump; Int iOrgRefNum; Int iBlendMode;
-
-          m_cRenModStrParser.getSingleModelData  ( iViewNum, iContent, iCurModel, iModelNum, iBlendMode, iLeftViewNum, iRightViewNum, iOrgRefNum, iDump ) ;
-          m_cRendererModel  .createSingleModel   ( iViewNum, iContent, iModelNum, iLeftViewNum, iRightViewNum, (iOrgRefNum != -1), iBlendMode );
-        }            
-      }
-    }
-    else
-    {
-      AOT(true);
-    }
-  }
-#endif
 }
 
 Void TAppEncTop::xCreateLib()
@@ -819,9 +584,6 @@ Void TAppEncTop::xCreateLib()
 #if NH_MV
   // initialize global variables
   initROM();
-#if NH_3D_DMM
-  initWedgeLists( true );
-#endif
 
   for( Int layer=0; layer < m_numberOfLayers; layer++)
   {
@@ -885,11 +647,7 @@ Void TAppEncTop::xInitLib(Bool isFieldCoding)
 #if NH_MV
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
-#if KWU_RC_MADPRED_E0227
-    m_acTEncTopList[layer]->init( isFieldCoding, this );
-#else
     m_acTEncTopList[layer]->init( isFieldCoding );
-#endif
   }
 #else
   m_cTEncTop.init(isFieldCoding);
@@ -917,9 +675,7 @@ Void TAppEncTop::encode()
     exit(EXIT_FAILURE);
   }
 
-#if !NH_3D
   TComPicYuv*       pcPicYuvOrg = new TComPicYuv;
-#endif
   TComPicYuv*       pcPicYuvRec = NULL;
 
   // initialize internal class & member variables
@@ -953,16 +709,6 @@ Void TAppEncTop::encode()
 
   list<AccessUnit> outputAccessUnits; ///< list of access units to write out.  is populated by the encoding process
   
-#if NH_3D
-  TComPicYuv* picYuvOrg[2]; 
-  TComPicYuv  picYuvTrueOrg[2]; 
-  for (Int d = 0; d < 2 ; d++)
-  {
-    picYuvOrg[d] = new TComPicYuv;
-    picYuvOrg[d]   ->create( m_iSourceWidth, m_isField ? m_iSourceHeightOrg : m_iSourceHeight, ( d > 0 ) ? CHROMA_400 : m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, true );
-    picYuvTrueOrg[d].create( m_iSourceWidth, m_isField ? m_iSourceHeightOrg : m_iSourceHeight, ( d > 0 ) ? CHROMA_400 : m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, true );
-  }
-#else
   TComPicYuv cPicYuvTrueOrg;
 
   // allocate original YUV buffer
@@ -976,16 +722,11 @@ Void TAppEncTop::encode()
     pcPicYuvOrg->create  ( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, true );
     cPicYuvTrueOrg.create(m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, true );
   }
-#endif
 #if NH_MV
   while ( (m_targetEncLayerIdList.size() != 0 ) && !allEos )
   {
     for(Int layer=0; layer < m_numberOfLayers; layer++ )
     {
-#if NH_3D
-      TComPicYuv* pcPicYuvOrg    =  picYuvOrg    [ m_depthFlag[layer] ];
-      TComPicYuv& cPicYuvTrueOrg =  picYuvTrueOrg[ m_depthFlag[layer] ];
-#endif
       if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
       {
         continue; 
@@ -1021,31 +762,13 @@ Void TAppEncTop::encode()
     }
     for ( Int gopId=0; gopId < gopSize; gopId++ )
     {
-#if NH_3D
-      UInt iNextPoc = m_acTEncTopList[0] -> getFrameId( gopId );
-      if ( iNextPoc < m_framesToBeEncoded )
-      {
-        m_cCameraData.update( iNextPoc );
-      }
-#endif
       for(Int layer=0; layer < m_numberOfLayers; layer++ )
       {
-#if NH_3D
-        TComPicYuv* pcPicYuvOrg    =  picYuvOrg    [ m_depthFlag[layer] ];
-        TComPicYuv& cPicYuvTrueOrg =  picYuvTrueOrg[ m_depthFlag[layer] ];
-#endif
         if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
         {
           continue; 
         }
 
-#if NH_3D_VSO        
-          if( m_bUseVSO && m_bUseEstimatedVSD && iNextPoc < m_framesToBeEncoded )
-          {
-            m_cCameraData.setDispCoeff( iNextPoc, m_acTEncTopList[layer]->getViewIndex() );
-            m_acTEncTopList[layer]  ->setDispCoeff( m_cCameraData.getDispCoeff() );
-          }
-#endif
 
         Int   iNumEncoded = 0;
 
@@ -1112,30 +835,16 @@ Void TAppEncTop::encode()
   m_cTEncTop.printSummary(m_isField);
 #endif
 
-#if NH_3D
-  // delete original YUV buffer
-  for (Int d = 0; d < 2; d++)
-  {
-    picYuvOrg[d]->destroy();
-    delete picYuvOrg[d];
-    picYuvOrg[d] = NULL;
-
-    picYuvTrueOrg[d].destroy();
-  }
-#else
   // delete original YUV buffer
   pcPicYuvOrg->destroy();
   delete pcPicYuvOrg;
   pcPicYuvOrg = NULL;
-#endif
 
 #if !NH_MV
   // delete used buffers in encoder class
   m_cTEncTop.deletePicBuffer();
 #endif
-#if !NH_3D
   cPicYuvTrueOrg.destroy();
-#endif
 
   // delete buffers & classes
   xDeleteBuffer();
@@ -1143,14 +852,6 @@ Void TAppEncTop::encode()
 
   printRateSummary();
 
-#if H_3D_REN_MAX_DEV_OUT
-  Double dMaxDispDiff = m_cCameraData.getMaxShiftDeviation(); 
-
-  if ( !(dMaxDispDiff < 0) )
-  {  
-    printf("\n Max. possible shift error: %12.3f samples.\n", dMaxDispDiff );
-  }
-#endif
 
   return;
 }
@@ -1187,11 +888,7 @@ Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec)
   else
   {
     rpcPicYuvRec = new TComPicYuv;
-#if NH_3D
-    rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, m_depthFlag[layer] > 0 ? CHROMA_400 : m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, true );
-#else
     rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, true );
-#endif
 
   }
 #if NH_MV
@@ -1269,11 +966,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
 #if NH_MV
       if (m_pchReconFileList[layerIdx])
       {
-#if NH_3D
-        m_acTVideoIOYuvReconFileList[layerIdx]->write( pcPicYuvRecTop, pcPicYuvRecBottom, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom, m_depth420OutputFlag && m_depthFlag[layerIdx ] ? CHROMA_420 : NUM_CHROMA_FORMAT, m_isTopFieldFirst );
-#else
         m_acTVideoIOYuvReconFileList[layerIdx]->write( pcPicYuvRecTop, pcPicYuvRecBottom, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom, NUM_CHROMA_FORMAT, m_isTopFieldFirst );
-#endif
       }
     }
   }
@@ -1326,11 +1019,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
 #if NH_MV
       if (m_pchReconFileList[layerIdx])
       {
-#if NH_3D
-        m_acTVideoIOYuvReconFileList[layerIdx]->write( pcPicYuvRec, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom, m_depth420OutputFlag && m_depthFlag[layerIdx ] ? CHROMA_420 : NUM_CHROMA_FORMAT  );
-#else
         m_acTVideoIOYuvReconFileList[layerIdx]->write( pcPicYuvRec, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom );
-#endif
 
       }    
     }
@@ -1455,77 +1144,6 @@ Void TAppEncTop::printChromaFormat()
   std::cout << "\n" << std::endl;
 }
 
-#if NH_3D_DLT
-Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt)
-{
-  TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
-  TComPicYuv*       pcDepthPicYuvTrueOrg = new TComPicYuv;
-  // allocate original YUV buffer
-  pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, false );
-  pcDepthPicYuvTrueOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxTotalCUDepth, false );
-  
-  TVideoIOYuv* depthVideoFile = new TVideoIOYuv;
-  
-  UInt uiMaxDepthValue = ((1 << m_inputBitDepth[CHANNEL_TYPE_LUMA])-1);
-  
-  std::vector<Bool> abValidDepths(256, false);
-  
-  depthVideoFile->open( m_pchInputFileList[layer], false, m_inputBitDepth, m_MSBExtendedBitDepth, m_internalBitDepth );
-  
-  Int iHeight   = pcDepthPicYuvOrg->getHeight(COMPONENT_Y);
-  Int iWidth    = pcDepthPicYuvOrg->getWidth(COMPONENT_Y);
-  Int iStride   = pcDepthPicYuvOrg->getStride(COMPONENT_Y);
-  
-  Pel* pInDM    = pcDepthPicYuvOrg->getAddr(COMPONENT_Y);
-  
-  for(Int uiFrame=0; uiFrame < uiNumFrames; uiFrame++ )
-  {
-    depthVideoFile->read( pcDepthPicYuvOrg, pcDepthPicYuvTrueOrg, IPCOLOURSPACE_UNCHANGED, m_aiPad, m_InputChromaFormatIDC, m_bClipInputVideoToRec709Range );
-    
-    // check all pixel values
-    for (Int i=0; i<iHeight; i++)
-    {
-      Int rowOffset = i*iStride;
-      
-      for (Int j=0; j<iWidth; j++)
-      {
-        Pel depthValue = pInDM[rowOffset+j];
-        abValidDepths[depthValue] = true;
-      }
-    }
-  }
-  
-  depthVideoFile->close();
-  delete depthVideoFile; 
-  
-  pcDepthPicYuvOrg->destroy();
-  delete pcDepthPicYuvOrg;
-  pcDepthPicYuvTrueOrg->destroy();
-  delete pcDepthPicYuvTrueOrg;
-  
-  // convert boolean array to idx2Depth LUT
-  std::vector<Int> aiIdx2DepthValue(256, 0);
-  Int iNumDepthValues = 0;
-  for(Int p=0; p<=uiMaxDepthValue; p++)
-  {
-    if( abValidDepths[p] == true)
-    {
-      aiIdx2DepthValue[iNumDepthValues++] = p;
-    }
-  }
-  
-  if( uiNumFrames == 0 || gCeilLog2(iNumDepthValues) == m_inputBitDepth[CHANNEL_TYPE_LUMA] )
-  {
-    dlt->setUseDLTFlag(layer, false);
-  }
-  
-  // assign LUT
-  if( dlt->getUseDLTFlag(layer) )
-  {
-    dlt->setDepthLUTs(layer, aiIdx2DepthValue, iNumDepthValues);
-  }
-}
-#endif
 
 #if NH_MV
 Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
@@ -1555,9 +1173,6 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
   assert( m_iNumberOfViews == vps.getNumViews() ); 
 
 
-#if NH_3D
-  vps.initViewCompLayer( ); 
-#endif
 }
 
 Void TAppEncTop::xSetDependencies( TComVPS& vps )
@@ -1634,75 +1249,19 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     {
       Int curLayerIdInNuh = vps.getLayerIdInNuh( curLayerIdInVps );      
       Int maxTid = -1; 
-#if NH_3D
-      if ( vps.getDirectDependencyFlag( curLayerIdInVps, refLayerIdInVps ) )
-      {
-        if ( m_depthFlag[ curLayerIdInVps] == m_depthFlag[ refLayerIdInVps ] )
-        {
-#endif
           for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
           {        
             GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
             GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
             for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++)
             {
-#if NH_3D
-              if ( vps.getIdRefListLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[ j ] ) == refLayerIdInNuh )
-#else
               if ( vps.getIdDirectRefLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[ j ] ) == refLayerIdInNuh )
-#endif
               {
                 Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
                 maxTid = std::max( maxTid, refLayerZero ? 0 : geRef.m_temporalId ); 
               }
             }
           }              
-#if NH_3D
-        }
-        else
-        {        
-          if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
-          {          
-            Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
-            if ( nuhLayerIdTex == refLayerIdInNuh )
-            {
-              for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
-              {        
-                GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
-                GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
-                if ( geCur.m_interCompPredFlag )
-                {
-                  Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
-                  maxTid = std::max( maxTid, refLayerZero ? 0 : geRef.m_temporalId ); 
-                }
-              }
-            }
-          }
-          if( !m_depthFlag[ curLayerIdInVps ] && vps.getNumRefListLayers( curLayerIdInNuh) > 0  && ( m_depthRefinementFlag || m_viewSynthesisPredFlag || m_depthBasedBlkPartFlag ) ) 
-          {             
-            for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
-            {        
-              GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
-              GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
-
-              if ( geCur.m_interCompPredFlag )
-              {
-                for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++ )
-                {
-                  Int nuhLayerIdDep = vps.getLayerIdInNuh( vps.getViewIndex( vps.getIdRefListLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[j] ) ), true ); 
-                  if ( nuhLayerIdDep == refLayerIdInNuh )
-                  {
-                    Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
-                    maxTid = std::max( maxTid, refLayerZero ? 0 : geRef.m_temporalId ); 
-                  }
-                }
-              }
-            }
-          }        
-        }
-      } // if ( vps.getDirectDependencyFlag( curLayerIdInVps, refLayerIdInVps ) ) 
-      vps.setMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps, maxTid + 1 );
-#endif
     }  // Loop curLayerIdInVps
   } // Loop refLayerIdInVps
 
@@ -1751,15 +1310,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       Int tId = ge.m_temporalId;  // Should be equal for all layers. 
       
       // check if all reference layers when allRefLayerActiveFlag is equal to 1 are reference layer pictures specified in the gop entry
-#if NH_3D
-      for (Int k = 0; k < vps.getNumRefListLayers( layerIdInNuh ) && allRefLayersActiveFlag; k++ )
-      {
-        Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdRefListLayer( layerIdInNuh , k ) ); 
-#else
       for (Int k = 0; k < vps.getNumDirectRefLayers( layerIdInNuh ) && allRefLayersActiveFlag; k++ )
       {
         Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdDirectRefLayer( layerIdInNuh , k ) ); 
-#endif
         if ( vps.getSubLayersVpsMaxMinus1(refLayerIdInVps) >= tId  && ( tId == 0 || vps.getMaxTidIlRefPicsPlus1(refLayerIdInVps,layerIdInVps) > tId )  )
         {
           Bool gopEntryFoundFlag = false; 
@@ -1777,15 +1330,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       for( Int l = 0; l < ge.m_numActiveRefLayerPics; l++ )
       {   
         Bool referenceLayerFoundFlag = false; 
-#if NH_3D
-        for (Int k = 0; k < vps.getNumRefListLayers( layerIdInNuh ); k++ )
-        {
-          Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdRefListLayer( layerIdInNuh, k) );
-#else
         for (Int k = 0; k < vps.getNumDirectRefLayers( layerIdInNuh ); k++ )
         {
           Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdDirectRefLayer( layerIdInNuh, k) );
-#endif
           if ( vps.getSubLayersVpsMaxMinus1(refLayerIdInVps) >= tId  && ( tId == 0 || vps.getMaxTidIlRefPicsPlus1(refLayerIdInVps,layerIdInVps) > tId )  )
           {          
             referenceLayerFoundFlag = referenceLayerFoundFlag || ( ge.m_interLayerPredLayerIdc[l] == k ); 
@@ -1914,9 +1461,6 @@ Void TAppEncTop::xSetProfileTierLevel(TComVPS& vps, Int profileTierLevelIdx, Int
   case Profile::MAIN:
     break; 
   case Profile::MULTIVIEWMAIN:
-#if NH_3D
-  case Profile::MAIN3D:
-#endif
     ptl->setMax12bitConstraintFlag      ( true  ); 
     ptl->setMax12bitConstraintFlag      ( true  );
     ptl->setMax10bitConstraintFlag      ( true  );
@@ -1938,13 +1482,6 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 {
 
   Bool anyDepth = false; 
-#if NH_3D
-  for ( Int i = 0; i < m_numberOfLayers; i++ )
-  {
-    vps.setVpsRepFormatIdx( i, m_depthFlag[ i ] ? 1 : 0 );
-    anyDepth = anyDepth || m_depthFlag[ i ];
-  }
-#endif
 
   vps.setRepFormatIdxPresentFlag( anyDepth ); 
   vps.setVpsNumRepFormatsMinus1 ( anyDepth ? 1 : 0     ); 
@@ -2349,40 +1886,6 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
   vps.setVPSVUI( vpsVui ); 
 }
 
-#if NH_3D
-Void TAppEncTop::xSetCamPara                ( TComVPS& vps )
-{
-  vps.setCpPrecision( m_cCameraData.getCamParsCodedPrecision()); 
-
-  for ( Int n = 1; n < vps.getNumViews(); n++ )
-  {  
-    Int i      = vps.getViewOIdxList( n ); 
-    Int iInVps = vps.getVoiInVps    ( i ); 
-    vps.setNumCp( iInVps,  n);   
-
-    if ( vps.getNumCp( iInVps ) > 0 )
-    {
-      vps.setCpInSliceSegmentHeaderFlag( iInVps, m_cCameraData.getVaryingCameraParameters() );
-
-      for( Int m = 0; m < vps.getNumCp( iInVps ); m++ )
-      {
-        vps.setCpRefVoi( iInVps, m, vps.getViewOIdxList( m ) ); 
-        if( !vps.getCpInSliceSegmentHeaderFlag( iInVps ) ) 
-        {
-          Int j = vps.getCpRefVoi( iInVps, m );
-          Int jInVps = vps.getVoiInVps( j );         
-
-          vps.setVpsCpScale   ( iInVps, jInVps, m_cCameraData.getCodedScale() [ jInVps ][ iInVps ] ) ;
-          vps.setVpsCpInvScale( iInVps, jInVps, m_cCameraData.getCodedScale() [ iInVps ][ jInVps ] ) ;
-          vps.setVpsCpOff     ( iInVps, jInVps, m_cCameraData.getCodedOffset()[ jInVps ][ iInVps ] ) ;
-          vps.setVpsCpInvOff  ( iInVps, jInVps, m_cCameraData.getCodedOffset()[ iInVps ][ jInVps ] ) ;
-        }
-      }
-    }
-  }
-  vps.deriveCpPresentFlag(); 
-}
-#endif
 
 
 Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
@@ -2394,110 +1897,4 @@ Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
 #endif
 
 
-#if NH_3D_DLT
-Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT* dlt )
-{
-  Int  iNumDepthViews  = 0;
-  Bool bDltPresentFlag = false;
-
-  for ( Int layer = 0; layer <= vps.getMaxLayersMinus1(); layer++ )
-  {
-    Bool isDepth = ( vps.getDepthId( layer ) == 1 );
-
-    if ( isDepth )
-    {
-      iNumDepthViews++;
-    }
-
-    dlt->setUseDLTFlag( layer , isDepth && m_useDLT );
-    if( dlt->getUseDLTFlag( layer ) )
-    {
-      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod[layer], 24), &vps, dlt);
-      bDltPresentFlag = bDltPresentFlag || dlt->getUseDLTFlag(layer);
-      dlt->setInterViewDltPredEnableFlag(layer, (dlt->getUseDLTFlag(layer) && (layer>1)));
-      
-      // ----------------------------- determine whether to use bit-map -----------------------------
-      Bool bDltBitMapRepFlag       = false;
-      UInt uiNumBitsNonBitMap      = 0;
-      UInt uiNumBitsBitMap         = 0;
-      
-      UInt uiMaxDiff               = 0;
-      UInt uiMinDiff               = MAX_INT;
-      UInt uiLengthMinDiff         = 0;
-      UInt uiLengthDltDiffMinusMin = 0;
-      
-      std::vector<Int> aiIdx2DepthValue_coded(256, 0);
-      UInt uiNumDepthValues_coded = 0;
-      
-      uiNumDepthValues_coded = dlt->getNumDepthValues(layer);
-      for( UInt ui = 0; ui<uiNumDepthValues_coded; ui++ )
-      {
-        aiIdx2DepthValue_coded[ui] = dlt->idx2DepthValue(layer, ui);
-      }
-      
-      if( dlt->getInterViewDltPredEnableFlag( layer ) )
-      {
-        AOF( vps.getDepthId( 1 ) == 1 );
-        AOF( layer > 1 );
-        // assumes ref layer id to be 1
-        std::vector<Int> piRefDLT = dlt->idx2DepthValue( 1 );
-        UInt uiRefNum = dlt->getNumDepthValues( 1 );
-        dlt->getDeltaDLT(layer, piRefDLT, uiRefNum, aiIdx2DepthValue_coded, uiNumDepthValues_coded);
-      }
-      
-      std::vector<UInt> puiDltDiffValues(uiNumDepthValues_coded, 0);
-      
-      for (UInt d = 1; d < uiNumDepthValues_coded; d++)
-      {
-        puiDltDiffValues[d] = aiIdx2DepthValue_coded[d] - aiIdx2DepthValue_coded[d-1];
-        
-        if ( uiMaxDiff < puiDltDiffValues[d] )
-        {
-          uiMaxDiff = puiDltDiffValues[d];
-        }
-        
-        if ( uiMinDiff > puiDltDiffValues[d] )
-        {
-          uiMinDiff = puiDltDiffValues[d];
-        }
-      }
-      
-      // counting bits
-      // diff coding branch
-      uiNumBitsNonBitMap += 8;                          // u(v) bits for num_depth_values_in_dlt[layerId] (i.e. num_entry[ layerId ])
-      
-      if ( uiNumDepthValues_coded > 1 )
-      {
-        uiNumBitsNonBitMap += 8;                        // u(v) bits for max_diff[ layerId ]
-      }
-      
-      if ( uiNumDepthValues_coded > 2 )
-      {
-        uiLengthMinDiff    = (UInt) gCeilLog2(uiMaxDiff + 1);
-        uiNumBitsNonBitMap += uiLengthMinDiff;          // u(v)  bits for min_diff[ layerId ]
-      }
-      
-      uiNumBitsNonBitMap += 8;                          // u(v) bits for dlt_depth_value0[ layerId ]
-      
-      if (uiMaxDiff > uiMinDiff)
-      {
-        uiLengthDltDiffMinusMin = (UInt) gCeilLog2(uiMaxDiff - uiMinDiff + 1);
-        uiNumBitsNonBitMap += uiLengthDltDiffMinusMin * (uiNumDepthValues_coded - 1);  // u(v) bits for dlt_depth_value_diff_minus_min[ layerId ][ j ]
-      }
-      
-      // bit map branch
-      uiNumBitsBitMap = 1 << m_inputBitDepth[CHANNEL_TYPE_LUMA];
-      
-      // determine bDltBitMapFlag
-      bDltBitMapRepFlag = (uiNumBitsBitMap > uiNumBitsNonBitMap) ? false : true;
-      
-      dlt->setUseBitmapRep(layer, bDltBitMapRepFlag);
-    }
-  }
-
-  dlt->setDltPresentFlag( bDltPresentFlag );
-  dlt->setNumDepthViews ( iNumDepthViews  );
-  dlt->setDepthViewBitDepth( m_inputBitDepth[CHANNEL_TYPE_LUMA] );
-}
-#endif
 //! \}

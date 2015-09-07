@@ -50,10 +50,6 @@
 
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
-#if NH_3D_DIS
-#define NUM_DIS_FLAG_CTX              1
-#define NUM_DIS_TYPE_CTX              1       
-#endif
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
 
@@ -161,33 +157,11 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1
 
-#if NH_3D_ARP
-#define NUM_ARPW_CTX                  3       ///< number of context models for weighting factor index used by advanced residual prediction
-#endif
 
-#if NH_3D_IC
-#define NUM_IC_FLAG_CTX               1       ///< number of context models for illumination compensation flag
-#endif
 #define NUM_CROSS_COMPONENT_PREDICTION_CTX 10
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
-#if NH_3D_DMM
-#define NUM_NOTDMM_FLAG_CTX           1       ///< number of context models for not-DMM flag
-#define NUM_DMM_MODE_CTX              1       ///< number of context models for DMM modes
-#endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA
-#define NUM_DDC_DATA_CTX              1       ///< number of context models for deltaDC data (DMM or SDC)
-#endif
-#if NH_3D_SDC_INTRA
-#define SDC_NUM_RESIDUAL_FLAG_CTX     1
-#define SDC_NUM_RESIDUAL_CTX          1
-#define NUM_SDC_FLAG_CTX              1      ///< number of context 
-#define NUM_DDC_FLAG_CTX              2       ///< number of context models for deltaDC flag (SDC only)
-#endif
-#if NH_3D_DBBP
-#define DBBP_NUM_FLAG_CTX                 1
-#endif
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -217,22 +191,6 @@ INIT_SKIP_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SKIP_FLAG_CTX] =
   { 197,  185,  201, },
   { CNU,  CNU,  CNU, },
 };
-#if NH_3D_DIS
-static const UChar 
-INIT_DIS_FLAG[3][NUM_DIS_FLAG_CTX] =  
-{
-    { 185 }, 
-    { 185 }, 
-    { 185 },
-};
-static const UChar
-INIT_DIS_TYPE[3][NUM_DIS_TYPE_CTX] = 
-{
-    { 137 }, 
-    { 137 }, 
-    { 137 }, 
-};
-#endif
 static const UChar
 INIT_MERGE_FLAG_EXT[NUMBER_OF_SLICE_TYPES][NUM_MERGE_FLAG_EXT_CTX] =
 {
@@ -539,89 +497,6 @@ INIT_CROSS_COMPONENT_PREDICTION[NUMBER_OF_SLICE_TYPES][NUM_CROSS_COMPONENT_PREDI
 
 //! \}
 
-#if NH_3D_ARP
-static const UChar 
-INIT_ARPW[3][NUM_ARPW_CTX] = 
-{
-    { 162, 153, 162 },
-    { 162, 153, 162 },
-    { 162, 153, 162 },
-};
 
-#endif
-#if NH_3D_IC
-static const UChar 
-INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
-{
-    { 154 },
-    { 154 },
-    { 154 },
-};
-
-#endif
-
-#if NH_3D_DMM
-static const UChar 
-INIT_NOTDMM_FLAG[3][NUM_NOTDMM_FLAG_CTX] =
-{
-  { 154 },
-  { 141 },
-  { 155 },
-};
-static const UChar 
-INIT_DMM_MODE[3][NUM_DMM_MODE_CTX] =
-{
-  { CNU },
-  { CNU },
-  { CNU }
-};
-#endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA
-static const UChar
-INIT_DDC_DATA[3][NUM_DDC_DATA_CTX] = 
-{
-  { CNU }, 
-  { CNU }, 
-  { CNU }, 
-};
-#endif
-#if NH_3D_SDC_INTRA
-static const UChar
-INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
-{
-  { CNU },
-  { CNU },
-  { CNU },
-};
-static const UChar
-INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
-{
-  { 155 },
-  { 155 },
-  { 155 },
-};
-static const UChar 
-INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
-{
-  { 154 },  
-  { 154 },
-  { 154 },
-};
-static const UChar 
-INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =
-{
-  {0 , CNU},
-  {0 , CNU},
-  {64, CNU}
-};
-#endif
-#if NH_3D_DBBP
-static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
-{
-  { CNU },
-  { CNU },
-  { CNU },
-};
-#endif
 
 #endif

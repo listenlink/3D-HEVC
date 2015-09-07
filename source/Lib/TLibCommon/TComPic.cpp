@@ -59,12 +59,6 @@ TComPic::TComPic()
 , m_layerId                               (0)
 , m_viewId                                (0)
 , m_bPicOutputFlag                        (false)
-#if NH_3D
-, m_viewIndex                             (0)
-, m_isDepth                               (false)
-, m_aaiCodedScale                         (0)
-, m_aaiCodedOffset                        (0)
-#endif
 #endif
 
 {
@@ -72,14 +66,6 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
-#if NH_3D_QTLPC
-  m_bReduceBitsQTL    = 0;
-#endif
-#if NH_3D_NBDV
-  m_iNumDdvCandPics   = 0;
-  m_eRapRefList       = REF_PIC_LIST_0;
-  m_uiRapRefIdx       = 0;
-#endif
 #if NH_MV
   m_isPocResettingPic = false;   
   m_hasGeneratedRefPics = false; 
@@ -122,16 +108,6 @@ Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirt
   }
   m_bUsedByCurr = false;
 
-#if H_3D_FCO
-/* initialize the texture to depth reference status */
-  for (int j=0; j<2; j++)
-  {
-      for (int i=0; i<MAX_NUM_REF; i++)
-      {
-          m_aiTexToDepRef[j][i] = -1;
-      }
-  }
-#endif
 
 }
 
@@ -151,46 +127,13 @@ Void TComPic::destroy()
 
   deleteSEIs(m_SEIs);
 }
-#if NH_3D
-#if NH_3D_ARP
-Void TComPic::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx )
-{
-  Int iMaxCUWidth   = (Int) ( getPicSym()->getSPS().getMaxCUWidth()  );
-  Int iMaxCuHeight  = (Int) ( getPicSym()->getSPS().getMaxCUHeight() );
-
-  UInt uiMaxTotalCUDepth = getPicSym()->getSPS().getMaxTotalCUDepth(); 
-  Int iBaseUnitWidth  = iMaxCUWidth >> uiMaxTotalCUDepth;
-  Int iBaseUnitHeight = iMaxCUWidth >> uiMaxTotalCUDepth;
-
-  Int iNumCuInWidth   = getPicYuvRec()->getWidth(COMPONENT_Y) / iMaxCUWidth;
-  iNumCuInWidth      += ( getPicYuvRec()->getWidth(COMPONENT_Y) % iMaxCUWidth ) ? 1 : 0;
-
-
-  Int iCuX            = iX / iMaxCUWidth;
-  Int iCuY            = iY / iMaxCuHeight;
-  Int iBaseX          = ( iX - iCuX * iMaxCUWidth  ) / iBaseUnitWidth;
-  Int iBaseY          = ( iY - iCuY * iMaxCuHeight ) / iBaseUnitHeight;
-  Int iCuSizeInBases  = iMaxCuHeight                 / iBaseUnitWidth;
-
-  riCuAddr            = iCuY   * iNumCuInWidth + iCuX;
-  Int iRastPartIdx    = iBaseY * iCuSizeInBases  + iBaseX;
-  riAbsZorderIdx      = g_auiRasterToZscan[ iRastPartIdx ];
-}
-#endif
-Void TComPic::compressMotion(Int scale)
-#else
 Void TComPic::compressMotion()
-#endif
 {
   TComPicSym* pPicSym = getPicSym();
   for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getNumberOfCtusInFrame(); uiCUAddr++ )
   {
     TComDataCU* pCtu = pPicSym->getCtu(uiCUAddr);
-#if NH_3D
-    pCtu->compressMV(scale); 
-#else
     pCtu->compressMV();
-#endif
     
   }
 }
@@ -326,202 +269,6 @@ Void TComPic::print( Int outputLevel )
   }
 }
 
-#if NH_3D
-Void TComPic::printMotion()
-{
-  TComPicSym* pPicSym = getPicSym();
-  for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getNumberOfCtusInFrame(); uiCUAddr++ )
-  {
-    TComDataCU* pCtu = pPicSym->getCtu(uiCUAddr);
-    std::cout << "CUAddr " << uiCUAddr << std::endl; 
-    pCtu->printMV();
-    std::cout << std::endl; 
-  }
-}
-
-#if NH_3D_NBDV 
-Int TComPic::getDisCandRefPictures(Int iColPOC)
-{
-  UInt       uiTempLayerCurr = 7;
-  TComSlice* currSlice       = getSlice(getCurrSliceIdx());
-  UInt       numDdvCandPics  = 0;
-
-  if(!currSlice->getEnableTMVPFlag())
-  {
-    return numDdvCandPics;
-  }
-
-  numDdvCandPics += 1;
-
-  UInt pocCurr = currSlice->getPOC();
-  UInt pocDiff = 255;
-
-  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr++)
-  {
-    Bool x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
-
-    for(UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
-    {
-      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() 
-         && (x == currSlice->getColFromL0Flag() || currSlice->getRefPOC((RefPicList)x, i) != iColPOC) && numDdvCandPics != 2)
-      {
-        TComSlice* refSlice    = currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx());
-        Bool       bRAP        = (refSlice->getViewIndex() && refSlice->isIRAP()) ? 1 : 0; 
-        UInt       uiTempLayer = currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer(); 
-        
-        if(bRAP)
-        {
-          this->setRapRefIdx(i);
-          this->setRapRefList((RefPicList)x);
-          numDdvCandPics = 2;
-
-          return numDdvCandPics;
-        }
-        else if (uiTempLayerCurr > uiTempLayer) 
-        {
-           uiTempLayerCurr = uiTempLayer; 
-        }
-      }
-    }
-  }
-
-  UInt z   = -1; // GT: Added to make code compile needs to be checked!
-  UInt idx = 0;
-  
-  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2 : 1); lpNr++)
-  {
-    Bool x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
-    
-    for(UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
-    {
-      Int iTempPoc = currSlice->getRefPic((RefPicList)x, i)->getPOC();
-      Int iTempDiff = (iTempPoc > pocCurr) ? (iTempPoc - pocCurr) : (pocCurr - iTempPoc);
-      
-      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() && (x == currSlice->getColFromL0Flag() || currSlice->getRefPOC((RefPicList)x, i) != iColPOC) 
-         && currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer() == uiTempLayerCurr && pocDiff > iTempDiff)
-      {
-        pocDiff = iTempDiff;
-        z       = x;
-        idx     = i;
-      }
-    }
-  }
-
-  if(pocDiff < 255)
-  {
-    this->setRapRefIdx(idx);
-    this->setRapRefList((RefPicList) z);
-    numDdvCandPics = 2;
-  }
-
-  return numDdvCandPics;
-}
-
-Void TComPic::checkTemporalIVRef()
-{
-  TComSlice* currSlice = getSlice(getCurrSliceIdx());
-  const Int numCandPics = this->getNumDdvCandPics();
-
-  for(Int curCandPic = 0; curCandPic < numCandPics; curCandPic++)
-  {
-    RefPicList eCurRefPicList   = REF_PIC_LIST_0 ;
-    Int        curCandPicRefIdx = 0;
-    if(curCandPic == 0) 
-    { 
-      eCurRefPicList   = RefPicList(currSlice->isInterB() ? 1 - currSlice->getColFromL0Flag() : 0);
-      curCandPicRefIdx = currSlice->getColRefIdx();
-    }
-    else                 
-    {
-      eCurRefPicList   = this->getRapRefList();
-      curCandPicRefIdx = this->getRapRefIdx();
-    }
-
-    TComPic* pcCandColPic = currSlice->getRefPic(eCurRefPicList, curCandPicRefIdx);
-    TComSlice* pcCandColSlice = pcCandColPic->getSlice(0); // currently only support single slice
-
-    if(!pcCandColSlice->isIntra())
-    {
-      for(Int iColRefDir = 0; iColRefDir < (pcCandColSlice->isInterB() ? 2 : 1); iColRefDir++)
-      {
-        for(Int iColRefIdx = 0; iColRefIdx < pcCandColSlice->getNumRefIdx((RefPicList)iColRefDir); iColRefIdx++)
-        {
-          m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = false;
-          Int iColViewIdx    = pcCandColSlice->getViewIndex();
-#if H_3D_FIX_ARP_CHECK_NOT_IN_DPB
-          // The picture pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx) might not be in DPB anymore
-          // So don't access it directly.
-          Int iColRefViewIdx = pcCandColSlice->getVPS()->getViewOrderIdx( pcCandColSlice->getRefLayerId( (RefPicList)iColRefDir, iColRefIdx ) );       
-#else
-          Int iColRefViewIdx = pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx)->getViewIndex();
-#endif
-          if(iColViewIdx == iColRefViewIdx)
-          {
-            continue;
-          }
-
-          for(Int iCurrRefDir = 0; (iCurrRefDir < (currSlice->isInterB() ? 2 : 1)) && (m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] == false); iCurrRefDir++)
-          {
-            for(Int iCurrRefIdx = 0; iCurrRefIdx < currSlice->getNumRefIdx((RefPicList)iCurrRefDir); iCurrRefIdx++)
-            {
-              if(currSlice->getRefPic((RefPicList)iCurrRefDir, iCurrRefIdx)->getViewIndex() == iColRefViewIdx)
-              {  
-                m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = true;
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-Bool TComPic::isTempIVRefValid(Int currCandPic, Int iColRefDir, Int iColRefIdx)
-{
-  return m_abTIVRINCurrRL[currCandPic][iColRefDir][iColRefIdx];
-}
-
-Void TComPic::checkTextureRef()
-{
-  TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
-  TComPic* pcTextPic = pcCurrSlice->getIvPic(0, getViewIndex());
-#if H_3D_FCO
-  if ( pcTextPic )
-  {
-#endif
-    TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
-
-    for(Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB() ? 2 :1) ) && !pcTextSlice->isIntra(); iTextRefDir++)
-    {
-      for(Int iTextRefIdx =0; iTextRefIdx < pcTextSlice->getNumRefIdx((RefPicList)iTextRefDir); iTextRefIdx++)
-      {
-        Int iTextRefPOC    = pcTextSlice->getRefPOC((RefPicList)iTextRefDir, iTextRefIdx);
-        Int iTextRefViewId = pcTextSlice->getRefPic((RefPicList)iTextRefDir, iTextRefIdx)->getViewIndex();
-        m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = -1;
-        Int iCurrRefDir = iTextRefDir;
-
-        for(Int iCurrRefIdx = 0; (iCurrRefIdx<pcCurrSlice->getNumRefIdx((RefPicList)iCurrRefDir)) && (m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0); iCurrRefIdx++)
-        {
-          if(pcCurrSlice->getRefPOC((RefPicList)iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
-            pcCurrSlice->getRefPic((RefPicList)iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId)
-          {  
-            m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = iCurrRefIdx;            
-          }
-        }
-      }
-    }
-#if H_3D_FCO
-  }
-#endif
-}
-
-Int TComPic::isTextRefValid(Int iTextRefDir, Int iTextRefIdx)
-{
-  return m_aiTexToDepRef[iTextRefDir][iTextRefIdx];
-}
-#endif
-#endif
 
 Void TComAu::setPicLatencyCount( Int picLatenyCount )
 {
@@ -992,19 +739,6 @@ Void TComPicLists::print()
   }
 }
 
-#if NH_3D
-TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon )
-{  
-  Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag ); 
-  return getPicYuv( layerIdInNuh, poc, recon );
-}
-
-TComPic* TComPicLists::getPic( Int viewIndex, Bool depthFlag, Int poc )
-{
-  return getPic   ( m_vps->getLayerIdInNuh( viewIndex, depthFlag ), poc );
-}
-
-#endif
 
 #endif
 

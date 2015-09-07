@@ -117,9 +117,6 @@ TComSlice::TComSlice()
 , m_layerId                       (0)
 , m_viewId                        (0)
 , m_viewIndex                     (0)
-#if NH_3D
-, m_isDepth                       (false)
-#endif
 #if NH_MV
 , m_pocResetFlag                  (false)
 , m_crossLayerBlaFlag             (false)
@@ -137,19 +134,6 @@ TComSlice::TComSlice()
 , m_pocMsbCycleValPresentFlag     (false)
 , m_pocMsbCycleVal                (0)
 , m_pocMsbValRequiredFlag         (false)
-#endif
-#if NH_3D_IC
-, m_bApplyIC                      (false)
-, m_icSkipParseFlag               (false)
-#endif
-#if NH_3D
-, m_inCmpPredFlag                 (false)
-, m_numViews                      (0)
-, m_depthToDisparityB             (NULL)
-, m_depthToDisparityF             (NULL)
-#endif
-#if NH_3D_DIS
-, m_bApplyDIS                     (false)
 #endif
 #endif
 {
@@ -209,64 +193,11 @@ TComSlice::TComSlice()
     m_interLayerPredLayerIdc[ i ] = -1;
   }
 #endif
-#if NH_3D
-  m_iDefaultRefViewIdx = -1;
-  m_bDefaultRefViewIdxAvailableFlag = false;
-  m_ivMvPredFlag           = false;
-  m_ivMvScalingFlag        = false;
-  m_ivResPredFlag          = false;  
-  m_depthRefinementFlag    = false;
-  m_viewSynthesisPredFlag  = false;
-  m_depthBasedBlkPartFlag  = false;
-  m_mpiFlag                = false;
-  m_intraContourFlag       = false;
-  m_intraSdcWedgeFlag      = false;
-  m_qtPredFlag             = false;
-  m_interSdcFlag           = false;
-  m_depthIntraSkipFlag     = false;
-  m_subPbSize              =  1 << 6;
-  m_mpiSubPbSize           =  1 << 6;
-
-  m_aaiCodedOffset.resize(2);
-  m_aaiCodedScale .resize(2);
-  for (Int i = 0; i < 2; i++)
-  {
-    m_aaiCodedOffset[i].resize(MAX_NUM_LAYERS);
-    m_aaiCodedScale [i].resize(MAX_NUM_LAYERS);
-  }
-  
-#endif
 
 }
 
 TComSlice::~TComSlice()
 {
-#if NH_3D
-  for( UInt i = 0; i < m_numViews; i++ )
-  {
-    if ( m_depthToDisparityB && m_depthToDisparityB[ i ] )
-    {
-      delete[] m_depthToDisparityB [ i ];
-    }
-
-    if ( m_depthToDisparityF && m_depthToDisparityF[ i ] ) 
-    {
-      delete[] m_depthToDisparityF [ i ];
-    }
-  }
-
-  if ( m_depthToDisparityF )
-  {
-    delete[] m_depthToDisparityF; 
-  }
-
-  m_depthToDisparityF = NULL;
-
-  if ( m_depthToDisparityB )
-    delete[] m_depthToDisparityB; 
-
-  m_depthToDisparityB = NULL;
-#endif
 
 }
 
@@ -288,21 +219,13 @@ Void TComSlice::initSlice()
   {
     m_iSliceChromaQpDelta[component] = 0;
   }
-#if NH_3D_IV_MERGE
-  m_maxNumMergeCand = MRG_MAX_NUM_CANDS_MEM;
-#else
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
-#endif
 
   m_bFinalized=false;
 
   m_substreamSizes.clear();
   m_cabacInitFlag        = false;
   m_enableTMVPFlag = true;
-#if NH_3D_TMVP
-  m_aiAlterRefIdx[0]                  = -1;
-  m_aiAlterRefIdx[1]                  = -1;
-#endif
 }
 
 Bool TComSlice::getRapPicFlag() const
@@ -627,9 +550,6 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   UInt NumPocStCurr1 = 0;
   UInt NumPocLtCurr = 0;
   Int i;
-#if NH_3D
-  m_pocsInCurrRPSs.clear();
-#endif
   for(i=0; i < m_pRPS->getNumberOfNegativePictures(); i++)
   {
     if(m_pRPS->getUsed(i))
@@ -640,9 +560,6 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
       RefPicSetStCurr0[NumPocStCurr0] = pcRefPic;
       NumPocStCurr0++;
       pcRefPic->setCheckLTMSBPresent(false);  
-#if NH_3D
-      m_pocsInCurrRPSs.push_back( pcRefPic->getPOC() ); 
-#endif
     }
   }
   
@@ -656,9 +573,6 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
       RefPicSetStCurr1[NumPocStCurr1] = pcRefPic;
       NumPocStCurr1++;
       pcRefPic->setCheckLTMSBPresent(false);  
-#if NH_3D
-      m_pocsInCurrRPSs.push_back( pcRefPic->getPOC() ); 
-#endif
     }
   }
   
@@ -671,9 +585,6 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetLtCurr[NumPocLtCurr] = pcRefPic;
       NumPocLtCurr++;
-#if NH_3D
-      m_pocsInCurrRPSs.push_back( pcRefPic->getPOC() ); 
-#endif
     }
     if(pcRefPic==NULL) 
     {
@@ -683,9 +594,6 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   }
 
   Int numPocInterCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr; 
-#if NH_3D
-  assert( numPocInterCurr == (Int) m_pocsInCurrRPSs.size() ); 
-#endif
   numPocTotalCurr = numPocInterCurr + getNumActiveRefLayerPics( );
   assert( numPocTotalCurr == getNumRpsCurrTempList() );
 
@@ -835,53 +743,7 @@ Void TComSlice::initEqualRef()
     }
   }
 }
-#if NH_3D
-#if NH_3D_TMVP
-Void TComSlice::generateAlterRefforTMVP()
-{
-  for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
-  {        
-    if ( this->getNumRefIdx( RefPicList( uiRefListIdx ) ) == 0)
-    {
-        continue;
-    }
-    Bool bZeroIdxLtFlag = this->getRefPic(RefPicList(uiRefListIdx), 0)->getIsLongTerm();
-    for(Int i = 1; i < this->getNumRefIdx(RefPicList(uiRefListIdx)); i++ )
-    {
-      if ( ( bZeroIdxLtFlag && !this->getRefPic(RefPicList(uiRefListIdx), i)->getIsLongTerm() ) ||
-           (!bZeroIdxLtFlag &&  this->getRefPic(RefPicList(uiRefListIdx), i)->getIsLongTerm() ) )
-      {
-        this->setAlterRefIdx(RefPicList(uiRefListIdx),i);
-        break;
-      }
-    }
-  }
-}
-#endif
-#endif
 
-#if NH_3D
-Void TComSlice::setCamparaSlice( Int** aaiScale, Int** aaiOffset )
-{  
-  Int voiInVps      = m_pcVPS->getVoiInVps(getViewIndex() ); 
-  if( m_pcVPS->getNumCp( voiInVps ) > 0 )
-  {    
-    if( m_pcVPS->getCpInSliceSegmentHeaderFlag( voiInVps ) )
-    {
-      for( Int m = 0; m < m_pcVPS->getNumCp( voiInVps ); m++ )
-      {      
-        Int j      = m_pcVPS->getCpRefVoi( voiInVps, m );
-        Int jInVps = m_pcVPS->getVoiInVps( j ); 
-
-        setCpScale   ( jInVps , aaiScale [ jInVps   ][ voiInVps ]);
-        setCpInvScale( jInVps , aaiScale [ voiInVps ][ jInVps   ]);
-        setCpOff     ( jInVps , aaiOffset[ jInVps   ][ voiInVps ]);
-        setCpInvOff  ( jInVps , aaiOffset[ voiInVps ][ jInVps   ]);
-      }
-    }
-  } 
-}
-#endif
 
 Void TComSlice::checkColRefIdx(UInt curSliceIdx, TComPic* pic)
 {
@@ -1176,13 +1038,6 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   {
     m_interLayerPredLayerIdc[ layer ] = pSrc->m_interLayerPredLayerIdc[ layer ]; 
   }
-#endif
-#if NH_3D_DIS
-  m_bApplyDIS = pSrc->m_bApplyDIS;
-#endif
-#if NH_3D_IC
-  m_bApplyIC = pSrc->m_bApplyIC;
-  m_icSkipParseFlag = pSrc->m_icSkipParseFlag;
 #endif
 
 }
@@ -1978,16 +1833,10 @@ TComVPS::TComVPS()
   {
     m_layerIdInNuh      [i] = ( i == 0 ) ? 0 : -1; 
     m_numDirectRefLayers[i] = 0; 
-#if NH_3D
-    m_numRefListLayers[i] = 0; 
-#endif
     m_vpsRepFormatIdx    [i] = 0; 
     m_pocLsbNotPresentFlag[i] = 0;    
     m_viewIdVal          [i] = 0; 
 
-#if NH_3D
-    m_viewIndex         [i] = -1; 
-#endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
     {
@@ -1995,9 +1844,6 @@ TComVPS::TComVPS()
       m_directDependencyType[i][j] = -1; 
       m_dependencyFlag  [i][j]    = false; 
       m_idDirectRefLayer[i][j]    = -1; 
-#if NH_3D
-      m_idRefListLayer[i][j]    = -1; 
-#endif
       m_idPredictedLayer[i][j]    = -1; 
       m_idRefLayer      [i][j]    = -1; 
       m_maxTidIlRefPicsPlus1[i][j]  = 7;
@@ -2007,8 +1853,6 @@ TComVPS::TComVPS()
     {
       m_dimensionId[i][j] = 0;
     }
-#if NH_3D_ARP
-#endif
   }  
 #endif
 }
@@ -2084,9 +1928,6 @@ Void TComVPS::setRefLayers()
   {
     Int iNuhLId = getLayerIdInNuh( i );
     Int d = 0;
-#if NH_3D
-    Int l = 0; 
-#endif
     Int r = 0;
     Int p = 0;
 
@@ -2097,12 +1938,6 @@ Void TComVPS::setRefLayers()
       {
         m_idDirectRefLayer[iNuhLId][d++] = jNuhLid;
       }
-#if NH_3D
-      if( getDirectDependencyFlag( i , j ) && ( getDepthId( iNuhLId ) == getDepthId( jNuhLid ) ))
-      {
-        m_idRefListLayer [iNuhLId][l++] = jNuhLid;
-      }
-#endif
 
       if( getDependencyFlag( i , j ) )
       {
@@ -2114,9 +1949,6 @@ Void TComVPS::setRefLayers()
       }
     }
     m_numDirectRefLayers[ iNuhLId ] = d;
-#if NH_3D
-    m_numRefListLayers[ iNuhLId ] = l; 
-#endif
 
     m_numRefLayers      [ iNuhLId ] = r;
     m_numPredictedLayers[ iNuhLId ] = p;
@@ -2155,10 +1987,6 @@ Void TComVPS::setRefLayers()
 Void     TComVPS::initNumViews( )
 {
   m_numViews = 1; 
-#if NH_3D
-  AOF( m_viewOIdxList.size() == 0 );   
-  m_viewOIdxList.push_back( 0 );        
-#endif
 
   for( Int i = 0; i <=  getMaxLayersMinus1(); i++ )
   {
@@ -2176,9 +2004,6 @@ Void     TComVPS::initNumViews( )
       if( newViewFlag )
       {
         m_numViews++;
-#if NH_3D
-        m_viewOIdxList.push_back( getViewOrderIdx( lId ) );        
-#endif
       }
     }
   }
@@ -2190,61 +2015,6 @@ Int TComVPS::getScalabilityId( Int layerIdInVps, ScalabilityType scalType ) cons
   return getScalabilityMaskFlag( scalType ) ? getDimensionId( layerIdInVps, scalTypeToScalIdx( scalType ) ) : 0;
 }
 
-#if NH_3D
-Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag ) const
-{
-  Int foundLayerIdinNuh = -1; 
-
-  for (Int layerIdInVps = 0 ; layerIdInVps <= getMaxLayersMinus1(); layerIdInVps++ )
-  {
-    Int layerIdInNuh = getLayerIdInNuh( layerIdInVps ); 
-    if( ( getViewIndex( layerIdInNuh ) == viewIndex ) && ( getDepthId( layerIdInNuh ) == ( depthFlag ? 1 : 0 ) )  )
-    {
-      foundLayerIdinNuh = layerIdInNuh; 
-      break; 
-    }
-  }
-  return foundLayerIdinNuh;
-}
-
-Void TComVPS::createCamPars(Int iNumViews)
-{
-  m_numCp                     .resize( iNumViews );
-  m_cpRefVoi                  .resize( iNumViews );
-  m_cpInSliceSegmentHeaderFlag.resize( iNumViews );
-  m_cpPresentFlag             .resize( iNumViews ); 
-  m_aaaiCodedScale            .resize( iNumViews ); 
-  m_aaaiCodedOffset           .resize( iNumViews ); 
-
-  for ( Int i = 0; i < iNumViews ; i++ )
-  {
-    m_numCp                     [i] = 0; 
-    m_cpRefVoi                  [i].resize( iNumViews );
-    m_cpInSliceSegmentHeaderFlag[i] = false;         
-    m_aaaiCodedScale            [i].resize( 2 );
-    m_aaaiCodedOffset           [i].resize( 2 );        
-    m_cpPresentFlag             [i].resize( iNumViews ); 
-
-    for ( Int j = 0; j < iNumViews; j++)
-    {
-      m_cpRefVoi             [i][j] = 0; 
-      m_cpPresentFlag        [i][j] = false; 
-    }
-
-    for ( Int j = 0; j < 2; j++ )
-    {
-      m_aaaiCodedScale       [i][j].resize( MAX_NUM_LAYERS );
-      m_aaaiCodedOffset      [i][j].resize( MAX_NUM_LAYERS );
-
-      for ( Int k = 0; k < MAX_NUM_LAYERS; k++ )
-      {
-        m_aaaiCodedScale [i][j][k] = 0;
-        m_aaaiCodedOffset[i][j][k] = 0;
-      }
-    }
-  }
-}
-#endif // NH_3D
 
 
 Int TComVPS::xGetDimBitOffset( Int j ) const
@@ -2497,9 +2267,6 @@ Void TComVPS::printLayerDependencies() const
   vector<Int> fullArray;
   vector<Int> range; 
 
-#if NH_3D
-  vector<Int> depthId; 
-#endif
 
   vector<Int> viewOrderIndex;
   vector<Int> auxId;
@@ -2513,9 +2280,6 @@ Void TComVPS::printLayerDependencies() const
     dependencyId  .push_back( getDependencyId( i ) );
     auxId         .push_back( getAuxId       ( i ) );      
     viewId        .push_back( getViewId      ( getLayerIdInNuh( i ) ) );
-#if NH_3D  
-    depthId.push_back( getDepthId( i ) );
-#endif
   }
   std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "Layer Dependencies" << std::endl; 
   xPrintArray( "direct_dependency_flag", getMaxLayersMinus1()+1, range, fullArray, m_directDependencyFlag, false ); 
@@ -2524,9 +2288,6 @@ Void TComVPS::printLayerDependencies() const
   xPrintArray( "IdPredictedLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numPredictedLayers, m_idPredictedLayer, true );
   xPrintArray( "IdRefLayer"      , getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefLayers, m_idRefLayer, true );
   xPrintArray( "IdDirectRefLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numDirectRefLayers, m_idDirectRefLayer, true );
-#if NH_3D
-  xPrintArray( "IdRefListLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefListLayers, m_idRefListLayer, true );
-#endif
 
   std::cout << std::endl;
 }
@@ -2620,68 +2381,6 @@ Void TComVPS::printLayerSets() const
   std::cout << endl;
 }
 
-#if NH_3D
-Void TComVPS::initViewCompLayer()
-{
-  assert( m_viewCompLayerId.size() == 0 && m_viewCompLayerPresentFlag.size() == 0  );
-  for( Int i = 0; i < getNumViews(); i++ )
-  {
-    m_viewCompLayerId         .push_back( std::vector<Int>(0)  );
-    m_viewCompLayerPresentFlag.push_back( std::vector<Bool>(0) );      
-
-    for( Int depFlag = 0; depFlag  <=  1; depFlag++ )
-    {
-      Int iViewOIdx = getViewOIdxList( i );
-      Int layerId = -1;
-      for( Int j = 0; j  <=  getMaxLayersMinus1(); j++ ) 
-      {
-        Int jNuhLId = getLayerIdInNuh( j );
-        if( getVpsDepthFlag( jNuhLId ) == ( (Bool) depFlag )  &&  getViewOrderIdx( jNuhLId )  ==  iViewOIdx  
-          &&  getDependencyId( jNuhLId )  ==  0  &&  getAuxId( jNuhLId )  ==  0 )
-        {
-          layerId = jNuhLId;
-        }
-      }
-      m_viewCompLayerPresentFlag[ i ].push_back( layerId  !=  -1 );
-      m_viewCompLayerId         [ i ].push_back( layerId );        
-    }
-  }
-}
-
-Int TComVPS::getVoiInVps(Int viewOIdx) const
-{
-  for ( Int i = 0; i < m_viewOIdxList.size(); i++ )
-  {
-    if  ( m_viewOIdxList[ i ] == viewOIdx )
-    {
-      return i; 
-    }
-  }
-  assert( 0 );   
-  return -1;
-}
-
-Void TComVPS::deriveCpPresentFlag()
-{
-  for( Int nInVps = 0; nInVps < getNumViews(); nInVps++  )
-  {
-    for( Int mInVps = 0; mInVps < getNumViews(); mInVps++ )
-    {
-      m_cpPresentFlag[nInVps][mInVps] = 0; 
-    }
-  }
-
-  for( Int n = 1; n < getNumViews(); n++ )
-  {
-    Int iInVps = getVoiInVps(  getViewOIdxList( n ) );      
-    for( Int m = 0; m < getNumCp( iInVps ); m++ )
-    {
-      m_cpPresentFlag[ iInVps ][ getVoiInVps( getCpRefVoi( iInVps, m ) ) ] = 1;
-    }
-  }
-}
-
-#endif
 #endif // NH_MV
 
 // ------------------------------------------------------------------------------------------------
@@ -2846,9 +2545,6 @@ TComPPS::TComPPS()
 , m_ppsScalingListRefLayerId         (0)
 , m_pocResetInfoPresentFlag          (false)
 #endif
-#if NH_3D_DLT
-, m_cDLT                             ()
-#endif
 {
 #if NH_MV
   m_ppsRangeExtensionsFlag     = false;
@@ -2863,149 +2559,6 @@ TComPPS::~TComPPS()
 {
 }
 
-#if NH_3D_DLT
-TComDLT::TComDLT()
-: m_bDltPresentFlag(false)
-, m_iNumDepthViews(0)
-, m_uiDepthViewBitDepth(8)
-{
-  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
-  {
-    m_bUseDLTFlag                 [i] = false;
-    m_bInterViewDltPredEnableFlag [i] = false;
-    m_bDltBitMapRepFlag           [i] = false;
-
-    // allocate some memory and initialize with default mapping
-    m_iNumDepthmapValues[i] = ((1 << m_uiDepthViewBitDepth)-1)+1;
-    m_iDepthValue2Idx[i]    = std::vector<Int>(m_iNumDepthmapValues[i]);
-    m_iIdx2DepthValue[i]    = std::vector<Int>(m_iNumDepthmapValues[i]);
-    
-    m_iDepthIdxToLayerId[i] = i;
-
-    //default mapping
-    for (Int d=0; d<m_iNumDepthmapValues[i]; d++)
-    {
-      m_iDepthValue2Idx[i][d] = d;
-      m_iIdx2DepthValue[i][d] = d;
-    }
-  }
-}
-
-TComDLT::~TComDLT()
-{
-  
-}
-
-Void TComDLT::setDepthLUTs(Int layerIdInVps, std::vector<Int> idxToDepthValueTable, Int iNumDepthValues)
-{
-  if( iNumDepthValues == 0 ) // default mapping only
-    return;
-
-  // copy idx2DepthValue to internal array
-  m_iIdx2DepthValue[layerIdInVps] = idxToDepthValueTable;
-
-  UInt uiMaxDepthValue = ((1 << m_uiDepthViewBitDepth)-1);
-  for(Int p=0; p<=uiMaxDepthValue; p++)
-  {
-    Int iIdxDown    = 0;
-    Int iIdxUp      = iNumDepthValues-1;
-    Bool bFound     = false;
-
-    // iterate over indices to find lower closest depth
-    Int i = 1;
-    while(!bFound && i<iNumDepthValues)
-    {
-      if( m_iIdx2DepthValue[layerIdInVps][i] > p )
-      {
-        iIdxDown  = i-1;
-        bFound    = true;
-      }
-
-      i++;
-    }
-    iIdxUp = bFound ?  iIdxDown + 1 : iNumDepthValues-1;
-
-    // assign closer depth value/idx
-    if( abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxDown]) < abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxUp]) )
-    {
-      m_iDepthValue2Idx[layerIdInVps][p] = iIdxDown;
-    }
-    else
-    {
-      m_iDepthValue2Idx[layerIdInVps][p] = iIdxUp;
-    }
-
-  }
-
-  // update DLT variables
-  m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
-}
-
-Void TComDLT::getDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int>& riDeltaDLTOut, UInt&ruiDeltaDLTOutNum ) const
-{
-  Bool abBM0[ 256 ];
-  Bool abBM1[ 256 ];
-  
-  memset( abBM0, 0, sizeof( abBM0 ));
-  memset( abBM1, 0, sizeof( abBM1 ));
-  
-  // convert reference DLT to bit string
-  for( Int i = 0; i < uiDLTInRefNum; i++ )
-  {
-    abBM0[ piDLTInRef[ i ] ] = true;
-  }
-  // convert internal DLT to bit string
-  for( Int i = 0; i < m_iNumDepthmapValues[ layerIdInVps ]; i++ )
-  {
-    abBM1[ m_iIdx2DepthValue[ layerIdInVps ][ i ] ] = true;
-  }
-  
-  ruiDeltaDLTOutNum = 0;
-  for( Int i = 0; i < 256; i++ )
-  {
-    if( abBM0[ i ] ^ abBM1[ i ] )
-    {
-      riDeltaDLTOut[ ruiDeltaDLTOutNum++ ] = i;
-    }
-  }
-}
-
-Void TComDLT::setDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int> piDeltaDLTIn, UInt uiDeltaDLTInNum )
-{
-  Bool abBM0[ 256 ];
-  Bool abBM1[ 256 ];
-  
-  memset( abBM0, 0, sizeof( abBM0 ));
-  memset( abBM1, 0, sizeof( abBM1 ));
-  
-  // convert reference DLT to bit string
-  for( Int i = 0; i < uiDLTInRefNum; i++ )
-  {
-    abBM0[ piDLTInRef[ i ] ] = true;
-  }
-  // convert delta DLT to bit string
-  for( Int i = 0; i < uiDeltaDLTInNum; i++ )
-  {
-    abBM1[ piDeltaDLTIn[ i ] ] = true;
-  }
-  
-  std::vector<Int> aiIdx2DepthValue(256, 0);
-  UInt uiNumDepthValues = 0;
-  std::fill(aiIdx2DepthValue.begin(), aiIdx2DepthValue.end(), 0);
-  
-  for( Int i = 0; i < 256; i++ )
-  {
-    if( abBM0[ i ] ^ abBM1[ i ] )
-    {
-      aiIdx2DepthValue[ uiNumDepthValues++ ] = i;
-    }
-  }
-  
-  // update internal tables
-  setDepthLUTs(layerIdInVps, aiIdx2DepthValue, uiNumDepthValues);
-}
-
-#endif
 
 #if NH_MV
 Void TComSPS::inferRepFormat( TComVPS* vps, Int layerIdCurr, Bool encoder )
@@ -3513,11 +3066,7 @@ TComPic* TComSlice::getPicFromRefPicSetInterLayer(Int setIdc, Int layerId ) cons
 Int  TComSlice::getRefLayerPicFlag( Int i ) const
 {
   const TComVPS* vps = getVPS(); 
-#if NH_3D
-  Int refLayerIdx = vps->getLayerIdInVps( vps->getIdRefListLayer( getLayerId(), i ) ); 
-#else
   Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
-#endif
 
   Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer()  && ( getTLayer() == 0   ||
     vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() )); 
@@ -3528,11 +3077,7 @@ Int TComSlice::getRefLayerPicIdc( Int j ) const
 {  
   Int refLayerPicIdc = -1; 
   Int curj = 0; 
-#if NH_3D
-  for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
-#else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
-#endif
   {
     if( getRefLayerPicFlag( i ) )
     {
@@ -3553,11 +3098,7 @@ Int TComSlice::getRefLayerPicIdc( Int j ) const
 Int  TComSlice::getNumRefLayerPics( ) const
 {  
   Int numRefLayerPics = 0; 
-#if NH_3D
-  for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
-#else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
-#endif
   {
     numRefLayerPics += getRefLayerPicFlag( i ); 
   }
@@ -3582,11 +3123,7 @@ Int TComSlice::getNumActiveRefLayerPics() const
   {
     numActiveRefLayerPics = 0; 
   }
-#if NH_3D
-  else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumRefListLayers( getLayerId() ) == 1 )
-#else
   else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
-#endif
   {
     numActiveRefLayerPics = 1; 
   }
@@ -3599,361 +3136,11 @@ Int TComSlice::getNumActiveRefLayerPics() const
 
 Int TComSlice::getRefPicLayerId( Int i ) const
 {
-#if NH_3D
-  return getVPS()->getIdRefListLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
-#else
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
-#endif
-}
-#endif
-#if NH_3D_NBDV
-Void TComSlice::setDefaultRefView()
-{
-  setDefaultRefViewIdx(-1);
-  setDefaultRefViewIdxAvailableFlag(false); 
-
-  Int valid = 0;
-  Int DefaultRefViewIdx = -1;
-
-  for(UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++)
-  {
-    for(Int iRefListId = 0; (iRefListId < (isInterB() ? 2 : 1)) && !isIntra() && valid == 0; iRefListId++)
-    {
-      RefPicList eRefPicList = RefPicList(iRefListId);
-      Int        iNumRefPics = getNumRefIdx(eRefPicList);
-
-      for(Int i = 0; i < iNumRefPics; i++)
-      { 
-        if(getPOC() == getRefPic(eRefPicList, i)->getPOC() && curViewIdx == getRefPic(eRefPicList, i)->getViewIndex())
-        {
-          valid = 1;
-          DefaultRefViewIdx = curViewIdx;
-          break;
-        }
-      }
-    }
-  }
-
-  if(valid)
-  {
-    setDefaultRefViewIdx(DefaultRefViewIdx);
-    setDefaultRefViewIdxAvailableFlag(true);
-  }
 }
 #endif
 
-#if NH_3D_ARP
-Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
-{
-  Bool tempRefPicInListsFlag = false;
-  if( !getIvResPredFlag() || this->isIRAP())
-  {
-    m_nARPStepNum = 0;
-  }
-  else
-  {
-    setFirstTRefIdx (REF_PIC_LIST_0, -1);
-    setFirstTRefIdx (REF_PIC_LIST_1, -1);
-    for ( Int refListIdx = 0; refListIdx < ((m_eSliceType==B_SLICE) ? 2 : 1); refListIdx++ )
-    {
-      Int diffPOC=MAX_INT;
-      Int idx=-1;
-      for(Int i = 0; i < getNumRefIdx(RefPicList(refListIdx)); i++ )
-      {
-        if ( getRefPic(RefPicList(refListIdx), i)->getPOC() != getPOC() )
-        {
-          if( abs(getRefPic(RefPicList(refListIdx), i)->getPOC() - getPOC()) < diffPOC)
-          {
-            diffPOC=abs(getRefPic(RefPicList(refListIdx), i)->getPOC() - getPOC());
-            idx=i;
-          }
-        }
-        if(idx>=0)
-        {
-          setFirstTRefIdx (RefPicList(refListIdx), idx);
-        }
-      }
-    }
-    tempRefPicInListsFlag = (getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0) && getDefaultRefViewIdxAvailableFlag();
-    m_nARPStepNum = tempRefPicInListsFlag ?  H_3D_ARP_WFNR : 0;
-  }
 
-  if (tempRefPicInListsFlag)
-  {
-    for ( Int refListIdx = 0; refListIdx < ((m_eSliceType==B_SLICE) ? 2 : 1); refListIdx++ )
-    {
-      RefPicList eRefPicList = RefPicList( refListIdx );
-      Int prevPOC = getRefPic(eRefPicList, getFirstTRefIdx(eRefPicList) )->getPOC();
-      for( Int i = 0; i < getNumActiveRefLayerPics(); i++ )
-      {
-        Int layerIdInNuh = getRefPicLayerId( i );
-
-        TComPic* picV = getIvPic( getIsDepth(), getVPS()->getViewIndex( layerIdInNuh ) );
-        assert( picV != NULL ); 
-        IntAry1d pocsInCurrRPSsPicV = picV->getSlice(0)->getPocsInCurrRPSs(); 
-        Bool refRpRefAvailFlag = false; 
-        for (Int idx = 0; idx < pocsInCurrRPSsPicV.size(); idx++)
-        {
-          if ( pocsInCurrRPSsPicV[idx] == prevPOC )
-          {
-            refRpRefAvailFlag = true; 
-            break; 
-          }
-        }
-
-        if (getFirstTRefIdx(eRefPicList) >= 0 && refRpRefAvailFlag )
-        {
-          m_arpRefPicAvailable[eRefPicList][layerIdInNuh] = true;
-        }
-        else
-        {
-          m_arpRefPicAvailable[eRefPicList][layerIdInNuh] = false;
-        }
-      }
-    }
-  }
-  if( m_nARPStepNum > 1)
-  {
-    for(Int i = 0; i < getNumActiveRefLayerPics(); i ++ )
-    {
-      Int  iLayerId = getRefPicLayerId( i );
-      Int  iViewIdx =   getVPS()->getViewIndex(iLayerId);
-      Bool bIsDepth = ( getVPS()->getDepthId  ( iLayerId ) == 1 );
-      if( iViewIdx<getViewIndex() && !bIsDepth )
-      {
-        setBaseViewRefPicList( ivPicLists->getSubDpb( iLayerId, false ), iViewIdx );
-      }
-    }
-  }
-}
-#endif
-
-#if NH_3D_IC
-// This is an encoder only function and should be moved to TEncSlice or TEncSearch!!
-Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
-{
-  if(bUseLowLatencyICEnc)
-  {
-    Bool existInterViewRef=false;
-    TComPic* pcCurrPic = getPic();
-    TComPic* pcRefPic = NULL;
-    for ( Int i = 0; (i < getNumRefIdx( REF_PIC_LIST_0 )) && !existInterViewRef; i++ )
-    {
-      pcRefPic = getRefPic( REF_PIC_LIST_0, i );
-      if ( pcRefPic != NULL )
-      {
-        if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
-        {
-          existInterViewRef = true;
-        }
-      }
-    }
-
-    for ( Int i = 0; (i < getNumRefIdx( REF_PIC_LIST_1 )) && !existInterViewRef; i++ )
-    {
-      pcRefPic = getRefPic( REF_PIC_LIST_1, i );
-      if ( pcRefPic != NULL )
-      {
-        if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
-        {
-          existInterViewRef = true;        
-        }
-      }
-    }
-
-    if(!existInterViewRef)
-    {
-      m_bApplyIC = false;
-    }
-    else
-    {
-      Int curLayer=getDepth();
-      if( curLayer>9) curLayer=9; // Max layer is 10
-
-      m_bApplyIC = true;
-      Int refLayer = curLayer-1;
-
-      Int ICEnableCandidate = getICEnableCandidate(refLayer);
-      Int ICEnableNum = getICEnableNum(refLayer);
-      if( (refLayer>=0) && (ICEnableCandidate>0) )
-      {    
-        Double ratio=Double(ICEnableNum/Double(ICEnableCandidate));
-
-        if( ratio > IC_LOW_LATENCY_ENCODING_THRESHOLD)
-        {
-          m_bApplyIC=true;
-        }
-        else
-        {
-          m_bApplyIC=false;
-        }
-      }
-      setICEnableCandidate(curLayer, 0);
-      setICEnableNum(curLayer, 0);
-    }
-  }
-  else
-  {        
-    TComPic*    pcCurrPic = getPic();
-    TComPicYuv* pcCurrPicYuv = pcCurrPic->getPicYuvOrg();
-    
-    // Get InterView Reference picture
-    // !!!!! Assume only one Interview Reference Picture in L0
-    // GT: Is this assumption correct?
-
-    TComPicYuv* pcRefPicYuvOrg = NULL;
-    for ( Int i = 0; i < getNumRefIdx( REF_PIC_LIST_0 ); i++ )
-    {
-      TComPic* pcRefPic = getRefPic( REF_PIC_LIST_0, i );
-      if ( pcRefPic != NULL )
-      {
-        if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
-        {
-          pcRefPicYuvOrg = pcRefPic->getPicYuvOrg();
-        }
-      }
-    }
-
-    if ( pcRefPicYuvOrg != NULL )
-    {
-      // Histogram building - luminance
-      Int iMaxPelValue = ( 1 << getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) ); 
-      Int *aiRefOrgHist = (Int *) xMalloc( Int,iMaxPelValue );
-      Int *aiCurrHist   = (Int *) xMalloc( Int,iMaxPelValue );
-      memset( aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
-      memset( aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
-
-      Int iWidth   = pcCurrPicYuv->getWidth(COMPONENT_Y);
-      Int iHeight  = pcCurrPicYuv->getHeight(COMPONENT_Y);
-      Pel* pCurrY   = pcCurrPicYuv->getAddr(COMPONENT_Y);
-      Pel* pRefOrgY = pcRefPicYuvOrg->getAddr(COMPONENT_Y);
-      Int iCurrStride = pcCurrPicYuv->getStride(COMPONENT_Y);
-      Int iRefStride = pcRefPicYuvOrg->getStride(COMPONENT_Y);
-      for ( Int y = 0; y < iHeight; y++ )
-      {
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          aiCurrHist[pCurrY[x]]++;
-          aiRefOrgHist[pRefOrgY[x]]++;
-        }
-        pCurrY += iCurrStride;
-        pRefOrgY += iRefStride;
-      }
-
-      // Histogram SAD
-      Int iSumOrgSAD = 0;
-      for ( Int i = 0; i < iMaxPelValue; i++ )
-      {
-        iSumOrgSAD += abs( aiCurrHist[i] - aiRefOrgHist[i] );
-      }
-
-      // Setting
-      Double dThresholdOrgSAD = getIsDepth() ? 0.1 : 0.05;
-
-      if ( iSumOrgSAD > Int( dThresholdOrgSAD * iWidth * iHeight ) )
-      {
-        m_bApplyIC = true;
-      }
-      else
-      {
-        m_bApplyIC = false;
-      }
-
-      xFree( aiCurrHist   );
-      xFree( aiRefOrgHist );
-    }
-  }//if(bUseLowLatencyICEnc)
-}
-#endif
-#if NH_3D
-Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
-{  
-  for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
-  { 
-    for ( Int depthId = 0; depthId < 2; depthId++ )
-    {
-      m_ivPicsCurrPoc[ depthId ][ i ] = ( i <= m_viewIndex ) ? m_ivPicLists->getPic( i, ( depthId == 1) , getPOC() ) : NULL;
-    }        
-  }  
-}
-Void TComSlice::setDepthToDisparityLUTs()
-{ 
-  Bool setupLUT = false; 
-  
-  setupLUT = setupLUT || getViewSynthesisPredFlag( ); 
-
-#if NH_3D_NBDV_REF
-  setupLUT = setupLUT || getDepthRefinementFlag( );
-#endif  
-
-#if NH_3D_IV_MERGE
-  setupLUT = setupLUT || ( getIvMvPredFlag() && getIsDepth() );
-#endif
-
-  Int bitDepthY = getSPS()->getBitDepth(CHANNEL_TYPE_LUMA);
-
-  if( !setupLUT )
-  {
-    return; 
-  }
-
-  m_numViews = getVPS()->getNumViews(); 
-  /// GT: Allocation should be moved to a better place later; 
-  if ( m_depthToDisparityB == NULL )
-  {
-    m_depthToDisparityB = new Int*[ m_numViews ];
-    for ( Int i = 0; i < getVPS()->getNumViews(); i++ )
-    {
-      m_depthToDisparityB[ i ] = new Int[ Int(1 << bitDepthY) ]; 
-    }
-  }
-
-  
-  if ( m_depthToDisparityF == NULL )
-  {
-    m_depthToDisparityF = new Int*[ m_numViews ];
-    for ( Int i = 0; i < m_numViews; i++ )
-    {
-      m_depthToDisparityF[ i ] = new Int[ Int(1 << bitDepthY) ]; 
-    }
-  }
-
-  assert( m_depthToDisparityB != NULL ); 
-  assert( m_depthToDisparityF != NULL ); 
-
-  const TComVPS* vps = getVPS(); 
-
-  Int log2Div = bitDepthY - 1 + vps->getCpPrecision();
-  Int voiInVps = vps->getVoiInVps( getViewIndex() ); 
-  Bool camParaSH = vps->getCpInSliceSegmentHeaderFlag( voiInVps );  
-
-  const IntAry1d codScale     = camParaSH ? m_aaiCodedScale [ 0 ] : vps->getCodedScale    ( voiInVps ); 
-  const IntAry1d codOffset    = camParaSH ? m_aaiCodedOffset[ 0 ] : vps->getCodedOffset   ( voiInVps ); 
-  const IntAry1d invCodScale  = camParaSH ? m_aaiCodedScale [ 1 ] : vps->getInvCodedScale ( voiInVps ); 
-  const IntAry1d invCodOffset = camParaSH ? m_aaiCodedOffset[ 1 ] : vps->getInvCodedOffset( voiInVps ); 
-
-
-  for (Int i = 0; i < voiInVps; i++)
-  {
-    Int iInVoi = vps->getVoiInVps( i ); 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
-    if ( g_traceCameraParameters )
-    {
-      std::cout << "Cp: " << codScale   [ iInVoi ] << " " <<    codOffset[ iInVoi ] << " "
-                << invCodScale[ iInVoi ] << " " << invCodOffset[ iInVoi ] << " " << log2Div << std::endl ; 
-    }
-#endif
-    for ( Int d = 0; d <= ( ( 1 << bitDepthY ) - 1 ); d++ )
-    {      
-      Int offset =    ( codOffset  [ iInVoi ] << bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
-      m_depthToDisparityB[ iInVoi ][ d ] = ( codScale [ iInVoi ] * d + offset ) >> log2Div; 
-
-      Int invOffset = ( invCodOffset[ iInVoi ] << bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
-      m_depthToDisparityF[ iInVoi ][ d ] = ( invCodScale[ iInVoi ] * d + invOffset ) >> log2Div; 
-    }
-  }
-}
-#endif
 
 
 
@@ -4310,152 +3497,6 @@ Int TComSlice::getDeltaPocMsbCycleLtVar( Int i ) const
 #endif
 
 
-#if NH_3D
-Void TComSlice::init3dToolParameters()
-{
-  Bool depthFlag = getIsDepth();
-
-  Bool nRLLG0 =  ( getVPS()->getNumRefListLayers( getLayerId() ) > 0 );     
-
-  const TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
-
-  m_ivMvPredFlag           = sps3dExt->getIvMvPredFlag         ( depthFlag ) && nRLLG0                       ;                             
-  m_ivMvScalingFlag        = sps3dExt->getIvMvScalingFlag      ( depthFlag )                                 ;                             
-  m_ivResPredFlag          = sps3dExt->getIvResPredFlag        ( depthFlag ) && nRLLG0                       ;                               
-  m_depthRefinementFlag    = sps3dExt->getDepthRefinementFlag  ( depthFlag )           && getInCompPredFlag() && m_cpAvailableFlag;
-  m_viewSynthesisPredFlag  = sps3dExt->getViewSynthesisPredFlag( depthFlag ) && nRLLG0 && getInCompPredFlag() && m_cpAvailableFlag;
-  m_depthBasedBlkPartFlag  = sps3dExt->getDepthBasedBlkPartFlag( depthFlag )           && getInCompPredFlag();                          
-  m_mpiFlag                = sps3dExt->getMpiFlag              ( depthFlag )           && getInCompPredFlag();
-  m_intraContourFlag       = sps3dExt->getIntraContourFlag     ( depthFlag )           && getInCompPredFlag();
-  m_intraSdcWedgeFlag      = sps3dExt->getIntraSdcWedgeFlag    ( depthFlag )                                 ;                          
-  m_qtPredFlag             = sps3dExt->getQtPredFlag           ( depthFlag )           && getInCompPredFlag();
-  m_interSdcFlag           = sps3dExt->getInterSdcFlag         ( depthFlag )                                 ;  
-  m_depthIntraSkipFlag     = sps3dExt->getDepthIntraSkipFlag   ( depthFlag )                                 ;                          
-
-  m_subPbSize              =  1 << ( sps3dExt->getLog2SubPbSizeMinus3   ( depthFlag ) + 3 );  
-  m_mpiSubPbSize           =  1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
-
-
-#if H_3D_OUTPUT_ACTIVE_TOOLS
-  std::cout << "Layer:                  :" << getLayerId()             << std::endl;
-  std::cout << "DepthFlag:              :" << getIsDepth()             << std::endl;
-  std::cout << "ViewOrderIdx:           :" << getViewIndex()           << std::endl;
-  std::cout << "InterCmpPredAvailableFlag:" << getInCmpPredAvailFlag() << std::endl;
-  std::cout << "InterCompPredFlag       :"  << getInCompPredFlag()     << std::endl;
-  
-  std::cout << "ivMvPredFlag            :" << m_ivMvPredFlag           << std::endl;
-  std::cout << "ivMvScalingFlag         :" << m_ivMvScalingFlag        << std::endl;
-  std::cout << "ivResPredFlag           :" << m_ivResPredFlag          << std::endl;
-  std::cout << "depthRefinementFlag     :" << m_depthRefinementFlag    << std::endl;
-  std::cout << "viewSynthesisPredFlag   :" << m_viewSynthesisPredFlag  << std::endl;
-  std::cout << "depthBasedBlkPartFlag   :" << m_depthBasedBlkPartFlag  << std::endl;
-  std::cout << "mpiFlag                 :" << m_mpiFlag                << std::endl;
-  std::cout << "intraContourFlag        :" << m_intraContourFlag       << std::endl;
-  std::cout << "intraSdcWedgeFlag       :" << m_intraSdcWedgeFlag      << std::endl;
-  std::cout << "qtPredFlag              :" << m_qtPredFlag             << std::endl;
-  std::cout << "interSdcFlag            :" << m_interSdcFlag           << std::endl;
-  std::cout << "depthIntraSkipFlag      :" << m_depthIntraSkipFlag     << std::endl;    
-  std::cout << "subPbSize               :" << m_subPbSize              << std::endl;
-  std::cout << "mpiSubPbSize            :" << m_mpiSubPbSize           << std::endl;
-#endif
-}
-
-Void TComSlice::deriveInCmpPredAndCpAvailFlag( )
-{
-  Int numCurCmpLIds = getIsDepth() ? 1 : getNumActiveRefLayerPics(); 
-  std::vector<Int> curCmpLIds;
-  if ( getIsDepth() )
-  {
-    curCmpLIds.push_back( getLayerId() );
-  }
-  else
-  {
-    for (Int i = 0; i < numCurCmpLIds; i++)
-    {
-      curCmpLIds.push_back( getRefPicLayerId( i ) );
-    }
-  }
-
-  m_cpAvailableFlag = true;
-  m_inCmpRefViewIdcs.clear();
-  Bool allRefCmpLayersAvailFlag = true;
-
-  for( Int i = 0; i <= numCurCmpLIds - 1; i++ )
-  {      
-    m_inCmpRefViewIdcs.push_back( getVPS()->getViewOrderIdx( curCmpLIds[ i ] ));
-    if( !getVPS()->getCpPresentFlag( getVPS()->getVoiInVps( getViewIndex() ),  getVPS()->getVoiInVps( m_inCmpRefViewIdcs[ i ] ) ) )
-    {
-      m_cpAvailableFlag = false;
-    }
-    Bool refCmpCurLIdAvailFlag = false;
-    if( getVPS()->getViewCompLayerPresentFlag( m_inCmpRefViewIdcs[ i ], !getIsDepth() ) )
-    {
-      Int j = getVPS()->getLayerIdInVps( getVPS()->getViewCompLayerId( m_inCmpRefViewIdcs[ i ],  !getIsDepth() ) );
-      if  ( getVPS()->getDirectDependencyFlag( getVPS()->getLayerIdInVps( getLayerId() ) ,  j ) &&
-        getVPS()->getSubLayersVpsMaxMinus1( j ) >= getTemporalId()   &&
-        ( getTemporalId() == 0 || getVPS()->getMaxTidIlRefPicsPlus1( j , getVPS()->getLayerIdInVps( getLayerId() ) ) > getTemporalId() )        
-        )
-      {
-        refCmpCurLIdAvailFlag = true;
-      }
-    }
-    if( !refCmpCurLIdAvailFlag )
-    {
-      allRefCmpLayersAvailFlag = false;
-    }
-  }
-
-  if( !allRefCmpLayersAvailFlag )
-  {
-    m_inCmpPredAvailFlag = false;
-  }  
-  else 
-  {
-    const TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
-    if( !getIsDepth() )
-    {
-      m_inCmpPredAvailFlag = sps3dExt->getViewSynthesisPredFlag( getIsDepth() ) || 
-        sps3dExt->getDepthBasedBlkPartFlag( getIsDepth() ) || 
-        sps3dExt->getDepthRefinementFlag  ( getIsDepth() );                            
-    }
-    else
-    {
-      m_inCmpPredAvailFlag = sps3dExt->getIntraContourFlag( getIsDepth() ) || 
-        sps3dExt->getQtPredFlag( getIsDepth() ) || 
-        sps3dExt->getMpiFlag( getIsDepth() );                                  
-    }
-  }
-}
-
-Void TComSlice::checkInCompPredRefLayers()
-{  
-  if ( getInCompPredFlag() )
-  {
-    for (Int i = 0; i < getNumCurCmpLIds(); i++ )
-    {      
-      assert( getIvPic(!getIsDepth(), getInCmpRefViewIdcs( i ) ) != NULL );       
-      //  It is a requirement of bitstream conformance that there 
-      //  is a picture in the DPB with PicOrderCntVal equal to the PicOrderCntVal of the current picture, 
-      //  and a nuh_layer_id value equal to ViewCompLayerId[ inCmpRefViewIdcs[ i ] ][ !DepthFlag ].
-    }
-  } 
-}
-
-Void TComSlice::setPocsInCurrRPSs()
-{
-  // Currently only needed at decoder side; 
-  m_pocsInCurrRPSs.clear();    
-  std::vector<TComPic*>** rpsCurr = getPic()->getDecodedRps()->m_refPicSetsCurr;
-  for (Int i = 0 ; i < 3; i++ )
-  {
-    for( Int j = 0; j < rpsCurr[i]->size(); j++ )
-    {
-      m_pocsInCurrRPSs.push_back( (*rpsCurr[i])[j]->getPOC() ); 
-    }
-  }
-}
-
-#endif
 
 /** get scaling matrix from RefMatrixID
  * \param sizeId    size index

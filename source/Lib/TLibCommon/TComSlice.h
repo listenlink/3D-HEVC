@@ -1029,10 +1029,6 @@ private:
   Int         m_numViews; 
   Int         m_numDirectRefLayers       [MAX_NUM_LAYERS];
   Int         m_idDirectRefLayer         [MAX_NUM_LAYERS][MAX_NUM_LAYERS];  
-#if NH_3D
-  Int         m_numRefListLayers         [MAX_NUM_LAYERS];
-  Int         m_idRefListLayer           [MAX_NUM_LAYERS][MAX_NUM_LAYERS];  
-#endif
 
 
   Int         m_numRefLayers             [MAX_NUM_LAYER_IDS]; 
@@ -1058,19 +1054,6 @@ private:
   Void        xSetRefLayerFlags( Int currLayerId );
 
   // VPS EXTENSION 2 SYNTAX ELEMENTS
-#if NH_3D
-  IntAry1d       m_numCp;  
-  IntAry2d       m_cpRefVoi;
-  BoolAry2d      m_cpPresentFlag; 
-  Int            m_cpPrecision;
-  BoolAry1d      m_cpInSliceSegmentHeaderFlag;
-  IntAry3d       m_aaaiCodedScale ;
-  IntAry3d       m_aaaiCodedOffset;
-
-  IntAry1d       m_viewOIdxList;
-  BoolAry2d      m_viewCompLayerPresentFlag;
-  IntAry2d       m_viewCompLayerId;
-#endif
 
 #endif
 
@@ -1306,21 +1289,8 @@ public:
   Int     getDependencyId ( Int layerIdInNuh ) const                            { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPENDENCY_ID  ); }    
   Int     getNumViews()                        const                            { return m_numViews; }
   Void    initNumViews();
-#if NH_3D
-  Void    initViewCompLayer( );
-  Int     getViewOIdxList( Int i )             const                            { return m_viewOIdxList[i]; }
-  std::vector<Int> getViewOIdxList( )          const                            { return m_viewOIdxList; }
-
-  Int     getVoiInVps( Int viewOIdx )          const;
-
-  Bool    getViewCompLayerPresentFlag (Int i, Bool d ) const                    { return  m_viewCompLayerPresentFlag[ getVoiInVps(i) ][d]; }
-  Bool    getViewCompLayerId          (Int i, Bool d ) const                    { return  m_viewCompLayerId         [ getVoiInVps(i) ][d]; }
-#endif
   Bool    getDependencyFlag( Int i, Int j ) const                               { return m_dependencyFlag[i][j]; }
   Int     getNumDirectRefLayers( Int layerIdInNuh ) const                       { return m_numDirectRefLayers[ layerIdInNuh ];  };                               
-#if NH_3D                                                                      
-  Int     getNumRefListLayers( Int layerIdInNuh )   const                       { return m_numRefListLayers[ layerIdInNuh ];  };                               
-#endif
 
   Int     getNumRefLayers            ( Int i )      const                       { return m_numRefLayers[i]; } 
   Int     getNumPredictedLayers      ( Int i )      const                       { return m_numPredictedLayers[i]; } 
@@ -1328,9 +1298,6 @@ public:
   Int     getIdRefLayer              ( Int i, Int j ) const                     { assert( j >= 0 && j < getNumRefLayers      ( i )); return m_idRefLayer      [i][j]; } 
   Int     getIdPredictedLayer        ( Int i, Int j ) const                     { assert( j >= 0 && j < getNumPredictedLayers( i )); return m_idPredictedLayer[i][j]; } 
   Int     getIdDirectRefLayer        ( Int i, Int j ) const                     { assert( j >= 0 && j < getNumDirectRefLayers( i )); return m_idDirectRefLayer[i][j]; } 
-#if NH_3D                                                                      
-  Int     getIdRefListLayer          ( Int i, Int j ) const                     { assert( j >= 0 && j < getNumRefListLayers   ( i )); return m_idRefListLayer[i][j]; } 
-#endif                                                                          
   Int     getNumIndependentLayers    (  )             const                     { return m_numIndependentLayers; } 
   Int     getNumLayersInTreePartition( Int i )        const                     { return m_numLayersInTreePartition[i]; } 
   Int     getTreePartitionLayerIdList( Int i, Int j ) const                     { return m_treePartitionLayerIdList[i][j]; } 
@@ -1383,47 +1350,6 @@ public:
 
   /// VPS EXTENSION 2 SYNTAX ELEMENTS
   Int     getDepthId                   ( Int layerIdInNuh)             const    { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPTH_ID ); }
-#if NH_3D                                                             
-  Bool    getVpsDepthFlag              ( Int layerIdInNuh)             const    { return (getDepthId( layerIdInNuh ) > 0);  }
-  Int     getLayerIdInNuh              ( Int viewIndex, Bool depthFlag ) const;   
-          
-  Void    createCamPars                ( Int iNumViews );  
-  Void    initCamParaVPS               ( Int vOIdxInVps, Int numCp, Bool cpInSliceSegmentHeaderFlag, Int* cpRefVoi, Int** aaiScale, Int** aaiOffset );                                                
-                                       
-  Void    setCpPrecision               ( Int  val )                             { m_cpPrecision = val;                       }
-  Int     getCpPrecision               (  )                            const    { return m_cpPrecision;                      }
-                                                                                                                
-  Void    setNumCp                     ( Int i, Int  val )                      { m_numCp[i] = val;                          }
-  Int     getNumCp                     ( Int i )                       const    { return m_numCp[i];                         }
-                                                                                                                
-  Void    setCpRefVoi                  ( Int i, Int m, Int  val )               { m_cpRefVoi[i][m] = val;                    }
-  Int     getCpRefVoi                  ( Int i, Int m )                const    { return m_cpRefVoi[i][m];                   }
-                                                                                                                
-  Void    setCpInSliceSegmentHeaderFlag( Int i, Bool flag )                     { m_cpInSliceSegmentHeaderFlag[i] = flag;    }
-  Bool    getCpInSliceSegmentHeaderFlag( Int i )                       const    { return m_cpInSliceSegmentHeaderFlag[i];    }
-                                                                                                                
-  Void    setVpsCpScale                ( Int i, Int j, Int val )                { m_aaaiCodedScale [i][0][j] = val;          }
-  Int     getVpsCpScale                ( Int i, Int j )                const    { return m_aaaiCodedScale[i][0][j];          }
-                                                                                                                
-  Void    setVpsCpOff                  ( Int i, Int j, Int val )                { m_aaaiCodedOffset[i][0][j] = val;          }
-  Int     getVpsCpOff                  ( Int i, Int j )                const    { return m_aaaiCodedOffset[i][0][j];         }
-                                                                                                                
-  Void    setVpsCpInvScale             ( Int i, Int j, Int val )                { m_aaaiCodedScale[i][1][j] = val;           }
-  Int     getVpsCpInvScale             ( Int i, Int j )                const    { return m_aaaiCodedScale[i][1][j];          }
-                                                                                                                
-  Void    setVpsCpInvOff               ( Int i, Int j, Int val )                { m_aaaiCodedOffset[i][1][j] = val;          }
-  Int     getVpsCpInvOff               ( Int i, Int j )                const    { return m_aaaiCodedOffset[i][1][j];         }
-
-// Derived
-  Void    deriveCpPresentFlag          ( );                  
-  Void    setCpPresentFlag             ( Int i, Int m, Bool flag )              { m_cpPresentFlag[i][m] = flag;             } 
-  Bool    getCpPresentFlag             ( Int i, Int m )                const    { return m_cpPresentFlag[i][m];             }   
-                                                                       
-  const IntAry1d& getCodedScale        ( Int viewIndex )               const    { return m_aaaiCodedScale [viewIndex][0];   }
-  const IntAry1d& getCodedOffset       ( Int viewIndex )               const    { return m_aaaiCodedOffset[viewIndex][0];   }
-  const IntAry1d& getInvCodedScale     ( Int viewIndex )               const    { return m_aaaiCodedScale [viewIndex][1];   }
-  const IntAry1d& getInvCodedOffset    ( Int viewIndex )               const    { return m_aaaiCodedOffset[viewIndex][1];   }
-#endif
 
   template <typename T, typename S, typename U> Void xPrintArray( const Char* name, Int numElemDim1, U idx, S numElemDim2, T vec, Bool printNumber, Bool printIdx = true ) const
   {
@@ -1469,59 +1395,6 @@ public:
 #endif
 };
 
-#if NH_3D_DLT
-class TComDLT
-{
-private:
-  Bool              m_bDltPresentFlag;
-  Bool              m_bUseDLTFlag                 [ MAX_NUM_LAYERS ];
-  Bool              m_bInterViewDltPredEnableFlag [ MAX_NUM_LAYERS ];
-  Bool              m_bDltBitMapRepFlag           [ MAX_NUM_LAYERS ];
-
-  Int               m_iNumDepthmapValues          [ MAX_NUM_LAYERS ];
-  std::vector<Int>  m_iDepthValue2Idx             [ MAX_NUM_LAYERS ];
-  std::vector<Int>  m_iIdx2DepthValue             [ MAX_NUM_LAYERS ];
-
-  Int               m_iNumDepthViews;
-  UInt              m_uiDepthViewBitDepth;
-  
-  // mapping
-  Int               m_iDepthIdxToLayerId          [ MAX_NUM_LAYERS ];
-
-public:
-  TComDLT();
-  ~TComDLT();
-  
-  Int     getDepthIdxToLayerId(Int depthIdx) const        { return m_iDepthIdxToLayerId[depthIdx]; }
-  Void    setDepthIdxToLayerId(Int depthIdx, Int layerId) { m_iDepthIdxToLayerId[depthIdx] = layerId; }
-
-  Bool    getDltPresentFlag  ()                           const   { return m_bDltPresentFlag; }
-  Void    setDltPresentFlag  ( Bool b )                   { m_bDltPresentFlag = b;    }
-
-  Bool    getUseDLTFlag      ( Int layerIdInVps )         const   { return m_bUseDLTFlag[ layerIdInVps ]; }
-  Void    setUseDLTFlag      ( Int layerIdInVps, Bool b ) { m_bUseDLTFlag[ layerIdInVps ]  = b;   }
-  
-  Bool    getInterViewDltPredEnableFlag( Int layerIdInVps )         const   { return m_bInterViewDltPredEnableFlag[ layerIdInVps ]; }
-  Void    setInterViewDltPredEnableFlag( Int layerIdInVps, Bool b ) { m_bInterViewDltPredEnableFlag[ layerIdInVps ] = b;    }
-  
-  Bool    getUseBitmapRep      ( Int layerIdInVps )         const   { return m_bDltBitMapRepFlag[ layerIdInVps ]; }
-  Void    setUseBitmapRep      ( Int layerIdInVps, Bool b ) { m_bDltBitMapRepFlag[ layerIdInVps ]  = b;   }
-
-  Void    setNumDepthViews   ( Int n )                    { m_iNumDepthViews = n; }
-  Int     getNumDepthViews   ()                           const   { return m_iNumDepthViews; }
-
-  Void    setDepthViewBitDepth( UInt n )                  { m_uiDepthViewBitDepth = n; }
-  UInt    getDepthViewBitDepth()                          const   { return m_uiDepthViewBitDepth; }
-
-  Int     getNumDepthValues( Int layerIdInVps )           const   { return getUseDLTFlag(layerIdInVps)?m_iNumDepthmapValues[layerIdInVps]:(1 << m_uiDepthViewBitDepth); }
-  Int     depthValue2idx( Int layerIdInVps, Pel value )   const   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
-  Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  const   { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][ClipBD(uiIdx,m_uiDepthViewBitDepth)]:uiIdx; }
-  Void    setDepthLUTs( Int layerIdInVps, std::vector<Int> idx2DepthValue, Int iNumDepthValues = 0 );
-  std::vector<Int>    idx2DepthValue( Int layerIdInVps )  const   { return m_iIdx2DepthValue[layerIdInVps]; }
-  Void    getDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int>& riDeltaDLTOut, UInt& ruiDeltaDLTOutNum ) const;
-  Void    setDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int> piDeltaDLTIn, UInt uiDeltaDLTInNum );
-};
-#endif
 
 
 class Window
@@ -1801,91 +1674,6 @@ public:
 };
 
 
-#if NH_3D
-class TComSps3dExtension
-{
-public:
-  TComSps3dExtension()
-  {
-    for (Int d = 0; d < 2; d++)
-    {
-      m_ivMvPredFlag          [d] = false; 
-      m_ivMvScalingFlag       [d] = false; 
-      m_log2SubPbSizeMinus3   [d] = 3; 
-      m_ivResPredFlag         [d] = false; 
-      m_depthRefinementFlag   [d] = false; 
-      m_viewSynthesisPredFlag [d] = false; 
-      m_depthBasedBlkPartFlag [d] = false; 
-      m_mpiFlag               [d] = false; 
-      m_log2MpiSubPbSizeMinus3[d] = 3; 
-      m_intraContourFlag      [d] = false; 
-      m_intraSdcWedgeFlag     [d] = false; 
-      m_qtPredFlag            [d] = false; 
-      m_interSdcFlag          [d] = false; 
-      m_depthIntraSkipFlag    [d] = false;   
-    }
-  }
-
-  Void          setIvMvPredFlag( Int d, Bool flag )         { m_ivMvPredFlag[d] = flag;             }
-  Bool          getIvMvPredFlag( Int d ) const              { return m_ivMvPredFlag[d];             }
-
-  Void          setIvMvScalingFlag( Int d, Bool flag )      { m_ivMvScalingFlag[d] = flag;          }
-  Bool          getIvMvScalingFlag( Int d ) const           { return m_ivMvScalingFlag[d];          }
-
-  Void          setLog2SubPbSizeMinus3( Int d, Int  val )   { m_log2SubPbSizeMinus3[d] = val;       }
-  Int           getLog2SubPbSizeMinus3( Int d ) const       { return m_log2SubPbSizeMinus3[d];      }
-
-  Void          setIvResPredFlag( Int d, Bool flag )        { m_ivResPredFlag[d] = flag;            }
-  Bool          getIvResPredFlag( Int d ) const             { return m_ivResPredFlag[d];            }
-
-  Void          setDepthRefinementFlag( Int d, Bool flag )  { m_depthRefinementFlag[d] = flag;      }
-  Bool          getDepthRefinementFlag( Int d ) const       { return m_depthRefinementFlag[d];      }
-
-  Void          setViewSynthesisPredFlag( Int d, Bool flag ) { m_viewSynthesisPredFlag[d] = flag;   }
-  Bool          getViewSynthesisPredFlag( Int d ) const     { return m_viewSynthesisPredFlag[d];    }
-
-  Void          setDepthBasedBlkPartFlag( Int d, Bool flag ) { m_depthBasedBlkPartFlag[d] = flag;   }
-  Bool          getDepthBasedBlkPartFlag( Int d ) const     { return m_depthBasedBlkPartFlag[d];    }
-
-  Void          setMpiFlag( Int d, Bool flag )              { m_mpiFlag[d] = flag;                  }
-  Bool          getMpiFlag( Int d ) const                   { return m_mpiFlag[d];                  }
-
-  Void          setLog2MpiSubPbSizeMinus3( Int d, Int  val ) { m_log2MpiSubPbSizeMinus3[d] = val;   }
-  Int           getLog2MpiSubPbSizeMinus3( Int d ) const    { return m_log2MpiSubPbSizeMinus3[d];   }
-
-  Void          setIntraContourFlag( Int d, Bool flag )     { m_intraContourFlag[d] = flag;         }
-  Bool          getIntraContourFlag( Int d ) const          { return m_intraContourFlag[d];         }
-
-  Void          setIntraSdcWedgeFlag( Int d, Bool flag )    { m_intraSdcWedgeFlag[d] = flag;        }
-  Bool          getIntraSdcWedgeFlag( Int d ) const         { return m_intraSdcWedgeFlag[d];        }
-
-  Void          setQtPredFlag( Int d, Bool flag )           { m_qtPredFlag[d] = flag;               }
-  Bool          getQtPredFlag( Int d ) const                { return m_qtPredFlag[d];               }
-
-  Void          setInterSdcFlag( Int d, Bool flag )         { m_interSdcFlag[d] = flag;             }
-  Bool          getInterSdcFlag( Int d ) const              { return m_interSdcFlag[d];             }
-
-  Void          setDepthIntraSkipFlag( Int d, Bool flag )   { m_depthIntraSkipFlag[d] = flag;       }
-  Bool          getDepthIntraSkipFlag( Int d ) const        { return m_depthIntraSkipFlag[d];       }
-private:
-
-  Bool        m_ivMvPredFlag          [2];
-  Bool        m_ivMvScalingFlag       [2];
-  Int         m_log2SubPbSizeMinus3   [2];
-  Bool        m_ivResPredFlag         [2];
-  Bool        m_depthRefinementFlag   [2];
-  Bool        m_viewSynthesisPredFlag [2];
-  Bool        m_depthBasedBlkPartFlag [2];
-  Bool        m_mpiFlag               [2];
-  Int         m_log2MpiSubPbSizeMinus3[2];
-  Bool        m_intraContourFlag      [2];
-  Bool        m_intraSdcWedgeFlag     [2];
-  Bool        m_qtPredFlag            [2];
-  Bool        m_interSdcFlag          [2];
-  Bool        m_depthIntraSkipFlag    [2];  
-};
-
-#endif
 
 
 /// SPS class
@@ -1993,11 +1781,6 @@ private:
   // SPS Extension 
   Bool             m_interViewMvVertConstraintFlag;
 #endif
-#if NH_3D
-  TComSps3dExtension m_sps3dExtension; 
-  Int              m_aaiCodedScale [2][MAX_NUM_LAYERS];
-  Int              m_aaiCodedOffset[2][MAX_NUM_LAYERS];
-#endif             
 #if NH_MV           
   Int              m_layerId; 
 #endif
@@ -2238,10 +2021,6 @@ public:
   Void                   setInterViewMvVertConstraintFlag(Bool val)                                      { m_interViewMvVertConstraintFlag = val;                               }
   Bool                   getInterViewMvVertConstraintFlag()         const                                { return m_interViewMvVertConstraintFlag;                              }
                                                                                                                                                                                 
-#if NH_3D
-  Void                   setSps3dExtension ( TComSps3dExtension& sps3dExtension )                        { m_sps3dExtension = sps3dExtension;                                   }
-  const TComSps3dExtension* getSps3dExtension ( )  const                                                 { return &m_sps3dExtension;                                            } 
-#endif                  
                         
   // Inference          
                         
@@ -2432,9 +2211,6 @@ private:
   Bool             m_pocResetInfoPresentFlag;
 #endif
 
-#if NH_3D_DLT
-  TComDLT                m_cDLT;
-#endif
 
 public:
                          TComPPS();
@@ -2457,11 +2233,6 @@ public:
   Void                   setMaxCuDQPDepth( UInt u )                                       { m_uiMaxCuDQPDepth = u;                        }
   UInt                   getMaxCuDQPDepth() const                                         { return m_uiMaxCuDQPDepth;                     }
 
-#if NH_3D_DLT
-  Void                   setDLT( TComDLT cDLT )                                           { m_cDLT = cDLT;                                }
-  const TComDLT*         getDLT() const                                                   { return &m_cDLT;                               }
-  TComDLT*               getDLT()                                                         { return &m_cDLT;                               }
-#endif
 
 
   Void                   setQpOffset(ComponentID compID, Int i )
@@ -2752,9 +2523,6 @@ private:
   Int        m_layerId; 
   Int        m_viewId;
   Int        m_viewIndex; 
-#if NH_3D
-  Bool       m_isDepth;
-#endif
 
 // Additional slice header syntax elements 
   Bool       m_pocResetFlag; 
@@ -2778,60 +2546,6 @@ private:
   Int        m_pocMsbCycleVal;
   Bool       m_pocMsbValRequiredFlag;
 
-#if NH_3D
-  IntAry2d   m_aaiCodedScale ;
-  IntAry2d   m_aaiCodedOffset;
-#endif
-#if NH_3D_TMVP
-  Int        m_aiAlterRefIdx   [2]; 
-#endif
-#if NH_3D_ARP
-  Bool       m_arpRefPicAvailable[2][MAX_NUM_LAYERS];
-  TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
-  UInt        m_nARPStepNum; 
-  Int         m_aiFirstTRefIdx    [2];   
-#endif
-#if NH_3D
-  std::vector<Int> m_pocsInCurrRPSs; 
-#endif
-#if NH_3D_IC
-  Bool       m_bApplyIC;
-  Bool       m_icSkipParseFlag;
-#endif
-#if NH_3D
-  std::vector<Int> m_inCmpRefViewIdcs;
-  Bool       m_inCmpPredAvailFlag; 
-  Bool       m_inCmpPredFlag; 
-  Bool       m_cpAvailableFlag; 
-  Int        m_numViews; 
-  TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
-  Int**      m_depthToDisparityB; 
-  Int**      m_depthToDisparityF; 
-  Bool       m_bApplyDIS;
-#endif
-#endif
-#if NH_3D_IC
-  Int*       m_aICEnableCandidate;
-  Int*       m_aICEnableNum;
-#endif       
-#if NH_3D   
-  Int        m_iDefaultRefViewIdx;
-  Bool       m_bDefaultRefViewIdxAvailableFlag;
-             
-  Bool       m_ivMvPredFlag         ;
-  Bool       m_ivMvScalingFlag      ;
-  Bool       m_ivResPredFlag        ;
-  Bool       m_depthRefinementFlag  ;
-  Bool       m_viewSynthesisPredFlag;
-  Bool       m_depthBasedBlkPartFlag;
-  Bool       m_mpiFlag              ;
-  Bool       m_intraContourFlag     ;
-  Bool       m_intraSdcWedgeFlag    ;
-  Bool       m_qtPredFlag           ;
-  Bool       m_interSdcFlag         ;
-  Bool       m_depthIntraSkipFlag   ;
-  Int        m_mpiSubPbSize         ; 
-  Int        m_subPbSize            ; 
 #endif
 public:
                               TComSlice();
@@ -2892,32 +2606,6 @@ public:
   TComPic*                    getPic()                                               { return m_pcPic;                                               }
   TComPic*                    getRefPic( RefPicList e, Int iRefIdx)                  { return m_apcRefPicList[e][iRefIdx];                           }
   Int                         getRefPOC( RefPicList e, Int iRefIdx)                  { return m_aiRefPOCList[e][iRefIdx];                            }
-#if NH_3D
-  Bool                        getInCmpPredAvailFlag( )                 const         { return m_inCmpPredAvailFlag;                                  }
-  Bool                        getCpAvailableFlag( )                    const         { return m_cpAvailableFlag;                                     }
-  Bool                        getInCompPredFlag( )                     const         { return m_inCmpPredFlag;                                       }
-  Void                        setInCompPredFlag( Bool b )                            { m_inCmpPredFlag = b;                                          }
-  Int                         getInCmpRefViewIdcs( Int i )             const         { return m_inCmpRefViewIdcs  [i];                               }
-  Int                         getNumCurCmpLIds( )                      const         { return (Int) m_inCmpRefViewIdcs.size();                       }
-  TComPic*                    getIvPic( Bool depthFlag, Int viewIndex) const         { return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ];    }
-  TComPic*                    getTexturePic       ()                                 { return  m_ivPicsCurrPoc[0][ m_viewIndex ];                    }
-#endif                            
-#if NH_3D_IC                                                                                                                                          
-  Void                        setApplyIC( Bool b )                                   { m_bApplyIC = b;                                               }
-  Bool                        getApplyIC()                                           { return m_bApplyIC;                                            }
-  Void                        xSetApplyIC();                                                                                                         
-  Void                        xSetApplyIC(Bool bUseLowLatencyICEnc);                                                                                 
-  Void                        setIcSkipParseFlag( Bool b )                           { m_icSkipParseFlag = b;                                        }
-  Bool                        getIcSkipParseFlag()                                   { return m_icSkipParseFlag;                                     }
-#endif                                                                                                                                               
-#if NH_3D_ARP                                                                                                                                         
-  Void                        setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic; }                  
-  Void                        setARPStepNum( TComPicLists*ivPicLists );                                                                              
-  Void                        setPocsInCurrRPSs( );
-
-  TComPic*                    getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )     { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
-  UInt                        getARPStepNum( )                                       { return m_nARPStepNum;                                         }  
-#endif
   Int                         getDepth() const                                       { return m_iDepth;                                              }
   Bool                        getColFromL0Flag() const                               { return m_colFromL0Flag;                                       }
   UInt                        getColRefIdx() const                                   { return m_colRefIdx;                                           }
@@ -3196,54 +2884,6 @@ public:
   Void                        setDecodingProcess ( DecodingProcess decProc )         { m_decodingProcess = decProc;                                  }
 
 
-#if NH_3D
-#if NH_3D_TMVP
-  Void                        generateAlterRefforTMVP ();   
-  Void                        setAlterRefIdx          ( RefPicList e, Int i )        { m_aiAlterRefIdx[e]    = i;                                    }
-  Int                         getAlterRefIdx          ( RefPicList e )               { return  m_aiAlterRefIdx[e];                                   }
-#endif                                                                                                                                               
-#if NH_3D_ARP                                                                                                                                         
-  Int                         getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];                                  }
-  Void                        setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;                                   }
-  Bool                        getArpRefPicAvailable  ( RefPicList e, Int viewIdx)    { return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }
-  IntAry1d                    getPocsInCurrRPSs()                                    { return m_pocsInCurrRPSs;                                      } 
-#endif                                                                                                                                               
-  Void                        setIsDepth            ( Bool isDepth )                 { m_isDepth = isDepth;                                          }
-  Bool                        getIsDepth            () const                         { return m_isDepth;                                             }
-  Void                        setCamparaSlice       ( Int** aaiScale = 0, Int** aaiOffset = 0 );      
-
-  IntAry1d                    getCodedScale         () const                         { return m_aaiCodedScale [0];                                   }
-  IntAry1d                    getCodedOffset        () const                         { return m_aaiCodedOffset[0];                                   }
-  IntAry1d                    getInvCodedScale      () const                         { return m_aaiCodedScale [1];                                   }
-  IntAry1d                    getInvCodedOffset     () const                         { return m_aaiCodedOffset[1];                                   }
-                                                                                                                                                     
-  Void                        setCpScale( Int j, Int  val )                          { m_aaiCodedScale[0][j] = val;                                  }
-  Int                         getCpScale( Int j )                                    { return m_aaiCodedScale[0][j];                                 }
-                                                                                                                                                     
-  Void                        setCpOff( Int j, Int  val )                            { m_aaiCodedOffset[0][j] = val;                                 }
-  Int                         getCpOff( Int j )                                      { return m_aaiCodedOffset[0][j];                                }
-                                                                                                                                                     
-  Void                        setCpInvScale( Int j, Int  val )                       { m_aaiCodedScale[1][j] = val;                                  }
-  Int                         getCpInvScale( Int j )                                 { return m_aaiCodedScale[1][j];                                 }
-                                                                                                                                                     
-  Void                        setCpInvOff( Int j, Int  val )                         { m_aaiCodedOffset[1][j] = val;                                 }
-  Int                         getCpInvOff( Int j )                                   { return m_aaiCodedOffset[1][j];                                }
-                                                                                                                                                        
-  Void                        setIvPicLists( TComPicLists* m_ivPicLists );                                                                              
-  Void                        setDepthToDisparityLUTs();                                                                                                
-                                                                                                                                                        
-  Int*                        getDepthToDisparityB( Int refViewIdx )                 { return m_depthToDisparityB[ getVPS()->getVoiInVps( refViewIdx) ];}
-  Int*                        getDepthToDisparityF( Int refViewIdx )                 { return m_depthToDisparityF[ getVPS()->getVoiInVps( refViewIdx) ];}
-#if NH_3D_IC                                                                                                                                             
-  Void                        setICEnableCandidate( Int* icEnableCandidate)          { m_aICEnableCandidate = icEnableCandidate;                     }
-  Void                        setICEnableNum( Int* icEnableNum)                      { m_aICEnableNum = icEnableNum;                                 }
-  Void                        setICEnableCandidate( UInt layer, Int value)           { m_aICEnableCandidate[ layer ] = value;                        }
-  Void                        setICEnableNum( UInt layer, Int value)                 { m_aICEnableNum[ layer ] = value; ;                            }
-                                                                                                                                                     
-  Int                         getICEnableCandidate( Int layer)                       { return  m_aICEnableCandidate[ layer ];                        }
-  Int                         getICEnableNum( Int layer)                             { return m_aICEnableNum[ layer ];                               }
-#endif
-#endif
 // Additional slice header syntax elements
 
   Void                        setCrossLayerBlaFlag( Bool flag )                      { m_crossLayerBlaFlag = flag;                                   }
@@ -3325,13 +2965,8 @@ public:
   }
 
   // Additional variables derived in slice header semantics 
-#if NH_3D
-  Int                         getNumInterLayerRefPicsMinus1Len( ) const              { return gCeilLog2(  getVPS()->getNumRefListLayers( getLayerId() )); }
-  Int                         getInterLayerPredLayerIdcLen    ( ) const              { return gCeilLog2(  getVPS()->getNumRefListLayers( getLayerId() )); }
-#else
   Int                         getNumInterLayerRefPicsMinus1Len( ) const              { return gCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerId() )); }
   Int                         getInterLayerPredLayerIdcLen    ( ) const              { return gCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerId() )); }
-#endif
 
   Int                         getRefLayerPicFlag( Int i ) const;
   Int                         getRefLayerPicIdc ( Int j ) const;
@@ -3347,36 +2982,6 @@ public:
   Void                        setRefPicSetInterLayer       ( std::vector<TComPic*>* refPicSetInterLayer0, std::vector<TComPic*>* refPicSetInterLayer1);
   TComPic*                    getPicFromRefPicSetInterLayer ( Int setIdc, Int layerId ) const ;
 
-#if NH_3D
-  // 3D-HEVC tool parameters
-  Void                        deriveInCmpPredAndCpAvailFlag( );
-  Void                        init3dToolParameters();
-  Void                        checkInCompPredRefLayers();
-
-  Bool                        getIvMvPredFlag           ( )                          { return m_ivMvPredFlag           ;                             };
-  Bool                        getIvMvScalingFlag        ( )                          { return m_ivMvScalingFlag        ;                             };
-  Bool                        getIvResPredFlag          ( )                          { return m_ivResPredFlag          ;                             };
-  Bool                        getDepthRefinementFlag    ( )                          { return m_depthRefinementFlag    ;                             };
-  Bool                        getViewSynthesisPredFlag  ( )                          { return m_viewSynthesisPredFlag  ;                             };
-  Bool                        getDepthBasedBlkPartFlag  ( )                          { return m_depthBasedBlkPartFlag  ;                             };
-  Bool                        getMpiFlag                ( )                          { return m_mpiFlag                ;                             };
-  Bool                        getIntraContourFlag       ( )                          { return m_intraContourFlag       ;                             };
-  Bool                        getIntraSdcWedgeFlag      ( )                          { return m_intraSdcWedgeFlag      ;                             };
-  Bool                        getQtPredFlag             ( )                          { return m_qtPredFlag             ;                             };
-  Bool                        getInterSdcFlag           ( )                          { return m_interSdcFlag           ;                             };
-  Bool                        getDepthIntraSkipFlag     ( )                          { return m_depthIntraSkipFlag     ;                             };
-
-  Int                         getMpiSubPbSize           ( )                          { return m_mpiSubPbSize           ;                             };
-  Int                         getSubPbSize              ( )                          { return m_subPbSize              ;                             };
-#if NH_3D_NBDV
-  Int                         getDefaultRefViewIdx()                                 { return m_iDefaultRefViewIdx;                                  }
-  Void                        setDefaultRefViewIdx(Int iViewIdx)                     { m_iDefaultRefViewIdx = iViewIdx;                              }
-
-  Bool                        getDefaultRefViewIdxAvailableFlag()                    { return m_bDefaultRefViewIdxAvailableFlag;                     }
-  Void                        setDefaultRefViewIdxAvailableFlag(Bool bViewIdx)       { m_bDefaultRefViewIdxAvailableFlag = bViewIdx;                 }
-  Void                        setDefaultRefView( );
-#endif
-#endif
 #if NH_MV
  TComPic*                     getRefPicSetInterLayer( Int setIdc, Int i ) const; 
 #endif
