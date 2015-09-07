@@ -80,12 +80,6 @@ public:
   Bool  isInitialized() const     { return m_bInitialized; }
   Int**** getBaseViewShiftLUTI()  { return m_aiBaseViewShiftLUT;   }
 
-#if !NH_3D_FIX_TICKET_101
-#if NH_3D_IV_MERGE
-  Void  copyCamParamForSlice( TComSlice* pcSlice );
-#endif
-#endif
-
 private:
   Void xResetReceivedIdc( Bool overWriteFlag ); 
   Void  xOutput     ( Int iPOC );
@@ -181,20 +175,17 @@ Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize )
 class TDecTop
 {
 private:
-  Int                     m_iMaxRefPicNum;
-
-  NalUnitType             m_associatedIRAPType; ///< NAL unit type of the associated IRAP picture
-  Int                     m_pocCRA;            ///< POC number of the latest CRA picture
-  Int                     m_pocRandomAccess;   ///< POC number of the random access point (the first IDR or CRA picture)
-
-  TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
-#if NH_MV
-  Bool*                    m_layerInitilizedFlag; // initialization Layers
-  static ParameterSetManager m_parameterSetManager;  // storage for parameter sets 
-  Int                      m_targetOlsIdx; 
-#else
-  ParameterSetManager     m_parameterSetManager;  // storage for parameter sets
+  Int                         m_iMaxRefPicNum;
+                              
+  NalUnitType                 m_associatedIRAPType; ///< NAL unit type of the associated IRAP picture
+#if !NH_MV
+  Int                         m_pocCRA;            ///< POC number of the latest CRA picture
+  Int                         m_pocRandomAccess;   ///< POC number of the random access point (the first IDR or CRA picture)
+  
+  TComList<TComPic*>           m_cListPic;         //  Dynamic buffer
+  ParameterSetManager          m_parameterSetManager;  // storage for parameter sets
 #endif
+
   TComSlice*              m_apcSlicePilot;
 
   SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices, excluding prefix SEIs...
@@ -214,16 +205,16 @@ private:
   TComSampleAdaptiveOffset m_cSAO;
 
   Bool isSkipPictureForBLA(Int& iPOCLastDisplay);
-#if NH_MV
-  Bool isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay, const TComVPS* vps);
-#else
+#if !NH_MV
   Bool isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay);
 #endif
+
   TComPic*                m_pcPic;
   UInt                    m_uiSliceIdx;
+#if !NH_MV
   Int                     m_prevPOC;
   Int                     m_prevTid0POC;
-  Bool                    m_bFirstSliceInPicture;
+  Bool                    m_bFirstSliceInPicture;  
   Bool                    m_bFirstSliceInSequence;
   Bool                    m_prevSliceSkipped;
   Int                     m_skippedPOC;
@@ -231,29 +222,58 @@ private:
   Int                     m_lastPOCNoOutputPriorPics;
   Bool                    m_isNoOutputPriorPics;
   Bool                    m_craNoRaslOutputFlag;    //value of variable NoRaslOutputFlag of the last CRA pic
+#endif
+  
 #if O0043_BEST_EFFORT_DECODING
   UInt                    m_forceDecodeBitDepth;
 #endif
+
+
   std::ostream           *m_pDecodedSEIOutputStream;
 
+#if !NH_MV
   Bool                    m_warningMessageSkipPicture;
-#if NH_MV
-  Bool                    m_isLastNALWasEos;
 #endif
 
 #if NH_MV
-  // For NH_MV m_bFirstSliceInSequence indicates first slice in sequence of the particular layer  
+  // Class interface 
+  static ParameterSetManager  m_parameterSetManager;  // storage for parameter sets 
+  TComPicLists*           m_dpb; 
+#if NH_3D
+  CamParsCollector*       m_pcCamParsCollector;
+#endif
+
+  // Layer identification
   Int                     m_layerId;
   Int                     m_viewId;
-  TComPicLists*           m_ivPicLists;
-  std::vector<TComPic*>   m_refPicSetInterLayer0; 
-  std::vector<TComPic*>   m_refPicSetInterLayer1; 
-#if NH_3D
+#if NH_3D                 
   Int                     m_viewIndex; 
   Bool                    m_isDepth;
-  CamParsCollector*       m_pcCamParsCollector;
-  Int                     m_profileIdc;
 #endif
+
+  // Layer set
+  Int                     m_targetOlsIdx; 
+  Int                     m_smallestLayerId; 
+  Bool                    m_isInOwnTargetDecLayerIdList;   
+
+  // Decoding processes 
+  DecodingProcess         m_decodingProcess;
+  DecodingProcess         m_decProcPocAndRps;
+
+  // Decoding state
+  Bool*                   m_firstPicInLayerDecodedFlag;   
+    
+  Int                     m_prevPicOrderCnt; 
+  Int                     m_prevTid0PicPicOrderCntMsb;
+  Int                     m_prevTid0PicSlicePicOrderCntLsb;
+  
+  Int*                    m_lastPresentPocResetIdc;
+  Bool*                   m_pocDecrementedInDpbFlag; 
+
+  Int                     m_prevIrapPoc;
+  Int64                   m_prevIrapDecodingOrder;
+  Int64                   m_prevStsaDecOrder;
+  Int                     m_prevStsaTemporalId;
 #endif
 
   std::list<InputNALUnit*> m_prefixSEINALUs; /// Buffered up prefix SEI NAL Units.
@@ -267,88 +287,147 @@ public:
   Void setDecodedPictureHashSEIEnabled(Int enabled) { m_cGopDecoder.setDecodedPictureHashSEIEnabled(enabled); }
 
   Void  init();
-#if NH_MV  
-  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer, Bool& sliceSkippedFlag );
-  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer );
-#else  
+#if !NH_MV
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
-#endif
   Void  deletePicBuffer();
 
-#if NH_MV
-  const TComVPS* getActiveVPS() { return m_parameterSetManager.getActiveVPS( ); }
-  const TComSPS* getActiveSPS() { return m_parameterSetManager.getActiveSPS( m_layerId ); }
-#endif
-
-#if NH_MV
-  Void endPicDecoding(Int& poc, TComList<TComPic*>*& rpcListPic,  std::vector<Int>& targetDecLayerIdSet);  
-#else  
   Void  executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
-#endif
   Void  checkNoOutputPriorPics (TComList<TComPic*>* rpcListPic);
 
   Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
   Void  setNoOutputPriorPicsFlag (Bool val) { m_isNoOutputPriorPics = val; }
+  
   Void  setFirstSliceInPicture (bool val)  { m_bFirstSliceInPicture = val; }
+
   Bool  getFirstSliceInSequence ()         { return m_bFirstSliceInSequence; }
   Void  setFirstSliceInSequence (bool val) { m_bFirstSliceInSequence = val; }
+#endif
+
 #if O0043_BEST_EFFORT_DECODING
   Void  setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }
 #endif
+
   Void  setDecodedSEIMessageOutputStream(std::ostream *pOpStream) { m_pDecodedSEIOutputStream = pOpStream; }
   UInt  getNumberOfChecksumErrorsDetected() const { return m_cGopDecoder.getNumberOfChecksumErrorsDetected(); }
+
 #if NH_MV    
-  TComPic*                getPic                ( Int poc );
-  TComList<TComPic*>*     getListPic            ()               { return &m_cListPic;  }  
-  Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
-  Void                    setLayerInitilizedFlags( Bool* val )    { m_layerInitilizedFlag = val; }
-  Void                    setTargetOlsIdx       ( Int targetOlsIdx ) { m_targetOlsIdx = targetOlsIdx; }    
-  Int                     getTargetOlsIdx       ( )                  { return m_targetOlsIdx; }    
-  Int                     getCurrPoc            ()               { return m_apcSlicePilot->getPOC(); }
-  Void                    setLayerId            ( Int layer)     { m_layerId = layer;   }
-  Int                     getLayerId            ()               { return m_layerId;    }
-  Void                    setViewId             ( Int viewId  )  { m_viewId  = viewId;  }
-  Int                     getViewId             ()               { return m_viewId;     }  
-  Void                    initFromActiveVps     ( const TComVPS* vps );
+
+  /////////////////////////
+  // For access from TAppDecTop
+  /////////////////////////
+
+  // Non VCL decoding
+  Bool       decodeNonVclNalu            ( InputNALUnit& nalu );                                    
+                                    
+  // Start picture decoding         
+  Int        preDecodePoc                ( Bool firstPicInLayerDecodedFlag, Bool isFstPicOfAllLayOfPocResetPer, Bool isPocResettingPicture ); 
+  Void       inferPocResetPeriodId       ( );
+  Void       decodeSliceHeader           ( InputNALUnit &nalu );    
+
+  // Picture decoding 
+  Void       activatePSsAndInitPicOrSlice( TComPic* newPic ); 
+  Void       decodePocAndRps             ( );
+  Void       genUnavailableRefPics       ( );                               
+  Void       decodeSliceSegment          ( InputNALUnit &nalu );
+                                    
+  // End Picture decoding           
+  Void       executeLoopFilters          ( );
+  Void       finalizePic( );
+  
+  //////////////////////////
+  // For access from slice 
+  /////////////////////////
+  Void       initFromActiveVps           ( const TComVPS* vps );
+
+  //////////////////////////
+  // General access
+  /////////////////////////
+  
+  // Picture identification 
+  Void       setLayerId            ( Int layer )       { m_layerId = layer;   }
+  Int        getLayerId            ( )                 { return m_layerId;    }
+  Void       setViewId             ( Int viewId )      { m_viewId  = viewId;  }
+  Int        getViewId             ( )                 { return m_viewId;     }  
 #if NH_3D    
-  Void                    setViewIndex          ( Int viewIndex  )  { m_viewIndex  = viewIndex;  }
-  Int                     getViewIndex          ()               { return m_viewIndex;     }  
-  Void                    setIsDepth            ( Bool isDepth ) { m_isDepth = isDepth; }
-  Bool                    getIsDepth            ()               { return m_isDepth;    }
-  Void                    setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
-
-
-  Bool                    decProcAnnexI()           { assert( m_profileIdc != -1 ); return ( m_profileIdc == 8); }    
+  Void       setViewIndex          ( Int viewIndex )   { m_viewIndex  = viewIndex;  }
+  Int        getViewIndex          ( )                 { return m_viewIndex;     }  
+  Void       setIsDepth            ( Bool isDepth )    { m_isDepth = isDepth; }
+  Bool       getIsDepth            ( )                 { return m_isDepth;    }
 #endif
+
+  // Classes
+  Void       setDpb                ( TComPicLists* picLists) { m_dpb = picLists; }
+#if NH_3D                                       
+  Void       setCamParsCollector   ( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
+#endif
+
+  // Slice pilot access
+  TComSlice* getSlicePilot                ( )               { return m_apcSlicePilot; }
+                                                                         
+  // Decoding state                                                      
+  Bool      getFirstSliceSegementInPicFlag( );              
+  Void      setFirstPicInLayerDecodedFlag(Bool* val )      { m_firstPicInLayerDecodedFlag = val;  }
+  Void      setPocDecrementedInDPBFlag   (Bool* val )      { m_pocDecrementedInDpbFlag = val;  }  
+  Void      setLastPresentPocResetIdc    (Int*  val )      { m_lastPresentPocResetIdc  = val;  }
+                                                           
+  // Layer sets                                                          
+  Void      setTargetOlsIdx        ( Int targetOlsIdx )    { m_targetOlsIdx = targetOlsIdx; }    
+  Int       getTargetOlsIdx        ( )                     { return m_targetOlsIdx; }    
+  Int       getSmallestLayerId     ( )                     { return m_smallestLayerId; }    
+  Bool      getIsInOwnTargetDecLayerIdList()               { return m_isInOwnTargetDecLayerIdList; }
+                                                                         
+  // Decoding processes identification                                   
+  Bool      decProcClause8( )                              { return ( m_decodingProcess == CLAUSE_8 ); }
+  Bool      decProcAnnexF ( )                              { return ( decProcAnnexG() || decProcAnnexH() || decProcAnnexI() ); }
+  Bool      decProcAnnexG ( )                              { return ( m_decodingProcess == ANNEX_G || decProcAnnexI() ); }
+  Bool      decProcAnnexH ( )                              { return ( m_decodingProcess == ANNEX_H  ); }
+  Bool      decProcAnnexI ( )                              { return ( m_decodingProcess == ANNEX_I  ); }
+                                                                         
+  DecodingProcess getDecodingProcess ( ) const                   { return m_decodingProcess;                }
+  Void      setDecProcPocAndRps( DecodingProcess decProc ) { m_decProcPocAndRps = decProc; }    
 #endif
 
 protected:
-  Void  xGetNewPicBuffer  (const TComSPS &sps, const TComPPS &pps, TComPic*& rpcPic, const UInt temporalLayer);
-  Void  xCreateLostPicture (Int iLostPOC);
 
+#if !NH_MV
+  Void      xGetNewPicBuffer  (const TComSPS &sps, const TComPPS &pps, TComPic*& rpcPic, const UInt temporalLayer);
+  Void      xCreateLostPicture (Int iLostPOC);
   Void      xActivateParameterSets();
-#if NH_MV  
-  TComPic*  xGetPic( Int layerId, Int poc ); 
-  Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag );  
-  Void      xResetPocInPicBuffer();
-  Void      xCeckNoClrasOutput();
-
-  Bool      xAllRefLayersInitilized( const TComVPS* vps );
-#else
-  Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
+  Bool      xDecodeSlice                   (InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
 #endif
+
   Void      xDecodeVPS(const std::vector<UChar> &naluData);
   Void      xDecodeSPS(const std::vector<UChar> &naluData);
-  Void      xDecodePPS(const std::vector<UChar> &naluData);
+  Void      xDecodePPS(const std::vector<UChar> &naluData);  
+#if !NH_MV
   Void      xUpdatePreviousTid0POC( TComSlice *pSlice ) { if ((pSlice->getTLayer()==0) && (pSlice->isReferenceNalu() && (pSlice->getNalUnitType()!=NAL_UNIT_CODED_SLICE_RASL_R)&& (pSlice->getNalUnitType()!=NAL_UNIT_CODED_SLICE_RADL_R))) { m_prevTid0POC=pSlice->getPOC(); } }
+#endif
 
   Void      xParsePrefixSEImessages();
   Void      xParsePrefixSEIsForUnknownVCLNal();
+
+#if NH_MV
+  // POC 
+  Void      x831DecProcForPicOrderCount         ( );
+  Void      xF831DecProcForPicOrderCount        ( );
+  Int       xGetCurrMsb                         ( Int cl, Int pl, Int pm, Int ml ); 
+
+  //RPS                                         
+  Void      x832DecProcForRefPicSet             ( Bool annexFModifications ); 
+  Void      xF832DecProcForRefPicSet            ( );
+  Void      xG813DecProcForInterLayerRefPicSet  ( );
+
+  // Unavailable Pics 
+  Void      x8331GenDecProcForGenUnavilRefPics  ( );
+  TComPic*  x8332GenOfOneUnavailPic             ( Bool calledFromCl8331 );
+  Void      xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay();
+  Void      xF833DecProcForGenUnavRefPics       ( );  
+  Void      xCheckUnavailableRefPics            ( ); 
+#endif
 
 };// END CLASS DEFINITION TDecTop
 
 
 //! \}
-
 #endif // __TDECTOP__
 

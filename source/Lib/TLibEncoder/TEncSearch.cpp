@@ -1529,7 +1529,9 @@ TEncSearch::xRecurIntraCodingLumaQT(TComYuv*    pcOrgYuv,
 #endif                                
                                   )
 {
+#if NH_MV
   D_PRINT_INC_INDENT( g_traceModeCheck, "xRecurIntraCodingLumaQT; zeroResiFlag " + n2s(zeroResiFlag) )
+#endif
 
   TComDataCU   *pcCU          = rTu.getCU();
   const UInt    uiAbsPartIdx  = rTu.GetAbsPartIdxTU();
@@ -1712,11 +1714,7 @@ TEncSearch::xRecurIntraCodingLumaQT(TComYuv*    pcOrgYuv,
       //----- code luma/chroma block with given intra prediction mode and store Cbf-----
       dSingleCost   = 0.0;
 #if NH_3D_ENC_DEPTH
-#if NH_3D_ENC_DEPTH_FIX
       xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, resiLumaSingle, false, uiSingleDistLuma, COMPONENT_Y, rTu DEBUG_STRING_PASS_INTO(sDebug), 0, zeroResiFlag );
-#else
-      xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, resiLumaSingle, false, uiSingleDistLuma, COMPONENT_Y, rTu DEBUG_STRING_PASS_INTO(sDebug), zeroResiFlag );
-#endif
 #else
       pcCU ->setTransformSkipSubParts ( 0, COMPONENT_Y, uiAbsPartIdx, totalAdjustedDepthChan );
       xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, resiLumaSingle, false, uiSingleDistLuma, COMPONENT_Y, rTu DEBUG_STRING_PASS_INTO(sDebug));
@@ -1840,7 +1838,9 @@ TEncSearch::xRecurIntraCodingLumaQT(TComYuv*    pcOrgYuv,
           }
         }
       }
+#if NH_MV
       D_DEC_INDENT( g_traceModeCheck ); 
+#endif
       return;
     }
 
@@ -1887,7 +1887,9 @@ TEncSearch::xRecurIntraCodingLumaQT(TComYuv*    pcOrgYuv,
 
   ruiDistY += uiSingleDistLuma;
   dRDCost  += dSingleCost;
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 }
 
 #if NH_3D_DIS
@@ -1906,7 +1908,7 @@ Void TEncSearch::xIntraCodingDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 
   TComTURecurse rTu(pcCU, 0);
   const ChromaFormat chFmt     = rTu.GetChromaFormat();
-
+  DEBUG_STRING_NEW(sTemp)
   if ( uiPredMode == 0 )
   {
     const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, VER_IDX, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getSpsRangeExtension().getIntraSmoothingDisabledFlag());
@@ -2030,7 +2032,7 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     //===== init availability pattern =====
     TComTURecurse tuRecurseCU(pcCU, 0);
     TComTURecurse tuRecurseWithPU(tuRecurseCU, false, TComTU::DONT_SPLIT);
-
+    DEBUG_STRING_NEW(sTemp)
     initIntraPatternChType( tuRecurseWithPU, COMPONENT_Y, false DEBUG_STRING_PASS_INTO(sTemp) );
 
     // get partition
@@ -2085,7 +2087,7 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
       const Bool bUseFilter = TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiLumaPredMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
       
       //===== init pattern for luma prediction =====
-      
+      DEBUG_STRING_NEW(sTemp2)
       initIntraPatternChType( tuRecurseWithPU, COMPONENT_Y, bUseFilter DEBUG_STRING_PASS_INTO(sTemp2) );
       
       predIntraAng( COMPONENT_Y, uiLumaPredMode, piOrgTU, uiStrideTU, piPredTU, uiStrideTU, tuRecurseWithPU, bUseFilter );
@@ -2211,29 +2213,12 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 #endif
 
   //===== determine distortion =====  
-#if NH_3D_INTRA_SDC_RD_FIX
 #if NH_3D_VSO  
   if( m_pcRdCost->getUseVSO() )
   {
     ruiDist = m_pcRdCost->getDistPartVSO( pcCU, uiAbsPartIdx, bitDepthY, piPred, uiStride, piOrg, uiStride, uiWidth, uiHeight, false );
   }
   else
-#endif
-#else
-#if NH_3D_VSO  
-  if( m_pcRdCost->getUseVSO() )
-  {
-    if( m_pcRdCost->getUseEstimatedVSD() )
-    {
-      ruiDist = m_pcRdCost->getDistPartVSD( pcCU, uiAbsPartIdx, bitDepthY, piPred, uiStride, piOrg, uiStride, uiWidth, uiHeight, false );
-    }
-    else
-    {
-      ruiDist = m_pcRdCost->getDistPartVSO( pcCU, uiAbsPartIdx, bitDepthY, piPred, uiStride, piOrg, uiStride, uiWidth, uiHeight, false );
-    }
-  }
-  else
-#endif
 #endif
   {
     ruiDist = m_pcRdCost->getDistPart( bitDepthY, piPred, uiStride, piOrg, uiStride, uiWidth, uiHeight, COMPONENT_Y, DF_SAD );
@@ -2753,7 +2738,9 @@ Void TEncSearch::estIntraPredDIS( TComDataCU* pcCU,
                                   UInt&       ruiDistC,
                                   Bool        bLumaOnly )
 {
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck, "estIntraPredDis");
+#endif
 
   UInt    uiDepth        = pcCU->getDepth(0);
   UInt    uiWidth        = pcCU->getWidth (0);
@@ -2771,7 +2758,9 @@ Void TEncSearch::estIntraPredDIS( TComDataCU* pcCU,
 
   for( UInt uiPredMode = 0; uiPredMode < 4 ; uiPredMode++ )
   {
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck, "uiPredMode" +  n2s(uiPredMode ) );
+#endif
 
     // set context models
     m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
@@ -2795,7 +2784,9 @@ Void TEncSearch::estIntraPredDIS( TComDataCU* pcCU,
       // copy reconstruction
       pcPredYuv->copyPartToPartYuv(pcRecoYuv, 0, uiWidth, uiHeight);
     }
+#if NH_MV
       D_DEC_INDENT( g_traceModeCheck );  
+#endif
   } 
 
 
@@ -2806,7 +2797,9 @@ Void TEncSearch::estIntraPredDIS( TComDataCU* pcCU,
 
   //===== set distortion (rate and r-d costs are determined later) =====
   pcCU->getTotalDistortion() = uiBestDist;
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 }
 #endif
 
@@ -2825,7 +2818,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #endif
                               )
 {
+#if NH_MV
   D_PRINT_INC_INDENT( g_traceModeCheck,  "estIntraPredLumaQT");
+#endif
 
   const UInt         uiDepth               = pcCU->getDepth(0);
   const UInt         uiInitTrDepth         = pcCU->getPartitionSize(0) == SIZE_2Nx2N ? 0 : 1;
@@ -2881,7 +2876,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
   do
   {
     const UInt uiPartOffset=tuRecurseWithPU.GetAbsPartIdxTU();
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck, "uiPartOffset: " + n2s(uiPartOffset ) );
+#endif
 
 //  for( UInt uiPU = 0, uiPartOffset=0; uiPU < uiNumPU; uiPU++, uiPartOffset += uiQNumParts )
   //{
@@ -2926,7 +2923,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
       const Bool bUseHadamard=pcCU->getCUTransquantBypass(0) == 0;
       m_pcRdCost->setDistParam(distParam, sps.getBitDepth(CHANNEL_TYPE_LUMA), piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height, bUseHadamard);
 
-#if NH_3D_IC_FIX
+#if NH_3D
       distParam.bUseIC = false;
 #endif
 #if NH_3D_SDC_INTER
@@ -2939,7 +2936,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #if !NH_3D_VSO
         Distortion uiSad  = 0;
 #endif
+#if NH_MV
         D_PRINT_INC_INDENT(g_traceModeCheck, "preTest; uiMode " + n2s(uiMode) );
+#endif
 
         const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiMode, puRect.width, puRect.height, chFmt, sps.getSpsRangeExtension().getIntraSmoothingDisabledFlag());
 
@@ -2992,7 +2991,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #endif
 
         CandNum += xUpdateCandList( uiMode, cost, numModesForFullRD, uiRdModeList, CandCostList );
+#if NH_MV
         D_DEC_INDENT( g_traceModeCheck ); 
+#endif
       }
 
       if (m_pcEncCfg->getFastUDIUseMPMEnabled())
@@ -3192,7 +3193,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
       }
 #endif
 
+#if NH_MV
       D_PRINT_INC_INDENT(g_traceModeCheck, "Test; uiOrgMode: " + n2s(uiOrgMode) );
+#endif
 
       pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, uiOrgMode, uiPartOffset, uiDepth + uiInitTrDepth );
 
@@ -3394,7 +3397,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
         } // SDC residual loop
       } // SDC loop
 #endif
+#if NH_MV
       D_DEC_INDENT( g_traceModeCheck ); 
+#endif
     } // Mode loop
 
 #if HHI_RQT_INTRA_SPEEDUP
@@ -3553,7 +3558,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #if NH_3D_SDC_INTRA
     pcCU->setSDCFlagSubParts          ( bBestUseSDC, uiPartOffset, uiDepth + uiInitTrDepth );
 #endif
+#if NH_MV
     D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   } while (tuRecurseWithPU.nextSection(tuRecurseCU));
 
 
@@ -3582,7 +3589,9 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 
   //===== set distortion (rate and r-d costs are determined later) =====
   pcCU->getTotalDistortion() = uiOverallDistY;
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 }
 
 
@@ -3891,7 +3900,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
 )
 {
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck,  "xMergeEstimation" ); 
+#endif
 
   UInt uiAbsPartIdx = 0;
   Int iWidth = 0;
@@ -4013,7 +4024,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
   ruiCost = std::numeric_limits<Distortion>::max();
   for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
   {
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck,  "uiMergeCand: " + n2s(uiMergeCand) ); 
+#endif
     Distortion uiCostCand = std::numeric_limits<Distortion>::max();
     UInt       uiBitsCand = 0;
 
@@ -4091,7 +4104,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     }
     uiCostCand = uiCostCand + m_pcRdCost->getCost( uiBitsCand );
 
+#if NH_MV
     D_PRINT_INDENT( g_traceRDCost, "IP RD Cost: "  + n2s(uiCostCand)); 
+#endif
 
     if ( uiCostCand < ruiCost )
     {
@@ -4101,9 +4116,13 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       uiInterDir = uhInterDirNeighbours[uiMergeCand];
       uiMergeIndex = uiMergeCand;
     }
+#if NH_MV
     D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   }
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 }
 
 /** convert bi-pred merge candidates to uni-pred
@@ -4141,7 +4160,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 #endif
 {
 
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck,  "predInterSearch");
+#endif
 
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -4209,7 +4230,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 
   for ( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx++ )
   {
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck, "iPartIdx: " + n2s(iPartIdx) );
+#endif
 
     Distortion   uiCost[2] = { std::numeric_limits<Distortion>::max(), std::numeric_limits<Distortion>::max() };
     Distortion   uiCostBi  =   std::numeric_limits<Distortion>::max();
@@ -4257,13 +4280,17 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
     //  Uni-directional prediction
     for ( Int iRefList = 0; iRefList < iNumPredDir; iRefList++ )
     {
+#if NH_MV
       D_PRINT_INC_INDENT(g_traceModeCheck,  "iRefList: " + n2s(iRefList) );
+#endif
 
       RefPicList  eRefPicList = ( iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0 );
 
       for ( Int iRefIdxTemp = 0; iRefIdxTemp < pcCU->getSlice()->getNumRefIdx(eRefPicList); iRefIdxTemp++ )
       {
+#if NH_MV
         D_PRINT_INC_INDENT(g_traceModeCheck,  "iRefIdxTemp: " + n2s(iRefIdxTemp) );
+#endif
 
         uiBitsTemp = uiMbBits[iRefList];
         if ( pcCU->getSlice()->getNumRefIdx(eRefPicList) > 1 )
@@ -4337,9 +4364,13 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
           mvValidList1     = cMvTemp[iRefList][iRefIdxTemp];
           refIdxValidList1 = iRefIdxTemp;
         }
+#if NH_MV
         D_DEC_INDENT( g_traceModeCheck ); 
+#endif
       }
+#if NH_MV
       D_DEC_INDENT( g_traceModeCheck ); 
+#endif
     }
 
     //  Bi-directional prediction
@@ -4608,7 +4639,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       {
         xGetInterPredictionError( pcCU, pcOrgYuv, iPartIdx, uiMEError, m_pcEncCfg->getUseHADME() );
         uiMECost = uiMEError + m_pcRdCost->getCost( uiMEBits );
+#if NH_MV
         D_PRINT_INDENT( g_traceRDCost, "IP RD Cost: "  + n2s(uiMECost)); 
+#endif
       }
 #else
       // calculate ME cost
@@ -4755,12 +4788,16 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 
     //  MC
     motionCompensation ( pcCU, pcPredYuv, REF_PIC_LIST_X, iPartIdx );
+#if NH_MV
     D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   } //  end of for ( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx++ )
 
   setWpScalingDistParam( pcCU, -1, REF_PIC_LIST_X );
 
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   return;
 }
 
@@ -4768,7 +4805,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 // AMVP
 Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMvPred, Bool bFilled, Distortion* puiDistBiP )
 {
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck, "xEstimateMvPredAMVP");
+#endif
 
   AMVPInfo*  pcAMVPInfo = pcCU->getCUMvField(eRefPicList)->getAMVPInfo();
 
@@ -4846,11 +4885,15 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
 
     if(pcCU->getSlice()->getMvdL1ZeroFlag() && eRefPicList==REF_PIC_LIST_1)
     {
+#if NH_MV
       D_PRINT_INC_INDENT(g_traceModeCheck, "Init");
+#endif
 
       (*puiDistBiP) = xGetTemplateCost( pcCU, uiPartAddr, pcOrgYuv, &m_cYuvPredTemp, rcMvPred, 0, AMVP_MAX_NUM_CANDS, eRefPicList, iRefIdx, iRoiWidth, iRoiHeight);
 
+#if NH_MV
       D_DEC_INDENT( g_traceModeCheck ); 
+#endif
     }
     return;
   }
@@ -4866,7 +4909,9 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
   //-- Check Minimum Cost.
   for ( i = 0 ; i < pcAMVPInfo->iN; i++)
   {
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck, "Cand i=" +  n2s(i) + " X: " + n2s( pcAMVPInfo->m_acMvCand[i].getHor() ) + " Y: " + n2s( pcAMVPInfo->m_acMvCand[i].getVer() ));
+#endif
 
     Distortion uiTmpCost;
     uiTmpCost = xGetTemplateCost( pcCU, uiPartAddr, pcOrgYuv, &m_cYuvPredTemp, pcAMVPInfo->m_acMvCand[i], i, AMVP_MAX_NUM_CANDS, eRefPicList, iRefIdx, iRoiWidth, iRoiHeight);
@@ -4878,7 +4923,9 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
       (*puiDistBiP) = uiTmpCost;
     }
 
+#if NH_MV
     D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   }
 
   m_cYuvPredTemp.clear();
@@ -4888,7 +4935,9 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
   pcCU->setMVPIdxSubParts( iBestIdx, eRefPicList, uiPartAddr, uiPartIdx, pcCU->getDepth(uiPartAddr));
   pcCU->setMVPNumSubParts( pcAMVPInfo->iN, eRefPicList, uiPartAddr, uiPartIdx, pcCU->getDepth(uiPartAddr));
 
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 
   return;
 }
@@ -5093,7 +5142,9 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
 
 Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, RefPicList eRefPicList, TComMv* pcMvPred, Int iRefIdxPred, TComMv& rcMv, UInt& ruiBits, Distortion& ruiCost, Bool bBi  )
 {
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck,  "xMotionEstimation");
+#endif
 
   UInt          uiPartAddr;
   Int           iRoiWidth;
@@ -5226,8 +5277,10 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   ruiBits      += uiMvBits;
   ruiCost       = (Distortion)( floor( fWeight * ( (Double)ruiCost - (Double)m_pcRdCost->getCost( uiMvBits ) ) ) + (Double)m_pcRdCost->getCost( ruiBits ) );
   
+#if NH_MV
   D_PRINT_INDENT(g_traceRDCost, "ME Cost:" + n2s(ruiCost)  );
   D_DEC_INDENT  ( g_traceModeCheck ); 
+#endif
 }
 
 
@@ -5787,7 +5840,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
                                             TComYuv* pcYuvResi, TComYuv* pcYuvResiBest, TComYuv* pcYuvRec,
                                             Bool bSkipResidual DEBUG_STRING_FN_DECLARE(sDebug) )
 {
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck, "encodeResAndCalcRdInterCU; Skip residual: " + n2s(bSkipResidual));
+#endif
 
   assert ( !pcCU->isIntra(0) );
 
@@ -5882,7 +5937,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       m_pcRdCost->setRenModelData( pcCU, 0, piSrc, uiSrcStride, cuWidthPixels >> csx, cuHeightPixels >> csy);
     }
 #endif
+#if NH_MV
     D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 
     return;
   }
@@ -6048,7 +6105,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_pcRdCost->setRenModelData( pcCU, 0, piSrc, uiSrcStride, cuWidthPixels >> pcYuvOrg->getComponentScaleX(COMPONENT_Y), cuHeightPixels >> pcYuvOrg->getComponentScaleY(COMPONENT_Y));
   }
 #endif
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 }
 
 #if NH_3D_SDC_INTER
@@ -6206,7 +6265,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                                            TComTU     &rTu
                                            DEBUG_STRING_FN_DECLARE(sDebug) )
 {
+#if NH_MV
   D_PRINT_INC_INDENT(g_traceModeCheck, "xEstimateInterResidualQT");
+#endif
 
   TComDataCU *pcCU        = rTu.getCU();
   const UInt uiAbsPartIdx = rTu.GetAbsPartIdxTU();
@@ -6259,7 +6320,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 
   if( bCheckFull )
   {
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck,  "bCheckFull" );
+#endif
 
     Double minCost[MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/];
     Bool checkTransformSkip[MAX_NUM_COMPONENT];
@@ -6348,7 +6411,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 
           for (Int transformSkipModeId = 0; transformSkipModeId < transformSkipModesToTest; transformSkipModeId++)
           {
+#if NH_MV
             D_PRINT_INC_INDENT( g_traceModeCheck && ( transformSkipModeId > 0) , "TransformSkipModeId: " + n2s(transformSkipModeId) );
+#endif
 
             pcCU->setTransformSkipPartRange(transformSkipModeId, compID, subTUAbsPartIdx, partIdxesPerSubTU);
 
@@ -6357,7 +6422,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
               const Bool isFirstMode          = (transformSkipModeId == 0) && (crossCPredictionModeId == 0);
               const Bool bUseCrossCPrediction = crossCPredictionModeId != 0;
 
+#if NH_MV
               D_PRINT_INC_INDENT( g_traceModeCheck, "Zero" );              
+#endif
 
               m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
               m_pcEntropyCoder->resetBits();
@@ -6510,13 +6577,16 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                 *puiZeroDist += nonCoeffDist; // initialized with zero residual distortion
               }
 
+
               DEBUG_STRING_NEW(sSingleStringTest)
-
-              D_DEC_INDENT( g_traceModeCheck ); 
-
+#if NH_MV
+                D_DEC_INDENT( g_traceModeCheck ); 
+#endif
               if( currAbsSum > 0 ) //if non-zero coefficients are present, a residual needs to be derived for further prediction
               {
+#if NH_MV
                 D_PRINT_INC_INDENT(g_traceModeCheck, "NonZero");
+#endif
 
                 if (isFirstMode)
                 {
@@ -6610,7 +6680,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                 currCompDist = nonCoeffDist;
                 currCompCost = nonCoeffCost;
               }
+#if NH_MV
               D_DEC_INDENT( g_traceModeCheck ); 
+#endif
 
               // evaluate
               if ((currCompCost < minCost[compID][subTUIndex]) || ((transformSkipModeId == 1) && (currCompCost == minCost[compID][subTUIndex])))
@@ -6688,7 +6760,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                 }
               }
             }
+#if NH_MV
             D_DEC_INDENT( g_traceModeCheck ); 
+#endif
           }
 
           pcCU->setExplicitRdpcmModePartRange            (   bestExplicitRdpcmModeUnSplit[compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU);
@@ -6699,7 +6773,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
       } // processing section
     } // component loop
 
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck,  "Final");
+#endif
 
     for(UInt ch = 0; ch < numValidComp; ch++)
     {
@@ -6757,14 +6833,18 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 #endif
       dSingleCost = m_pcRdCost->calcRdCost( uiSingleBits, uiSingleDist );
 
+#if NH_MV
       D_DEC_INDENT( g_traceModeCheck ); 
       D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   } // check full
 
   // code sub-blocks
   if( bCheckSplit )
   {
+#if NH_MV
     D_PRINT_INC_INDENT(g_traceModeCheck,  "bCheckSplit" );
+#endif
     if( bCheckFull )
     {
       m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_TEST ] );
@@ -6934,7 +7014,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 
       m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_TEST ] );
     }
+#if NH_MV
     D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   }
   else
   {
@@ -6954,8 +7036,11 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
     }
 #endif
   }
+#if NH_MV
   D_DEC_INDENT( g_traceModeCheck ); 
+#endif
   DEBUG_STRING_APPEND(sDebug, debug_reorder_data_inter_token[MAX_NUM_COMPONENT])
+
 }
 
 

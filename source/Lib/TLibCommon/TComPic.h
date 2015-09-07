@@ -53,6 +53,62 @@
 
 /// picture class (symbol + YUV buffers)
 
+
+
+#if NH_MV
+class TComPic; 
+
+class TComDecodedRps
+{
+public: 
+
+  TComDecodedRps()
+  {
+    m_refPicSetsCurr[0] = &m_refPicSetStCurrBefore;
+    m_refPicSetsCurr[1] = &m_refPicSetStCurrAfter ;
+    m_refPicSetsCurr[2] = &m_refPicSetLtCurr      ; 
+
+    m_refPicSetsLt  [0] = &m_refPicSetLtCurr      ; 
+    m_refPicSetsLt  [1] = &m_refPicSetLtFoll      ;
+
+    m_refPicSetsAll [0] = &m_refPicSetStCurrBefore;
+    m_refPicSetsAll [1] = &m_refPicSetStCurrAfter ;
+    m_refPicSetsAll [2] = &m_refPicSetStFoll      ;
+    m_refPicSetsAll [3] = &m_refPicSetLtCurr      ;
+    m_refPicSetsAll [4] = &m_refPicSetLtFoll      ;
+  };    
+
+  std::vector<Int>       m_pocStCurrBefore;
+  std::vector<Int>       m_pocStCurrAfter;
+  std::vector<Int>       m_pocStFoll;    
+  std::vector<Int>       m_pocLtCurr;
+  std::vector<Int>       m_pocLtFoll; 
+
+  Int                    m_numPocStCurrBefore;
+  Int                    m_numPocStCurrAfter;
+  Int                    m_numPocStFoll;
+  Int                    m_numPocLtCurr;
+  Int                    m_numPocLtFoll;
+
+  std::vector<TComPic*>  m_refPicSetStCurrBefore; 
+  std::vector<TComPic*>  m_refPicSetStCurrAfter; 
+  std::vector<TComPic*>  m_refPicSetStFoll; 
+  std::vector<TComPic*>  m_refPicSetLtCurr; 
+  std::vector<TComPic*>  m_refPicSetLtFoll;   
+
+  std::vector<TComPic*>* m_refPicSetsCurr[3];
+  std::vector<TComPic*>* m_refPicSetsLt  [2];
+  std::vector<TComPic*>* m_refPicSetsAll [5];
+
+  // Annex F
+  Int                    m_numActiveRefLayerPics0;
+  Int                    m_numActiveRefLayerPics1;     
+
+  std::vector<TComPic*>  m_refPicSetInterLayer0;
+  std::vector<TComPic*>  m_refPicSetInterLayer1;
+};
+#endif
+
 class TComPic
 {
 public:
@@ -71,9 +127,7 @@ private:
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
   Bool                  m_bNeededForOutput;
-#if NH_MV
-  Bool                  m_bPicOutputFlag;         // Semantics variable 
-#endif
+
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
   Bool                  m_bCheckLTMSB;
 
@@ -86,24 +140,35 @@ private:
 #if NH_MV
   Int                   m_layerId;
   Int                   m_viewId;
+  Bool                  m_bPicOutputFlag;                // Semantics variable 
+  Bool                  m_hasGeneratedRefPics; 
+  Bool                  m_isPocResettingPic; 
+  Bool                  m_isFstPicOfAllLayOfPocResetPer; 
+  Int64                 m_decodingOrder; 
+  Bool                  m_noRaslOutputFlag; 
+  Bool                  m_noClrasOutputFlag; 
+  Int                   m_picLatencyCount; 
+  Bool                  m_isGenerated;
+  Bool                  m_isGeneratedCl833; 
+  Bool                  m_activatesNewVps;
+  TComDecodedRps        m_decodedRps;
+#endif
 #if NH_3D
   Int                   m_viewIndex;
   Bool                  m_isDepth;
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
-#endif
-#endif
 #if NH_3D_QTLPC
   Bool                  m_bReduceBitsQTL;
 #endif
 #if NH_3D_NBDV
-  UInt        m_uiRapRefIdx;
-  RefPicList  m_eRapRefList;
-  Int         m_iNumDdvCandPics;
-  Bool        m_abTIVRINCurrRL [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
-  Int         m_aiTexToDepRef  [2][MAX_NUM_REF];
+  UInt                   m_uiRapRefIdx;
+  RefPicList             m_eRapRefList;
+  Int                    m_iNumDdvCandPics;
+  Bool                   m_abTIVRINCurrRL [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
+  Int                    m_aiTexToDepRef  [2][MAX_NUM_REF];
 #endif
-
+#endif
 public:
   TComPic();
   virtual ~TComPic();
@@ -114,27 +179,6 @@ public:
 
   UInt          getTLayer() const               { return m_uiTLayer;   }
   Void          setTLayer( UInt uiTLayer ) { m_uiTLayer = uiTLayer; }
-#if NH_MV
-  Void          setLayerId            ( Int layerId )    { m_layerId      = layerId; }
-  Int           getLayerId            ()                 { return m_layerId;    }
-  Void          setViewId             ( Int viewId )     { m_viewId = viewId;   }
-  Int           getViewId             ()                 { return m_viewId;     }
-#if NH_3D
-  Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
-  Int           getViewIndex          ()                 { return m_viewIndex;     }
-
-  Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
-  Bool          getIsDepth            ()                 { return m_isDepth; }
-
-  Void          setScaleOffset( Int** pS, Int** pO )  { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
-  Int**         getCodedScale ()                      { return m_aaiCodedScale;  }
-  Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
-#endif
-#endif
-#if NH_3D_QTLPC
-  Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
-  Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
-#endif
 
   Bool          getUsedByCurr() const            { return m_bUsedByCurr; }
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
@@ -176,16 +220,8 @@ public:
   Bool          getReconMark () const      { return m_bReconstructed;  }
   Void          setOutputMark (Bool b) { m_bNeededForOutput = b;     }
   Bool          getOutputMark () const      { return m_bNeededForOutput;  }
- #if NH_MV
-  Void          setPicOutputFlag(Bool b) { m_bPicOutputFlag = b;      }
-  Bool          getPicOutputFlag()       { return m_bPicOutputFlag ;  }
-#endif
-#if NH_3D
-#if NH_3D_ARP
-  Void          getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
-#endif
-  Void          compressMotion(Int scale); 
-#else   
+
+#if !NH_3D
   Void          compressMotion();
 #endif
   UInt          getCurrSliceIdx() const           { return m_uiCurrSliceIdx;                }
@@ -209,20 +245,104 @@ public:
    Bool              isField()                            {return m_isField;}
 
 #if NH_MV
-  Void          print( Bool legend );
+   Void          setLayerId            ( Int layerId )    { m_layerId      = layerId; }
+   Int           getLayerId            ()                 { return m_layerId;    }
+   
+   Void          setViewId             ( Int viewId )     { m_viewId = viewId;   }
+   Int           getViewId             ()                 { return m_viewId;     }
+
+   Void          setPicOutputFlag(Bool b)                 { m_bPicOutputFlag = b;      }
+   Bool          getPicOutputFlag()                       { return m_bPicOutputFlag ;  }
+
+   Bool          getPocResetPeriodId();
+
+   Void          markAsUsedForShortTermReference();
+   Void          markAsUsedForLongTermReference(); 
+   Void          markAsUnusedForReference(); 
+
+   Bool          getMarkedUnUsedForReference();
+   Bool          getMarkedAsShortTerm();
+
+   Void          setHasGeneratedRefPics(Bool val)       { m_hasGeneratedRefPics  = val;    }
+   Bool          getHasGeneratedRefPics( )              { return m_hasGeneratedRefPics;   }
+
+   Void          setIsPocResettingPic(Bool val)         { m_isPocResettingPic = val;    }
+   Bool          getIsPocResettingPic( )                { return m_isPocResettingPic;   }
+
+   Void          setIsFstPicOfAllLayOfPocResetPer(Bool val) { m_isFstPicOfAllLayOfPocResetPer = val;  }
+   Bool          getIsFstPicOfAllLayOfPocResetPer( )        { return m_isFstPicOfAllLayOfPocResetPer; }
+
+   Int64         getDecodingOrder( )                    { return m_decodingOrder;       }
+   Void          setDecodingOrder( UInt64 val  )        { m_decodingOrder = val;        }
+
+   Bool          getNoRaslOutputFlag()                  { return m_noRaslOutputFlag;     }
+   Void          setNoRaslOutputFlag( Bool b )          { m_noRaslOutputFlag = b;        }
+
+   Bool          getNoClrasOutputFlag()                 { return m_noClrasOutputFlag;    }
+   Void          setNoClrasOutputFlag( Bool b )         { m_noClrasOutputFlag = b;       }
+
+   Int           getPicLatencyCount()                   { return m_picLatencyCount;      }
+   Void          setPicLatencyCount( Int val )          { m_picLatencyCount = val;       }
+
+   Bool          getIsGenerated() const                 { return m_isGenerated;          }
+   Void          setIsGenerated( Bool b )               { m_isGenerated = b;             }
+
+   Bool          getIsGeneratedCl833() const            { return m_isGeneratedCl833;     }
+   Void          setIsGeneratedCl833( Bool b )          { m_isGeneratedCl833 = b;        }
+
+   Int           getTemporalId( )                       { return getSlice(0)->getTemporalId(); }
+
+   Bool          getActivatesNewVps()                   { return m_activatesNewVps;      }
+   Void          setActivatesNewVps( Bool b )           { m_activatesNewVps = b;         }
+
+   TComDecodedRps* getDecodedRps()                      { return &m_decodedRps;          }
+
+   Bool          isIrap()                               { return getSlice(0)->isIRAP(); } 
+   Bool          isBla ()                               { return getSlice(0)->isBla (); } 
+   Bool          isIdr ()                               { return getSlice(0)->isIdr (); } 
+   Bool          isCra ()                               { return getSlice(0)->isCra (); } 
+   Bool          isSlnr ()                              { return getSlice(0)->isSlnr (); }
+   Bool          isRasl ()                              { return getSlice(0)->isRasl (); }
+   Bool          isRadl ()                              { return getSlice(0)->isRadl (); }
+   Bool          isStsa ()                              { return getSlice(0)->isStsa (); }
+   Bool          isTsa ()                               { return getSlice(0)->isTsa  (); }
+
+   Void          print( Int outputLevel );
+
+#if NH_3D
+   Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
+   Int           getViewIndex          ()                 { return m_viewIndex;     }
+
+   Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
+   Bool          getIsDepth            ()                 { return m_isDepth; }
+
+   Void          setScaleOffset( Int** pS, Int** pO )     { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
+   Int**         getCodedScale ()                         { return m_aaiCodedScale;  }
+   Int**         getCodedOffset()                         { return m_aaiCodedOffset; }
+
+   Void          compressMotion(Int scale); 
+   Void          printMotion( );
+#if NH_3D_ARP
+   Void          getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
+#endif
+#if NH_3D_QTLPC
+   Bool          getReduceBitsFlag ()                     { return m_bReduceBitsQTL;     }
+   Void          setReduceBitsFlag ( Bool bFlag )         { m_bReduceBitsQTL = bFlag;    }
 #endif
 #if NH_3D_NBDV
-  Int           getNumDdvCandPics()                    {return m_iNumDdvCandPics;   }
-  Int           getDisCandRefPictures(Int iColPOC);
-  Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
-  Void          setRapRefList(RefPicList eRefPicList)  {m_eRapRefList = eRefPicList;}
-  Void          setNumDdvCandPics (Int i)              {m_iNumDdvCandPics = i;       }
-  UInt          getRapRefIdx()                         {return m_uiRapRefIdx;       }
-  RefPicList    getRapRefList()                        {return m_eRapRefList;       }
-  Void          checkTemporalIVRef();
-  Bool          isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
-  Void          checkTextureRef(  );
-  Int           isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
+  Int            getNumDdvCandPics()                      { return m_iNumDdvCandPics;    }
+  Int            getDisCandRefPictures(Int iColPOC);        
+  Void           setRapRefIdx(UInt uiRapRefIdx)           { m_uiRapRefIdx = uiRapRefIdx; }
+  Void           setRapRefList(RefPicList eRefPicList)    { m_eRapRefList = eRefPicList; }
+  Void           setNumDdvCandPics (Int i)                { m_iNumDdvCandPics = i;       }
+  UInt           getRapRefIdx()                           { return m_uiRapRefIdx;        }
+  RefPicList     getRapRefList()                          { return m_eRapRefList;        }
+  Void           checkTemporalIVRef();                     
+  Bool           isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
+  Void           checkTextureRef(  );
+  Int            isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
+#endif
+#endif
 #endif
 
   /** transfer ownership of seis to this picture */
@@ -240,32 +360,104 @@ public:
 };// END CLASS DEFINITION TComPic
 
 #if NH_MV
+
+class TComAu : public TComList<TComPic*>
+{
+  
+public:
+
+  Int                 getPoc            ( )                     {  assert(!empty()); return back()->getPOC            ();  }
+  Void                setPicLatencyCount( Int picLatenyCount );
+  Int                 getPicLatencyCount( )                     {  assert(!empty()); return back()->getPicLatencyCount();  }  
+  TComPic*            getPic            ( Int nuhLayerId  );
+  Void                addPic            ( TComPic* pic, Bool pocUnkown );
+  Bool                containsPic       ( TComPic* pic );  
+};
+
+
+class TComSubDpb : public TComList<TComPic*>
+{
+private: 
+  Int m_nuhLayerId; 
+public:  
+  TComSubDpb( Int nuhLayerid );
+
+  Int                 getLayerId                      ( ) { return m_nuhLayerId; }
+
+  TComPic*            getPic                          ( Int poc  );
+  TComPic*            getPicFromLsb                   ( Int pocLsb, Int maxPicOrderCntLsb );
+  TComPic*            getShortTermRefPic              ( Int poc  );
+  TComList<TComPic*>  getPicsMarkedNeedForOutput      ( );
+
+  Void                markAllAsUnusedForReference     ( );
+
+  Void                addPic                          ( TComPic* pic );
+  Void                removePics                      ( std::vector<TComPic*> picToRemove );
+  Bool                areAllPicsMarkedNotNeedForOutput( );
+};
+
 class TComPicLists 
 {
 private: 
-  TComList<TComList<TComPic*>*> m_lists; 
-#if NH_3D
-  const TComVPS*                     m_vps; 
+  TComList<TComAu*    >       m_aus;  
+  TComList<TComSubDpb*>       m_subDpbs; 
+  Bool                        m_printPicOutput; 
+#if NH_3D                     
+  const TComVPS*              m_vps; 
 #endif
 public: 
-  Void        push_back( TComList<TComPic*>* list ) { m_lists.push_back( list );   }
-  Int         size     ()                           { return (Int) m_lists.size(); } 
-#if NH_3D_ARP
-  TComList<TComPic*>*  getPicList   ( Int layerIdInNuh );
-#endif
-  TComPic*    getPic   ( Int layerIdInNuh,              Int poc );    
-  TComPicYuv* getPicYuv( Int layerIdInNuh,              Int poc, Bool recon ); 
-#if NH_3D
-  Void        setVPS   ( const TComVPS* vps ) { m_vps = vps;  }; 
-  TComPic*    getPic   ( Int viewIndex, Bool depthFlag, Int poc );
-  TComPicYuv* getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon );
+  TComPicLists() { m_printPicOutput = false; };
+  ~TComPicLists();
+
+  // Add and remove single pictures
+  Void                   addNewPic( TComPic* pic );
+  Void                   removePic( TComPic* pic );
+
+  // Get Pics
+  TComPic*               getPic                         ( Int layerIdInNuh, Int poc );
+  TComPicYuv*            getPicYuv                      ( Int layerIdInNuh, Int poc, Bool recon );
+
+  // Get and AUs and SubDPBs
+  TComSubDpb*            getSubDpb                      ( Int nuhLayerId, Bool create );
+  TComList<TComSubDpb*>* getSubDpbs                     ( );
+                                                        
+  TComAu*                addAu                          ( Int poc  );
+  TComAu*                getAu                          ( Int poc, Bool create );
+  TComList<TComAu*>*     getAus                         ( );
+  TComList<TComAu*>      getAusHavingPicsMarkedForOutput( );
+
+  // Mark pictures and set POCs
+  Void                   markSubDpbAsUnusedForReference ( Int layerIdInNuh );
+  Void                   markSubDpbAsUnusedForReference ( TComSubDpb& subDpb );
+  Void                   markAllSubDpbAsUnusedForReference(  );
+  Void                   decrementPocsInSubDpb          ( Int nuhLayerId, Int deltaPocVal );
+  
+  // Empty Sub DPBs
+  Void                   emptyAllSubDpbs                ( );
+  Void                   emptySubDpbs                   ( TComList<TComSubDpb*>* subDpbs);
+  Void                   emptySubDpb                    ( TComSubDpb* subDpb);
+  Void                   emptySubDpb                    ( Int nuhLayerId );
+
+  Void                   emptyNotNeedForOutputAndUnusedForRef      ( );
+  Void                   emptySubDpbNotNeedForOutputAndUnusedForRef( Int layerId  );
+  Void                   emptySubDpbNotNeedForOutputAndUnusedForRef( TComSubDpb subDpb );  
+
+  // For printing to std::out 
+  Void                   setPrintPicOutput ( Bool printPicOutput ) { m_printPicOutput = printPicOutput; };
+  Void                   print(); 
+
+#if NH_3D                                   
+  Void                   setVPS                        ( const TComVPS* vps ) { m_vps = vps;  }; 
+  TComPic*               getPic                        ( Int viewIndex, Bool depthFlag, Int poc );
+  TComPicYuv*            getPicYuv                     ( Int viewIndex, Bool depthFlag, Int poc, Bool recon );
 #endif  
 
-  Void print( );  
+}; 
 
-}; // END CLASS DEFINITION TComPicLists
+// END CLASS DEFINITION TComPicLists
 
-#endif 
+#endif
+
 
 //! \}
 

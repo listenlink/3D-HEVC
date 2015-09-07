@@ -237,8 +237,9 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   UInt uiNumPU = ( ePartSize == SIZE_2Nx2N ? 1 : ( ePartSize == SIZE_NxN ? 4 : 2 ) );
   UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - uiDepth ) << 1 ) ) >> 4;
-//#if H_3D_IV_MERGE
+
 #if NH_3D_MLC
+//#if H_3D_IV_MERGE
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
 #else
@@ -650,7 +651,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           }
 #endif
         }
-      }
+      } 
 #if NH_3D_IC
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif

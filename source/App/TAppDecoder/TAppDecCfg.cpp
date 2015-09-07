@@ -101,7 +101,9 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("TarDecLayerIdSetFile,l",    cfg_TargetDecLayerIdSetFile,           string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
   ("RespectDefDispWindow,w",    m_respectDefDispWindow,                0,          "Only output content inside the default display window\n")
 #if NH_MV
-  ("OutputVpsInfo,v",           m_outputVpsInfo,                       false,       "Output information about the layer dependencies and layer sets")
+  ("OutputVpsInfo,v",           m_printVpsInfo,                       false,       "Output information about the layer dependencies and layer sets")
+  ("PrintPicOutput,c" ,         m_printPicOutput,                     false,         "Print information on picture output")
+  ("PrintNalus,n",              m_printReceivedNalus,                 false,        "Print information on received NAL units")
 #endif
 #if O0043_BEST_EFFORT_DECODING
   ("ForceDecodeBitDepth",       m_forceDecodeBitDepth,                 0U,         "Force the decoder to operate at a particular bit-depth (best effort decoding)")

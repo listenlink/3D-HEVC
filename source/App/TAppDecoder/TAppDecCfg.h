@@ -44,6 +44,9 @@
 
 #include "TLibCommon/CommonDef.h"
 #include <vector>
+#if NH_MV
+#include <fstream>
+#endif
 
 //! \ingroup TAppDecoder
 //! \{
@@ -57,16 +60,7 @@ class TAppDecCfg
 {
 protected:
   Char*         m_pchBitstreamFile;                     ///< input bitstream file name
-#if NH_MV
-  Int           m_targetOptLayerSetIdx;                 ///< target output layer set index
-  Int           m_maxLayerId;                           ///< maximum nuh_layer_id decoded
-  std::vector<Char*> m_pchReconFiles;                   ///< array of output reconstruction file name create from output reconstruction file name
-#endif
   Char*         m_pchReconFile;                         ///< output reconstruction file name
-#if NH_3D
-  Char*         m_pchScaleOffsetFile;                   ///< output coded scale and offset parameters
-  Bool          m_depth420OutputFlag;                   ///< output depth layers in 4:2:0
-#endif
   Int           m_iSkipFrame;                           ///< counter for frames prior to the random access point to skip
   Int           m_outputBitDepth[MAX_NUM_CHANNEL_TYPE]; ///< bit depth used for writing output
   InputColourSpaceConversion m_outputColourSpaceConvert;
@@ -75,9 +69,6 @@ protected:
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Bool          m_decodedNoDisplaySEIEnabled;         ///< Enable(true)/disable(false) writing only pictures that get displayed based on the no display SEI message
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
-#if NH_MV
-  Bool          m_targetDecLayerIdSetFileEmpty;       ///< indication if target layers are given by file
-#endif
 
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window
 #if O0043_BEST_EFFORT_DECODING
@@ -86,7 +77,26 @@ protected:
   std::string   m_outputDecodedSEIMessagesFilename;   ///< filename to output decoded SEI messages to. If '-', then use stdout. If empty, do not output details.
   Bool          m_bClipOutputVideoToRec709Range;      ///< If true, clip the output video to the Rec 709 range on saving.
 #if NH_MV
-  Bool          m_outputVpsInfo;                     ///< Output VPS information 
+  std::vector<Char*> m_pchReconFiles;                   ///< array of output reconstruction file name create from output reconstruction file name
+
+  Int           m_targetOptLayerSetIdx;                 ///< target output layer set index
+  Int           m_targetDecLayerSetIdx;
+  Int           m_baseLayerOutputFlag; 
+  Int           m_baseLayerPicOutputFlag; 
+  Int           m_auOutputFlag; 
+  Int           m_maxLayerId;                           ///< maximum nuh_layer_id decoded
+  std::ifstream m_bitstreamFile; 
+  Int           m_highestTid;
+  Bool          m_targetDecLayerIdSetFileEmpty;       ///< indication if target layers are given by file
+
+  Bool          m_printVpsInfo;                      ///< Output VPS information 
+  Bool          m_printPicOutput;                     ///< Print information on picture output
+  Bool          m_printReceivedNalus;                 ///< Print information on received NAL units
+#if NH_3D
+  Char*         m_pchScaleOffsetFile;                   ///< output coded scale and offset parameters
+  Bool          m_depth420OutputFlag;                   ///< output depth layers in 4:2:0
+#endif
+
   Void xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName); ///< create filenames
 #endif
 
@@ -99,13 +109,15 @@ public:
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
   , m_decodedNoDisplaySEIEnabled(false)
-#if NH_MV
-  , m_targetDecLayerIdSetFileEmpty(true)
-#endif
   , m_respectDefDispWindow(0)
 #if O0043_BEST_EFFORT_DECODING
   , m_forceDecodeBitDepth(0)
 #endif
+#if NH_MV
+  , m_highestTid(-1)
+  , m_targetDecLayerIdSetFileEmpty(true)
+#endif
+
   {
     for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
     {
