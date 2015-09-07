@@ -121,26 +121,6 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic* pcPic)
     ppcSubstreams[ui] = pcBitstream->extractSubstream(ui+1 < uiNumSubstreams ? (pcSlice->getSubstreamSize(ui)<<3) : pcBitstream->getNumBitsLeft());
   }
 
-#if NH_3D_NBDV 
-  if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
-  {
-    Int iColPoc = pcSlice->getRefPOC(RefPicList(1 - pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
-    pcPic->setNumDdvCandPics(pcPic->getDisCandRefPictures(iColPoc));
-  }
-
-  if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
-  {
-    pcPic->checkTemporalIVRef();
-  }
-
-  if(pcSlice->getIsDepth())
-  {
-    pcPic->checkTextureRef();
-  }
-#endif
-#if NH_3D
-  pcSlice->setDepthToDisparityLUTs(); 
-#endif
 
   m_pcSliceDecoder->decompressSlice( ppcSubstreams, pcPic, m_pcSbacDecoder);
   // deallocate all created substreams, including internal buffers.
@@ -171,11 +151,7 @@ Void TDecGop::filterPicture(TComPic* pcPic)
     m_pcSAO->SAOProcess(pcPic);
     m_pcSAO->PCMLFDisableProcess(pcPic);
   }
-#if NH_3D
-  pcPic->compressMotion(2); 
-#else
   pcPic->compressMotion();
-#endif
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced())
   {

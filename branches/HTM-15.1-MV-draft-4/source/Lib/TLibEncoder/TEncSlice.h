@@ -88,11 +88,7 @@ private:
   TEncSbac***             m_pppcRDSbacCoder;                    ///< storage for SBAC-based RD optimization
   TEncSbac*               m_pcRDGoOnSbacCoder;                  ///< go-on SBAC encoder
   UInt64                  m_uiPicTotalBits;                     ///< total bits for the picture
-#if NH_3D_VSO
-  Dist64                  m_uiPicDist;                          ///< total distortion for the picture
-#else
   UInt64                  m_uiPicDist;                          ///< total distortion for the picture
-#endif
   Double                  m_dPicRdCost;                         ///< picture-level RD cost
   Double*                 m_pdRdPicLambda;                      ///< array of lambda candidates
   Double*                 m_pdRdPicQp;                          ///< array of picture QP candidates (double-type for lambda)

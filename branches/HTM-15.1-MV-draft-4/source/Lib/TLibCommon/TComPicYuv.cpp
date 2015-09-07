@@ -90,16 +90,6 @@ Void TComPicYuv::create ( const Int iPicWidth,                ///< picture width
   m_iPicWidth         = iPicWidth;
   m_iPicHeight        = iPicHeight;
 
-#if NH_3D_IV_MERGE
-  m_iCuWidth        = uiMaxCUWidth;
-  m_iCuHeight       = uiMaxCUHeight;
-
-  m_iNumCuInWidth   = m_iPicWidth / m_iCuWidth;
-  m_iNumCuInWidth  += ( m_iPicWidth % m_iCuWidth ) ? 1 : 0;
-
-  m_iBaseUnitWidth  = uiMaxCUWidth  >> uiMaxCUDepth;
-  m_iBaseUnitHeight = uiMaxCUHeight >> uiMaxCUDepth;
-#endif
 
   m_chromaFormatIDC   = chromaFormatIDC;
   m_iMarginX          = (bUseMargin?uiMaxCUWidth:0) + 16;   // for 16-byte alignment
@@ -294,52 +284,5 @@ Void TComPicYuv::dump (const Char* pFileName, const BitDepths &bitDepths, Bool b
 
   fclose(pFile);
 }
-#if NH_3D_IV_MERGE
-Void
-TComPicYuv::getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY )
-{
-  Int iRastPartIdx    = g_auiZscanToRaster[iAbsZorderIdx];
-  Int iCuSizeInBases  = m_iCuWidth   / m_iBaseUnitWidth;
-  Int iCuX            = iCuAddr      % m_iNumCuInWidth;
-  Int iCuY            = iCuAddr      / m_iNumCuInWidth;
-  Int iBaseX          = iRastPartIdx % iCuSizeInBases;
-  Int iBaseY          = iRastPartIdx / iCuSizeInBases;
-  riX                 = iCuX * m_iCuWidth  + iBaseX * m_iBaseUnitWidth;
-  riY                 = iCuY * m_iCuHeight + iBaseY * m_iBaseUnitHeight; 
-}
 
-Void
-TComPicYuv::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx )
-{
-  Int iCuX            = iX / m_iCuWidth;
-  Int iCuY            = iY / m_iCuHeight;
-  Int iBaseX          = ( iX - iCuX * m_iCuWidth  ) / m_iBaseUnitWidth;
-  Int iBaseY          = ( iY - iCuY * m_iCuHeight ) / m_iBaseUnitHeight;
-  Int iCuSizeInBases  = m_iCuWidth                  / m_iBaseUnitWidth;
-  riCuAddr            = iCuY   * m_iNumCuInWidth + iCuX;
-  Int iRastPartIdx    = iBaseY * iCuSizeInBases  + iBaseX;
-  riAbsZorderIdx      = g_auiRasterToZscan[ iRastPartIdx ];
-}
-
-#endif
-
-#if NH_3D_VSO
-Void TComPicYuv::setChromaTo( Pel pVal )
-{
-  xSetPels( getAddr( COMPONENT_Cb ), getStride( COMPONENT_Cb ), getWidth( COMPONENT_Cb), getHeight( COMPONENT_Cb ), pVal ); 
-  xSetPels( getAddr( COMPONENT_Cr ), getStride( COMPONENT_Cr ), getWidth( COMPONENT_Cr), getHeight( COMPONENT_Cr ), pVal );
-}
-
-Void TComPicYuv::xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Pel iVal )
-{
-  for (Int iYPos = 0; iYPos < iHeight; iYPos++)
-  {
-    for (Int iXPos = 0; iXPos < iWidth; iXPos++)
-    {
-      piPelSource[iXPos] = iVal; 
-    }
-    piPelSource += iSourceStride; 
-  }
-}
-#endif
 //! \}

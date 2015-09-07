@@ -92,10 +92,6 @@ protected:
   Bool          m_printVpsInfo;                      ///< Output VPS information 
   Bool          m_printPicOutput;                     ///< Print information on picture output
   Bool          m_printReceivedNalus;                 ///< Print information on received NAL units
-#if NH_3D
-  Char*         m_pchScaleOffsetFile;                   ///< output coded scale and offset parameters
-  Bool          m_depth420OutputFlag;                   ///< output depth layers in 4:2:0
-#endif
 
   Void xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName); ///< create filenames
 #endif

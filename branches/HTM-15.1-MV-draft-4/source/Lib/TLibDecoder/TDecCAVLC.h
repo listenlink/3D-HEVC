@@ -93,11 +93,6 @@ public:
   Void  parsePpsMultilayerExtension( TComPPS* pcPPS );
   Void  setDecTop           ( TDecTop* decTop ) { m_decTop = decTop; }; 
 #endif
-#if NH_3D
-  Void  parseVps3dExtension  ( TComVPS* pcVPS ); 
-  Void  parseSps3dExtension  ( TComSPS* pcSPS );  
-  Void  parsePps3dExtension  ( TComPPS* pcPPS );
-#endif
 
   Void  parseSPS            ( TComSPS* pcSPS );
   Void  parsePPS            ( TComPPS* pcPPS );
@@ -120,27 +115,9 @@ public:
   Void  parseMVPIdx          ( Int& riMVPIdx );
         
   Void  parseSkipFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if NH_3D_DIS
-  Void  parseDIS             ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );
-#if NH_3D_ARP 
-  Void parseARPW            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if NH_3D_IC
-  Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void  parseDeltaDC        ( TComDataCU* /*pcCU*/, UInt /*absPartIdx*/, UInt /*depth*/ ) { assert(0); };
-#endif
-#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void  parseSDCFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if NH_3D_DBBP
-  Void  parseDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePartSize        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

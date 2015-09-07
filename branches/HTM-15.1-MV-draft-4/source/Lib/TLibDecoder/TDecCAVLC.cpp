@@ -435,15 +435,8 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
     if ( pcPPS->getPps3dExtensionFlag() )
     { 
-#if NH_3D
-      parsePps3dExtension( pcPPS );
-#endif
     }
-#if NH_3D
-    if ( pcPPS->getPpsExtension5bits() )
-#else
     if ( pcPPS->getPpsExtension5bits() || pcPPS->getPps3dExtensionFlag() )
-#endif
     {
       while ( xMoreRbspData() )
       {
@@ -542,145 +535,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   xReadRbspTrailingBits();
 }
 
-#if NH_3D
-Void TDecCavlc::parsePps3dExtension( TComPPS* pcPPS )
-{
-#if NH_3D_DLT
-  UInt uiCode = 0; 
-  //
-  TComDLT* pcDLT = pcPPS->getDLT();
-
-  READ_FLAG(uiCode, "dlts_present_flag");
-  pcDLT->setDltPresentFlag( (uiCode == 1) ? true : false );
-
-  if ( pcDLT->getDltPresentFlag() )
-  {
-    READ_CODE(6, uiCode, "pps_depth_layers_minus1");
-    pcDLT->setNumDepthViews( uiCode+1 );
-    
-    READ_CODE(4, uiCode, "pps_bit_depth_for_depth_layers_minus8");
-    pcDLT->setDepthViewBitDepth( (uiCode+8) );
-    
-    for( Int i = 0; i <= pcDLT->getNumDepthViews()-1; i++ )
-    {
-      Int layerId = pcDLT->getDepthIdxToLayerId(i);
-      
-      READ_FLAG(uiCode, "dlt_flag[i]");
-      pcDLT->setUseDLTFlag(layerId, (uiCode == 1) ? true : false);
-      
-      if ( pcDLT->getUseDLTFlag( layerId ) )
-      {
-        Bool bDltBitMapRepFlag    = false;
-        UInt uiMaxDiff            = MAX_INT;
-        UInt uiMinDiff            = 0;
-        UInt uiCodeLength         = 0;
-        
-        READ_FLAG(uiCode, "dlt_pred_flag[i]");
-        
-        if( uiCode )
-        {
-          assert( pcDLT->getUseDLTFlag( 1 ));
-        }
-        pcDLT->setInterViewDltPredEnableFlag( layerId, (uiCode == 1) ? true : false );
-        
-        if ( pcDLT->getInterViewDltPredEnableFlag( layerId ) == false )
-        {
-          READ_FLAG(uiCode, "dlt_val_flags_present_flag[i]");
-          bDltBitMapRepFlag = (uiCode == 1) ? true : false;
-        }
-        else
-        {
-          bDltBitMapRepFlag = false;
-        }
-        
-        UInt uiNumDepthValues = 0;
-        std::vector<Int> aiIdx2DepthValue(256, 0);
-        
-        // Bit map
-        if ( bDltBitMapRepFlag )
-        {
-          for (UInt d=0; d<256; d++)
-          {
-            READ_FLAG(uiCode, "dlt_value_flag[i][j]");
-            if (uiCode == 1)
-            {
-              aiIdx2DepthValue[uiNumDepthValues] = d;
-              uiNumDepthValues++;
-            }
-          }
-        }
-        // Diff Coding
-        else
-        {
-          READ_CODE(8, uiNumDepthValues, "num_val_delta_dlt");   // num_entry
-          
-          {
-            // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component.
-            
-            if (uiNumDepthValues > 1)
-            {
-              READ_CODE(8, uiCode, "max_diff");
-              uiMaxDiff = uiCode;
-            }
-            else
-            {
-              uiMaxDiff = 0;           // when there is only one value in DLT
-            }
-            
-            if (uiNumDepthValues > 2)
-            {
-              uiCodeLength = (UInt) gCeilLog2(uiMaxDiff + 1);
-              READ_CODE(uiCodeLength, uiCode, "min_diff_minus1");
-              uiMinDiff = uiCode + 1;
-            }
-            else
-            {
-              uiMinDiff = uiMaxDiff;   // when there are only one or two values in DLT
-            }
-            
-            READ_CODE(8, uiCode, "delta_dlt_val0");   // entry0
-            aiIdx2DepthValue[0] = uiCode;
-            
-            if (uiMaxDiff == uiMinDiff)
-            {
-              for (UInt d=1; d<uiNumDepthValues; d++)
-              {
-                aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + 0;
-              }
-            }
-            else
-            {
-              uiCodeLength = (UInt) gCeilLog2(uiMaxDiff - uiMinDiff + 1);
-              for (UInt d=1; d<uiNumDepthValues; d++)
-              {
-                READ_CODE(uiCodeLength, uiCode, "delta_val_diff_minus_min[k]");
-                aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + uiCode;
-              }
-            }
-            
-          }
-        }
-        
-        if( pcDLT->getInterViewDltPredEnableFlag( layerId ) )
-        {
-          // interpret decoded values as delta DLT
-          AOF( layerId > 1 );
-          // assumes ref layer id to be 1
-          std::vector<Int> viRefDLT = pcDLT->idx2DepthValue( 1 );
-          UInt uiRefNum = pcDLT->getNumDepthValues( 1 );
-          pcDLT->setDeltaDLT(layerId, viRefDLT, uiRefNum, aiIdx2DepthValue, uiNumDepthValues);
-        }
-        else
-        {
-          // store final DLT
-          pcDLT->setDepthLUTs(layerId, aiIdx2DepthValue, uiNumDepthValues);
-        }
-      }
-    }
-  }
-#endif
-}
-#endif
 
 
 Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
@@ -1183,16 +1037,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
     if ( pcSPS->getSps3dExtensionFlag() )
     {
-#if NH_3D
-      parseSps3dExtension( pcSPS ); 
-#endif
     }
 
-#if NH_3D
-    if ( pcSPS->getSpsExtension5bits() )
-#else
     if ( pcSPS->getSpsExtension5bits() || pcSPS->getSps3dExtensionFlag() )
-#endif
     { 
       while ( xMoreRbspData() )
       {
@@ -1269,37 +1116,6 @@ Void TDecCavlc::parseSpsMultilayerExtension( TComSPS* pcSPS )
   READ_FLAG( uiCode, "inter_view_mv_vert_constraint_flag" );    pcSPS->setInterViewMvVertConstraintFlag(uiCode == 1 ? true : false);  
 }
 
-#if NH_3D
-Void TDecCavlc::parseSps3dExtension( TComSPS* pcSPS )
-{ 
-  TComSps3dExtension sps3dExt; 
-  UInt uiCode; 
-  for( Int d = 0; d  <=  1; d++ )
-  {
-    READ_FLAG( uiCode, "iv_mv_pred_flag" ); sps3dExt.setIvMvPredFlag( d, uiCode == 1 );
-    READ_FLAG( uiCode, "iv_mv_scaling_flag" ); sps3dExt.setIvMvScalingFlag( d, uiCode == 1 );
-    if( d  ==  0 )
-    {
-      READ_UVLC( uiCode, "log2_sub_pb_size_minus3" ); sps3dExt.setLog2SubPbSizeMinus3( d, uiCode );
-      READ_FLAG( uiCode, "iv_res_pred_flag" ); sps3dExt.setIvResPredFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "depth_refinement_flag" ); sps3dExt.setDepthRefinementFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "view_synthesis_pred_flag" ); sps3dExt.setViewSynthesisPredFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "depth_based_blk_part_flag" ); sps3dExt.setDepthBasedBlkPartFlag( d, uiCode == 1 );
-    }
-    else 
-    {
-      READ_FLAG( uiCode, "mpi_flag" ); sps3dExt.setMpiFlag( d, uiCode == 1 );
-      READ_UVLC( uiCode, "log2_mpi_sub_pb_size_minus3" ); sps3dExt.setLog2MpiSubPbSizeMinus3( d, uiCode );
-      READ_FLAG( uiCode, "intra_contour_flag" ); sps3dExt.setIntraContourFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "intra_sdc_wedge_flag" ); sps3dExt.setIntraSdcWedgeFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "qt_pred_flag" ); sps3dExt.setQtPredFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "inter_sdc_flag" ); sps3dExt.setInterSdcFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "intra_skip_flag" ); sps3dExt.setDepthIntraSkipFlag( d, uiCode == 1 );
-    }
-  }
-  pcSPS->setSps3dExtension( sps3dExt ); 
-}
-#endif
 
 Void TDecCavlc::parsePpsMultilayerExtension(TComPPS* pcPPS)
 {
@@ -1481,27 +1297,12 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     READ_FLAG( uiCode,  "vps_extension2_flag" );
     if (uiCode)
     {
-#if NH_3D
-      READ_FLAG( uiCode,  "vps_3d_extension_flag" );
-      if ( uiCode )
-      {
-        m_pcBitstream->readOutTrailingBits();
-        pcVPS->createCamPars(pcVPS->getNumViews());
-        parseVps3dExtension( pcVPS );   
-      }
-      READ_FLAG( uiCode,  "vps_extension3_flag" );
-      if (uiCode)
-      {      
-#endif
 #endif  
         while ( xMoreRbspData() )
         {
           READ_FLAG( uiCode, "vps_extension_data_flag");
         }
 #if NH_MV
-#if NH_3D
-      }
-#endif
     }
 #endif
   }
@@ -1586,9 +1387,6 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }
 
-#if NH_3D
-  pcVPS->initViewCompLayer( ); 
-#endif
 
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
   {
@@ -2177,40 +1975,6 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
   vps->setDpbSize( dpbSize ); 
 }
 
-#if NH_3D
-Void TDecCavlc::parseVps3dExtension( TComVPS* pcVPS )
-{
-  UInt uiCode;   
-  READ_UVLC( uiCode, "cp_precision"); pcVPS->setCpPrecision( uiCode ) ;
-  
-  for (Int n = 1; n < pcVPS->getNumViews(); n++)
-  {
-    Int i      = pcVPS->getViewOIdxList( n );
-    Int iInVps = pcVPS->getVoiInVps( i ); 
-    READ_CODE( 6, uiCode, "num_cp" ); pcVPS->setNumCp( iInVps, uiCode );
-
-    if( pcVPS->getNumCp( iInVps ) > 0 )
-    {
-      READ_FLAG( uiCode, "cp_in_slice_segment_header_flag" ); pcVPS->setCpInSliceSegmentHeaderFlag( iInVps, uiCode == 1 );
-      for( Int m = 0; m < pcVPS->getNumCp( iInVps ); m++ )
-      {
-        READ_UVLC( uiCode, "cp_ref_voi" ); pcVPS->setCpRefVoi( iInVps, m, uiCode );
-        if( !pcVPS->getCpInSliceSegmentHeaderFlag( iInVps ) )
-        {
-          Int j      = pcVPS->getCpRefVoi( iInVps, m );
-          Int jInVps = pcVPS->getVoiInVps( j ); 
-          Int iCode;
-          READ_SVLC( iCode, "vps_cp_scale" );                pcVPS->setVpsCpScale   ( iInVps, jInVps, iCode );
-          READ_SVLC( iCode, "vps_cp_off" );                  pcVPS->setVpsCpOff     ( iInVps, jInVps, iCode );
-          READ_SVLC( iCode, "vps_cp_inv_scale_plus_scale" ); pcVPS->setVpsCpInvScale( iInVps, jInVps, iCode - pcVPS->getVpsCpScale( iInVps, jInVps ) );
-          READ_SVLC( iCode, "vps_cp_inv_off_plus_off" );     pcVPS->setVpsCpInvOff  ( iInVps, jInVps, iCode - pcVPS->getVpsCpOff  ( iInVps, jInVps ) );
-        }
-      }
-    }    
-  }
-  pcVPS->deriveCpPresentFlag(); 
-}
-#endif
 #endif
 
 #if NH_MV
@@ -2303,9 +2067,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
 
   pcSlice->setViewId   ( vps->getViewId   ( pcSlice->getLayerId() )      );
   pcSlice->setViewIndex( vps->getViewIndex( pcSlice->getLayerId() )      );  
-#if NH_3D
-  pcSlice->setIsDepth  ( vps->getDepthId  ( pcSlice->getLayerId() ) == 1 );
-#endif
 #endif
 
   const ChromaFormat chFmt = sps->getChromaFormatIdc();
@@ -2621,28 +2382,16 @@ else
 #if NH_MV
     Bool interLayerPredLayerIdcPresentFlag = false; 
     Int layerId       = pcSlice->getLayerId(); 
-#if NH_3D
-    if( pcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumRefListLayers( layerId ) > 0 )
-#else
     if( pcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumDirectRefLayers( layerId ) > 0 )
-#endif
     {   
       READ_FLAG( uiCode, "inter_layer_pred_enabled_flag" ); pcSlice->setInterLayerPredEnabledFlag( uiCode == 1 );
-#if NH_3D
-      if( pcSlice->getInterLayerPredEnabledFlag() && vps->getNumRefListLayers( layerId ) > 1 )
-#else
       if( pcSlice->getInterLayerPredEnabledFlag() && vps->getNumDirectRefLayers( layerId ) > 1 )
-#endif
       {            
         if( !vps->getMaxOneActiveRefLayerFlag())  
         {
           READ_CODE( pcSlice->getNumInterLayerRefPicsMinus1Len( ), uiCode, "num_inter_layer_ref_pics_minus1" ); pcSlice->setNumInterLayerRefPicsMinus1( uiCode );
         }
-#if NH_3D
-        if ( pcSlice->getNumActiveRefLayerPics() != vps->getNumRefListLayers( layerId ) )
-#else
         if ( pcSlice->getNumActiveRefLayerPics() != vps->getNumDirectRefLayers( layerId ) )
-#endif
         {
           interLayerPredLayerIdcPresentFlag = true; 
           for( Int idx = 0; idx < pcSlice->getNumActiveRefLayerPics(); idx++ )   
@@ -2659,17 +2408,6 @@ else
         pcSlice->setInterLayerPredLayerIdc( i, pcSlice->getRefLayerPicIdc( i ) );
       }
     }
-#if NH_3D
-    if ( getDecTop()->decProcAnnexI() )
-    {    
-      pcSlice->deriveInCmpPredAndCpAvailFlag( );
-      if ( pcSlice->getInCmpPredAvailFlag() )
-      {
-        READ_FLAG(uiCode, "in_comp_pred_flag");  pcSlice->setInCompPredFlag((Bool)uiCode);      
-      }
-      pcSlice->init3dToolParameters(); 
-    }
-#endif
 #endif
     if(sps->getUseSAO())
     {
@@ -2876,33 +2614,11 @@ else
       pcSlice->initWpScaling(sps);
     }
 
-#if NH_3D_IC
-    else if(    pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) 
-             && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
-             && getDecTop()->decProcAnnexI()
-           )
-    {
-      UInt uiCodeTmp = 0;
-
-      READ_FLAG ( uiCodeTmp, "slice_ic_enable_flag" );
-      pcSlice->setApplyIC( uiCodeTmp );
-
-      if ( uiCodeTmp )
-      {
-        READ_FLAG ( uiCodeTmp, "slice_ic_disabled_merge_zero_idx_flag" );
-        pcSlice->setIcSkipParseFlag( uiCodeTmp );
-      }
-    }
-#endif
 
     if (!pcSlice->isIntra())
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
-#if NH_3D_IV_MERGE
-      pcSlice->setMaxNumMergeCand(( ( pcSlice->getMpiFlag() || pcSlice->getIvMvPredFlag() || pcSlice->getViewSynthesisPredFlag() ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
-#else
       pcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
-#endif
     }
 
     READ_SVLC( iCode, "slice_qp_delta" );
@@ -2993,23 +2709,6 @@ else
     }
     pcSlice->setLFCrossSliceBoundaryFlag( (uiCode==1)?true:false);
 
-#if NH_3D
-    if ( getDecTop()->decProcAnnexI() )
-    {
-      Int voiInVps = vps->getVoiInVps( pcSlice->getViewIndex() ); 
-      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) )
-      {
-        for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
-        {
-          Int jInVps = vps->getVoiInVps( vps->getCpRefVoi( voiInVps, m ));
-          READ_SVLC( iCode, "cp_scale" );                pcSlice->setCpScale   ( jInVps, iCode );
-          READ_SVLC( iCode, "cp_off" );                  pcSlice->setCpOff     ( jInVps, iCode );
-          READ_SVLC( iCode, "cp_inv_scale_plus_scale" ); pcSlice->setCpInvScale( jInVps, iCode - pcSlice->getCpScale   ( jInVps ));
-          READ_SVLC( iCode, "cp_inv_off_plus_off" );     pcSlice->setCpInvOff  ( jInVps, iCode - pcSlice->getCpOff     ( jInVps ));
-        }
-      }
-    }
-#endif
 
   }
 
@@ -3350,12 +3049,6 @@ Void TDecCavlc::parseRemainingBytes( Bool noTrailingBytesExpected )
   }
 }
 
-#if NH_3D_DIS
-Void TDecCavlc::parseDIS( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
-{
-  assert(0);
-}
-#endif
 
 Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
@@ -3492,31 +3185,6 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* /*pcCU*/, UInt& /*ruiMergeIndex*/ 
   assert(0);
 }
 
-#if NH_3D_ARP
-Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  assert(0);
-}
-#endif
-#if NH_3D_IC
-Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  assert(0);
-}
-#endif
-#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  assert(0);
-}
-
-#endif
-#if NH_3D_DBBP
-  Void TDecCavlc::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-  {
-    assert(0);
-  }
-#endif
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================

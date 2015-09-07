@@ -57,9 +57,6 @@
 
 #include "TEncAnalyze.h"
 #include "TEncRateCtrl.h"
-#if KWU_RC_MADPRED_E0227
-#include "../App/TAppEncoder/TAppEncTop.h"
-#endif
 #include <vector>
 
 //! \ingroup TLibEncoder
@@ -126,14 +123,6 @@ private:
   Int                     m_pocLastCoded;
   Int                     m_layerId;  
   Int                     m_viewId;
-#if NH_3D
-  Int                     m_viewIndex; 
-  Bool                    m_isDepth;
-#endif
-#endif
-#if NH_3D_IC
-  Int*                    m_aICEnableCandidate; 
-  Int*                    m_aICEnableNum; 
 #endif
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
@@ -175,25 +164,14 @@ public:
   Int       getPocLastCoded  ()                 { return m_pocLastCoded; }  
   Int       getLayerId       ()                 { return m_layerId;    }  
   Int       getViewId        ()                 { return m_viewId;    }
-#if NH_3D
-  Int       getViewIndex     ()                 { return m_viewIndex;    }
-  Bool      getIsDepth       ()                 { return m_isDepth; }
-#endif
 #endif
 
   Int   getGOPSize()          { return  m_iGopSize;  }
 
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
   Void  printOutSummary      ( UInt uiNumAllPicCoded, Bool isField, const Bool printMSEBasedSNR, const Bool printSequenceMSE, const BitDepths &bitDepths );
-#if NH_3D_VSO
-  Void  preLoopFilterPicAll  ( TComPic* pcPic, Dist64& ruiDist);
-#else
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist );
-#endif
 
-#if KWU_RC_MADPRED_E0227
-  TEncTop* getEncTop() { return m_pcEncTop; }
-#endif
 
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr, Bool isField );
@@ -212,11 +190,7 @@ protected:
   Void  xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic* pcPicOrgSecondField,
                                      TComPicYuv* pcPicRecFirstField, TComPicYuv* pcPicRecSecondField,
                                      const InputColourSpaceConversion snr_conversion, const Bool printFrameMSE );
-#if NH_3D_VSO
-  Dist64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1, const BitDepths &bitDepths);
-#else  
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1, const BitDepths &bitDepths);
-#endif
   Double xCalculateRVM();
 
   Void xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TComSPS *sps, const TComPPS *pps);

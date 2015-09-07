@@ -43,290 +43,6 @@ ParameterSetManager TDecTop::m_parameterSetManager;
 //! \ingroup TLibDecoder
 //! \{
 
-#if NH_3D
-CamParsCollector::CamParsCollector()
-: m_bInitialized( false )
-{
-  m_aaiCodedOffset         = new Int* [ MAX_NUM_LAYERS ];
-  m_aaiCodedScale          = new Int* [ MAX_NUM_LAYERS ];
-  for( UInt uiId = 0; uiId < MAX_NUM_LAYERS; uiId++ )
-  {
-    m_aaiCodedOffset      [ uiId ] = new Int [ MAX_NUM_LAYERS ];
-    m_aaiCodedScale       [ uiId ] = new Int [ MAX_NUM_LAYERS ];
-  }
-
-  xCreateLUTs( (UInt)MAX_NUM_LAYERS, (UInt)MAX_NUM_LAYERS, m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-  m_iLog2Precision   = LOG2_DISP_PREC_LUT;
-  m_uiBitDepthForLUT = 8; // fixed
-  m_receivedIdc = NULL; 
-  m_vps         = NULL; 
-}
-
-CamParsCollector::~CamParsCollector()
-{
-  for( UInt uiId = 0; uiId < MAX_NUM_LAYERS; uiId++ )
-  {
-    delete [] m_aaiCodedOffset      [ uiId ];
-    delete [] m_aaiCodedScale       [ uiId ];
-  }
-  delete [] m_aaiCodedOffset;
-  delete [] m_aaiCodedScale;
-
-  xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
-  xDeleteArray( m_aiBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
-  xDeleteArray( m_receivedIdc, m_vps->getNumViews() );
-}
-
-
-Void
-CamParsCollector::init( const TComVPS* vps)
-{
-  assert( !isInitialized() ); // Only one initialization currently supported
-  m_bInitialized            = true;
-  m_vps                     = vps; 
-  m_bCamParsVaryOverTime    = false;   
-  m_lastPoc                 = -1;   
-  m_firstReceivedPoc        = -2; 
-
-  for (Int i = 0; i <= vps->getMaxLayersMinus1(); i++)
-  {
-    Int curViewIdxInVps = m_vps->getVoiInVps( m_vps->getViewIndex( m_vps->getLayerIdInNuh( i ) ) ) ; 
-    m_bCamParsVaryOverTime = m_bCamParsVaryOverTime || vps->getCpInSliceSegmentHeaderFlag( curViewIdxInVps );    
-  }
-
-  assert( m_receivedIdc == NULL ); 
-  m_receivedIdc = new Int*[ m_vps->getNumViews() ]; 
-  for (Int i = 0; i < m_vps->getNumViews(); i++)
-  {
-    m_receivedIdc[i] = new Int[ m_vps->getNumViews() ]; 
-  }
-
-  xResetReceivedIdc( true ); 
-
-  for (Int voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
-  {
-    if( !m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) ) 
-    {
-      for (Int baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
-      { 
-        if( m_vps->getCpPresentFlag( voiInVps, baseVoiInVps ) )
-        {
-          m_receivedIdc   [ baseVoiInVps ][ voiInVps ] = -1; 
-          m_aaiCodedScale [ baseVoiInVps ][ voiInVps ] = m_vps->getCodedScale    (voiInVps) [ baseVoiInVps ];
-          m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ] = m_vps->getCodedOffset   (voiInVps) [ baseVoiInVps ];
-
-          m_receivedIdc   [ voiInVps ][ baseVoiInVps ] = -1; 
-          m_aaiCodedScale [ voiInVps ][ baseVoiInVps ] = m_vps->getInvCodedScale (voiInVps) [ baseVoiInVps ];
-          m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ] = m_vps->getInvCodedOffset(voiInVps) [ baseVoiInVps ];
-          xInitLUTs( baseVoiInVps, voiInVps, m_aaiCodedScale[ baseVoiInVps ][ voiInVps ], m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-          xInitLUTs( voiInVps, baseVoiInVps, m_aaiCodedScale[ voiInVps ][ baseVoiInVps ], m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-        }
-      }
-    }
-  }
-}
-
-Void
-CamParsCollector::xResetReceivedIdc( Bool overWriteFlag )
-{
-  for (Int i = 0; i < m_vps->getNumViews(); i++)
-  {  
-    for (Int j = 0; j < m_vps->getNumViews(); j++)
-    {
-      if ( overWriteFlag ||  ( m_receivedIdc[i][j] != -1 ) )
-      {
-        m_receivedIdc[i][j] = 0; 
-      }      
-    }
-  }
-}
-
-
-Void
-CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT)
-{
-
-  uiNumberSourceViews = std::max( (UInt) 1, uiNumberSourceViews );
-  uiNumberTargetViews = std::max( (UInt) 1, uiNumberTargetViews );
-
-  radLUT         = new Double***[ uiNumberSourceViews ];
-  raiLUT         = new Int   ***[ uiNumberSourceViews ];
-
-  for( UInt uiSourceView = 0; uiSourceView < uiNumberSourceViews; uiSourceView++ )
-  {
-    radLUT        [ uiSourceView ] = new Double**[ uiNumberTargetViews ];
-    raiLUT        [ uiSourceView ] = new Int   **[ uiNumberTargetViews ];
-
-    for( UInt uiTargetView = 0; uiTargetView < uiNumberTargetViews; uiTargetView++ )
-    {
-      radLUT        [ uiSourceView ][ uiTargetView ]      = new Double*[ 2 ];
-      radLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Double [ 257 ];
-      radLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Double [ 257 ];
-
-      raiLUT        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
-      raiLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
-      raiLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
-    }
-  }
-}
-
-Void 
-  CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
-{
-  Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCpPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
-  Int     iLog2DivChroma = iLog2DivLuma + 1;
-
-  iOffset <<= m_uiBitDepthForLUT;
-
-  Double dScale  = (Double) iScale  / (( Double ) ( 1 << iLog2DivLuma ));
-  Double dOffset = (Double) iOffset / (( Double ) ( 1 << iLog2DivLuma ));
-
-  // offsets including rounding offsets
-  Int64 iOffsetLuma   = iOffset + ( ( 1 << iLog2DivLuma   ) >> 1 );
-  Int64 iOffsetChroma = iOffset + ( ( 1 << iLog2DivChroma ) >> 1 );
-
-
-  for( UInt uiDepthValue = 0; uiDepthValue < 256; uiDepthValue++ )
-  {
-
-    // real-valued look-up tables
-    Double  dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
-    Double  dShiftChroma    = dShiftLuma / 2;
-    radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = dShiftLuma;
-    radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = dShiftChroma;
-
-    // integer-valued look-up tables
-    Int64   iTempScale      = (Int64)uiDepthValue * iScale;
-    Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
-    Int64   iShiftChroma    = ( iTempScale + iOffsetChroma ) >> iLog2DivChroma;
-    raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = (Int)iShiftLuma;
-    raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = (Int)iShiftChroma;
-  }
-
-  radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
-  radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
-  raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
-  raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
-}
-
-Void
-CamParsCollector::uninit()
-{
-  m_bInitialized = false;
-}
-
-Void CamParsCollector::setSlice( const TComSlice* pcSlice )
-{
-  if( pcSlice == 0 )
-  {
-    xOutput( m_lastPoc );
-    return;
-  }
-
-#if !H_3D_FCO
-  if ( pcSlice->getIsDepth())
-  {
-    return;
-  }
-#endif
-
-  Int curPoc = pcSlice->getPOC();
-  if( m_firstReceivedPoc == -2 )
-  {
-    m_firstReceivedPoc = curPoc; 
-  }
-
-  Bool newPocFlag = ( m_lastPoc != curPoc );  
-
-  if ( newPocFlag )
-  {    
-    if( m_lastPoc != -1 )
-    {
-      xOutput( m_lastPoc );
-    }
-
-    xResetReceivedIdc( false ); 
-    m_lastPoc = pcSlice->getPOC();
-  }
-
-  UInt voiInVps          = m_vps->getVoiInVps(pcSlice->getViewIndex());  
-  if( m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) ) // check consistency of slice parameters here
-  {   
-    for( Int baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
-    {        
-      if ( m_vps->getCpPresentFlag( voiInVps, baseVoiInVps ) )
-      {
-        if ( m_receivedIdc[ voiInVps ][ baseVoiInVps ] != 0 )
-        {      
-          AOF( m_aaiCodedScale [ voiInVps ][ baseVoiInVps ] == pcSlice->getInvCodedScale () [ baseVoiInVps ] );
-          AOF( m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ] == pcSlice->getInvCodedOffset() [ baseVoiInVps ] );
-        }
-        else
-        {          
-          m_receivedIdc   [ voiInVps ][ baseVoiInVps ]  = 1; 
-          m_aaiCodedScale [ voiInVps ][ baseVoiInVps ]  = pcSlice->getInvCodedScale () [ baseVoiInVps ];
-          m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ]  = pcSlice->getInvCodedOffset() [ baseVoiInVps ];
-          xInitLUTs( voiInVps, baseVoiInVps, m_aaiCodedScale[ voiInVps ][ baseVoiInVps ], m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
-        }
-        if ( m_receivedIdc[ baseVoiInVps ][ voiInVps ] != 0 )
-        {      
-          AOF( m_aaiCodedScale [ baseVoiInVps ][ voiInVps ] == pcSlice->getCodedScale    () [ baseVoiInVps ] );
-          AOF( m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ] == pcSlice->getCodedOffset   () [ baseVoiInVps ] );
-        }
-        else
-        {        
-          m_receivedIdc   [ baseVoiInVps ][ voiInVps ]  = 1; 
-          m_aaiCodedScale [ baseVoiInVps ][ voiInVps ]  = pcSlice->getCodedScale    () [ baseVoiInVps ];
-          m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ]  = pcSlice->getCodedOffset   () [ baseVoiInVps ];
-          xInitLUTs( baseVoiInVps, voiInVps, m_aaiCodedScale[ baseVoiInVps ][ voiInVps ], m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
-        }
-      }
-    }
-  }  
-}
-
-Void
-CamParsCollector::xOutput( Int iPOC )
-{
-  if( m_pCodedScaleOffsetFile )
-  {
-    if( iPOC == m_firstReceivedPoc )
-    {
-      fprintf( m_pCodedScaleOffsetFile, "#ViewOrderIdx     ViewIdVal\n" );
-      fprintf( m_pCodedScaleOffsetFile, "#------------ -------------\n" );
-      
-      for( UInt voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
-      {
-        fprintf( m_pCodedScaleOffsetFile, "%13d %13d\n", m_vps->getViewOIdxList( voiInVps ), m_vps->getViewIdVal( m_vps->getViewOIdxList( voiInVps ) ) );
-      }
-      fprintf( m_pCodedScaleOffsetFile, "\n\n");
-      fprintf( m_pCodedScaleOffsetFile, "# StartFrame     EndFrame    TargetVOI      BaseVOI   CodedScale  CodedOffset    Precision\n" );
-      fprintf( m_pCodedScaleOffsetFile, "#----------- ------------ ------------ ------------ ------------ ------------ ------------\n" );
-    }
-    if( iPOC == m_firstReceivedPoc || m_bCamParsVaryOverTime  )
-    {
-      Int iS = iPOC;
-      Int iE = ( m_bCamParsVaryOverTime ? iPOC : ~( 1 << 31 ) );
-      for( UInt voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
-      {
-        for( UInt baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
-        {
-          if( voiInVps != baseVoiInVps )
-          {
-            if ( m_receivedIdc[baseVoiInVps][voiInVps] != 0 )
-            {            
-              fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
-                iS, iE, m_vps->getViewOIdxList( voiInVps ), m_vps->getViewOIdxList( baseVoiInVps ), 
-                m_aaiCodedScale [ baseVoiInVps ][ voiInVps ], 
-                m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_vps->getCpPrecision() );
-            }            
-          }
-        }
-      }
-    }
-  }
-}
-#endif
 
 
 TDecTop::TDecTop()
@@ -389,11 +105,6 @@ TDecTop::TDecTop()
   m_layerId                       = 0;
   m_viewId                        = 0;
 
-#if NH_3D
-  m_viewIndex                     = 0;
-  m_isDepth                       = false;
-  m_pcCamParsCollector            = 0;
-#endif
 
   m_decodingProcess               = CLAUSE_8;
   m_targetOlsIdx                  = -1;
@@ -729,12 +440,6 @@ Void TDecTop::xActivateParameterSets()
     assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, sps->getLayerId() ) );
 #endif
 
-#if NH_3D
-    if ( !m_pcCamParsCollector->isInitialized() )
-    {
-      m_pcCamParsCollector->init( vps );
-    }
-#endif
     // Initialise the various objects for the new set of settings
     m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getChromaFormatIdc(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getMaxTotalCUDepth(), pps->getPpsRangeExtension().getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA), pps->getPpsRangeExtension().getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA) );
     m_cLoopFilter.create( sps->getMaxTotalCUDepth() );
@@ -1057,11 +762,6 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
 
     m_pcPic->setLayerId( nalu.m_nuhLayerId );
     m_pcPic->setViewId ( getViewId() );
-#if NH_3D
-    m_pcPic->setViewIndex( getViewIndex() );
-    m_pcPic->setIsDepth  ( getIsDepth  () );
-    pcSlice->setIvPicLists( m_dpb );         
-#endif
 #endif
     
     // When decoding the slice header, the stored start and end addresses were actually RS addresses, not TS addresses.
@@ -1099,13 +799,6 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
           assert( false ); 
         }
       }
-#if NH_3D_NBDV
-      pcSlice->setDefaultRefView();
-#endif
-#if NH_3D_ARP
-      pcSlice->setPocsInCurrRPSs(); 
-      pcSlice->setARPStepNum(m_dpb);
-#endif     
 #endif
 
       // For generalized B
@@ -1149,12 +842,6 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
 
       //---------------
       pcSlice->setRefPOCList();
-#if  NH_3D_TMVP
-      if(pcSlice->getLayerId())
-      {
-        pcSlice->generateAlterRefforTMVP();
-      }
-#endif
     }
 
     m_pcPic->setCurrSliceIdx(m_uiSliceIdx);
@@ -1187,22 +874,10 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
       m_cTrQuant.setUseScalingList(false);
     }
 
-#if NH_3D
-    if ( decProcAnnexI() )
-    {
-      pcSlice->checkInCompPredRefLayers(); 
-    }
-#endif
 
     //  Decode a picture
     m_cGopDecoder.decompressSlice(&(nalu.getBitstream()), m_pcPic);
 
-#if NH_3D
-    if( m_pcCamParsCollector )
-    {
-      m_pcCamParsCollector->setSlice( pcSlice );
-    }
-#endif
 
 #if !NH_MV
     m_bFirstSliceInPicture = false;
@@ -1234,9 +909,6 @@ Void TDecTop::xDecodeSPS(const std::vector<UChar> &naluData)
 #if O0043_BEST_EFFORT_DECODING
   sps->setForceDecodeBitDepth(m_forceDecodeBitDepth);
 #endif
-#if NH_3D
-  // GT: Please don't add parsing dependency of SPS from VPS here again!!!
-#endif
   m_cEntropyDecoder.decodeSPS( sps );
   m_parameterSetManager.storeSPS(sps, naluData);
 }
@@ -1246,16 +918,6 @@ Void TDecTop::xDecodePPS(const std::vector<UChar> &naluData)
   TComPPS* pps = new TComPPS();
 #if NH_MV
   pps->setLayerId( getLayerId() ); 
-#endif
-#if NH_3D_DLT
-  // create mapping from depth layer indexes to layer ids
-  Int j=0;
-  for( Int i=0; i<=m_parameterSetManager.getFirstVPS()->getMaxLayersMinus1(); i++ )
-  {
-    Int layerId = m_parameterSetManager.getFirstVPS()->getLayerIdInNuh(i);
-    if( m_parameterSetManager.getFirstVPS()->getDepthId(layerId) )
-      pps->getDLT()->setDepthIdxToLayerId(j++, layerId);
-  }
 #endif
   m_cEntropyDecoder.decodePPS( pps );
 
@@ -1792,10 +1454,6 @@ Void TDecTop::finalizePic()
 Void TDecTop::initFromActiveVps( const TComVPS* vps )
 {   
   setViewId   ( vps->getViewId   ( getLayerId() )      );  
-#if NH_3D
-  setViewIndex( vps->getViewIndex( getLayerId() )      );  
-  setIsDepth  ( vps->getDepthId  ( getLayerId() ) == 1 );  
-#endif
 
   if ( !vps->getVpsExtensionFlag() )
   {

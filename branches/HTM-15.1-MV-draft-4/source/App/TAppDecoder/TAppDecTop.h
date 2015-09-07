@@ -116,10 +116,6 @@ private:
   const TComVPS*                  m_vps;                                ///< active VPS
 
   Bool                            m_reconOpen           [ MAX_NUM_LAYERS ]; ///< reconstruction file opened
-#if NH_3D
-  FILE*                           m_pScaleOffsetFile;
-  CamParsCollector                m_cCamParsCollector;
-#endif
 #else
   TDecTop                         m_cTDecTop;                     ///< decoder class
   TVideoIOYuv                     m_cTVideoIOYuvReconFile;        ///< reconstruction YUV class

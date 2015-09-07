@@ -39,10 +39,6 @@
 #include "TComMotionInfo.h"
 #include "assert.h"
 #include <stdlib.h>
-#if NH_3D_SPIVMP
-#include "TComDataCU.h"
-#include "TComPic.h"
-#endif
 #if NH_MV
 #include <iomanip>
 #endif
@@ -329,29 +325,6 @@ Void TComCUMvField::setAllMvField( TComMvField const & mvField, PartSize eCUMode
   setAllRefIdx( mvField.getRefIdx(), eCUMode, iPartAddr, uiDepth, iPartIdx );
 }
 
-#if NH_3D_SPIVMP
-Void TComCUMvField::setMvFieldSP( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  )
-{
-  uiAbsPartIdx += pcCU->getZorderIdxInCtu();
-  Int iStartPelX = g_auiRasterToPelX[g_auiZscanToRaster[uiAbsPartIdx]];
-  Int iStartPelY = g_auiRasterToPelY[g_auiZscanToRaster[uiAbsPartIdx]];
-  Int iEndPelX = iStartPelX + iWidth;
-  Int iEndPelY = iStartPelY + iHeight;  
-
-  for (Int i=iStartPelY; i<iEndPelY; i+=pcCU->getPic()->getMinCUHeight())
-  {
-    for (Int j=iStartPelX; j < iEndPelX; j += pcCU->getPic()->getMinCUWidth())
-    {
-      Int iCurrRaster = i / pcCU->getPic()->getMinCUHeight() * pcCU->getPic()->getNumPartInCtuWidth() + j/pcCU->getPic()->getMinCUWidth();
-      Int uiPartAddr = g_auiRasterToZscan[iCurrRaster];
-      uiPartAddr -= pcCU->getZorderIdxInCtu();  
-
-      m_pcMv[uiPartAddr] = cMvField.getMv();
-      m_piRefIdx[uiPartAddr] = cMvField.getRefIdx();
-    }
-  }
-}
-#endif
 
 /**Subsampling of the stored prediction mode, reference index and motion vector
  * \param pePredMode Pointer to prediction modes
@@ -404,41 +377,5 @@ Void TComCUMvField::print(Char* pePredMode)
   }
 }
 
-#if NH_3D_MLC
-Void TComMotionCand::print( Int i )
-{
-  if (i == 0  )
-  {
-
-    std::cout << std::setfill(' ')                          << std::setw( 15 )
-      << "Num"                                              << std::setw( 15 )
-      << "Avai"                                             << std::setw( 15 )
-      << "Dir "                                             << std::setw( 15 )
-      <<  "L0 RefIdx"                                       << std::setw( 15 )
-      <<  "L0 Hor"                                          << std::setw( 15 )
-      <<  "L0 Ver"                                          << std::setw( 15 )
-      <<  "L1 RefIdx"                                       << std::setw( 15 )
-      <<  "L1 Hor"                                          << std::setw( 15 )
-      <<  "L1 Ver"                                          << std::setw( 15 )
-      << "VspFlag"                                          << std::setw( 15 )
-      << "SPIVMPFlag"                                       
-      << std::endl; 
-  }
-
-  std::cout << std::setfill(' ')                                  << std::setw( 15 )
-    << i                                                          << std::setw( 15 )
-    << m_bAvailable                                               << std::setw( 15 )
-    << (UInt) m_uDir                                              << std::setw( 15 )
-    << ((m_uDir & 1) ? m_cMvField[0].getRefIdx()       : MIN_INT) << std::setw( 15 )
-    << ((m_uDir & 1) ? m_cMvField[0].getMv().getHor()  : MIN_INT) << std::setw( 15 )
-    << ((m_uDir & 1) ? m_cMvField[0].getMv().getVer()  : MIN_INT) << std::setw( 15 )
-    << ((m_uDir & 2) ? m_cMvField[1].getRefIdx()       : MIN_INT) << std::setw( 15 )
-    << ((m_uDir & 2) ? m_cMvField[1].getMv().getHor()  : MIN_INT) << std::setw( 15 )
-    << ((m_uDir & 2) ? m_cMvField[1].getMv().getVer()  : MIN_INT) << std::setw( 15 )
-    << m_iVspFlag                                                 << std::setw( 15 )
-    << m_bSPIVMPFlag                                              << std::setw( 15 )
-    << std::endl;
-}
-#endif
 #endif
 //! \}

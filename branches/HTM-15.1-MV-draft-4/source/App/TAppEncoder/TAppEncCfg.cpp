@@ -72,9 +72,6 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
 //                           If it is a RExt still picture, there is a '1' for the top digit.
 #if NH_MV
   MULTIVIEWMAIN = 6,
-#if NH_3D
-  MAIN3D = 8, 
-#endif
 #endif
   MONOCHROME_8      = 1008,
   MONOCHROME_12     = 1012,
@@ -128,9 +125,6 @@ TAppEncCfg::TAppEncCfg()
   m_codedPivotValue = NULL;
   m_targetPivotValue = NULL;
 
-#if KWU_RC_MADPRED_E0227
-  m_depthMADPred = 0;
-#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -195,23 +189,6 @@ TAppEncCfg::~TAppEncCfg()
     }
   }
 #endif
-#if NH_3D
-#if NH_3D_VSO
-  if (  m_pchVSOConfig != NULL)
-  {
-    free (  m_pchVSOConfig );
-  }
-#endif
-  if ( m_pchCameraParameterFile != NULL )
-  {
-    free ( m_pchCameraParameterFile ); 
-  }
-
-  if ( m_pchBaseViewCameraNumbers != NULL )
-  {
-    free ( m_pchBaseViewCameraNumbers ); 
-  }
-#endif
 }
 
 Void TAppEncCfg::create()
@@ -266,9 +243,6 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
     in>>entry.m_interViewRefPosL[1][i];
   }
 #endif
-#if NH_3D
-  in>>entry.m_interCompPredFlag;
-#endif
 
   return in;
 }
@@ -302,9 +276,6 @@ strToProfile[] =
   {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT }
 #if NH_MV
   ,{"multiview-main"     , Profile::MULTIVIEWMAIN      },
-#if NH_3D
-   {"3d-main"            , Profile::MAIN3D             }
-#endif
 #endif
 
 };
@@ -331,9 +302,6 @@ strToExtendedProfile[] =
     {"high-throughput-rext",      HIGHTHROUGHPUTREXT },
 #if NH_MV
     {"multiview-main"     , MULTIVIEWMAIN   },
-#if NH_3D
-    {"3d-main"            , MAIN3D          },
-#endif
 #endif
     {"monochrome",         MONOCHROME_8     },
     {"monochrome12",       MONOCHROME_12    },
@@ -773,12 +741,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string        cfg_profiles;
   string        cfg_levels; 
   string        cfg_tiers; 
-#if NH_3D
-  cfg_dimensionLength.push_back( 2  );  // depth
-  cfg_dimensionLength.push_back( 32 );  // texture 
-#else
   cfg_dimensionLength.push_back( 64 ); 
-#endif 
 #endif
   string cfg_dQPFile;
   string cfg_ScalingListFile;
@@ -847,18 +810,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if NH_MV
   ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
-#if !NH_3D
   ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask: 2: Multiview, 8: Auxiliary, 10: Multiview + Auxiliary")    
-#else
-  ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
-#endif  
   ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
   ("ViewOrderIndex",        m_viewOrderIndex     , std::vector<Int>(1,0), "View Order Index per layer")
   ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id per View Order Index")
   ("AuxId",                 m_auxId              , std::vector<Int>(1,0), "AuxId per layer")
-#if NH_3D
-  ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
-#endif
   ("TargetEncLayerIdList",  m_targetEncLayerIdList, std::vector<Int>(0,0), "LayerIds in Nuh to be encoded")  
   ("LayerIdInNuh",          m_layerIdInNuh        , std::vector<Int>(1,0), "LayerId in Nuh")  
   ("SplittingFlag",         m_splittingFlag       , false                , "Splitting Flag")    
@@ -1124,13 +1080,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ( "InitialQP",                                      m_RCInitialQP,                                        0, "Rate control: initial QP" )
   ( "RCForceIntraQP",                                 m_RCForceIntraQP,                                 false, "Rate control: force intra QP to be equal to initial QP" )
 
-#if KWU_RC_VIEWRC_E0227
-  ("ViewWiseTargetBits, -vtbr" ,  m_viewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
-  ("TargetBitAssign, -ta", m_viewWiseRateCtrl, false, "View-wise rate control on/off")
-#endif
-#if KWU_RC_MADPRED_E0227
-  ("DepthMADPred, -dm", m_depthMADPred, (UInt)0, "Depth based MAD prediction on/off")
-#endif
 #if NH_MV
 // A lot of this stuff could should actually be derived by the encoder.
   // VPS VUI
@@ -1314,52 +1263,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("OutputVpsInfo",                                   m_outputVpsInfo,                false                     ,"Output information about the layer dependencies and layer sets")
 #endif
-#if NH_3D
-/* Camera parameters */  
-  ("Depth420OutputFlag",                              m_depth420OutputFlag,           true                     , "Output depth layers in 4:2:0 ") 
-  ("CameraParameterFile,cpf",                         m_pchCameraParameterFile,    (Char *) 0,                    "Camera Parameter File Name")
-  ("BaseViewCameraNumbers",                           m_pchBaseViewCameraNumbers,  (Char *) 0,                    "Numbers of base views")
-  ("CodedCamParsPrecision",                           m_iCodedCamParPrecision,      STD_CAM_PARAMETERS_PRECISION, "precision for coding of camera parameters (in units of 2^(-x) luma samples)" )
-
-#if NH_3D_VSO
-  /* View Synthesis Optimization */
-  ("VSOConfig",                                       m_pchVSOConfig            , (Char *) 0                    ,"VSO configuration")
-  ("VSO",                                             m_bUseVSO                 , false                         ,"Use VSO" )    
-  ("VSOMode",                                         m_uiVSOMode               , (UInt)   4                    ,"VSO Mode")
-  ("LambdaScaleVSO",                                  m_dLambdaScaleVSO         , (Double) 1                    ,"Lambda Scaling for VSO")
-  ("VSOLSTable",                                      m_bVSOLSTable             , true                          ,"Depth QP dependent video/depth rate allocation by Lagrange multiplier" )      
-  ("ForceLambdaScaleVSO",                             m_bForceLambdaScaleVSO    , false                         ,"Force using Lambda Scale VSO also in non-VSO-Mode")
-  ("AllowNegDist",                                    m_bAllowNegDist           , true                          ,"Allow negative Distortion in VSO")
-                                                                                                              
-  ("UseEstimatedVSD",                                 m_bUseEstimatedVSD        , true                          ,"Model based VSD estimation instead of rendering based for some encoder decisions" )      
-  ("VSOEarlySkip",                                    m_bVSOEarlySkip           , true                          ,"Early skip of VSO computation if synthesis error assumed to be zero" )      
-                                                                                                               
-  ("WVSO",                                            m_bUseWVSO                , true                          ,"Use depth fidelity term for VSO" )
-  ("VSOWeight",                                       m_iVSOWeight              , 10                            ,"Synthesized View Distortion Change weight" )
-  ("VSDWeight",                                       m_iVSDWeight              , 1                             ,"View Synthesis Distortion estimate weight" )
-  ("DWeight",                                         m_iDWeight                , 1                             ,"Depth Distortion weight" )
-#endif //HHI_VSO
-/* 3D- HEVC Tools */                                                            
-  ("QTL"                   ,                          m_bUseQTL                 , true                          , "Use depth quad tree limitation (encoder only)" )
-  ("IvMvPredFlag"          ,                          m_ivMvPredFlag            , BoolAry1d(2,true)             , "Inter-view motion prediction"              )
-  ("IvMvScalingFlag"       ,                          m_ivMvScalingFlag         , BoolAry1d(2,true)             , "Inter-view motion vector scaling"          )
-  ("Log2SubPbSizeMinus3"   ,                          m_log2SubPbSizeMinus3     , 0                             , "Log2 minus 3 of sub Pb size"               )
-  ("IvResPredFlag"         ,                          m_ivResPredFlag           , true                          , "Inter-view residual prediction"            )
-  ("DepthRefinementFlag"   ,                          m_depthRefinementFlag     , true                          , "Depth to refine disparity"                 )
-  ("ViewSynthesisPredFlag" ,                          m_viewSynthesisPredFlag   , true                          , "View synthesis prediction"                 )
-  ("DepthBasedBlkPartFlag" ,                          m_depthBasedBlkPartFlag   , true                          , "Depth base block partitioning"             )
-  ("MpiFlag"               ,                          m_mpiFlag                 , true                          , "Motion inheritance from texture to depth"  )
-  ("Log2MpiSubPbSizeMinus3",                          m_log2MpiSubPbSizeMinus3  , 0                             , "Log2 minus 3 of sub Pb size for MPI"       )
-  ("IntraContourFlag"      ,                          m_intraContourFlag        , true                          , "Intra contour mode"                        )
-  ("IntraWedgeFlag"        ,                          m_intraWedgeFlag          , true                          , "Intra wedge mode and segmental depth DCs"  )
-  ("IntraSdcFlag"          ,                          m_intraSdcFlag            , true                          , "Intra depth DCs"                           )
-  ("QtPredFlag"            ,                          m_qtPredFlag              , true                          , "Quad tree prediction from texture to depth")
-  ("InterSdcFlag"          ,                          m_interSdcFlag            , true                          , "Inter depth DCs"                           )
-  ("DepthIntraSkip"        ,                          m_depthIntraSkipFlag      , true                          , "Depth intra skip mode"                     )
-  ("DLT"                   ,                          m_useDLT                  , true                          , "Depth lookup table"                        )
-  ("IlluCompEnable"        ,                          m_abUseIC                 , true                          , "Enable illumination compensation"          )
-  ("IlluCompLowLatencyEnc" ,                          m_bUseLowLatencyICEnc     , false                         , "Enable low-latency illumination compensation encoding")
-#endif //NH_3D
     
   ;
 
@@ -1554,11 +1457,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   Bool anyEmpty = false; 
   if( cfg_profiles.empty() )
   {
-#if NH_3D
-    cfg_profiles = string("main main 3d-main");
-#else
     cfg_profiles = string("main main multiview-main");    
-#endif
     fprintf(stderr, "\nWarning: No profiles given, using defaults: %s", cfg_profiles.c_str() );
     anyEmpty = true; 
   }
@@ -1797,9 +1696,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_iNumberOfViews = (Int) uniqueViewOrderIndices.size(); 
   xResizeVector( m_auxId );
 
-#if NH_3D
-  xResizeVector( m_depthFlag ); 
-#endif
   xResizeVector( m_fQP ); 
 
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
@@ -2003,87 +1899,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     }
   }
 
-#if NH_3D
-#if NH_3D_VSO
-  // Table base optimization 
-  // Q&D
-  Double adLambdaScaleTable[] = 
-  {  0.031250, 0.031639, 0.032029, 0.032418, 0.032808, 0.033197, 0.033586, 0.033976, 0.034365, 0.034755, 
-  0.035144, 0.035533, 0.035923, 0.036312, 0.036702, 0.037091, 0.037480, 0.037870, 0.038259, 0.038648, 
-  0.039038, 0.039427, 0.039817, 0.040206, 0.040595, 0.040985, 0.041374, 0.041764, 0.042153, 0.042542, 
-  0.042932, 0.043321, 0.043711, 0.044100, 0.044194, 0.053033, 0.061872, 0.070711, 0.079550, 0.088388, 
-  0.117851, 0.147314, 0.176777, 0.235702, 0.294628, 0.353553, 0.471405, 0.589256, 0.707107, 0.707100, 
-  0.753550, 0.800000  
-  }; 
-  if ( m_bUseVSO && m_bVSOLSTable )
-  {
-    Int firstDepthLayer = -1; 
-    for (Int layer = 0; layer < m_numberOfLayers; layer++ )
-    {
-      if ( m_depthFlag[ layer ])
-      {
-        firstDepthLayer = layer;
-        break; 
-      }
-    }
-    AOT( firstDepthLayer == -1 );
-    AOT( (m_iQP[firstDepthLayer] < 0) || (m_iQP[firstDepthLayer] > 51));
-    m_dLambdaScaleVSO *= adLambdaScaleTable[m_iQP[firstDepthLayer]]; 
-  }
-  if ( m_bUseVSO && m_uiVSOMode == 4)
-  {
-    m_cRenModStrParser.setString( m_iNumberOfViews, m_pchVSOConfig );
-    m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
-      m_internalBitDepth[ CHANNEL_TYPE_LUMA],
-      (UInt)m_iCodedCamParPrecision,
-      m_FrameSkip,
-      (UInt)m_framesToBeEncoded,
-      m_pchCameraParameterFile,
-      m_pchBaseViewCameraNumbers,
-      NULL,
-      m_cRenModStrParser.getSynthViews(),
-      LOG2_DISP_PREC_LUT );
-  }
-  else if ( m_bUseVSO && m_uiVSOMode != 4 )
-  {
-    m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
-      m_internalBitDepth[ CHANNEL_TYPE_LUMA],
-      (UInt)m_iCodedCamParPrecision,
-      m_FrameSkip,
-      (UInt)m_framesToBeEncoded,
-      m_pchCameraParameterFile,
-      m_pchBaseViewCameraNumbers,
-      m_pchVSOConfig,
-      NULL,
-      LOG2_DISP_PREC_LUT );
-  }
-  else
-  {
-    m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
-      m_internalBitDepth[ CHANNEL_TYPE_LUMA],
-      (UInt) m_iCodedCamParPrecision,
-      m_FrameSkip,
-      (UInt) m_framesToBeEncoded,
-      m_pchCameraParameterFile,
-      m_pchBaseViewCameraNumbers,
-      NULL,
-      NULL,
-      LOG2_DISP_PREC_LUT );
-  }
-#else
-  m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
-    m_internalBitDepth[ CHANNEL_TYPE_LUMA],
-    (UInt) m_iCodedCamParPrecision,
-    m_FrameSkip,
-    (UInt) m_framesToBeEncoded,
-    m_pchCameraParameterFile,
-    m_pchBaseViewCameraNumbers,
-    NULL,
-    NULL,
-    LOG2_DISP_PREC_LUT );
-#endif
-  m_cCameraData.check( false, true );
-#endif
 
   // check validity of input parameters
   xCheckParameter();
@@ -2261,18 +2076,8 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_layerIdInNuh[0] != 0      , "LayerIdInNuh must be 0 for the first layer. ");
   xConfirmPara( (m_layerIdInNuh.size()!=1) && (m_layerIdInNuh.size() < m_numberOfLayers) , "LayerIdInNuh must be given for all layers. ");
 
-#if NH_3D
-  xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 3, "Scalability Mask must be equal to 2 or 3. ");
-#else
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 8 && m_scalabilityMask != 10, "Scalability Mask must be equal to 2, 8 or 10");
-#endif
 
-#if NH_3D
-  if ( m_scalabilityMask & ( 1 << DEPTH_ID ) )
-  {
-    m_dimIds.push_back( m_depthFlag ); 
-  }
-#endif
 
   m_dimIds.push_back( m_viewOrderIndex );   
   for (Int i = 0; i < m_auxId.size(); i++)
@@ -2339,7 +2144,6 @@ Void TAppEncCfg::xCheckParameter()
 
       xConfirmPara( allEqual , "Each layer shall have a different position in scalability space." );
 
-#if !H_3D_FCO
       if ( numDiff  == 1 ) 
       {
         Bool inc = m_dimIds[ lastDiff ][ i ] > m_dimIds[ lastDiff ][ j ]; 
@@ -2350,7 +2154,6 @@ Void TAppEncCfg::xCheckParameter()
         }
         xConfirmPara( shallBeButIsNotIncreasing,  "DimensionIds shall be increasing within one dimension. " );
       }
-#endif
     }
   }
 
@@ -2557,15 +2360,6 @@ Void TAppEncCfg::xCheckParameter()
 
   xConfirmPara(  m_maxNumMergeCand < 1,  "MaxNumMergeCand must be 1 or greater.");
   xConfirmPara(  m_maxNumMergeCand > 5,  "MaxNumMergeCand must be 5 or smaller.");
-#if NH_3D
-  xConfirmPara( m_log2SubPbSizeMinus3 < 0,                                        "Log2SubPbSizeMinus3 must be equal to 0 or greater.");
-  xConfirmPara( m_log2SubPbSizeMinus3 > 3,                                        "Log2SubPbSizeMinus3 must be equal to 3 or smaller.");
-  xConfirmPara( (1<< ( m_log2SubPbSizeMinus3 + 3) ) > m_uiMaxCUWidth,              "Log2SubPbSizeMinus3 must be  equal to log2(maxCUSize)-3 or smaller.");
- 
-  xConfirmPara( m_log2MpiSubPbSizeMinus3 < 0,                                        "Log2MpiSubPbSizeMinus3 must be equal to 0 or greater.");
-  xConfirmPara( m_log2MpiSubPbSizeMinus3 > 3,                                        "Log2MpiSubPbSizeMinus3 must be equal to 3 or smaller.");
-  xConfirmPara( (1<< (m_log2MpiSubPbSizeMinus3 + 3)) > m_uiMaxCUWidth,               "Log2MpiSubPbSizeMinus3 must be equal to log2(maxCUSize)-3 or smaller.");
-#endif
 #if ADAPTIVE_QP_SELECTION
 #if NH_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
@@ -2628,19 +2422,6 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_defDispWinBottomOffset % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Bottom default display window offset must be an integer multiple of the specified chroma subsampling");
   }
 
-#if NH_3D
-  xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
-  xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
-  xConfirmPara( m_iNumberOfViews != m_cCameraData.getBaseViewNumbers().size() ,   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
-  xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
-#if NH_3D_VSO
-    if( m_bUseVSO )
-    {
-      xConfirmPara(   m_pchVSOConfig            == 0                             ,   "VSO Setup string must be given");
-      xConfirmPara( m_uiVSOMode > 4 ,                                                "VSO Mode must be less than 5");
-    }
-#endif
-#endif
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
   while(ui)
@@ -3385,10 +3166,6 @@ Void TAppEncCfg::xPrintParameter()
   xPrintParaVector( "ViewOrderIdx"  , m_viewOrderIndex ); 
   xPrintParaVector( "AuxId", m_auxId );
 #endif
-#if NH_3D
-  xPrintParaVector( "DepthLayerFlag", m_depthFlag ); 
-  printf("Coded Camera Param. Precision     : %d\n", m_iCodedCamParPrecision);  
-#endif
 #if NH_MV  
   xPrintParaVector( "QP"               , m_fQP                ); 
   xPrintParaVector( "LoopFilterDisable", m_bLoopFilterDisable ); 
@@ -3555,50 +3332,10 @@ Void TAppEncCfg::xPrintParameter()
     printf("InitialQP                         : %d\n", m_RCInitialQP );
     printf("ForceIntraQP                      : %d\n", m_RCForceIntraQP );
 
-#if KWU_RC_MADPRED_E0227
-    printf("Depth based MAD prediction   : %d\n", m_depthMADPred);
-#endif
-#if KWU_RC_VIEWRC_E0227
-    printf("View-wise Rate control       : %d\n", m_viewWiseRateCtrl);
-    if(m_viewWiseRateCtrl)
-    {
-
-      printf("ViewWiseTargetBits           : ");
-      for (Int i = 0 ; i < m_iNumberOfViews ; i++)
-        printf("%d ", m_viewTargetBits[i]);
-      printf("\n");
-    }
-    else
-    {
-      printf("TargetBitrate                : %d\n", m_RCTargetBitrate );
-    }
-#endif
 
   }
 
   printf("Max Num Merge Candidates          : %d\n", m_maxNumMergeCand);
-#if NH_3D
-  printf("BaseViewCameraNumbers             : %s\n", m_pchBaseViewCameraNumbers ); 
-  printf("Coded Camera Param. Precision     : %d\n", m_iCodedCamParPrecision);
-#if NH_3D_VSO
-  printf("Force use of Lambda Scale         : %d\n", m_bForceLambdaScaleVSO );
-
-  if ( m_bUseVSO )
-  {    
-    printf("VSO Lambda Scale                  : %5.2f\n", m_dLambdaScaleVSO );
-    printf("VSO Mode                          : %d\n",    m_uiVSOMode       );
-    printf("VSO Config                        : %s\n",    m_pchVSOConfig    );
-    printf("VSO Negative Distortion           : %d\n",    m_bAllowNegDist ? 1 : 0);
-    printf("VSO LS Table                      : %d\n",    m_bVSOLSTable ? 1 : 0);
-    printf("VSO Estimated VSD                 : %d\n",    m_bUseEstimatedVSD ? 1 : 0);
-    printf("VSO Early Skip                    : %d\n",    m_bVSOEarlySkip ? 1 : 0);   
-    if ( m_bUseWVSO )
-    {
-      printf("Dist. Weights (VSO/VSD/SAD)       : %d/%d/%d\n ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );    
-    }    
-  }
-#endif //HHI_VSO
-#endif //NH_3D
   printf("\n");
 #if NH_MV
   printf("TOOL CFG General: ");
@@ -3660,34 +3397,6 @@ Void TAppEncCfg::xPrintParameter()
 
   printf(" SignBitHidingFlag:%d ", m_signHideFlag);
   printf("RecalQP:%d", m_recalculateQPAccordingToLambda ? 1 : 0 );
-#if NH_3D_VSO
-  printf(" VSO:%d ", m_bUseVSO   );
-  printf("WVSO:%d ", m_bUseWVSO );  
-#endif
-#if NH_3D
-  printf( "QTL:%d "                  , m_bUseQTL);
-  printf( "IlluCompEnable:%d "       , m_abUseIC);
-  printf( "IlluCompLowLatencyEnc:%d ",  m_bUseLowLatencyICEnc);
-  printf( "DLT:%d ", m_useDLT );
-
-
-  printf( "IvMvPred:%d %d "            , m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1]  ? 1 : 0);
-  printf( "IvMvScaling:%d %d "         , m_ivMvScalingFlag[0] ? 1 : 0 , m_ivMvScalingFlag[1]  ? 1 : 0);
-
-  printf( "Log2SubPbSizeMinus3:%d "    , m_log2SubPbSizeMinus3            );
-  printf( "IvResPred:%d "              , m_ivResPredFlag          ? 1 : 0 );
-  printf( "DepthRefinement:%d "        , m_depthRefinementFlag    ? 1 : 0 );
-  printf( "ViewSynthesisPred:%d "      , m_viewSynthesisPredFlag  ? 1 : 0 );
-  printf( "DepthBasedBlkPart:%d "      , m_depthBasedBlkPartFlag  ? 1 : 0 );
-  printf( "Mpi:%d "                    , m_mpiFlag                ? 1 : 0 );
-  printf( "Log2MpiSubPbSizeMinus3:%d " , m_log2MpiSubPbSizeMinus3         );
-  printf( "IntraContour:%d "           , m_intraContourFlag       ? 1 : 0 );
-  printf( "IntraWedge:%d "             , m_intraWedgeFlag         ? 1 : 0 );
-  printf( "IntraSdc:%d "               , m_intraSdcFlag           ? 1 : 0 );
-  printf( "QtPred:%d "                 , m_qtPredFlag             ? 1 : 0 );
-  printf( "InterSdc:%d "               , m_interSdcFlag           ? 1 : 0 );
-  printf( "DepthIntraSkip:%d "         , m_depthIntraSkipFlag     ? 1 : 0 );
-#endif
 
   printf("\n\n");
 
