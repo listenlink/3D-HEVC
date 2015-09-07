@@ -51,7 +51,7 @@
    make HEVC_EXT=1  -> NH_MV=1   --> MV only 
 */
 #ifndef HEVC_EXT
-#define HEVC_EXT                    2
+#define HEVC_EXT                    1
 #endif
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 1 )
 #error HEVC_EXT must be in the range of 0 to 1, inclusive. 
