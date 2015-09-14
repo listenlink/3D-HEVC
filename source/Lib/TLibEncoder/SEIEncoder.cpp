@@ -464,6 +464,7 @@ Void SEIEncoder::initSEITimeCode(SEITimeCode *seiTimeCode)
 }
 
 #if NH_MV
+#if !NH_MV_SEI
 Void SEIEncoder::initSEISubBitstreamProperty(SEISubBitstreamProperty *seiSubBitstreamProperty, const TComSPS *sps)
 {
   seiSubBitstreamProperty->m_activeVpsId = sps->getVPSId();
@@ -475,6 +476,38 @@ Void SEIEncoder::initSEISubBitstreamProperty(SEISubBitstreamProperty *seiSubBits
   seiSubBitstreamProperty->m_avgBitRate              = m_pcCfg->getAvgBitRate();
   seiSubBitstreamProperty->m_maxBitRate              = m_pcCfg->getMaxBitRate();  
 }
+#else
+Void SEIEncoder::createAnnexFGISeiMessages( SEIMessages& seiMessage, const TComSlice* slice )
+{
+  const SEIMessages* seiMessageCfg = m_pcCfg->getSeiMessages(); 
+
+  for( SEIMessages::const_iterator itS = seiMessageCfg->begin(); itS != seiMessageCfg->end(); itS++ )    
+  {      
+    const SEI* curSei = (*itS); 
+    SEI* newSei; 
+    if ( curSei->insertSei( slice->getLayerId(), slice->getPOC(), slice->getTemporalId(), slice->getNalUnitType() ) )
+    {
+      newSei = curSei->getCopy( ) ;
+
+      if ( curSei->m_modifyByEncoder )
+      {
+        newSei->setupFromSlice  ( slice ); 
+      } 
+
+      if ( newSei   ->checkCfg( slice ) )
+      {
+        std::cout << "--> Omit sending SEI."  <<  std::endl; 
+        delete newSei; 
+      }
+      else
+      {
+        seiMessage.push_back(newSei); 
+      }
+
+    }
+  }
+}
+#endif
 #endif
 
 //! \}
