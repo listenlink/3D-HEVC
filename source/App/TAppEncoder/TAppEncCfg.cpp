@@ -222,6 +222,34 @@ Void TAppEncCfg::destroy()
 {
 }
 
+
+#if NH_MV_SEI
+Void TAppEncCfg::xParseSeiCfg()
+{
+  for (Int i = 0; i < MAX_NUM_SEIS; i++)
+  {
+    if ( m_seiCfgFileNames[i] != NULL )
+    {
+      Int payloadType; 
+      po::Options opts;     
+      
+      opts.addOptions()("PayloadType", payloadType,-1, "Payload Type");
+      po::setDefaults(opts);      
+
+      po::ErrorReporter err;
+      err.output_on_unknow_parameter = false; 
+      po::parseConfigFile( opts, m_seiCfgFileNames[i], err );
+      SEI* sei = SEI::getNewSEIMessage( (SEI::PayloadType) payloadType ); 
+      assert( sei != NULL );
+
+      sei->setupFromCfgFile( m_seiCfgFileNames[i] ); 
+
+      m_seiMessages.push_back( sei );
+    }
+  }
+}
+#endif
+
 std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //input
 {
   in>>entry.m_sliceType;
@@ -853,32 +881,31 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
 #endif  
   ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
-  ("ViewOrderIndex",        m_viewOrderIndex     , std::vector<Int>(1,0), "View Order Index per layer")
-  ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id per View Order Index")
-  ("AuxId",                 m_auxId              , std::vector<Int>(1,0), "AuxId per layer")
+  ("ViewOrderIndex",                 m_viewOrderIndex              , IntAry1d(1,0),                                 "View Order Index per layer")
+  ("ViewId",                         m_viewId                      , IntAry1d(1,0),                                 "View Id per View Order Index")
+  ("AuxId",                          m_auxId                       , IntAry1d(1,0),                                 "AuxId per layer")
 #if NH_3D
-  ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
+  ("DepthFlag",                      m_depthFlag                   , IntAry1d(1,0),                                 "Depth Flag")
 #endif
-  ("TargetEncLayerIdList",  m_targetEncLayerIdList, std::vector<Int>(0,0), "LayerIds in Nuh to be encoded")  
-  ("LayerIdInNuh",          m_layerIdInNuh        , std::vector<Int>(1,0), "LayerId in Nuh")  
+  ("TargetEncLayerIdList",           m_targetEncLayerIdList        , IntAry1d(0,0),                                 "LayerIds in Nuh to be encoded")  
+  ("LayerIdInNuh",                   m_layerIdInNuh                , IntAry1d(1,0),                                 "LayerId in Nuh")  
   ("SplittingFlag",         m_splittingFlag       , false                , "Splitting Flag")    
 
   // Layer Sets + Output Layer Sets + Profile Tier Level
   ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
-  ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
+  ("LayerIdsInSet_%d"              , m_layerIdsInSets              , IntAry1d(1,0) , MAX_VPS_OP_SETS_PLUS1      ,   "LayerIds of Layer set")  
   ("NumAddLayerSets"     , m_numAddLayerSets     , 0                                              , "NumAddLayerSets     ")
-  ("HighestLayerIdxPlus1_%d", m_highestLayerIdxPlus1, std::vector< Int  >(0,0)  ,MAX_VPS_NUM_ADD_LAYER_SETS, "HighestLayerIdxPlus1")
+  ("HighestLayerIdxPlus1_%d"       , m_highestLayerIdxPlus1        , IntAry1d(0,0) , MAX_VPS_NUM_ADD_LAYER_SETS ,   "HighestLayerIdxPlus1")
   ("DefaultTargetOutputLayerIdc"     , m_defaultOutputLayerIdc     , 0, "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
-  ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
-
-  ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "Indices in VPS of output layers in additional output layer set")  
-  ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_OP_SETS_PLUS1, "Indices in VPS of output layers in layer set")  
-  ("AltOutputLayerFlag",    m_altOutputLayerFlag , std::vector<Bool>(1,0), "Alt output layer flag")
+  ("OutputLayerSetIdx"             , m_outputLayerSetIdx           , IntAry1d(0,0)                              ,   "Indices of layer sets used as additional output layer sets")
+  ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet , IntAry1d(0,0) , MAX_VPS_ADD_OUTPUT_LAYER_SETS, "Indices in VPS of output layers in additional output layer set")  
+  ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet , IntAry1d(0,0) , MAX_VPS_OP_SETS_PLUS1,         "Indices in VPS of output layers in layer set")  
+  ("AltOutputLayerFlag"            , m_altOutputLayerFlag          , BoolAry1d(1,0),                                "Alt output layer flag")
   
-  ("ProfileTierLevelIdx_%d",  m_profileTierLevelIdx, std::vector<Int>(0), MAX_NUM_LAYERS, "Indices to profile level tier for ols")
+  ("ProfileTierLevelIdx_%d"        , m_profileTierLevelIdx         , IntAry1d(0)  , MAX_NUM_LAYERS,                  "Indices to profile level tier for ols")
   // Layer dependencies
-  ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIdx in VPS of direct reference layers")
-  ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
+  ("DirectRefLayers_%d"            , m_directRefLayers             , IntAry1d(0,0), MAX_NUM_LAYERS,                  "LayerIdx in VPS of direct reference layers")
+  ("DependencyTypes_%d"            , m_dependencyTypes             , IntAry1d(0,0), MAX_NUM_LAYERS,                  "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
 #endif
   ("SourceWidth,-wdt",                                m_iSourceWidth,                                       0, "Source picture width")
   ("SourceHeight,-hgt",                               m_iSourceHeight,                                      0, "Source picture height")
@@ -1142,10 +1169,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PicRatePresentVpsFlag"       , m_picRatePresentVpsFlag       , false                                           , "PicRatePresentVpsFlag       ")
   ("BitRatePresentFlag"          , m_bitRatePresentFlag          , BoolAry1d(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "BitRatePresentFlag per sub layer for the N-th layer set")
   ("PicRatePresentFlag"          , m_picRatePresentFlag          , BoolAry1d(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "PicRatePresentFlag per sub layer for the N-th layer set")
-  ("AvgBitRate"                  , m_avgBitRate                  , std::vector< Int  >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "AvgBitRate         per sub layer for the N-th layer set")
-  ("MaxBitRate"                  , m_maxBitRate                  , std::vector< Int  >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "MaxBitRate         per sub layer for the N-th layer set")
-  ("ConstantPicRateIdc"          , m_constantPicRateIdc          , std::vector< Int  >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "ConstantPicRateIdc per sub layer for the N-th layer set")
-  ("AvgPicRate"                  , m_avgPicRate                  , std::vector< Int  >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "AvgPicRate         per sub layer for the N-th layer set")
+  ("AvgBitRate"                  , m_avgBitRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "AvgBitRate         per sub layer for the N-th layer set")
+  ("MaxBitRate"                  , m_maxBitRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "MaxBitRate         per sub layer for the N-th layer set")
+  ("ConstantPicRateIdc"          , m_constantPicRateIdc           , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "ConstantPicRateIdc per sub layer for the N-th layer set")
+  ("AvgPicRate"                  , m_avgPicRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "AvgPicRate         per sub layer for the N-th layer set")
   ("TilesNotInUseFlag"            , m_tilesNotInUseFlag            , true                                          , "TilesNotInUseFlag            ")
   ("TilesInUseFlag"               , m_tilesInUseFlag               , BoolAry1d(1,false)                   , "TilesInUseFlag               ")
   ("LoopFilterNotAcrossTilesFlag" , m_loopFilterNotAcrossTilesFlag , BoolAry1d(1,false)                  , "LoopFilterNotAcrossTilesFlag ")
@@ -1153,9 +1180,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("WppInUseFlag"                 , m_wppInUseFlag                 , BoolAry1d(1,0)                      , "WppInUseFlag                 ")
   ("TileBoundariesAlignedFlag"   , m_tileBoundariesAlignedFlag   , BoolAry1d(1,0)  ,MAX_NUM_LAYERS       , "TileBoundariesAlignedFlag    per direct reference for the N-th layer")
   ("IlpRestrictedRefLayersFlag"  , m_ilpRestrictedRefLayersFlag  , false                                           , "IlpRestrictedRefLayersFlag")
-  ("MinSpatialSegmentOffsetPlus1", m_minSpatialSegmentOffsetPlus1, std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
+  ("MinSpatialSegmentOffsetPlus1", m_minSpatialSegmentOffsetPlus1 , IntAry1d (1,0), MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
   ("CtuBasedOffsetEnabledFlag"   , m_ctuBasedOffsetEnabledFlag   , BoolAry1d(1,0)  ,MAX_NUM_LAYERS       , "CtuBasedOffsetEnabledFlag    per direct reference for the N-th layer")
-  ("MinHorizontalCtuOffsetPlus1" , m_minHorizontalCtuOffsetPlus1 , std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinHorizontalCtuOffsetPlus1  per direct reference for the N-th layer")
+  ("MinHorizontalCtuOffsetPlus1" , m_minHorizontalCtuOffsetPlus1  , IntAry1d (1,0), MAX_NUM_LAYERS       , "MinHorizontalCtuOffsetPlus1  per direct reference for the N-th layer")
   ("SingleLayerForNonIrapFlag", m_singleLayerForNonIrapFlag, false                                          , "SingleLayerForNonIrapFlag")
   ("HigherLayerIrapSkipFlag"  , m_higherLayerIrapSkipFlag  , false                                          , "HigherLayerIrapSkipFlag  ")
 #endif
@@ -1304,14 +1331,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
 #if NH_MV
+#if !NH_MV_SEI
   ("SubBitstreamPropSEIEnabled",                      m_subBistreamPropSEIEnabled,    false                     ,"Enable signaling of sub-bitstream property SEI message")
   ("SEISubBitstreamNumAdditionalSubStreams",          m_sbPropNumAdditionalSubStreams,0                         ,"Number of substreams for which additional information is signalled")
-  ("SEISubBitstreamSubBitstreamMode",                 m_sbPropSubBitstreamMode,       std::vector< Int  >(1,0)  ,"Specifies mode of generation of the i-th sub-bitstream (0 or 1)")
-  ("SEISubBitstreamOutputLayerSetIdxToVps",           m_sbPropOutputLayerSetIdxToVps, std::vector< Int  >(1,0)  ,"Specifies output layer set index of the i-th sub-bitstream ")
-  ("SEISubBitstreamHighestSublayerId",                m_sbPropHighestSublayerId,      std::vector< Int  >(1,0)  ,"Specifies highest TemporalId of the i-th sub-bitstream")
-  ("SEISubBitstreamAvgBitRate",                       m_sbPropAvgBitRate,             std::vector< Int  >(1,0)  ,"Specifies average bit rate of the i-th sub-bitstream")
-  ("SEISubBitstreamMaxBitRate",                       m_sbPropMaxBitRate,             std::vector< Int  >(1,0)  ,"Specifies maximum bit rate of the i-th sub-bitstream")
-
+  ("SEISubBitstreamSubBitstreamMode",                 m_sbPropSubBitstreamMode,       IntAry1d (1,0)            ,"Specifies mode of generation of the i-th sub-bitstream (0 or 1)")
+  ("SEISubBitstreamOutputLayerSetIdxToVps",           m_sbPropOutputLayerSetIdxToVps, IntAry1d (1,0)            ,"Specifies output layer set index of the i-th sub-bitstream ")
+  ("SEISubBitstreamHighestSublayerId",                m_sbPropHighestSublayerId,      IntAry1d (1,0)            ,"Specifies highest TemporalId of the i-th sub-bitstream")
+  ("SEISubBitstreamAvgBitRate",                       m_sbPropAvgBitRate,             IntAry1d (1,0)            ,"Specifies average bit rate of the i-th sub-bitstream")
+  ("SEISubBitstreamMaxBitRate",                       m_sbPropMaxBitRate,             IntAry1d (1,0)            ,"Specifies maximum bit rate of the i-th sub-bitstream")
+#else
+  ("SeiCfgFileName_%d",                               m_seiCfgFileNames,             (Char *) 0 , MAX_NUM_SEIS , "SEI cfg file name %d")
+#endif
   ("OutputVpsInfo",                                   m_outputVpsInfo,                false                     ,"Output information about the layer dependencies and layer sets")
 #endif
 #if NH_3D
@@ -1922,6 +1952,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     }
   }
 
+#if NH_MV_SEI
+  xParseSeiCfg(); 
+#endif
   if( m_masteringDisplay.colourVolumeSEIEnabled )
   {
     for(UInt idx=0; idx<6; idx++)
@@ -3294,6 +3327,7 @@ Void TAppEncCfg::xCheckParameter()
 #if NH_MV
   }
   }
+#if !NH_MV_SEI
   // Check input parameters for Sub-bitstream property SEI message
   if( m_subBistreamPropSEIEnabled )
   {
@@ -3311,6 +3345,7 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara( m_sbPropOutputLayerSetIdxToVps[i] < 0 || m_sbPropOutputLayerSetIdxToVps[i] >= MAX_VPS_OUTPUTLAYER_SETS, "OutputLayerSetIdxToVps should be within allowed range" );
     }
   }
+#endif
 #endif
 
   if (m_segmentedRectFramePackingSEIEnabled)

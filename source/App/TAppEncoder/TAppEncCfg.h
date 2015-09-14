@@ -76,17 +76,17 @@ protected:
   #if NH_MV
 // VPS specification
   IntAry2d m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
-  std::vector<Int>       m_viewId;                            ///< view id
-  std::vector<Int>       m_viewOrderIndex;                    ///< view order index  
-  std::vector<Int>       m_auxId;                             ///< auxiliary id
+  IntAry1d               m_viewId;                            ///< view id
+  IntAry1d               m_viewOrderIndex;                    ///< view order index  
+  IntAry1d               m_auxId;                             ///< auxiliary id
 #if NH_3D
-  std::vector<Int>       m_depthFlag;                         ///< depth flag
+  IntAry1d               m_depthFlag;                         ///< depth flag
 #endif
-  std::vector<Int>       m_targetEncLayerIdList;              ///< layer Ids in Nuh to be encoded
-  std::vector<Int>       m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
+  IntAry1d               m_targetEncLayerIdList;              ///< layer Ids in Nuh to be encoded
+  IntAry1d               m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
   Bool                   m_splittingFlag;                     ///< Splitting Flag
   Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
-  std::vector<Int>       m_dimensionIdLen;                    ///< Length of scalability dimension s 
+  IntAry1d               m_dimensionIdLen;                    ///< Length of scalability dimension s 
   
 // layer sets   
   Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
@@ -94,11 +94,11 @@ protected:
   Int                    m_numAddLayerSets;                    ///< Number of additional layer sets
   IntAry2d m_highestLayerIdxPlus1;      ///< HighestLayerIdxPlus1 for each additional layer set and each independent layer (value with index 0 will be ignored)
   Int                    m_defaultOutputLayerIdc;             ///< Specifies output layers of layer sets, 0: output all layers, 1: output highest layers, 2: specified by LayerIdsInDefOuputLayerSet
-  std::vector<Int>       m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
+  IntAry1d               m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
   IntAry2d m_layerIdsInAddOutputLayerSet; ///< LayerIds in vps of additional output layers
   IntAry2d m_layerIdsInDefOutputLayerSet; ///< Indices in vps of output layers in layer sets
   IntAry2d               m_profileTierLevelIdx;      ///< Indices of of profile, per layer in layer set
-  std::vector<Bool>      m_altOutputLayerFlag;                ///< Alt output layer flag
+  BoolAry1d              m_altOutputLayerFlag;                ///< Alt output layer flag
 
   // Dependencies
   IntAry2d m_directRefLayers;          ///< LayerIds of direct reference layers
@@ -111,23 +111,23 @@ protected:
   Bool m_allLayersIdrAlignedFlag;
   Bool m_bitRatePresentVpsFlag;
   Bool m_picRatePresentVpsFlag;
-  std::vector< std::vector<Bool > > m_bitRatePresentFlag;
-  std::vector< std::vector<Bool > > m_picRatePresentFlag;
-  std::vector< std::vector<Int  > > m_avgBitRate;
-  std::vector< std::vector<Int  > > m_maxBitRate;
-  std::vector< std::vector<Int  > > m_constantPicRateIdc;
-  std::vector< std::vector<Int  > > m_avgPicRate;
+  BoolAry2d              m_bitRatePresentFlag;
+  BoolAry2d              m_picRatePresentFlag;
+  IntAry2d               m_avgBitRate;
+  IntAry2d               m_maxBitRate;
+  IntAry2d               m_constantPicRateIdc;
+  IntAry2d               m_avgPicRate;
   Bool                              m_tilesNotInUseFlag; 
   BoolAry1d               m_tilesInUseFlag;
   BoolAry1d               m_loopFilterNotAcrossTilesFlag; 
   Bool                              m_wppNotInUseFlag;
   BoolAry1d               m_wppInUseFlag;
 
-  std::vector< std::vector<Bool > > m_tileBoundariesAlignedFlag;  
+  BoolAry2d              m_tileBoundariesAlignedFlag;  
   Bool m_ilpRestrictedRefLayersFlag;
-  std::vector< std::vector<Int  > > m_minSpatialSegmentOffsetPlus1;
-  std::vector< std::vector<Bool > > m_ctuBasedOffsetEnabledFlag;
-  std::vector< std::vector<Int  > > m_minHorizontalCtuOffsetPlus1;
+  IntAry2d               m_minSpatialSegmentOffsetPlus1;
+  BoolAry2d              m_ctuBasedOffsetEnabledFlag;
+  IntAry2d               m_minHorizontalCtuOffsetPlus1;
   Bool m_singleLayerForNonIrapFlag;
   Bool m_higherLayerIrapSkipFlag;
 
@@ -194,7 +194,7 @@ protected:
 
   // coding structure
 #if NH_MV
-  std::vector<Int> m_iIntraPeriod;                            ///< period of I-slice (random access period)
+  IntAry1d  m_iIntraPeriod;                            ///< period of I-slice (random access period)
 #else
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
 #endif
@@ -255,6 +255,10 @@ protected:
   Bool      m_bUseAdaptQpSelect;
 #endif
   TComSEIMasteringDisplay m_masteringDisplay;
+#if NH_MV_SEI
+  std::vector<char*>     m_seiCfgFileNames;               ///< SEI message files.
+  SEIMessages            m_seiMessages;                       ///< Buffer for SEI messages. 
+#endif
 
   Bool      m_bUseAdaptiveQP;                                 ///< Flag for enabling QP adaptation based on a psycho-visual model
   Int       m_iQPAdaptationRange;                             ///< dQP range by QP adaptation
@@ -508,13 +512,15 @@ ScalingListMode m_useScalingListId;                         ///< using quantizat
   std::string m_summaryPicFilenameBase;                       ///< Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended.
   UInt        m_summaryVerboseness;                           ///< Specifies the level of the verboseness of the text output.
 #if NH_MV
+#if !NH_MV_SEI
   Bool              m_subBistreamPropSEIEnabled;
   Int               m_sbPropNumAdditionalSubStreams;
-  std::vector<Int>  m_sbPropSubBitstreamMode;
-  std::vector<Int>  m_sbPropOutputLayerSetIdxToVps;
-  std::vector<Int>  m_sbPropHighestSublayerId;
-  std::vector<Int>  m_sbPropAvgBitRate;
-  std::vector<Int>  m_sbPropMaxBitRate;
+  IntAry1d          m_sbPropSubBitstreamMode;
+  IntAry1d          m_sbPropOutputLayerSetIdxToVps;
+  IntAry1d          m_sbPropHighestSublayerId;
+  IntAry1d          m_sbPropAvgBitRate;
+  IntAry1d          m_sbPropMaxBitRate;
+#endif
   Bool              m_outputVpsInfo;
 #endif
 #if NH_3D
@@ -653,6 +659,9 @@ ScalingListMode m_useScalingListId;                         ///< using quantizat
   
   Void xPrintVectorElem( Double elem ) { printf(" %5.2f", elem            );};  
   Void xPrintVectorElem( Bool   elem ) { printf(" %d"   , ( elem ? 1 : 0 ));};
+#if NH_MV_SEI
+  Void xParseSeiCfg();
+#endif
 #endif
 #if NH_MV
   Int   getGOPSize() { return m_iGOPSize; }

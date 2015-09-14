@@ -56,6 +56,10 @@ public:
   SEIReader() {};
   virtual ~SEIReader() {};
   Void parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream);
+#if NH_MV_SEI
+  Void setLayerId                            ( Int   layerId )   { m_layerId  = layerId; }; 
+  Void setDecOrder                           ( Int64 decOrder )  { m_decOrder = decOrder; }; 
+#endif
 protected:
   Void xReadSEImessage                        (SEIMessages& seis, const NalUnitType nalUnitType, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIuserDataUnregistered          (SEIuserDataUnregistered &sei,          UInt payloadSize,                     std::ostream *pDecodedMessageOutputStream);
@@ -80,14 +84,53 @@ protected:
   Void xParseSEIKneeFunctionInfo              (SEIKneeFunctionInfo& sei,              UInt payloadSize,                     std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIMasteringDisplayColourVolume  (SEIMasteringDisplayColourVolume& sei,  UInt payloadSize,                     std::ostream *pDecodedMessageOutputStream);
 #if NH_MV
+#if !NH_MV_SEI
   Void  xParseSEISubBitstreamProperty         (SEISubBitstreamProperty &sei        ,  UInt payloadSize,                     std::ostream *pDecodedMessageOutputStream);
   Void  xResizeSubBitstreamPropertySeiArrays  (SEISubBitstreamProperty &sei);
+#endif
+#endif
+#if NH_MV_SEI_TBD
+  Void xParseSEILayersNotPresent              (SEILayersNotPresent& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#endif
+  Void xParseSEIInterLayerConstrainedTileSets (SEIInterLayerConstrainedTileSets& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#if NH_MV_SEI_TBD
+  Void xParseSEIBspNesting                    (SEIBspNesting& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+  Void xParseSEIBspInitialArrivalTime         (SEIBspInitialArrivalTime& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#endif
+  Void xParseSEISubBitstreamProperty          (SEISubBitstreamProperty& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#if NH_MV_SEI_TBD
+  Void xParseSEIAlphaChannelInfo              (SEIAlphaChannelInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+  Void xParseSEIOverlayInfo                   (SEIOverlayInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#endif
+  Void xParseSEITemporalMvPredictionConstraints(SEITemporalMvPredictionConstraints& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#if NH_MV_SEI_TBD
+  Void xParseSEIFrameFieldInfo                (SEIFrameFieldInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+  Void xParseSEIThreeDimensionalReferenceDisplaysInfo (SEIThreeDimensionalReferenceDisplaysInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+  Void xParseSEIDepthRepresentationInfo       (SEIDepthRepresentationInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+
+  Void xParseSEIDepthRepInfoElement           (SEIDepthRepInfoElement& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#endif
+  Void xParseSEIMultiviewSceneInfo            (SEIMultiviewSceneInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+
+  Void xParseSEIMultiviewAcquisitionInfo      (SEIMultiviewAcquisitionInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+
+#if NH_MV_SEI
+  Void xParseSEIMultiviewViewPosition         (SEIMultiviewViewPosition& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#endif
+#if NH_MV_SEI_TBD
+  Void xParseSEIAlternativeDepthInfo          (SEIAlternativeDepthInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #endif
 
   Void sei_read_code(std::ostream *pOS, UInt uiLength, UInt& ruiCode, const Char *pSymbolName);
   Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
   Void sei_read_svlc(std::ostream *pOS,                Int&  ruiCode, const Char *pSymbolName);
   Void sei_read_flag(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
+#if NH_MV_SEI
+  inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMessageOutputStream, UInt payloadSize);
+private: 
+  Int   m_layerId; 
+  Int64 m_decOrder;   
+#endif
 };
 
 
