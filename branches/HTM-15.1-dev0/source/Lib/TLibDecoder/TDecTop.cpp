@@ -683,6 +683,10 @@ Void TDecTop::xActivateParameterSets()
         assert( sps->getMultiLayerExtSpsFlag() == 0 ); 
       }
     }
+#if NH_MV_SEI
+    m_seiReader.setLayerId ( newPic->getLayerId      ( ) ); 
+    m_seiReader.setDecOrder( newPic->getDecodingOrder( ) );
+#endif
 #endif
 
     xParsePrefixSEImessages();
