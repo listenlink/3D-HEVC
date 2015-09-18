@@ -328,6 +328,13 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(currentMessages, !testWrite);
 
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+  // Layers not present SEI message
+  currentMessages = extractSeisByType(localMessages, SEI::LAYERS_NOT_PRESENT);
+  xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
+  xClearSEIs(currentMessages, !testWrite);
+#endif
+
   // And finally everything else one by one
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, localMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(localMessages, !testWrite);
