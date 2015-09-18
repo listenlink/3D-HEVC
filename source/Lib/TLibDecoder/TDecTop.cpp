@@ -835,7 +835,11 @@ Void TDecTop::xParsePrefixSEImessages()
   {
     InputNALUnit &nalu=*m_prefixSEINALUs.front();
 #if NH_MV
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+    m_seiReader.parseSEImessage(&(nalu.getBitstream()), m_SEIs, nalu.m_nalUnitType, m_parameterSetManager.getActiveVPS(), m_parameterSetManager.getActiveSPS(getLayerId()), m_pDecodedSEIOutputStream);
+#else
     m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_SEIs, nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS( getLayerId() ), m_pDecodedSEIOutputStream );
+#endif
 #else
     m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_SEIs, nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS(), m_pDecodedSEIOutputStream );
 #endif
@@ -1307,7 +1311,11 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       if (m_pcPic)
       {
 #if NH_MV
-        m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_pcPic->getSEIs(), nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS( getLayerId() ), m_pDecodedSEIOutputStream );
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+      m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_pcPic->getSEIs(), nalu.m_nalUnitType, m_parameterSetManager.getActiveVPS(), m_parameterSetManager.getActiveSPS(getLayerId()), m_pDecodedSEIOutputStream);
+#else
+      m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_pcPic->getSEIs(), nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS( getLayerId() ), m_pDecodedSEIOutputStream );
+#endif
 #else
         m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_pcPic->getSEIs(), nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS(), m_pDecodedSEIOutputStream );
 #endif

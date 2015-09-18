@@ -83,7 +83,7 @@ protected:
   Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
 
 #if NH_MV_SEI
-#if NH_MV_SEI_TBD
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
   Void xWriteSEILayersNotPresent              ( const SEILayersNotPresent& sei);
 #endif
   Void xWriteSEIInterLayerConstrainedTileSets ( const SEIInterLayerConstrainedTileSets& sei);

@@ -659,7 +659,7 @@ public:
 };
 
 #if NH_MV_SEI
-#if NH_MV_SEI_TBD
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
 class SEILayersNotPresent : public SEI
 {
 public:
@@ -669,11 +669,17 @@ public:
   SEI* getCopy( ) const { return new SEILayersNotPresent(*this); }; 
 
   Void setupFromCfgFile( const Char*      cfgFile );
-  Void setupFromSlice  ( const TComSlice* slice   );
+  //Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Int       m_lnpSeiActiveVpsId;
+  UInt      m_lnpSeiMaxLayers;
   BoolAry1d m_layerNotPresentFlag;
+
+  void resizeDimI( Int sizeDimI )
+  {
+    m_layerNotPresentFlag.resize( sizeDimI );
+  }
 };
 #endif
 

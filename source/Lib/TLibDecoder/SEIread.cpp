@@ -123,15 +123,22 @@ static inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMes
 /**
  * unmarshal a single SEI message from bitstream bs
  */
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, const TComVPS *vps, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
+#else
 Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
+#endif
 {
   setBitstream(bs);
 
   assert(!m_pcBitstream->getNumBitsUntilByteAligned());
   do
   {
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+    xReadSEImessage(seis, nalUnitType, vps, sps, pDecodedMessageOutputStream);
+#else
     xReadSEImessage(seis, nalUnitType, sps, pDecodedMessageOutputStream);
-
+#endif
     /* SEI messages are an integer number of bytes, something has failed
     * in the parsing if bitstream not byte-aligned */
     assert(!m_pcBitstream->getNumBitsUntilByteAligned());
@@ -141,7 +148,11 @@ Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const
   xReadRbspTrailingBits();
 }
 
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType, const TComVPS *vps, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
+#else
 Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
+#endif
 {
 #if ENC_DEC_TRACE
   xTraceSEIHeader();
@@ -260,7 +271,11 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       break;
     case SEI::SCALABLE_NESTING:
       sei = new SEIScalableNesting;
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+      xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, vps, sps, pDecodedMessageOutputStream);
+#else
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps, pDecodedMessageOutputStream);
+#endif
       break;
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
       sei = new SEITempMotionConstrainedTileSets;
@@ -289,10 +304,17 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEISubBitstreamProperty((SEISubBitstreamProperty&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
 #else
-#if NH_MV_TBD
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
     case SEI::LAYERS_NOT_PRESENT:
-      sei = new SEILayersNotPresent;
-      xParseSEILayersNotPresent((SEILayersNotPresent&) *sei, payloadSize, pDecodedMessageOutputStream );
+      if (!vps)
+      {
+        printf ("Warning: Found Layers not present SEI message, but no active VPS is available. Ignoring.");
+      }
+      else
+      {
+        sei = new SEILayersNotPresent;
+        xParseSEILayersNotPresent((SEILayersNotPresent&) *sei, payloadSize, vps, pDecodedMessageOutputStream);
+      }
       break;
 #endif
     case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS:
@@ -884,7 +906,11 @@ Void SEIReader::xParseSEISOPDescription(SEISOPDescription &sei, UInt payloadSize
   }
 }
 
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, const TComVPS *vps, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
+#else
 Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
+#endif
 {
   UInt uiCode;
   SEIMessages seis;
@@ -926,7 +952,11 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
   // read nested SEI messages
   do
   {
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+    xReadSEImessage(sei.m_nestedSEIs, nalUnitType, vps, sps, pDecodedMessageOutputStream);
+#else
     xReadSEImessage(sei.m_nestedSEIs, nalUnitType, sps, pDecodedMessageOutputStream);
+#endif
   } while (m_pcBitstream->getNumBitsLeft() > 8);
 
   if (pDecodedMessageOutputStream)
@@ -1182,16 +1212,22 @@ Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourV
   sei_read_code( pDecodedMessageOutputStream, 32, code, "min_display_mastering_luminance" ); sei.values.minLuminance = code;
 }
 
-#if NH_MV_SEI_TBD
-Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent &sei, UInt payloadSize, const TComVPS *vps, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;
-  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
+  UInt i = 0;
 
+  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
   sei_read_code( pDecodedMessageOutputStream, 4, code, "lnp_sei_active_vps_id" ); sei.m_lnpSeiActiveVpsId = code;
-  for( Int i = 0; i  <=  MaxLayersMinus1; i++ )
+  assert(vps->getVPSId() == sei.m_lnpSeiActiveVpsId);
+
+  sei.m_lnpSeiMaxLayers = vps->getMaxLayersMinus1() + 1;
+  sei.resizeDimI(sei.m_lnpSeiMaxLayers);
+  for (; i < sei.m_lnpSeiMaxLayers; i++)
   {
-    sei_read_flag( pDecodedMessageOutputStream, code, "layer_not_present_flag" ); sei.m_layerNotPresentFlag[i] = (code == 1);
+    sei_read_flag( pDecodedMessageOutputStream, code, "layer_not_present_flag" ); 
+    sei.m_layerNotPresentFlag[i] = (code == 1);
   }
 };
 #endif

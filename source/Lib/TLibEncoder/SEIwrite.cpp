@@ -128,9 +128,9 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
 #endif
 #endif
 #if NH_MV_SEI
-#if NH_MV_SEI_TBD
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
    case SEI::LAYERS_NOT_PRESENT:
-     xWriteSEILayersNotPresent(*static_cast<const SEILayersNotPresent*>(&sei));
+       xWriteSEILayersNotPresent(*static_cast<const SEILayersNotPresent*>(&sei));
      break; 
 #endif
    case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS:
@@ -880,11 +880,11 @@ Void SEIWriter::xWriteByteAlign()
   }
 }
 
-#if NH_MV_SEI_TBD
-Void SEIWriter::xWriteSEILayersNotPresent( const SEILayersNotPresent& sei)
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+Void SEIWriter::xWriteSEILayersNotPresent(const SEILayersNotPresent& sei)
 {
   WRITE_CODE( sei.m_lnpSeiActiveVpsId, 4, "lnp_sei_active_vps_id" );
-  for( Int i = 0; i  <=  MaxLayersMinus1; i++ )
+  for( Int i = 0; i  <  sei.m_lnpSeiMaxLayers; i++ )
   {
     WRITE_FLAG( ( sei.m_layerNotPresentFlag[i] ? 1 : 0 ), "layer_not_present_flag" );
   }

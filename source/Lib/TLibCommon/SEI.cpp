@@ -223,7 +223,7 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
     case SEI::CHROMA_SAMPLING_FILTER_HINT:          return new SEIChromaSamplingFilterHint
 #endif
 #if NH_MV_SEI
-#if NH_MV_SEI_TBD
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
   case SEI::LAYERS_NOT_PRESENT                    :               return new SEILayersNotPresent;
 #endif
   case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS     :               return new SEIInterLayerConstrainedTileSets;
@@ -341,28 +341,29 @@ Void SEI::xCheckCfg( Bool& wrongConfig, Bool cond, const Char* errStr )
 }
 
 
-#if NH_MV_SEI_TBD
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
 Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
 { 
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
   // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-  defAppLayerIds    .push_back( TBD );
-  defAppPocs        .push_back( TBD );
-  defAppTids        .push_back( TBD );
-  defAppVclNaluTypes.push_back( TBD );
+  // This SEI message doesn't need to be added by default to any Layer / POC / NAL Unit / T Layer. Not sure if empty is right.
+  defAppLayerIds     empty( );      //push_back( TBD );
+  defAppPocs         empty( );      //push_back( TBD );
+  defAppTids         empty( );      //push_back( TBD );
+  defAppVclNaluTypes.empty( );      //push_back( TBD );
 
   Int      defSeiNaluId                  = 0; 
   Int      defPositionInSeiNalu          = 0; 
-  Bool     defModifyByEncoder            = TBD; 
+  Bool     defModifyByEncoder            = false;   //0: Use payload as specified in cfg file   1: Modify SEI by encoder
 
   // Setup config file options
   po::Options opts;     
   xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder ); 
 
   opts.addOptions()
-    ("LnpSeiActiveVpsId"              , m_lnpSeiActiveVpsId                , 0                              , "LnpSeiActiveVpsId"                )
+    ("LnpSeiActiveVpsId"              , m_lnpSeiActiveVpsId                , 0                              , "LnpSeiActiveVpsId"                )   //Why?
     ("LayerNotPresentFlag"            , m_layerNotPresentFlag              , BoolAry1d(1,0)                 , "LayerNotPresentFlag"              )
     ;
 
@@ -371,32 +372,34 @@ Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
   // Parse the cfg file
   po::ErrorReporter err;
   po::parseConfigFile( opts, cfgFile, err );
+  m_lnpSeiMaxLayers = m_layerNotPresentFlag.size();
 };
 
-Bool SEILayersNotPresent::checkCfg( const TComSlice* slice )
-{ 
-  // Check config values
-  Bool wrongConfig = false; 
-
-  // TBD: Add constraints on presence of SEI here. 
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-
-  // TBD: Modify constraints according to the SEI semantics. 
-  xCheckCfgRange( wrongConfig, m_lnpSeiActiveVpsId              , MINVAL , MAXVAL, "lnp_sei_active_vps_id"            );
-  xCheckCfgRange( wrongConfig, m_layerNotPresentFlag[i]         , MINVAL , MAXVAL, "layer_not_present_flag"           );
-
-  return wrongConfig; 
-};
-
-Void SEILayersNotPresent::setupFromSlice  ( const TComSlice* slice )
-{
-  sei.m_lnpSeiActiveVpsId =  TBD ;
-  for( Int i = 0; i  <=  MaxLayersMinus1; i++ )
-  {
-    sei.m_layerNotPresentFlag[i] =  TBD ;
-  }
-};
+  Bool SEILayersNotPresent::checkCfg( const TComSlice* slice )
+  { 
+//  // Check config values
+//  Bool wrongConfig = false; 
+//
+//  // TBD: Add constraints on presence of SEI here. 
+//  xCheckCfg     ( wrongConfig, TBD , "TBD" );
+//  xCheckCfg     ( wrongConfig, TBD , "TBD" );
+//
+//  // TBD: Modify constraints according to the SEI semantics. 
+//  xCheckCfgRange( wrongConfig, m_lnpSeiActiveVpsId              , MINVAL , MAXVAL, "lnp_sei_active_vps_id"            );
+//  xCheckCfgRange( wrongConfig, m_layerNotPresentFlag[i]         , MINVAL , MAXVAL, "layer_not_present_flag"           );
+//
+//  return wrongConfig; 
+      return false;
+  };
+//
+//Void SEILayersNotPresent::setupFromSlice  ( const TComSlice* slice )
+//{
+//  sei.m_lnpSeiActiveVpsId =  TBD ;
+//  for( Int i = 0; i  <=  MaxLayersMinus1; i++ )
+//  {
+//    sei.m_layerNotPresentFlag[i] =  TBD ;
+//  }
+//};
 #endif
 
 
