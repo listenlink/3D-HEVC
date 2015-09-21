@@ -669,14 +669,13 @@ public:
   SEI* getCopy( ) const { return new SEILayersNotPresent(*this); }; 
 
   Void setupFromCfgFile( const Char*      cfgFile );
-  //Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Int       m_lnpSeiActiveVpsId;
   UInt      m_lnpSeiMaxLayers;
   BoolAry1d m_layerNotPresentFlag;
 
-  void resizeDimI( Int sizeDimI )
+  Void resizeDimI( Int sizeDimI )
   {
     m_layerNotPresentFlag.resize( sizeDimI );
   }

@@ -1216,7 +1216,6 @@ Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourV
 Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent &sei, UInt payloadSize, const TComVPS *vps, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;
-  UInt i = 0;
 
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
   sei_read_code( pDecodedMessageOutputStream, 4, code, "lnp_sei_active_vps_id" ); sei.m_lnpSeiActiveVpsId = code;
@@ -1224,7 +1223,7 @@ Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent &sei, UInt payload
 
   sei.m_lnpSeiMaxLayers = vps->getMaxLayersMinus1() + 1;
   sei.resizeDimI(sei.m_lnpSeiMaxLayers);
-  for (; i < sei.m_lnpSeiMaxLayers; i++)
+  for (Int i = 0; i < sei.m_lnpSeiMaxLayers; i++)
   {
     sei_read_flag( pDecodedMessageOutputStream, code, "layer_not_present_flag" ); 
     sei.m_layerNotPresentFlag[i] = (code == 1);
