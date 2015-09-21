@@ -349,12 +349,12 @@ Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
 
   // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
   // This SEI message doesn't need to be added by default to any Layer / POC / NAL Unit / T Layer. Not sure if empty is right.
-  defAppLayerIds     empty( );      //push_back( TBD );
-  defAppPocs         empty( );      //push_back( TBD );
-  defAppTids         empty( );      //push_back( TBD );
-  defAppVclNaluTypes.empty( );      //push_back( TBD );
+  defAppLayerIds    .empty( );
+  defAppPocs        .empty( );
+  defAppTids        .empty( );
+  defAppVclNaluTypes.empty( );
 
-  Int      defSeiNaluId                  = 0; 
+  Int      defSeiNaluId                  = 0;
   Int      defPositionInSeiNalu          = 0; 
   Bool     defModifyByEncoder            = false;   //0: Use payload as specified in cfg file   1: Modify SEI by encoder
 
@@ -377,29 +377,27 @@ Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
 
   Bool SEILayersNotPresent::checkCfg( const TComSlice* slice )
   { 
-//  // Check config values
-//  Bool wrongConfig = false; 
+  // Check config values
+    Bool wrongConfig = false; 
 //
+    const TComVPS* vps = slice->getVPS(); 
 //  // TBD: Add constraints on presence of SEI here. 
-//  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-//  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-//
-//  // TBD: Modify constraints according to the SEI semantics. 
-//  xCheckCfgRange( wrongConfig, m_lnpSeiActiveVpsId              , MINVAL , MAXVAL, "lnp_sei_active_vps_id"            );
-//  xCheckCfgRange( wrongConfig, m_layerNotPresentFlag[i]         , MINVAL , MAXVAL, "layer_not_present_flag"           );
-//
-//  return wrongConfig; 
-      return false;
+    xCheckCfg     ( wrongConfig, m_lnpSeiActiveVpsId == vps->getVPSId(), "The value of lnp_sei_active_vps_id shall be equal to the value of vps_video_parameter_set_id of the active VPS for the VCL NAL units of the access unit containing the SEI message." );
+
+
+    for (Int i = 0; i < vps->getMaxLayersMinus1(); i++)
+    {
+      if ( m_layerNotPresentFlag[ i ] && i < vps->getMaxLayersMinus1() )
+      {
+        for (Int j = 0; j < vps->getNumPredictedLayers( vps->getLayerIdInNuh( j ) - 1 ); j++ )
+        {
+          xCheckCfg     ( wrongConfig, m_layerNotPresentFlag[ vps->getLayerIdInVps( vps->getIdPredictedLayer( vps->getLayerIdInNuh(i),j) )], "When layer_not_present_flag[ i ] is equal to 1 and i is less than MaxLayersMinus1, layer_not_present_flag[ LayerIdxInVps[ IdPredictedLayer[ layer_id_in_nuh[ i ] ][ j ] ] ] shall be equal to 1 for all values of j in the range of 0 to NumPredictedLayers[ layer_id_in_nuh[ i ] ] - 1, inclusive." );
+        }
+      }
+    }
+
+      return wrongConfig; 
   };
-//
-//Void SEILayersNotPresent::setupFromSlice  ( const TComSlice* slice )
-//{
-//  sei.m_lnpSeiActiveVpsId =  TBD ;
-//  for( Int i = 0; i  <=  MaxLayersMinus1; i++ )
-//  {
-//    sei.m_layerNotPresentFlag[i] =  TBD ;
-//  }
-//};
 #endif
 
 
