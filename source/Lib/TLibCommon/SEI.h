@@ -781,7 +781,6 @@ public:
   IntAry1d  m_maxSbPropertyBitRate;
 };
 
-#if NH_MV_SEI_TBD
 class SEIAlphaChannelInfo : public SEI
 {
 public:
@@ -791,7 +790,6 @@ public:
   SEI* getCopy( ) const { return new SEIAlphaChannelInfo(*this); }; 
 
   Void setupFromCfgFile( const Char*      cfgFile );
-  Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Bool      m_alphaChannelCancelFlag;
@@ -804,6 +802,7 @@ public:
   Bool      m_alphaChannelClipTypeFlag;
 };
 
+#if NH_MV_SEI_TBD
 class SEIOverlayInfo : public SEI
 {
 public:

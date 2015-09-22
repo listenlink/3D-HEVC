@@ -110,8 +110,8 @@ protected:
   Void xParseSEIBspInitialArrivalTime         (SEIBspInitialArrivalTime& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #endif
   Void xParseSEISubBitstreamProperty          (SEISubBitstreamProperty& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
-#if NH_MV_SEI_TBD
   Void xParseSEIAlphaChannelInfo              (SEIAlphaChannelInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#if NH_MV_SEI_TBD
   Void xParseSEIOverlayInfo                   (SEIOverlayInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #endif
   Void xParseSEITemporalMvPredictionConstraints(SEITemporalMvPredictionConstraints& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
