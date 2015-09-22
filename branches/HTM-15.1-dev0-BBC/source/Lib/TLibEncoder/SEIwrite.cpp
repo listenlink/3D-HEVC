@@ -147,10 +147,10 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
    case SEI::SUB_BITSTREAM_PROPERTY:
      xWriteSEISubBitstreamProperty(*static_cast<const SEISubBitstreamProperty*>(&sei));
      break; 
-#if NH_MV_SEI_TBD
    case SEI::ALPHA_CHANNEL_INFO:
      xWriteSEIAlphaChannelInfo(*static_cast<const SEIAlphaChannelInfo*>(&sei));
-     break; 
+     break;
+#if NH_MV_SEI_TBD
    case SEI::OVERLAY_INFO:
      xWriteSEIOverlayInfo(*static_cast<const SEIOverlayInfo*>(&sei));
      break; 
@@ -976,7 +976,7 @@ Void SEIWriter::xWriteSEISubBitstreamProperty( const SEISubBitstreamProperty& se
     WRITE_CODE( sei.m_maxSbPropertyBitRate[i], 16, "max_sb_property_bit_rate" );
   }
 };
-#if NH_MV_SEI_TBD
+
 Void SEIWriter::xWriteSEIAlphaChannelInfo( const SEIAlphaChannelInfo& sei)
 {
   WRITE_FLAG( ( sei.m_alphaChannelCancelFlag ? 1 : 0 ), "alpha_channel_cancel_flag" );
@@ -984,8 +984,8 @@ Void SEIWriter::xWriteSEIAlphaChannelInfo( const SEIAlphaChannelInfo& sei)
   {
     WRITE_CODE( sei.m_alphaChannelUseIdc, 3, "alpha_channel_use_idc" );
     WRITE_CODE( sei.m_alphaChannelBitDepthMinus8, 3, "alpha_channel_bit_depth_minus8" );
-    WRITE_CODE( sei.m_alphaTransparentValue, getAlphaTransparentValueLen ), "alpha_transparent_value" );
-    WRITE_CODE( sei.m_alphaOpaqueValue, getAlphaOpaqueValueLen ), "alpha_opaque_value" );
+    WRITE_CODE( sei.m_alphaTransparentValue, sei.m_alphaChannelBitDepthMinus8+9, "alpha_transparent_value" );
+    WRITE_CODE( sei.m_alphaOpaqueValue, sei.m_alphaChannelBitDepthMinus8+9, "alpha_opaque_value" );
     WRITE_FLAG( ( sei.m_alphaChannelIncrFlag ? 1 : 0 ), "alpha_channel_incr_flag" );
     WRITE_FLAG( ( sei.m_alphaChannelClipFlag ? 1 : 0 ), "alpha_channel_clip_flag" );
     if( sei.m_alphaChannelClipFlag )
@@ -995,6 +995,7 @@ Void SEIWriter::xWriteSEIAlphaChannelInfo( const SEIAlphaChannelInfo& sei)
   }
 };
 
+#if NH_MV_SEI_TBD
 Void SEIWriter::xWriteSEIOverlayInfo( const SEIOverlayInfo& sei)
 {
   WRITE_FLAG( ( sei.m_overlayInfoCancelFlag ? 1 : 0 ), "overlay_info_cancel_flag" );

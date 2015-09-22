@@ -335,11 +335,11 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEISubBitstreamProperty;
       xParseSEISubBitstreamProperty((SEISubBitstreamProperty&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#if NH_MV_SEI_TBD
     case SEI::ALPHA_CHANNEL_INFO:
       sei = new SEIAlphaChannelInfo;
       xParseSEIAlphaChannelInfo((SEIAlphaChannelInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
+#if NH_MV_SEI_TBD
     case SEI::OVERLAY_INFO:
       sei = new SEIOverlayInfo;
       xParseSEIOverlayInfo((SEIOverlayInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
@@ -1333,7 +1333,6 @@ Void SEIReader::xParseSEISubBitstreamProperty(SEISubBitstreamProperty& sei, UInt
   }
 };
 
-#if NH_MV_SEI_TBD
 Void SEIReader::xParseSEIAlphaChannelInfo(SEIAlphaChannelInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;
@@ -1344,8 +1343,8 @@ Void SEIReader::xParseSEIAlphaChannelInfo(SEIAlphaChannelInfo& sei, UInt payload
   {
     sei_read_code( pDecodedMessageOutputStream, 3, code, "alpha_channel_use_idc" ); sei.m_alphaChannelUseIdc = code;
     sei_read_code( pDecodedMessageOutputStream, 3, code, "alpha_channel_bit_depth_minus8" ); sei.m_alphaChannelBitDepthMinus8 = code;
-    sei_read_code( pDecodedMessageOutputStream, getAlphaTransparentValueLen ), code, "alpha_transparent_value" ); sei.m_alphaTransparentValue = code;
-    sei_read_code( pDecodedMessageOutputStream, getAlphaOpaqueValueLen ), code, "alpha_opaque_value" ); sei.m_alphaOpaqueValue = code;
+    sei_read_code( pDecodedMessageOutputStream, sei.m_alphaChannelBitDepthMinus8+9, code, "alpha_transparent_value" ); sei.m_alphaTransparentValue = code;
+    sei_read_code( pDecodedMessageOutputStream, sei.m_alphaChannelBitDepthMinus8+9, code, "alpha_opaque_value" ); sei.m_alphaOpaqueValue = code;
     sei_read_flag( pDecodedMessageOutputStream, code, "alpha_channel_incr_flag" ); sei.m_alphaChannelIncrFlag = (code == 1);
     sei_read_flag( pDecodedMessageOutputStream, code, "alpha_channel_clip_flag" ); sei.m_alphaChannelClipFlag = (code == 1);
     if( sei.m_alphaChannelClipFlag )
@@ -1355,6 +1354,7 @@ Void SEIReader::xParseSEIAlphaChannelInfo(SEIAlphaChannelInfo& sei, UInt payload
   }
 };
 
+#if NH_MV_SEI_TBD
 Void SEIReader::xParseSEIOverlayInfo(SEIOverlayInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;

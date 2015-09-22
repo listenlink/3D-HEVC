@@ -92,8 +92,8 @@ protected:
   Void xWriteSEIBspInitialArrivalTime         ( const SEIBspInitialArrivalTime& sei);
 #endif
   Void xWriteSEISubBitstreamProperty          ( const SEISubBitstreamProperty& sei);
-#if NH_MV_SEI_TBD
   Void xWriteSEIAlphaChannelInfo              ( const SEIAlphaChannelInfo& sei);
+#if NH_MV_SEI_TBD
   Void xWriteSEIOverlayInfo                   ( const SEIOverlayInfo& sei);
 #endif
   Void xWriteSEITemporalMvPredictionConstraints ( const SEITemporalMvPredictionConstraints& sei);

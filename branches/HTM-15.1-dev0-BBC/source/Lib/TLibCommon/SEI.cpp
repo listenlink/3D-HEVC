@@ -232,8 +232,8 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
   case SEI::BSP_INITIAL_ARRIVAL_TIME              :               return new SEIBspInitialArrivalTime;
 #endif
   case SEI::SUB_BITSTREAM_PROPERTY                :               return new SEISubBitstreamProperty;
-#if NH_MV_SEI_TBD
   case SEI::ALPHA_CHANNEL_INFO                    :               return new SEIAlphaChannelInfo;
+#if NH_MV_SEI_TBD
   case SEI::OVERLAY_INFO                          :               return new SEIOverlayInfo;
 #endif
   case SEI::TEMPORAL_MV_PREDICTION_CONSTRAINTS    :               return new SEITemporalMvPredictionConstraints;
@@ -681,40 +681,20 @@ Void SEISubBitstreamProperty::resizeArrays( )
   m_maxSbPropertyBitRate.resize( m_numAdditionalSubStreamsMinus1 + 1); 
 }
 
-#if NH_MV_SEI_TBD
-
-Void SEIAlphaChannelInfo::setupFromSlice  ( const TComSlice* slice )
-{
-  sei.m_alphaChannelCancelFlag =  TBD ;
-  if( !sei.m_alphaChannelCancelFlag )
-  {
-    sei.m_alphaChannelUseIdc =  TBD ;
-    sei.m_alphaChannelBitDepthMinus8 =  TBD ;
-    sei.m_alphaTransparentValue =  TBD ;
-    sei.m_alphaOpaqueValue =  TBD ;
-    sei.m_alphaChannelIncrFlag =  TBD ;
-    sei.m_alphaChannelClipFlag =  TBD ;
-    if( sei.m_alphaChannelClipFlag )
-    {
-      sei.m_alphaChannelClipTypeFlag =  TBD ;
-    }
-  }
-};
-
 Void SEIAlphaChannelInfo::setupFromCfgFile(const Char* cfgFile)
 { 
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
   // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-  defAppLayerIds    .push_back( TBD );
-  defAppPocs        .push_back( TBD );
-  defAppTids        .push_back( TBD );
-  defAppVclNaluTypes.push_back( TBD );
+  defAppLayerIds    .push_back( 0 );
+  defAppPocs        .push_back( 0 );
+  defAppTids        .push_back( 0 );
+  defAppVclNaluTypes.push_back( 0 );
 
   Int      defSeiNaluId                  = 0; 
   Int      defPositionInSeiNalu          = 0; 
-  Bool     defModifyByEncoder            = TBD; 
+  Bool     defModifyByEncoder            = false;
 
   // Setup config file options
   po::Options opts;     
@@ -725,7 +705,7 @@ Void SEIAlphaChannelInfo::setupFromCfgFile(const Char* cfgFile)
     ("AlphaChannelUseIdc"             , m_alphaChannelUseIdc               , 0                              , "AlphaChannelUseIdc"               )
     ("AlphaChannelBitDepthMinus8"     , m_alphaChannelBitDepthMinus8       , 0                              , "AlphaChannelBitDepthMinus8"       )
     ("AlphaTransparentValue"          , m_alphaTransparentValue            , 0                              , "AlphaTransparentValue"            )
-    ("AlphaOpaqueValue"               , m_alphaOpaqueValue                 , 0                              , "AlphaOpaqueValue"                 )
+    ("AlphaOpaqueValue"               , m_alphaOpaqueValue                 , 255                            , "AlphaOpaqueValue"                 )
     ("AlphaChannelIncrFlag"           , m_alphaChannelIncrFlag             , false                          , "AlphaChannelIncrFlag"             )
     ("AlphaChannelClipFlag"           , m_alphaChannelClipFlag             , false                          , "AlphaChannelClipFlag"             )
     ("AlphaChannelClipTypeFlag"       , m_alphaChannelClipTypeFlag         , false                          , "AlphaChannelClipTypeFlag"         )
@@ -744,24 +724,20 @@ Bool SEIAlphaChannelInfo::checkCfg( const TComSlice* slice )
   // Check config values
   Bool wrongConfig = false; 
 
-  // TBD: Add constraints on presence of SEI here. 
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-
-  // TBD: Modify constraints according to the SEI semantics.   
-  xCheckCfgRange( wrongConfig, m_alphaChannelCancelFlag         , MINVAL , MAXVAL, "alpha_channel_cancel_flag"        );
-  xCheckCfgRange( wrongConfig, m_alphaChannelUseIdc             , MINVAL , MAXVAL, "alpha_channel_use_idc");
-  xCheckCfgRange( wrongConfig, m_alphaChannelBitDepthMinus8     , MINVAL , MAXVAL, "alpha_channel_bit_depth_minus8"   );
-  xCheckCfgRange( wrongConfig, m_alphaTransparentValue          , MINVAL , MAXVAL, "alpha_transparent_value"          );
-  xCheckCfgRange( wrongConfig, m_alphaOpaqueValue               , MINVAL , MAXVAL, "alpha_opaque_value"   );
-  xCheckCfgRange( wrongConfig, m_alphaChannelIncrFlag           , MINVAL , MAXVAL, "alpha_channel_incr_flag"          );
-  xCheckCfgRange( wrongConfig, m_alphaChannelClipFlag           , MINVAL , MAXVAL, "alpha_channel_clip_flag"          );
-  xCheckCfgRange( wrongConfig, m_alphaChannelClipTypeFlag       , MINVAL , MAXVAL, "alpha_channel_clip_type_flag"     );
+  int maxInterpretationValue = (1 << (m_alphaChannelBitDepthMinus8+9)) - 1;
+  xCheckCfgRange( wrongConfig, m_alphaChannelCancelFlag         , 0 , 1, "alpha_channel_cancel_flag"        );
+  xCheckCfgRange( wrongConfig, m_alphaChannelUseIdc             , 0 , 7, "alpha_channel_use_idc");
+  xCheckCfgRange( wrongConfig, m_alphaChannelBitDepthMinus8     , 0 , 7, "alpha_channel_bit_depth_minus8"   );
+  xCheckCfgRange( wrongConfig, m_alphaTransparentValue          , 0 , maxInterpretationValue, "alpha_transparent_value"          );
+  xCheckCfgRange( wrongConfig, m_alphaOpaqueValue               , 0 , maxInterpretationValue, "alpha_opaque_value"   );
+  xCheckCfgRange( wrongConfig, m_alphaChannelIncrFlag           , 0 , 1, "alpha_channel_incr_flag"          );
+  xCheckCfgRange( wrongConfig, m_alphaChannelClipFlag           , 0 , 1, "alpha_channel_clip_flag"          );
+  xCheckCfgRange( wrongConfig, m_alphaChannelClipTypeFlag       , 0 , 1, "alpha_channel_clip_type_flag"     );
 
   return wrongConfig; 
 
 };
-
+#if NH_MV_SEI_TBD
 Void SEIOverlayInfo::setupFromSlice  ( const TComSlice* slice )
 {
   sei.m_overlayInfoCancelFlag =  TBD ;
