@@ -41,9 +41,21 @@
 
 #include "CommonDef.h"
 #include "libmd5/MD5.h"
+ 
+
+#if NH_MV_SEI
+#include "TAppCommon/program_options_lite.h"
+using namespace std;
+namespace po = df::program_options_lite;
+#endif
+
 //! \ingroup TLibCommon
 //! \{
 class TComSPS;
+#if NH_MV_SEI
+class TComSlice; 
+class SEIScalableNesting; 
+#endif
 
 /**
  * Abstract class representing an SEI message with lightweight RTTI.
@@ -83,18 +95,65 @@ public:
     TEMP_MOTION_CONSTRAINED_TILE_SETS    = 139,
     CHROMA_SAMPLING_FILTER_HINT          = 140,
     KNEE_FUNCTION_INFO                   = 141
-#if NH_MV
-    ,SUB_BITSTREAM_PROPERTY              = 164
+#if NH_MV_SEI
+    ,COLOUR_REMAPPING_INFO                    = 142,
+    DEINTERLACED_FIELD_IDENTIFICATION         = 143,
+    LAYERS_NOT_PRESENT                        = 160,
+    INTER_LAYER_CONSTRAINED_TILE_SETS         = 161,
+    BSP_NESTING                               = 162,
+    BSP_INITIAL_ARRIVAL_TIME                  = 163,
+    SUB_BITSTREAM_PROPERTY                    = 164,
+    ALPHA_CHANNEL_INFO                        = 165,
+    OVERLAY_INFO                              = 166,
+    TEMPORAL_MV_PREDICTION_CONSTRAINTS        = 167,
+    FRAME_FIELD_INFO                          = 168,
+    THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO = 176,
+    DEPTH_REPRESENTATION_INFO                 = 177,
+    MULTIVIEW_SCENE_INFO                      = 178,
+    MULTIVIEW_ACQUISITION_INFO                = 179,
+    MULTIVIEW_VIEW_POSITION                   = 180
+#if NH_3D
+    ,    ALTERNATIVE_DEPTH_INFO                    = 181
+#endif
 #endif
 
   };
 
-  SEI() {}
+  SEI();
+
   virtual ~SEI() {}
-
-  static const Char *getSEIMessageString(SEI::PayloadType payloadType);
-
+  virtual SEI*       getCopy( ) const;
+  static const Char *getSEIMessageString(SEI::PayloadType payloadType );
   virtual PayloadType payloadType() const = 0;
+
+#if NH_MV_SEI
+  static SEI*        getNewSEIMessage         ( SEI::PayloadType payloadType ); 
+  Bool               insertSei                ( Int curLayerId, Int curPoc, Int curTid, Int curNaluType ) const;  
+
+
+  virtual Void       setupFromSlice           ( const TComSlice* slice );
+  virtual Void       setupFromCfgFile         ( const Char* cfgFile );
+  virtual Bool       checkCfg                 ( const TComSlice* slice   );
+
+  Void               xPrintCfgErrorIntro();
+  Void               xCheckCfgRange           ( Bool& wrongConfig, Int val, Int minVal, Int maxVal, const Char* seName );
+  Void               xCheckCfg                ( Bool& wrongConfig, Bool cond, const Char* errStr );
+  Void               xAddGeneralOpts          ( po::Options &opts, IntAry1d defAppLayerIds, IntAry1d defAppPocs, IntAry1d defAppTids, IntAry1d defAppVclNaluTypes, 
+                                                Int defSeiNaluId, Int defPositionInSeiNalu, Bool defModifyByEncoder );
+    // Filters where to insert SEI in the bitstream. 
+  // When the respected vector is empty, all layersIds, POCs, Tids, and Nalu types are used. 
+  IntAry1d                       m_applicableLayerIds; 
+  IntAry1d                       m_applicablePocs; 
+  IntAry1d                       m_applicableTids; 
+  IntAry1d                       m_applicableVclNaluTypes;     
+
+  Int                            m_payloadType;              // Payload type
+  Int                            m_seiNaluId;                // Identifies to which NAL unit  the SEI is added. 
+  Int                            m_positionInSeiNalu;        // Identifies the order within the NAL unit
+  Bool                           m_modifyByEncoder;          // Don't use the SEI cfg-file, but let let the encoder setup the NALU.   
+
+  SEIScalableNesting*            m_scalNestSeiContThisSei;   // Pointer to scalable nesting SEI containing the SEI. When NULL, the SEI is not nested.
+#endif
 };
 
 static const UInt ISO_IEC_11578_LEN=16;
@@ -472,6 +531,7 @@ public:
 };
 
 #if NH_MV
+#if !NH_MV_SEI
 class SEISubBitstreamProperty : public SEI
 {
 public:
@@ -488,6 +548,7 @@ public:
   std::vector<Int>  m_avgBitRate;
   std::vector<Int>  m_maxBitRate;
 };
+#endif
 #endif
 
 typedef std::list<SEI*> SEIMessages;
@@ -597,6 +658,499 @@ public:
 
 };
 
+#if NH_MV_SEI
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+class SEILayersNotPresent : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return LAYERS_NOT_PRESENT; }
+  SEILayersNotPresent ( ) { };
+  ~SEILayersNotPresent( ) { };
+  SEI* getCopy( ) const { return new SEILayersNotPresent(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Int       m_lnpSeiActiveVpsId;
+  UInt      m_lnpSeiMaxLayers;
+  BoolAry1d m_layerNotPresentFlag;
+
+  Void resizeDimI( Int sizeDimI )
+  {
+    m_layerNotPresentFlag.resize( sizeDimI );
+  }
+};
 #endif
 
+class SEIInterLayerConstrainedTileSets : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return INTER_LAYER_CONSTRAINED_TILE_SETS; }
+  SEIInterLayerConstrainedTileSets ( ) { };
+  ~SEIInterLayerConstrainedTileSets( ) { };
+  SEI* getCopy( ) const { return new SEIInterLayerConstrainedTileSets(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Bool      m_ilAllTilesExactSampleValueMatchFlag;
+  Bool      m_ilOneTilePerTileSetFlag;
+  Int       m_ilNumSetsInMessageMinus1;
+  Bool      m_skippedTileSetPresentFlag;
+  IntAry1d  m_ilctsId;
+  IntAry1d  m_ilNumTileRectsInSetMinus1;
+  IntAry2d  m_ilTopLeftTileIndex;
+  IntAry2d  m_ilBottomRightTileIndex;
+  IntAry1d  m_ilcIdc;
+  BoolAry1d m_ilExactSampleValueMatchFlag;
+  Int       m_allTilesIlcIdc;
+
+  Void      resizeDimI( Int sizeDimI )
+  {
+    m_ilctsId                    .resize( sizeDimI );
+    m_ilNumTileRectsInSetMinus1  .resize( sizeDimI );
+    m_ilTopLeftTileIndex         .resize( sizeDimI );
+    m_ilBottomRightTileIndex     .resize( sizeDimI );
+    m_ilcIdc                     .resize( sizeDimI );
+    m_ilExactSampleValueMatchFlag.resize( sizeDimI );
+  }
+
+  Void      resizeDimJ( Int i, Int sizeDimJ )
+  {
+    m_ilTopLeftTileIndex    [i].resize( sizeDimJ );
+    m_ilBottomRightTileIndex[i].resize( sizeDimJ );
+  }
+
+};
+
+#if NH_MV_TBD
+class SEIBspNesting : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return BSP_NESTING; }
+  SEIBspNesting ( ) { };
+  ~SEIBspNesting( ) { };
+  SEI* getCopy( ) const { return new SEIBspNesting(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Int       m_seiOlsIdx;
+  Int       m_seiPartitioningSchemeIdx;
+  Int       m_bspIdx;
+  Int       m_bspNestingZeroBit;
+  Int       m_numSeisInBspMinus1;
+};
+
+class SEIBspInitialArrivalTime : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return BSP_INITIAL_ARRIVAL_TIME; }
+  SEIBspInitialArrivalTime ( ) { };
+  ~SEIBspInitialArrivalTime( ) { };
+  SEI* getCopy( ) const { return new SEIBspInitialArrivalTime(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  IntAry1d  m_nalInitialArrivalDelay;
+  IntAry1d  m_vclInitialArrivalDelay;
+};
+#endif
+
+class SEISubBitstreamProperty : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return SUB_BITSTREAM_PROPERTY; }
+  SEISubBitstreamProperty ( ) { };
+  ~SEISubBitstreamProperty( ) { };
+  SEI* getCopy( ) const { return new SEISubBitstreamProperty(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Bool checkCfg        ( const TComSlice* slice   );
+  Void resizeArrays    ( ); 
+
+  Int       m_sbPropertyActiveVpsId;
+  Int       m_numAdditionalSubStreamsMinus1;
+  IntAry1d  m_subBitstreamMode;
+  IntAry1d  m_olsIdxToVps;
+  IntAry1d  m_highestSublayerId;
+  IntAry1d  m_avgSbPropertyBitRate;
+  IntAry1d  m_maxSbPropertyBitRate;
+};
+
+class SEIAlphaChannelInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return ALPHA_CHANNEL_INFO; }
+  SEIAlphaChannelInfo ( ) { };
+  ~SEIAlphaChannelInfo( ) { };
+  SEI* getCopy( ) const { return new SEIAlphaChannelInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Bool      m_alphaChannelCancelFlag;
+  Int       m_alphaChannelUseIdc;
+  Int       m_alphaChannelBitDepthMinus8;
+  Int       m_alphaTransparentValue;
+  Int       m_alphaOpaqueValue;
+  Bool      m_alphaChannelIncrFlag;
+  Bool      m_alphaChannelClipFlag;
+  Bool      m_alphaChannelClipTypeFlag;
+};
+
+#if NH_MV_SEI_TBD
+class SEIOverlayInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return OVERLAY_INFO; }
+  SEIOverlayInfo ( ) { };
+  ~SEIOverlayInfo( ) { };
+  SEI* getCopy( ) const { return new SEIOverlayInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Bool      m_overlayInfoCancelFlag;
+  Int       m_overlayContentAuxIdMinus128;
+  Int       m_overlayLabelAuxIdMinus128;
+  Int       m_overlayAlphaAuxIdMinus128;
+  Int       m_overlayElementLabelValueLengthMinus8;
+  Int       m_numOverlaysMinus1;
+  IntAry1d  m_overlayIdx;
+  BoolAry1d m_languageOverlayPresentFlag;
+  IntAry1d  m_overlayContentLayerId;
+  BoolAry1d m_overlayLabelPresentFlag;
+  IntAry1d  m_overlayLabelLayerId;
+  BoolAry1d m_overlayAlphaPresentFlag;
+  IntAry1d  m_overlayAlphaLayerId;
+  IntAry1d  m_numOverlayElementsMinus1;
+  IntAry2d  m_overlayElementLabelMin;
+  IntAry2d  m_overlayElementLabelMax;
+  Int       m_overlayZeroBit;
+  IntAry1d  m_overlayLanguage;
+  IntAry1d  m_overlayName;
+  IntAry2d  m_overlayElementName;
+  Bool      m_overlayInfoPersistenceFlag;
+};
+
+#endif
+
+class SEITemporalMvPredictionConstraints : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return TEMPORAL_MV_PREDICTION_CONSTRAINTS; }
+  SEITemporalMvPredictionConstraints ( ) { };
+  ~SEITemporalMvPredictionConstraints( ) { };
+  SEI* getCopy( ) const { return new SEITemporalMvPredictionConstraints(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Bool      m_prevPicsNotUsedFlag;
+  Bool      m_noIntraLayerColPicFlag;
+};
+
+#if NH_MV_SEI_TBD
+class SEIFrameFieldInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return FRAME_FIELD_INFO; }
+  SEIFrameFieldInfo ( ) { };
+  ~SEIFrameFieldInfo( ) { };
+  SEI* getCopy( ) const { return new SEIFrameFieldInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Int       m_ffinfoPicStruct;
+  Int       m_ffinfoSourceScanType;
+  Bool      m_ffinfoDuplicateFlag;
+};
+
+class SEIThreeDimensionalReferenceDisplaysInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO; }
+  SEIThreeDimensionalReferenceDisplaysInfo ( ) { };
+  ~SEIThreeDimensionalReferenceDisplaysInfo( ) { };
+  SEI* getCopy( ) const { return new SEIThreeDimensionalReferenceDisplaysInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Int       m_precRefDisplayWidth;
+  Bool      m_refViewingDistanceFlag;
+  Int       m_precRefViewingDist;
+  Int       m_numRefDisplaysMinus1;
+  IntAry1d  m_leftViewId;
+  IntAry1d  m_rightViewId;
+  IntAry1d  m_exponentRefDisplayWidth;
+  IntAry1d  m_mantissaRefDisplayWidth;
+  IntAry1d  m_exponentRefViewingDistance;
+  IntAry1d  m_mantissaRefViewingDistance;
+  BoolAry1d m_additionalShiftPresentFlag;
+  IntAry1d  m_numSampleShiftPlus512;
+  Bool      m_threeDimensionalReferenceDisplaysExtensionFlag;
+};
+
+class SEIDepthRepresentationInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return DEPTH_REPRESENTATION_INFO; }
+  SEIDepthRepresentationInfo ( ) { };
+  ~SEIDepthRepresentationInfo( ) { };
+  SEI* getCopy( ) const { return new SEIDepthRepresentationInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Bool      m_zNearFlag;
+  Bool      m_zFarFlag;
+  Bool      m_dMinFlag;
+  Bool      m_dMaxFlag;
+  Int       m_depthRepresentationType;
+  Int       m_disparityRefViewId;
+  Int       m_depthNonlinearRepresentationNumMinus1;
+};
+
+class SEIDepthRepInfoElement : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return DEPTH_REP_INFO_ELEMENT; }
+  SEIDepthRepInfoElement ( ) { };
+  ~SEIDepthRepInfoElement( ) { };
+  SEI* getCopy( ) const { return new SEIDepthRepInfoElement(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Bool      m_daSignFlag;
+  Int       m_daExponent;
+  Int       m_daMantissaLenMinus1;
+  Int       m_daMantissa;
+};
+#endif
+
+class SEIMultiviewSceneInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return MULTIVIEW_SCENE_INFO; }
+  SEIMultiviewSceneInfo ( ) { };
+  ~SEIMultiviewSceneInfo( ) { };
+  SEI* getCopy( ) const { return new SEIMultiviewSceneInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Int       m_minDisparity;
+  Int       m_maxDisparityRange;
+};
+
+
+class SEIMultiviewAcquisitionInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return MULTIVIEW_ACQUISITION_INFO; }
+  SEIMultiviewAcquisitionInfo ( ) { };
+  ~SEIMultiviewAcquisitionInfo( ) { };
+  SEI* getCopy( ) const { return new SEIMultiviewAcquisitionInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Int getNumViewsMinus1( ) const
+  {
+    Int numViewsMinus1; 
+    if( m_scalNestSeiContThisSei != NULL )
+    {
+      numViewsMinus1 = m_scalNestSeiContThisSei->m_nestingNumLayersMinus1;
+    }  
+    else
+    {
+      numViewsMinus1 = 0; 
+    }
+    return numViewsMinus1; 
+  }
+  
+  Void resizeArrays( )
+  {
+    Int numViews = getNumViewsMinus1() + 1;      
+    m_signFocalLengthX       .resize( numViews );
+    m_exponentFocalLengthX   .resize( numViews );
+    m_mantissaFocalLengthX   .resize( numViews );
+    m_signFocalLengthY       .resize( numViews );
+    m_exponentFocalLengthY   .resize( numViews );
+    m_mantissaFocalLengthY   .resize( numViews );
+    m_signPrincipalPointX    .resize( numViews );
+    m_exponentPrincipalPointX.resize( numViews );
+    m_mantissaPrincipalPointX.resize( numViews );
+    m_signPrincipalPointY    .resize( numViews );
+    m_exponentPrincipalPointY.resize( numViews );
+    m_mantissaPrincipalPointY.resize( numViews );
+    m_signSkewFactor         .resize( numViews );
+    m_exponentSkewFactor     .resize( numViews );
+    m_mantissaSkewFactor     .resize( numViews );
+
+    m_signR                  .resize( numViews );    
+    m_exponentR              .resize( numViews );
+    m_mantissaR              .resize( numViews );  
+    m_signT                  .resize( numViews );
+    m_exponentT              .resize( numViews );
+    m_mantissaT              .resize( numViews );
+
+    for( Int i = 0; i  < numViews ; i++ )
+    {
+      m_signR    [i].resize( 3 );    
+      m_exponentR[i].resize( 3 );
+      m_mantissaR[i].resize( 3 );  
+      m_signT    [i].resize( 3 );
+      m_exponentT[i].resize( 3 );
+      m_mantissaT[i].resize( 3 );
+
+      for (Int j = 0; j < 3; j++)
+      {
+        m_signR    [i][j].resize( 3 );    
+        m_exponentR[i][j].resize( 3 );
+        m_mantissaR[i][j].resize( 3 );  
+      }
+    }
+  }
+  
+  UInt getMantissaFocalLengthXLen   ( Int i ) const ;
+  UInt getMantissaFocalLengthYLen   ( Int i ) const ;
+  UInt getMantissaPrincipalPointXLen( Int i ) const ;
+  UInt getMantissaPrincipalPointYLen( Int i ) const ;
+  UInt getMantissaSkewFactorLen     ( Int i ) const ;
+  UInt getMantissaRLen              ( Int i, Int j, Int k ) const ;
+  UInt getMantissaTLen              ( Int i, Int j )        const ;
+
+  Bool      m_intrinsicParamFlag;
+  Bool      m_extrinsicParamFlag;
+  Bool      m_intrinsicParamsEqualFlag;
+  Int       m_precFocalLength;
+  Int       m_precPrincipalPoint;
+  Int       m_precSkewFactor;
+  BoolAry1d m_signFocalLengthX;
+  IntAry1d  m_exponentFocalLengthX;
+  IntAry1d  m_mantissaFocalLengthX;
+  BoolAry1d m_signFocalLengthY;
+  IntAry1d  m_exponentFocalLengthY;
+  IntAry1d  m_mantissaFocalLengthY;
+  BoolAry1d m_signPrincipalPointX;
+  IntAry1d  m_exponentPrincipalPointX;
+  IntAry1d  m_mantissaPrincipalPointX;
+  BoolAry1d m_signPrincipalPointY;
+  IntAry1d  m_exponentPrincipalPointY;
+  IntAry1d  m_mantissaPrincipalPointY;
+  BoolAry1d m_signSkewFactor;
+  IntAry1d  m_exponentSkewFactor;
+  IntAry1d  m_mantissaSkewFactor;
+  Int       m_precRotationParam;
+  Int       m_precTranslationParam;
+  BoolAry3d m_signR;
+  IntAry3d  m_exponentR;
+  IntAry3d  m_mantissaR;
+  BoolAry2d m_signT;
+  IntAry2d  m_exponentT;
+  IntAry2d  m_mantissaT;
+private: 
+  UInt xGetSyntaxElementLen( Int expo, Int prec, Int val ) const; 
+};
+
+
+
+class SEIMultiviewViewPosition : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return MULTIVIEW_VIEW_POSITION; }
+  SEIMultiviewViewPosition ( ) { };
+  ~SEIMultiviewViewPosition( ) { };
+  SEI* getCopy( ) const { return new SEIMultiviewViewPosition(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+  
+  Int       m_numViewsMinus1;
+  IntAry1d  m_viewPosition;
+};
+
+#if NH_MV_SEI_TBD
+class SEIAlternativeDepthInfo : public SEI
+{
+public:
+  PayloadType payloadType( ) const { return ALTERNATIVE_DEPTH_INFO; }
+  SEIAlternativeDepthInfo ( ) { };
+  ~SEIAlternativeDepthInfo( ) { };
+  SEI* getCopy( ) const { return new SEIAlternativeDepthInfo(*this); }; 
+
+  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromSlice  ( const TComSlice* slice   );
+  Bool checkCfg        ( const TComSlice* slice   );
+
+  Bool      m_alternativeDepthInfoCancelFlag;
+  Int       m_depthType;
+  Int       m_numConstituentViewsGvdMinus1;
+  Bool      m_depthPresentGvdFlag;
+  Bool      m_zGvdFlag;
+  Bool      m_intrinsicParamGvdFlag;
+  Bool      m_rotationGvdFlag;
+  Bool      m_translationGvdFlag;
+  BoolAry1d m_signGvdZNearFlag;
+  IntAry1d  m_expGvdZNear;
+  IntAry1d  m_manLenGvdZNearMinus1;
+  IntAry1d  m_manGvdZNear;
+  BoolAry1d m_signGvdZFarFlag;
+  IntAry1d  m_expGvdZFar;
+  IntAry1d  m_manLenGvdZFarMinus1;
+  IntAry1d  m_manGvdZFar;
+  Int       m_precGvdFocalLength;
+  Int       m_precGvdPrincipalPoint;
+  Int       m_precGvdRotationParam;
+  Int       m_precGvdTranslationParam;
+  BoolAry1d m_signGvdFocalLengthX;
+  IntAry1d  m_expGvdFocalLengthX;
+  IntAry1d  m_manGvdFocalLengthX;
+  BoolAry1d m_signGvdFocalLengthY;
+  IntAry1d  m_expGvdFocalLengthY;
+  IntAry1d  m_manGvdFocalLengthY;
+  BoolAry1d m_signGvdPrincipalPointX;
+  IntAry1d  m_expGvdPrincipalPointX;
+  IntAry1d  m_manGvdPrincipalPointX;
+  BoolAry1d m_signGvdPrincipalPointY;
+  IntAry1d  m_expGvdPrincipalPointY;
+  IntAry1d  m_manGvdPrincipalPointY;
+  BoolAry3d m_signGvdR;
+  IntAry3d  m_expGvdR;
+  IntAry3d  m_manGvdR;
+  BoolAry1d m_signGvdTX;
+  IntAry1d  m_expGvdTX;
+  IntAry1d  m_manGvdTX;
+  Int       m_minOffsetXInt;
+  Int       m_minOffsetXFrac;
+  Int       m_maxOffsetXInt;
+  Int       m_maxOffsetXFrac;
+  Bool      m_offsetYPresentFlag;
+  Int       m_minOffsetYInt;
+  Int       m_minOffsetYFrac;
+  Int       m_maxOffsetYInt;
+  Int       m_maxOffsetYFrac;
+  Bool      m_warpMapSizePresentFlag;
+  Int       m_warpMapWidthMinus2;
+  Int       m_warpMapHeightMinus2;
+};
+#endif
+
+#endif
+
+#endif
 //! \}
