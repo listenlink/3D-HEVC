@@ -687,10 +687,10 @@ Void SEIAlphaChannelInfo::setupFromCfgFile(const Char* cfgFile)
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
   // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-  defAppLayerIds    .push_back( 0 );
+  defAppLayerIds    .clear();
   defAppPocs        .push_back( 0 );
   defAppTids        .push_back( 0 );
-  defAppVclNaluTypes.push_back( 0 );
+  defAppVclNaluTypes = IDR_NAL_UNIT_TYPES;
 
   Int      defSeiNaluId                  = 0; 
   Int      defPositionInSeiNalu          = 0; 
