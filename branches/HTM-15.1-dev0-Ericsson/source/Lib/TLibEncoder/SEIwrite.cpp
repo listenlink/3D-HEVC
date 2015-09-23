@@ -162,9 +162,11 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
    case SEI::FRAME_FIELD_INFO:
      xWriteSEIFrameFieldInfo(*static_cast<const SEIFrameFieldInfo*>(&sei));
      break; 
+#endif
    case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:
      xWriteSEIThreeDimensionalReferenceDisplaysInfo(*static_cast<const SEIThreeDimensionalReferenceDisplaysInfo*>(&sei));
      break; 
+ #if NH_MV_SEI_TBD
    case SEI::DEPTH_REPRESENTATION_INFO:
      xWriteSEIDepthRepresentationInfo(*static_cast<const SEIDepthRepresentationInfo*>(&sei));
      break; 
@@ -1068,6 +1070,7 @@ Void SEIWriter::xWriteSEIFrameFieldInfo( const SEIFrameFieldInfo& sei)
   WRITE_CODE( sei.m_ffinfoSourceScanType, 2, "ffinfo_source_scan_type" );
   WRITE_FLAG( ( sei.m_ffinfoDuplicateFlag ? 1 : 0 ), "ffinfo_duplicate_flag" );
 };
+#endif
 
 Void SEIWriter::xWriteSEIThreeDimensionalReferenceDisplaysInfo( const SEIThreeDimensionalReferenceDisplaysInfo& sei)
 {
@@ -1078,19 +1081,19 @@ Void SEIWriter::xWriteSEIThreeDimensionalReferenceDisplaysInfo( const SEIThreeDi
     WRITE_UVLC( sei.m_precRefViewingDist, "prec_ref_viewing_dist" );
   }
   WRITE_UVLC( sei.m_numRefDisplaysMinus1, "num_ref_displays_minus1" );
-  for( Int i = 0; i  <=  NumRefDisplaysMinus1( ); i++ )
+  for( Int i = 0; i  <=  sei.getNumRefDisplaysMinus1( ); i++ )
   {
     WRITE_UVLC( sei.m_leftViewId[i], "left_view_id" );
     WRITE_UVLC( sei.m_rightViewId[i], "right_view_id" );
     WRITE_CODE( sei.m_exponentRefDisplayWidth[i], 6, "exponent_ref_display_width" );
-    WRITE_CODE( sei.m_mantissaRefDisplayWidth[i], getMantissaRefDisplayWidthLen ), "mantissa_ref_display_width" );
+    WRITE_CODE( sei.m_mantissaRefDisplayWidth[i], sei.getMantissaReferenceDisplayWidthLen(i) , "mantissa_ref_display_width" );
     if( sei.m_refViewingDistanceFlag )
     {
       WRITE_CODE( sei.m_exponentRefViewingDistance[i], 6, "exponent_ref_viewing_distance" );
-      WRITE_CODE( sei.m_mantissaRefViewingDistance[i], getMantissaRefViewingDistanceLen ), "mantissa_ref_viewing_distance" );
+      WRITE_CODE( sei.m_mantissaRefViewingDistance[i], sei.getMantissaReferenceViewingDistanceLen(i), "mantissa_ref_viewing_distance" );
     }
     WRITE_FLAG( ( sei.m_additionalShiftPresentFlag[i] ? 1 : 0 ), "additional_shift_present_flag" );
-    if( sei.m_additionalShiftPresentFlag( i ) )
+    if( sei.m_additionalShiftPresentFlag[i] )
     {
       WRITE_CODE( sei.m_numSampleShiftPlus512[i], 10, "num_sample_shift_plus512" );
     }
@@ -1098,6 +1101,7 @@ Void SEIWriter::xWriteSEIThreeDimensionalReferenceDisplaysInfo( const SEIThreeDi
   WRITE_FLAG( ( sei.m_threeDimensionalReferenceDisplaysExtensionFlag ? 1 : 0 ), "three_dimensional_reference_displays_extension_flag" );
 };
 
+#if NH_MV_SEI_TBD
 Void SEIWriter::xWriteSEIDepthRepresentationInfo( const SEIDepthRepresentationInfo& sei)
 {
   WRITE_FLAG( ( sei.m_zNearFlag ? 1 : 0 ), "z_near_flag" );

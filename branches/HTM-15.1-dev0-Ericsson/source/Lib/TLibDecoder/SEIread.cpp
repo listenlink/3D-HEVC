@@ -354,10 +354,12 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIFrameFieldInfo;
       xParseSEIFrameFieldInfo((SEIFrameFieldInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
+#endif
     case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:
       sei = new SEIThreeDimensionalReferenceDisplaysInfo;
       xParseSEIThreeDimensionalReferenceDisplaysInfo((SEIThreeDimensionalReferenceDisplaysInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
+#if NH_MV_SEI_TBD
     case SEI::DEPTH_REPRESENTATION_INFO:
       sei = new SEIDepthRepresentationInfo;
       xParseSEIDepthRepresentationInfo((SEIDepthRepresentationInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
@@ -1436,6 +1438,7 @@ Void SEIReader::xParseSEIFrameFieldInfo(SEIFrameFieldInfo& sei, UInt payloadSize
   sei_read_code( pDecodedMessageOutputStream, 2, code, "ffinfo_source_scan_type" ); sei.m_ffinfoSourceScanType = code;
   sei_read_flag( pDecodedMessageOutputStream, code, "ffinfo_duplicate_flag" ); sei.m_ffinfoDuplicateFlag = (code == 1);
 };
+#endif
 
 Void SEIReader::xParseSEIThreeDimensionalReferenceDisplaysInfo(SEIThreeDimensionalReferenceDisplaysInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
@@ -1449,19 +1452,20 @@ Void SEIReader::xParseSEIThreeDimensionalReferenceDisplaysInfo(SEIThreeDimension
     sei_read_uvlc( pDecodedMessageOutputStream, code, "prec_ref_viewing_dist" ); sei.m_precRefViewingDist = code;
   }
   sei_read_uvlc( pDecodedMessageOutputStream, code, "num_ref_displays_minus1" ); sei.m_numRefDisplaysMinus1 = code;
-  for( Int i = 0; i  <=  NumRefDisplaysMinus1( ); i++ )
+  sei.resizeArrays( );
+  for( Int i = 0; i  <=  sei.getNumRefDisplaysMinus1( ); i++ )
   {
     sei_read_uvlc( pDecodedMessageOutputStream, code, "left_view_id" ); sei.m_leftViewId[i] = code;
     sei_read_uvlc( pDecodedMessageOutputStream, code, "right_view_id" ); sei.m_rightViewId[i] = code;
     sei_read_code( pDecodedMessageOutputStream, 6, code, "exponent_ref_display_width" ); sei.m_exponentRefDisplayWidth[i] = code;
-    sei_read_code( pDecodedMessageOutputStream, getMantissaRefDisplayWidthLen ), code, "mantissa_ref_display_width" ); sei.m_mantissaRefDisplayWidth[i] = code;
+    sei_read_code( pDecodedMessageOutputStream, sei.getMantissaReferenceDisplayWidthLen(i), code, "mantissa_ref_display_width" ); sei.m_mantissaRefDisplayWidth[i] =  code      ;
     if( sei.m_refViewingDistanceFlag )
     {
       sei_read_code( pDecodedMessageOutputStream, 6, code, "exponent_ref_viewing_distance" ); sei.m_exponentRefViewingDistance[i] = code;
-      sei_read_code( pDecodedMessageOutputStream, getMantissaRefViewingDistanceLen ), code, "mantissa_ref_viewing_distance" ); sei.m_mantissaRefViewingDistance[i] = code;
+      sei_read_code( pDecodedMessageOutputStream, sei.getMantissaReferenceViewingDistanceLen(i), code, "mantissa_ref_viewing_distance" ); sei.m_mantissaRefViewingDistance[i] = code;
     }
     sei_read_flag( pDecodedMessageOutputStream, code, "additional_shift_present_flag" ); sei.m_additionalShiftPresentFlag[i] = (code == 1);
-    if( sei.m_additionalShiftPresentFlag( i ) )
+    if( sei.m_additionalShiftPresentFlag[i] )
     {
       sei_read_code( pDecodedMessageOutputStream, 10, code, "num_sample_shift_plus512" ); sei.m_numSampleShiftPlus512[i] = code;
     }
@@ -1469,6 +1473,7 @@ Void SEIReader::xParseSEIThreeDimensionalReferenceDisplaysInfo(SEIThreeDimension
   sei_read_flag( pDecodedMessageOutputStream, code, "three_dimensional_reference_displays_extension_flag" ); sei.m_threeDimensionalReferenceDisplaysExtensionFlag = (code == 1);
 };
 
+#if NH_MV_SEI_TBD
 Void SEIReader::xParseSEIDepthRepresentationInfo(SEIDepthRepresentationInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;

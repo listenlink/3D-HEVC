@@ -239,7 +239,9 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
   case SEI::TEMPORAL_MV_PREDICTION_CONSTRAINTS    :               return new SEITemporalMvPredictionConstraints;
 #if NH_MV_SEI_TBD
   case SEI::FRAME_FIELD_INFO                      :               return new SEIFrameFieldInfo;
+#endif
   case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:            return new SEIThreeDimensionalReferenceDisplaysInfo;
+#if NH_MV_SEI_TBD
   case SEI::DEPTH_REPRESENTATION_INFO             :               return new SEIDepthRepresentationInfo;  
 #endif
   case SEI::MULTIVIEW_SCENE_INFO                  :               return new SEIMultiviewSceneInfo;
@@ -975,50 +977,22 @@ Bool SEIFrameFieldInfo::checkCfg( const TComSlice* slice )
   return wrongConfig; 
 
 };
-
-Void SEIThreeDimensionalReferenceDisplaysInfo::setupFromSlice  ( const TComSlice* slice )
-{
-  sei.m_precRefDisplayWidth =  TBD ;
-  sei.m_refViewingDistanceFlag =  TBD ;
-  if( sei.m_refViewingDistanceFlag )
-  {
-    sei.m_precRefViewingDist =  TBD ;
-  }
-  sei.m_numRefDisplaysMinus1 =  TBD ;
-  for( Int i = 0; i  <=  NumRefDisplaysMinus1( ); i++ )
-  {
-    sei.m_leftViewId[i] =  TBD ;
-    sei.m_rightViewId[i] =  TBD ;
-    sei.m_exponentRefDisplayWidth[i] =  TBD ;
-    sei.m_mantissaRefDisplayWidth[i] =  TBD ;
-    if( sei.m_refViewingDistanceFlag )
-    {
-      sei.m_exponentRefViewingDistance[i] =  TBD ;
-      sei.m_mantissaRefViewingDistance[i] =  TBD ;
-    }
-    sei.m_additionalShiftPresentFlag[i] =  TBD ;
-    if( sei.m_additionalShiftPresentFlag( i ) )
-    {
-      sei.m_numSampleShiftPlus512[i] =  TBD ;
-    }
-  }
-  sei.m_threeDimensionalReferenceDisplaysExtensionFlag =  TBD ;
-};
+#endif
 
 Void SEIThreeDimensionalReferenceDisplaysInfo::setupFromCfgFile(const Char* cfgFile)
 { 
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
-  // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-  defAppLayerIds    .push_back( TBD );
-  defAppPocs        .push_back( TBD );
-  defAppTids        .push_back( TBD );
-  defAppVclNaluTypes.push_back( TBD );
+  // Default values for which layers, POCS, Tids or Nalu types the SEI should be sent. 
+  defAppLayerIds      .push_back( 0 ); 
+  defAppPocs          .push_back( 0 );
+  defAppTids          .push_back( 0 );
+  defAppVclNaluTypes = IRAP_NAL_UNIT_TYPES;
 
   Int      defSeiNaluId                  = 0; 
   Int      defPositionInSeiNalu          = 0; 
-  Bool     defModifyByEncoder            = TBD; 
+  Bool     defModifyByEncoder            = 0; 
 
   // Setup config file options
   po::Options opts;     
@@ -1047,34 +1021,61 @@ Void SEIThreeDimensionalReferenceDisplaysInfo::setupFromCfgFile(const Char* cfgF
   po::parseConfigFile( opts, cfgFile, err );
 };
 
+
+UInt SEIThreeDimensionalReferenceDisplaysInfo::getMantissaReferenceDisplayWidthLen( Int i ) const
+{
+  return xGetSyntaxElementLen( m_exponentRefDisplayWidth[i], m_precRefDisplayWidth, m_mantissaRefDisplayWidth[ i ] );
+}
+
+UInt SEIThreeDimensionalReferenceDisplaysInfo::getMantissaReferenceViewingDistanceLen( Int i ) const
+{
+  return xGetSyntaxElementLen( m_exponentRefViewingDistance[i], m_precRefViewingDist, m_mantissaRefViewingDistance[ i ] );
+}
+
+UInt SEIThreeDimensionalReferenceDisplaysInfo::xGetSyntaxElementLen( Int expo, Int prec, Int val ) const
+{
+  UInt len; 
+  if( expo == 0 )
+  {
+    len = std::max(0, prec - 30 );
+  }
+  else
+  {
+    len = std::max( 0, expo + prec - 31 );
+  }
+
+  assert( val >= 0 ); 
+  assert( val <= ( ( 1 << len )- 1) );
+  return len; 
+}
+
 Bool SEIThreeDimensionalReferenceDisplaysInfo::checkCfg( const TComSlice* slice )
 { 
   // Check config values
   Bool wrongConfig = false; 
 
-  // TBD: Add constraints on presence of SEI here. 
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
+  // The 3D reference display SEI should preferably be sent along with the multiview acquisition SEI. For now the multiview acquisition SEI is restricted to POC = 0, so 3D reference displays SEI is restricted to POC = 0 as well. 
+  xCheckCfg     ( wrongConfig, slice->isIRAP() && (slice->getPOC() == 0)  , "The 3D reference displays SEI message currently is associated with an access unit that contains an IRAP picture." );  
 
-  // TBD: Modify constraints according to the SEI semantics.   
-  xCheckCfgRange( wrongConfig, m_precRefDisplayWidth            , MINVAL , MAXVAL, "prec_ref_display_width"           );
-  xCheckCfgRange( wrongConfig, m_refViewingDistanceFlag         , MINVAL , MAXVAL, "ref_viewing_distance_flag"        );
-  xCheckCfgRange( wrongConfig, m_precRefViewingDist             , MINVAL , MAXVAL, "prec_ref_viewing_dist"            );
-  xCheckCfgRange( wrongConfig, m_numRefDisplaysMinus1           , MINVAL , MAXVAL, "num_ref_displays_minus1"          );
-  xCheckCfgRange( wrongConfig, m_leftViewId[i]                  , MINVAL , MAXVAL, "left_view_id"                     );
-  xCheckCfgRange( wrongConfig, m_rightViewId[i]                 , MINVAL , MAXVAL, "right_view_id"                    );
-  xCheckCfgRange( wrongConfig, m_exponentRefDisplayWidth[i]     , MINVAL , MAXVAL, "exponent_ref_display_width"       );
-  xCheckCfgRange( wrongConfig, m_mantissaRefDisplayWidth[i]     , MINVAL , MAXVAL, "mantissa_ref_display_width"       );
-  xCheckCfgRange( wrongConfig, m_exponentRefViewingDistance[i]  , MINVAL , MAXVAL, "exponent_ref_viewing_distance"    );
-  xCheckCfgRange( wrongConfig, m_mantissaRefViewingDistance[i]  , MINVAL , MAXVAL, "mantissa_ref_viewing_distance"    );
-  xCheckCfgRange( wrongConfig, m_additionalShiftPresentFlag[i]  , MINVAL , MAXVAL, "additional_shift_present_flag"    );
-  xCheckCfgRange( wrongConfig, m_numSampleShiftPlus512[i]       , MINVAL , MAXVAL, "num_sample_shift_plus512"         );
-  xCheckCfgRange( wrongConfig, m_threeDimensionalReferenceDisplaysExtensionFlag, MINVAL , MAXVAL, "three_dimensional_reference_displays_extension_flag");
+  xCheckCfgRange( wrongConfig, m_precRefDisplayWidth            , 0 , 31, "prec_ref_display_width"  );
+  xCheckCfgRange( wrongConfig, m_refViewingDistanceFlag         , 0 , 1, "ref_viewing_distance_flag");
+  xCheckCfgRange( wrongConfig, m_precRefViewingDist             , 0 , 31, "prec_ref_viewing_dist"   );
+  xCheckCfgRange( wrongConfig, m_numRefDisplaysMinus1           , 0 , 31, "num_ref_displays_minus1" );
+
+  for (Int i = 0; i <= getNumRefDisplaysMinus1(); i++ )
+  {  
+    xCheckCfgRange( wrongConfig, m_exponentRefDisplayWidth[i]     , 0 , 62, "exponent_ref_display_width"   );
+    xCheckCfgRange( wrongConfig, m_exponentRefViewingDistance[i]  , 0 , 62, "exponent_ref_viewing_distance");
+    xCheckCfgRange( wrongConfig, m_additionalShiftPresentFlag[i]  , 0 , 1, "additional_shift_present_flag" );
+    xCheckCfgRange( wrongConfig, m_numSampleShiftPlus512[i]       , 0 , 1023, "num_sample_shift_plus512"   );
+  }
+  xCheckCfgRange( wrongConfig, m_threeDimensionalReferenceDisplaysExtensionFlag, 0 , 1, "three_dimensional_reference_displays_extension_flag");
 
   return wrongConfig; 
 
 };
 
+#if NH_MV_SEI_TBD
 Void SEIDepthRepresentationInfo::setupFromSlice  ( const TComSlice* slice )
 {
   sei.m_zNearFlag =  TBD ;

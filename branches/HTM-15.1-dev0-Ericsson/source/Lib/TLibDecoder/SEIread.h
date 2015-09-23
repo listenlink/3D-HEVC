@@ -117,7 +117,9 @@ protected:
   Void xParseSEITemporalMvPredictionConstraints(SEITemporalMvPredictionConstraints& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #if NH_MV_SEI_TBD
   Void xParseSEIFrameFieldInfo                (SEIFrameFieldInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#endif
   Void xParseSEIThreeDimensionalReferenceDisplaysInfo (SEIThreeDimensionalReferenceDisplaysInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#if NH_MV_SEI_TBD
   Void xParseSEIDepthRepresentationInfo       (SEIDepthRepresentationInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 
   Void xParseSEIDepthRepInfoElement           (SEIDepthRepInfoElement& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
