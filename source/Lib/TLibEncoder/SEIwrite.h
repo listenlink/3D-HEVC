@@ -99,7 +99,9 @@ protected:
   Void xWriteSEITemporalMvPredictionConstraints ( const SEITemporalMvPredictionConstraints& sei);
 #if NH_MV_SEI_TBD
   Void xWriteSEIFrameFieldInfo                ( const SEIFrameFieldInfo& sei);
+#endif
   Void xWriteSEIThreeDimensionalReferenceDisplaysInfo ( const SEIThreeDimensionalReferenceDisplaysInfo& sei);
+#if NH_MV_SEI_TBD
   Void xWriteSEIDepthRepresentationInfo       ( const SEIDepthRepresentationInfo& sei);
   Void xWriteSEIDepthRepInfoElement           ( const SEIDepthRepInfoElement& sei);
 #endif

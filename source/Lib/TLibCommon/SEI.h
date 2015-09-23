@@ -872,6 +872,7 @@ public:
   Int       m_ffinfoSourceScanType;
   Bool      m_ffinfoDuplicateFlag;
 };
+#endif
 
 class SEIThreeDimensionalReferenceDisplaysInfo : public SEI
 {
@@ -882,8 +883,12 @@ public:
   SEI* getCopy( ) const { return new SEIThreeDimensionalReferenceDisplaysInfo(*this); }; 
 
   Void setupFromCfgFile( const Char*      cfgFile );
-  Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
+
+  Int getNumRefDisplaysMinus1( ) const
+  {
+    return m_numRefDisplaysMinus1; 
+  }
 
   Int       m_precRefDisplayWidth;
   Bool      m_refViewingDistanceFlag;
@@ -898,8 +903,28 @@ public:
   BoolAry1d m_additionalShiftPresentFlag;
   IntAry1d  m_numSampleShiftPlus512;
   Bool      m_threeDimensionalReferenceDisplaysExtensionFlag;
+
+  Void resizeArrays( )
+  {
+    Int numReferenceDiaplays = getNumRefDisplaysMinus1() + 1;
+  
+    m_leftViewId    .resize( numReferenceDiaplays );
+    m_rightViewId   .resize( numReferenceDiaplays );
+    m_exponentRefDisplayWidth      .resize( numReferenceDiaplays );
+    m_mantissaRefDisplayWidth      .resize( numReferenceDiaplays );
+    m_exponentRefViewingDistance   .resize( numReferenceDiaplays );
+    m_mantissaRefViewingDistance   .resize( numReferenceDiaplays );
+    m_additionalShiftPresentFlag   .resize( numReferenceDiaplays );
+    m_numSampleShiftPlus512        .resize( numReferenceDiaplays );
+  }
+
+  UInt getMantissaReferenceDisplayWidthLen  ( Int i ) const ;
+  UInt getMantissaReferenceViewingDistanceLen  ( Int i ) const ;
+private: 
+  UInt xGetSyntaxElementLen( Int expo, Int prec, Int val ) const; 
 };
 
+#if NH_MV_SEI_TBD
 class SEIDepthRepresentationInfo : public SEI
 {
 public:
