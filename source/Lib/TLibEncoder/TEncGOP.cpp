@@ -328,6 +328,13 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(currentMessages, !testWrite);
 
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+  // Layers not present SEI message
+  currentMessages = extractSeisByType(localMessages, SEI::LAYERS_NOT_PRESENT);
+  xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
+  xClearSEIs(currentMessages, !testWrite);
+#endif
+
   // And finally everything else one by one
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, localMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(localMessages, !testWrite);
@@ -411,11 +418,8 @@ Void TEncGOP::xWriteDuSEIMessages (SEIMessages& duInfoSeiMessages, AccessUnit &a
 
 Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TComSPS *sps, const TComPPS *pps)
 {
-#if NH_MV
-  OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI, 0, getLayerId());
-#else
   OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI);
-#endif
+
   if(m_pcCfg->getActiveParameterSetsSEIEnabled())
   {
     SEIActiveParameterSets *sei = new SEIActiveParameterSets;
@@ -481,12 +485,14 @@ Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TCo
   }
 
 #if NH_MV
+#if !NH_MV_SEI
   if( m_pcCfg->getSubBitstreamPropSEIEnabled() && ( getLayerId() == 0 ) )
   {
     SEISubBitstreamProperty *sei = new SEISubBitstreamProperty;
     m_seiEncoder.initSEISubBitstreamProperty( sei, sps );   
     seiMessages.push_back(sei);
   }
+#endif
 #endif
 }
 
@@ -1833,6 +1839,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_bufferingPeriodSEIPresentInAU = false;
     // create prefix SEI associated with a picture
     xCreatePerPictureSEIMessages(iGOPid, leadingSeiMessages, nestedSeiMessages, pcSlice);
+
+#if NH_MV_SEI
+    m_seiEncoder.createAnnexFGISeiMessages( leadingSeiMessages, pcSlice );
+#endif
 
     /* use the main bitstream buffer for storing the marshalled picture */
     m_pcEntropyCoder->setBitstream(NULL);

@@ -86,25 +86,25 @@ public:
                                  Int&  riDepthDistMode
                                 );
 
-  std::vector<Int>* getSynthViews() { return &m_aiAllSynthViewNums;  }
-  std::vector<Int>* getBaseViews()  { return &m_aiAllBaseViewIdx;    }
+  IntAry1d*  getSynthViews() { return &m_aiAllSynthViewNums;  }
+  IntAry1d*  getBaseViews()  { return &m_aiAllBaseViewIdx;    }
 
   TRenModSetupStrParser();
 
   Void setString( Int iNumOfBaseViews, Char* pchSetStr );
 
 private:
-  std::vector< std::vector<Int > > m_aaaiBaseViewsIdx  [2];
-  std::vector< std::vector<Int > > m_aaaiVideoDistMode [2];
-  std::vector< std::vector<Int > > m_aaaiDepthDistMode [2];
-  std::vector< std::vector<Int > > m_aaaiModelNums     [2];
-  std::vector< std::vector<Int > > m_aaaiSynthViewNums [2];
-  std::vector< std::vector<Bool> > m_aaabOrgRef        [2];
-  std::vector< std::vector<Bool> > m_aaabExtrapolate   [2];
-  std::vector< std::vector<Int > > m_aaaiBlendMode     [2];
+  IntAry2d                         m_aaaiBaseViewsIdx  [2];
+  IntAry2d                         m_aaaiVideoDistMode [2];
+  IntAry2d                         m_aaaiDepthDistMode [2];
+  IntAry2d                         m_aaaiModelNums     [2];
+  IntAry2d                         m_aaaiSynthViewNums [2];
+  BoolAry2d                        m_aaabOrgRef        [2];
+  BoolAry2d                        m_aaabExtrapolate   [2];
+  IntAry2d                         m_aaaiBlendMode     [2];
 
-  std::vector<Int>                 m_aiAllBaseViewIdx;
-  std::vector<Int>                 m_aiAllSynthViewNums;
+  IntAry1d                         m_aiAllBaseViewIdx;
+  IntAry1d                         m_aiAllSynthViewNums;
 
   Bool                             m_bCurrentViewSet;
   Int                              m_iCurrentView;

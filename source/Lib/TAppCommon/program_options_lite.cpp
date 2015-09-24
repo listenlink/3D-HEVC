@@ -110,13 +110,26 @@ namespace df
       return OptionSpecific(*this);
     }
 
+#if NH_MV_SEI
+    static void setOptions(Options::NamesPtrList& opt_list, const std::vector<int> idcs, const string& value, ErrorReporter& error_reporter)
+#else
     static void setOptions(Options::NamesPtrList& opt_list, const string& value, ErrorReporter& error_reporter)
+#endif
     {
       /* multiple options may be registered for the same name:
        *   allow each to parse value */
       for (Options::NamesPtrList::iterator it = opt_list.begin(); it != opt_list.end(); ++it)
       {
+        #if NH_MV_SEI
+          Bool doParsing = (*it)->opt->checkDim( idcs, error_reporter ); 
+          if ( doParsing )
+          {
+            (*it)->opt->parse(value, idcs, error_reporter);
+          }
+          
+        #else
         (*it)->opt->parse(value, error_reporter);
+        #endif
       }
     }
 
@@ -276,6 +289,31 @@ namespace df
 
     bool OptionWriter::storePair(bool allow_long, bool allow_short, const string& name, const string& value)
     {
+#if NH_MV_SEI
+      std::vector<int> idcs;             
+      
+      std::size_t pos_underscore            = name.find("_" );         
+      std::size_t pos_last_underscore_plus1 = pos_underscore+1;       
+      std::size_t pos_first_underscore      = pos_underscore; 
+
+      while ( pos_underscore != string::npos )
+      {        
+        pos_underscore   = name.find("_", pos_last_underscore_plus1  );         
+        size_t subStrlen = ( pos_underscore == string::npos ) ? string::npos : ( pos_underscore - pos_last_underscore_plus1 );
+        string idx_str   = name.substr( pos_last_underscore_plus1, subStrlen ); 
+        idcs.push_back( atoi( idx_str.c_str()));
+        pos_last_underscore_plus1 = pos_underscore + 1;         
+      } 
+
+      string name_idcs = name.substr(0, pos_first_underscore  );
+      for (size_t i = 0; i < idcs.size(); i++ )
+      {
+        name_idcs += "_%d";
+      }      
+
+      bool found_idcs = false; 
+      Options::NamesMap::iterator opt_it_idcs;
+#endif
       bool found = false;
       Options::NamesMap::iterator opt_it;
       if (allow_long)
@@ -285,6 +323,19 @@ namespace df
         {
           found = true;
         }
+#if NH_MV_SEI
+        if ( idcs.size() > 0 )
+        {
+          opt_it_idcs = opts.opt_long_map.find(name_idcs);
+          if (opt_it_idcs != opts.opt_long_map.end() )
+          {
+            assert( !found );
+            found = true;
+            found_idcs = true; 
+            opt_it = opt_it_idcs;  
+          }
+        }
+#endif
       }
 
       /* check for the short list */
@@ -295,16 +346,47 @@ namespace df
         {
           found = true;
         }
+#if NH_MV_SEI
+        if ( idcs.size() > 0 )
+        {
+          opt_it = opts.opt_short_map.find(name);
+          if (opt_it != opts.opt_short_map.end())
+          {
+            assert( !found );
+            found = true;
+            found_idcs = true; 
+            opt_it = opt_it_idcs;  
+          }
+        }
+#endif
       }
 
+#if NH_MV_SEI
+    if ( !found_idcs )
+    {
+      idcs.clear(); 
+    }
+#endif
       if (!found)
       {
+#if NH_MV_SEI
+        if (error_reporter.output_on_unknow_parameter )
+        {       
+#endif
+
         error_reporter.error(where())
           << "Unknown option `" << name << "' (value:`" << value << "')\n";
+#if NH_MV_SEI
+        }
+#endif
         return false;
       }
 
+#if NH_MV_SEI
+      setOptions((*opt_it).second, idcs, value, error_reporter);
+#else
       setOptions((*opt_it).second, value, error_reporter);
+#endif
       return true;
     }
 
