@@ -166,11 +166,11 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
    case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:
      xWriteSEIThreeDimensionalReferenceDisplaysInfo(*static_cast<const SEIThreeDimensionalReferenceDisplaysInfo*>(&sei));
      break; 
- #if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
    case SEI::DEPTH_REPRESENTATION_INFO:
-     xWriteSEIDepthRepresentationInfo(*static_cast<const SEIDepthRepresentationInfo*>(&sei));
-     break; 
-#endif
+       xWriteSEIDepthRepresentationInfo(*static_cast<const SEIDepthRepresentationInfo*>(&sei));
+       break;
+#endif 
    case SEI::MULTIVIEW_SCENE_INFO:
      xWriteSEIMultiviewSceneInfo(*static_cast<const SEIMultiviewSceneInfo*>(&sei));
      break; 
@@ -1101,53 +1101,132 @@ Void SEIWriter::xWriteSEIThreeDimensionalReferenceDisplaysInfo( const SEIThreeDi
   WRITE_FLAG( ( sei.m_threeDimensionalReferenceDisplaysExtensionFlag ? 1 : 0 ), "three_dimensional_reference_displays_extension_flag" );
 };
 
-#if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
 Void SEIWriter::xWriteSEIDepthRepresentationInfo( const SEIDepthRepresentationInfo& sei)
 {
-  WRITE_FLAG( ( sei.m_zNearFlag ? 1 : 0 ), "z_near_flag" );
-  WRITE_FLAG( ( sei.m_zFarFlag ? 1 : 0 ), "z_far_flag" );
-  WRITE_FLAG( ( sei.m_dMinFlag ? 1 : 0 ), "d_min_flag" );
-  WRITE_FLAG( ( sei.m_dMaxFlag ? 1 : 0 ), "d_max_flag" );
-  WRITE_UVLC( sei.m_depthRepresentationType, "depth_representation_type" );
-  if( sei.m_dMinFlag  | |  sei.m_dMaxFlag )
-  {
-    WRITE_UVLC( sei.m_disparityRefViewId, "disparity_ref_view_id" );
-  }
-  if( sei.m_zNearFlag )
-  {
-    DepthRepInfoElement(() ZNearSign, ZNearExp, ZNearMantissa, ZNearManLen );
-  }
-  if( sei.m_zFarFlag )
-  {
-    DepthRepInfoElement(() ZFarSign, ZFarExp, ZFarMantissa, ZFarManLen );
-  }
-  if( sei.m_dMinFlag )
-  {
-    DepthRepInfoElement(() DMinSign, DMinExp, DMinMantissa, DMinManLen );
-  }
-  if( sei.m_dMaxFlag )
-  {
-    DepthRepInfoElement(() DMaxSign, DMaxExp, DMaxMantissa, DMaxManLen );
-  }
-  if( sei.m_depthRepresentationType  ==  3 )
-  {
-    WRITE_UVLC( sei.m_depthNonlinearRepresentationNumMinus1, "depth_nonlinear_representation_num_minus1" );
-    for( Int i = 1; i  <=  sei.m_depthNonlinearRepresentationNumMinus1 + 1; i++ )
+
+    assert(sei.m_currLayerID>=0);
+
+    WRITE_FLAG( ( sei.m_zNearFlag[sei.m_currLayerID] ? 1 : 0 ), "z_near_flag" );
+    WRITE_FLAG( ( sei.m_zFarFlag[sei.m_currLayerID] ? 1 : 0 ), "z_far_flag" );
+    WRITE_FLAG( ( sei.m_dMinFlag[sei.m_currLayerID] ? 1 : 0 ), "d_min_flag" );
+    WRITE_FLAG( ( sei.m_dMaxFlag[sei.m_currLayerID] ? 1 : 0 ), "d_max_flag" );
+    WRITE_UVLC( sei.m_depthRepresentationType[sei.m_currLayerID][0], "depth_representation_type" );
+    if( sei.m_dMinFlag[sei.m_currLayerID]  ||  sei.m_dMaxFlag[sei.m_currLayerID] )
     {
-      DepthNonlinearRepresentationModel( i );
+        WRITE_UVLC( sei.m_disparityRefViewId[sei.m_currLayerID][0], "disparity_ref_view_id" );
     }
-  }
-};
+    if( sei.m_zNearFlag[sei.m_currLayerID] )
+    {
+        xWriteSEIDepthRepInfoElement(sei.m_zNear[sei.m_currLayerID][0]);
+    }
+    if( sei.m_zFarFlag[sei.m_currLayerID] )
+    {
+        xWriteSEIDepthRepInfoElement(sei.m_zFar[sei.m_currLayerID][0]);
+    }
+    if( sei.m_dMinFlag[sei.m_currLayerID] )
+    {
+        xWriteSEIDepthRepInfoElement(sei.m_dMin[sei.m_currLayerID][0]);
+    }
+    if( sei.m_dMaxFlag[sei.m_currLayerID] )
+    {
+        xWriteSEIDepthRepInfoElement(sei.m_dMax[sei.m_currLayerID][0]);
+    }
 
-Void SEIWriter::xWriteSEIDepthRepInfoElement( const SEIDepthRepInfoElement& sei)
+    if (sei.m_depthRepresentationType[sei.m_currLayerID][0] == 3)
+    {
+        WRITE_UVLC( sei.m_depthNonlinearRepresentationNumMinus1[sei.m_currLayerID][0], "depth_nonlinear_representation_num_minus1" );
+        for( Int i = 1; i  <=  sei.m_depthNonlinearRepresentationNumMinus1[sei.m_currLayerID][0] + 1; i++ )
+        {
+            WRITE_UVLC(sei.m_depth_nonlinear_representation_model[sei.m_currLayerID][i-1],"depth_nonlinear_representation_model[ i ]");
+        }
+    }
+}
+
+Void SEIWriter::xWriteSEIDepthRepInfoElement( double f)
 {
-  WRITE_FLAG( ( sei.m_daSignFlag ? 1 : 0 ), "da_sign_flag" );
-  WRITE_CODE( sei.m_daExponent, 7, "da_exponent" );
-  WRITE_CODE( sei.m_daMantissaLenMinus1, 5, "da_mantissa_len_minus1" );
-  WRITE_CODE( sei.m_daMantissa, getDaMantissaLen ), "da_mantissa" );
-};
+    UInt x_sign, x_exp, x_mantissa,x_mantissa_len;
+    if (f < 0) 
+    {
+        f = f * (-1);
+        x_sign = 1;
+    }
+    else
+    {
+        x_sign = 0;
+    }
+    int exponent=0;
+    if(f >= 1)
+    {
+        while(f>=2)
+        {
+            exponent++;
+            f = f/2;
+        }
+    }
+    else
+    {
+        while (f<1)
+        {
+            exponent++;
+            f = f*2;
+        }
+        exponent=-exponent;
+    }
 
-#endif 
+    int i;
+    f = f -1;
+    double s = 1;
+    char s_mantissa[32];
+    double thr=1.0/(4.0*(1<<30));
+
+    if (f>=thr)
+    {
+        for(i=0;i<32;i++)
+        {
+            s /= 2;
+            if(f>=s)
+            {
+                f = f-s;
+                s_mantissa[i]=1;
+
+                if (f<thr)
+                    break;
+            }else
+            {
+                s_mantissa[i]=0;
+            }
+        }
+
+        if (i<32)
+            x_mantissa_len=i+1;
+        else
+            x_mantissa_len=32;
+
+        x_mantissa=0;
+
+        for(i=0;i<x_mantissa_len;i++)
+        {
+            if (s_mantissa[i]==1)
+                x_mantissa += (1u)<<(x_mantissa_len-1-i) ;
+        }
+
+    }else
+    {
+        x_mantissa=0;
+        x_mantissa_len=1;
+    }
+
+    assert(exponent>=-31 && exponent<= (1<<7)-32);
+    x_exp=exponent+31;
+
+    WRITE_FLAG(  x_sign,                         "da_sign_flag" );
+    WRITE_CODE(  x_exp, 7 ,                      "da_exponent" );
+    WRITE_CODE( x_mantissa_len-1, 5 ,            "da_mantissa_len_minus1" );
+    WRITE_CODE( x_mantissa, x_mantissa_len ,     "da_mantissa" );
+
+};
+#endif
 Void SEIWriter::xWriteSEIMultiviewSceneInfo( const SEIMultiviewSceneInfo& sei)
 {
   WRITE_SVLC( sei.m_minDisparity     , "min_disparity"       );

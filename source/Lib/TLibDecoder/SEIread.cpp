@@ -359,11 +359,11 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIThreeDimensionalReferenceDisplaysInfo;
       xParseSEIThreeDimensionalReferenceDisplaysInfo((SEIThreeDimensionalReferenceDisplaysInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
     case SEI::DEPTH_REPRESENTATION_INFO:
-      sei = new SEIDepthRepresentationInfo;
-      xParseSEIDepthRepresentationInfo((SEIDepthRepresentationInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
-      break;
+        sei = new SEIDepthRepresentationInfo;
+        xParseSEIDepthRepresentationInfo((SEIDepthRepresentationInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
+        break;
 #endif
     case SEI::MULTIVIEW_SCENE_INFO:
       sei = new SEIMultiviewSceneInfo;
@@ -1473,57 +1473,109 @@ Void SEIReader::xParseSEIThreeDimensionalReferenceDisplaysInfo(SEIThreeDimension
   sei_read_flag( pDecodedMessageOutputStream, code, "three_dimensional_reference_displays_extension_flag" ); sei.m_threeDimensionalReferenceDisplaysExtensionFlag = (code == 1);
 };
 
-#if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
+Void SEIReader::xParseSEIDepthRepInfoElement(double& f,std::ostream *pDecodedMessageOutputStream)
+{
+    UInt val;
+    UInt x_sign,x_mantissa_len,x_mantissa;
+    Int x_exp;
+
+    sei_read_flag(pDecodedMessageOutputStream,     val,"da_sign_flag");  x_sign = val ? 1 : 0 ;
+    sei_read_code(pDecodedMessageOutputStream,  7, val, "da_exponent" );         x_exp = val-31;
+    sei_read_code(pDecodedMessageOutputStream,  5, val, "da_mantissa_len_minus1" );         x_mantissa_len = val+1;
+    sei_read_code(pDecodedMessageOutputStream,  x_mantissa_len, val, "da_mantissa" );         x_mantissa = val;
+    if (x_mantissa_len>=16)
+    {
+        f =1.0 +  (x_mantissa*1.0)/(1u<<(x_mantissa_len-16))/(256.0*256.0 );
+    }else
+    {
+        f =1.0 +  (x_mantissa*1.0)/(1u<<x_mantissa_len);
+    }
+    double m=1.0;
+    int i;
+    if (x_exp<0)
+    {
+        for(i=0;i<-x_exp;i++)
+            m = m * 2;
+
+        f = f/m;
+    }
+    else
+    {
+        for(i=0;i<x_exp;i++)
+            m = m * 2;
+
+        f= f * m;
+    }
+    if (x_sign==1)
+    {
+        f= -f;
+    }
+};
+
 Void SEIReader::xParseSEIDepthRepresentationInfo(SEIDepthRepresentationInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
-  UInt code;
-  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
+    UInt code;
+    double zNear,zFar,dMin,dMax;
+    bool zNearFlag,zFarFlag,dMinFlag,dMaxFlag;
+    int depth_representation_type,disparityRefViewId,depthNonlinearRepresentationNumMinus1;
+    std::vector<int> DepthNonlinearRepresentationModel;
 
-  sei_read_flag( pDecodedMessageOutputStream, code, "z_near_flag" ); sei.m_zNearFlag = (code == 1);
-  sei_read_flag( pDecodedMessageOutputStream, code, "z_far_flag" ); sei.m_zFarFlag = (code == 1);
-  sei_read_flag( pDecodedMessageOutputStream, code, "d_min_flag" ); sei.m_dMinFlag = (code == 1);
-  sei_read_flag( pDecodedMessageOutputStream, code, "d_max_flag" ); sei.m_dMaxFlag = (code == 1);
-  sei_read_uvlc( pDecodedMessageOutputStream, code, "depth_representation_type" ); sei.m_depthRepresentationType = code;
-  if( sei.m_dMinFlag  | |  sei.m_dMaxFlag )
-  {
-    sei_read_uvlc( pDecodedMessageOutputStream, code, "disparity_ref_view_id" ); sei.m_disparityRefViewId = code;
-  }
-  if( sei.m_zNearFlag )
-  {
-    DepthRepInfoElement(() ZNearSign, ZNearExp, ZNearMantissa, ZNearManLen );
-  }
-  if( sei.m_zFarFlag )
-  {
-    DepthRepInfoElement(() ZFarSign, ZFarExp, ZFarMantissa, ZFarManLen );
-  }
-  if( sei.m_dMinFlag )
-  {
-    DepthRepInfoElement(() DMinSign, DMinExp, DMinMantissa, DMinManLen );
-  }
-  if( sei.m_dMaxFlag )
-  {
-    DepthRepInfoElement(() DMaxSign, DMaxExp, DMaxMantissa, DMaxManLen );
-  }
-  if( sei.m_depthRepresentationType  ==  3 )
-  {
-    sei_read_uvlc( pDecodedMessageOutputStream, code, "depth_nonlinear_representation_num_minus1" ); sei.m_depthNonlinearRepresentationNumMinus1 = code;
-    for( Int i = 1; i  <=  sei.m_depthNonlinearRepresentationNumMinus1 + 1; i++ )
+    sei.clear();
+
+    output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
+
+    sei_read_flag( pDecodedMessageOutputStream, code, "z_near_flag" );    zNearFlag  = (code == 1);
+    sei_read_flag( pDecodedMessageOutputStream, code, "z_far_flag" );     zFarFlag = (code == 1);
+    sei_read_flag( pDecodedMessageOutputStream, code, "d_min_flag" );     dMinFlag = (code == 1);
+    sei_read_flag( pDecodedMessageOutputStream, code, "d_max_flag" );     dMaxFlag = (code == 1);
+    sei_read_uvlc( pDecodedMessageOutputStream, code, "depth_representation_type" ); depth_representation_type = code;
+
+    sei.m_zNearFlag.push_back(zNearFlag);
+    sei.m_zFarFlag.push_back(zFarFlag);
+    sei.m_dMinFlag.push_back(dMinFlag);
+    sei.m_dMaxFlag.push_back(dMaxFlag);
+
+    sei.m_depthRepresentationType.push_back(IntAry1d(1,depth_representation_type));
+
+    if( dMinFlag  ||  dMaxFlag )
     {
-      DepthNonlinearRepresentationModel( i );
+        sei_read_uvlc( pDecodedMessageOutputStream, code, "disparity_ref_view_id" ); disparityRefViewId = code;
+        sei.m_disparityRefViewId.push_back(IntAry1d(1,disparityRefViewId));
     }
-  }
-};
+    if( zNearFlag )
+    {
+        xParseSEIDepthRepInfoElement(zNear , pDecodedMessageOutputStream);
+        sei.m_zNear.push_back(std::vector<double>(1,zNear));
+    }
+    if( zFarFlag )
+    {
+        xParseSEIDepthRepInfoElement(zFar , pDecodedMessageOutputStream);
+        sei.m_zFar.push_back(std::vector<double>(1,zFar));
+    }
+    if( dMinFlag )
+    {
+        xParseSEIDepthRepInfoElement(dMin , pDecodedMessageOutputStream);
+        sei.m_dMin.push_back(std::vector<double>(1,dMin));
+    }
+    if( dMaxFlag )
+    {
+        xParseSEIDepthRepInfoElement(dMax , pDecodedMessageOutputStream);
+        sei.m_dMax.push_back(std::vector<double>(1,dMax));
+    }
+    if( depth_representation_type  ==  3 )
+    {
+        sei_read_uvlc( pDecodedMessageOutputStream, code, "depth_nonlinear_representation_num_minus1" ); depthNonlinearRepresentationNumMinus1 = code;
+        sei.m_depthNonlinearRepresentationNumMinus1.push_back(IntAry1d(1,depthNonlinearRepresentationNumMinus1));
+        for( Int i = 1; i  <=  depthNonlinearRepresentationNumMinus1 + 1; i++ )
+        {
+            sei_read_uvlc(pDecodedMessageOutputStream,code,"DepthNonlinearRepresentationModel" ) ;
+            DepthNonlinearRepresentationModel.push_back(code);
+        }
 
-Void SEIReader::xParseSEIDepthRepInfoElement(SEIDepthRepInfoElement& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
-{
-  UInt code;
-  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
-
-  sei_read_flag( pDecodedMessageOutputStream, code, "da_sign_flag" ); sei.m_daSignFlag = (code == 1);
-  sei_read_code( pDecodedMessageOutputStream, 7, code, "da_exponent" ); sei.m_daExponent = code;
-  sei_read_code( pDecodedMessageOutputStream, 5, code, "da_mantissa_len_minus1" ); sei.m_daMantissaLenMinus1 = code;
-  sei_read_code( pDecodedMessageOutputStream, getDaMantissaLen ), code, "da_mantissa" ); sei.m_daMantissa = code;
-};
+        sei.m_depth_nonlinear_representation_model.push_back(DepthNonlinearRepresentationModel);
+    }
+}
 #endif
 Void SEIReader::xParseSEIMultiviewSceneInfo(SEIMultiviewSceneInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {

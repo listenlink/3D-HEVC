@@ -404,6 +404,46 @@ namespace df
     {
       xParseVec ( arg, opt_storage[ idcs[0] ][ idcs[1] ] );
     };
+#if SEI_DRI_F0169
+    template<>
+    inline void
+    Option< std::vector<std::vector<double>> >::parse(const std::string& arg, const IntAry1d& idcs, ErrorReporter&)
+    {
+        // xParseVec ( arg, opt_storage[ idcs[0] ] );
+        char* pcNextStart = (char*) arg.data();
+        char* pcEnd = pcNextStart + arg.length();
+
+        char* pcOldStart = 0; 
+
+        size_t iIdx = 0; 
+
+        while (pcNextStart < pcEnd)
+        {
+            errno = 0; 
+
+            if ( iIdx < opt_storage[idcs[0]].size() )
+            {
+                opt_storage[idcs[0]][iIdx] = strtod(pcNextStart, &pcNextStart);
+            }
+            else
+            {
+                opt_storage[idcs[0]].push_back( strtod(pcNextStart, &pcNextStart)) ;
+            }
+            iIdx++; 
+
+            if ( errno == ERANGE || (pcNextStart == pcOldStart) )
+            {
+                std::cerr << "Error Parsing Doubles: `" << arg << "'" << std::endl;
+                exit(EXIT_FAILURE);    
+            };   
+            while( (pcNextStart < pcEnd) && ( *pcNextStart == ' ' || *pcNextStart == '\t' || *pcNextStart == '\r' ) ) pcNextStart++;  
+            pcOldStart = pcNextStart; 
+
+        }       
+
+
+    }
+#endif
 #else
     template<>
     inline void
