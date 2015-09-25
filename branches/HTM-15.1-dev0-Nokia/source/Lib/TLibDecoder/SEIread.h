@@ -119,10 +119,9 @@ protected:
   Void xParseSEIFrameFieldInfo                (SEIFrameFieldInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #endif
   Void xParseSEIThreeDimensionalReferenceDisplaysInfo (SEIThreeDimensionalReferenceDisplaysInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
-#if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
+  Void xParseSEIDepthRepInfoElement           (double &f,std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIDepthRepresentationInfo       (SEIDepthRepresentationInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
-
-  Void xParseSEIDepthRepInfoElement           (SEIDepthRepInfoElement& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #endif
   Void xParseSEIMultiviewSceneInfo            (SEIMultiviewSceneInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 

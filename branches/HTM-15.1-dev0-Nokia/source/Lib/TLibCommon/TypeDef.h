@@ -70,6 +70,9 @@
 #define NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS  1 // Derivation of NumActiveRefLayerPIcs. !!SPEC!! 
 #define NH_MV_FIX_NUM_POC_TOTAL_CUR               1 // Derivation of NumPocTotalCur for IDR pictures. !!SPEC!!
 #define NH_MV_LAYERS_NOT_PRESENT_SEI              1 // Layers not present SEI message JCTMV-M0043
+#if NH_MV_SEI
+#define SEI_DRI_F0169 1
+#endif
 #endif
 #if NH_3D
 #define H_3D_FIX_ARP_CHECK_NOT_IN_DPB     1

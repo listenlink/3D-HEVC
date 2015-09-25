@@ -241,9 +241,9 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
   case SEI::FRAME_FIELD_INFO                      :               return new SEIFrameFieldInfo;
 #endif
   case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:            return new SEIThreeDimensionalReferenceDisplaysInfo;
-#if NH_MV_SEI_TBD
-  case SEI::DEPTH_REPRESENTATION_INFO             :               return new SEIDepthRepresentationInfo;  
-#endif
+#if SEI_DRI_F0169
+  case SEI::DEPTH_REPRESENTATION_INFO             :               return new SEIDepthRepresentationInfo; 
+#endif 
   case SEI::MULTIVIEW_SCENE_INFO                  :               return new SEIMultiviewSceneInfo;
   case SEI::MULTIVIEW_ACQUISITION_INFO            :               return new SEIMultiviewAcquisitionInfo;
   case SEI::MULTIVIEW_VIEW_POSITION               :               return new SEIMultiviewViewPosition;
@@ -1075,159 +1075,174 @@ Bool SEIThreeDimensionalReferenceDisplaysInfo::checkCfg( const TComSlice* slice 
 
 };
 
-#if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
 Void SEIDepthRepresentationInfo::setupFromSlice  ( const TComSlice* slice )
 {
-  sei.m_zNearFlag =  TBD ;
-  sei.m_zFarFlag =  TBD ;
-  sei.m_dMinFlag =  TBD ;
-  sei.m_dMaxFlag =  TBD ;
-  sei.m_depthRepresentationType =  TBD ;
-  if( sei.m_dMinFlag  | |  sei.m_dMaxFlag )
-  {
-    sei.m_disparityRefViewId =  TBD ;
-  }
-  if( sei.m_zNearFlag )
-  {
-    DepthRepInfoElement(() ZNearSign, ZNearExp, ZNearMantissa, ZNearManLen );
-  }
-  if( sei.m_zFarFlag )
-  {
-    DepthRepInfoElement(() ZFarSign, ZFarExp, ZFarMantissa, ZFarManLen );
-  }
-  if( sei.m_dMinFlag )
-  {
-    DepthRepInfoElement(() DMinSign, DMinExp, DMinMantissa, DMinManLen );
-  }
-  if( sei.m_dMaxFlag )
-  {
-    DepthRepInfoElement(() DMaxSign, DMaxExp, DMaxMantissa, DMaxManLen );
-  }
-  if( sei.m_depthRepresentationType  = =  3 )
-  {
-    sei.m_depthNonlinearRepresentationNumMinus1 =  TBD ;
-    for( Int i = 1; i  <=  sei.m_depthNonlinearRepresentationNumMinus1 + 1; i++ )
-    {
-      DepthNonlinearRepresentationModel( i );
-    }
-  }
+
+    m_currLayerID=slice->getLayerIdInVps();
 };
 
 Void SEIDepthRepresentationInfo::setupFromCfgFile(const Char* cfgFile)
 { 
-  // Set default values
-  IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
+    // Set default values
+    IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
-  // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-  defAppLayerIds    .push_back( TBD );
-  defAppPocs        .push_back( TBD );
-  defAppTids        .push_back( TBD );
-  defAppVclNaluTypes.push_back( TBD );
+    // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
+    //defAppLayerIds    .push_back( TBD );
+    defAppPocs        .push_back( 0 );
+    //defAppTids        .push_back( TBD );
+    //defAppVclNaluTypes.push_back( TBD );
 
-  Int      defSeiNaluId                  = 0; 
-  Int      defPositionInSeiNalu          = 0; 
-  Bool     defModifyByEncoder            = TBD; 
+    Int      defSeiNaluId                  = 0; 
+    Int      defPositionInSeiNalu          = 0; 
+    Bool     defModifyByEncoder            = true; 
 
-  // Setup config file options
-  po::Options opts;     
-  xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder ); 
+    // Setup config file options
+    po::Options opts;  
 
-  opts.addOptions()
-    ("ZNearFlag"                      , m_zNearFlag                        , false                          , "ZNearFlag"                        )
-    ("ZFarFlag"                       , m_zFarFlag                         , false                          , "ZFarFlag"                         )
-    ("DMinFlag"                       , m_dMinFlag                         , false                          , "DMinFlag"                         )
-    ("DMaxFlag"                       , m_dMaxFlag                         , false                          , "DMaxFlag"                         )
-    ("DepthRepresentationType"        , m_depthRepresentationType          , 0                              , "DepthRepresentationType"          )
-    ("DisparityRefViewId"             , m_disparityRefViewId               , 0                              , "DisparityRefViewId"               )
-    ("DepthNonlinearRepresentationNumMinus1", m_depthNonlinearRepresentationNumMinus1, 0                              , "DepthNonlinearRepresentationNumMinus1")
-    ;
+    xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder ); 
 
-  po::setDefaults(opts);
+    opts.addOptions()
+        ("ZNear_%d"                      , m_zNear               , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "ZNear"           )
+        ("ZFar_%d"                       , m_zFar                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "ZFar"            )
+        ("DMin_%d"                       , m_dMin                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "DMin"            )
+        ("DMax_%d"                       , m_dMax                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "DMax"            )
+        ("DepthRepresentationInfoSeiPresentFlag_%d",  m_depthRepresentationInfoSeiPresentFlag, BoolAry1d(1,0), MAX_NUM_LAYERS, "DepthRepresentationInfoSeiPresentFlag")
+        ("DepthRepresentationType_%d"        , m_depthRepresentationType          , IntAry1d(0,0), MAX_NUM_LAYERS,  "DepthRepresentationType"        )
+        ("DisparityRefViewId_%d"             , m_disparityRefViewId               ,  IntAry1d(0,0), MAX_NUM_LAYERS,  "DisparityRefViewId"             )
+        ("DepthNonlinearRepresentationNumMinus1_%d", m_depthNonlinearRepresentationNumMinus1, IntAry1d(0,0), MAX_NUM_LAYERS, "DepthNonlinearRepresentationNumMinus1")
+        ("DepthNonlinearRepresentationModel_%d"    , m_depth_nonlinear_representation_model ,   IntAry1d(0,0), MAX_NUM_LAYERS, "DepthNonlinearRepresentationModel") ;
 
-  // Parse the cfg file
-  po::ErrorReporter err;
-  po::parseConfigFile( opts, cfgFile, err );
-};
+
+    po::setDefaults(opts);
+
+    // Parse the cfg file
+    po::ErrorReporter err;
+    po::parseConfigFile( opts, cfgFile, err );
+
+    Bool wrongConfig = false; 
+
+    for(int i=0;i<MAX_NUM_LAYERS;i++)
+    {
+        if (m_zNear[i].size()>0)
+            m_zNearFlag.push_back(true);
+        else
+            m_zNearFlag.push_back(false);
+
+        if (m_zFar[i].size()>0)
+            m_zFarFlag.push_back(true);
+        else
+            m_zFarFlag.push_back(false);
+
+        if (m_dMin[i].size()>0)
+            m_dMinFlag.push_back(true);
+        else
+            m_dMinFlag.push_back(false);
+
+        if (m_dMax[i].size()>0)
+            m_dMaxFlag.push_back(true);
+        else
+            m_dMaxFlag.push_back(false);
+
+
+        if (m_depthRepresentationInfoSeiPresentFlag[i][0])
+        {
+            if ( m_depthRepresentationType[i].size()<=0 )
+            {
+                printf("DepthRepresentationType_%d must be present for layer %d\n",i,i );
+                return;
+            }
+
+            if (  m_depthRepresentationType[i][0]<0 )
+            {
+                printf("DepthRepresentationType_%d must be equal to or greater than 0\n",i );
+                return;
+            }
+
+            if (m_dMinFlag[i] || m_dMaxFlag[i])
+            {
+                if (m_disparityRefViewId[i].size()<=0)
+                {
+                    printf("DisparityRefViewId_%d must be present for layer %d\n",i,i );
+                    assert(false);
+                    return;
+                }
+                if (m_disparityRefViewId[i][0]<0)
+                {
+                    printf("DisparityRefViewId_%d must be equal to or greater than 0\n",i );
+                    assert(false);
+                    return;
+                }
+            }
+
+            if (m_depthRepresentationType[i][0]==3)
+            {
+                if (m_depthNonlinearRepresentationNumMinus1[i].size()<=0)
+                {
+                    printf("DepthNonlinearRepresentationNumMinus1_%d must be present for layer %d\n",i,i );
+                    assert(false);
+                    return;
+                }
+                if (m_depthNonlinearRepresentationNumMinus1[i][0]<0)
+                {
+                    printf("DepthNonlinearRepresentationNumMinus1_%d must be equal to or greater than 0\n",i );
+                    assert(false);
+                    return;
+                }
+
+                if (m_depth_nonlinear_representation_model[i].size() != m_depthNonlinearRepresentationNumMinus1[i][0]+1)
+                {
+                    printf("the number of values in Depth_nonlinear_representation_model must be equal to DepthNonlinearRepresentationNumMinus1+1 in layer %d\n",i );
+                    assert(false);
+                    return;
+                }
+
+
+            }
+
+
+        }
+
+
+   }
+
+    assert(m_zNearFlag.size()==MAX_NUM_LAYERS);
+    assert(m_zFarFlag.size()==MAX_NUM_LAYERS);
+    assert(m_dMinFlag.size()==MAX_NUM_LAYERS);
+    assert(m_dMaxFlag.size()==MAX_NUM_LAYERS);
+}
 
 Bool SEIDepthRepresentationInfo::checkCfg( const TComSlice* slice )
 { 
-  // Check config values
-  Bool wrongConfig = false; 
+    // Check config values
+    Bool wrongConfig = false; 
+    assert(m_currLayerID>=0);
 
-  // TBD: Add constraints on presence of SEI here. 
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
+    if (m_depthRepresentationInfoSeiPresentFlag[m_currLayerID][0]==false)
+    {
+        printf("DepthRepresentationInfoSeiPresentFlag_%d should be equal to 1 when  ApplicableLayerIds is empty or ApplicableLayerIds contains  %d\n",m_currLayerID,slice->getLayerId());
+        assert(false);
+    }
+    // TBD: Add constraints on presence of SEI here. 
+    xCheckCfg     ( wrongConfig, m_depthRepresentationType[m_currLayerID][0] >=0 , "depth_representation_type must be equal to or greater than 0" );
+    if ( m_dMaxFlag[m_currLayerID] || m_dMinFlag[m_currLayerID])
+    {
+        xCheckCfg( wrongConfig , m_disparityRefViewId[m_currLayerID][0]>=0, "disparity_ref_view_id must be equal to or greater than 0 when d_min or d_max are present"); 
+    }
 
-  // TBD: Modify constraints according to the SEI semantics.   
-  xCheckCfgRange( wrongConfig, m_zNearFlag                      , MINVAL , MAXVAL, "z_near_flag"                      );
-  xCheckCfgRange( wrongConfig, m_zFarFlag                       , MINVAL , MAXVAL, "z_far_flag"                       );
-  xCheckCfgRange( wrongConfig, m_dMinFlag                       , MINVAL , MAXVAL, "d_min_flag"                       );
-  xCheckCfgRange( wrongConfig, m_dMaxFlag                       , MINVAL , MAXVAL, "d_max_flag"                       );
-  xCheckCfgRange( wrongConfig, m_depthRepresentationType        , MINVAL , MAXVAL, "depth_representation_type"        );
-  xCheckCfgRange( wrongConfig, m_disparityRefViewId             , MINVAL , MAXVAL, "disparity_ref_view_id"            );
-  xCheckCfgRange( wrongConfig, m_depthNonlinearRepresentationNumMinus1, MINVAL , MAXVAL, "depth_nonlinear_representation_num_minus1");
+    if (m_depthRepresentationType[m_currLayerID][0]==3)          
+    {
+        xCheckCfg(wrongConfig , m_depthNonlinearRepresentationNumMinus1[m_currLayerID][0]>=0, "depth_nonlinear_representation_num_minus1 must be greater than or equal to 0");
 
-  return wrongConfig; 
-};
+        if (m_depthNonlinearRepresentationNumMinus1[m_currLayerID][0]>=0)
+        {
+            xCheckCfg( wrongConfig , m_depthNonlinearRepresentationNumMinus1[m_currLayerID][0]+1 == m_depth_nonlinear_representation_model[m_currLayerID].size() ,"the number of values in depth_nonlinear_representation_model must be equal to depth_nonlinear_representation_num_minus1+1");
+        }
 
-Void SEIDepthRepInfoElement::setupFromSlice  ( const TComSlice* slice )
-{
-  sei.m_daSignFlag =  TBD ;
-  sei.m_daExponent =  TBD ;
-  sei.m_daMantissaLenMinus1 =  TBD ;
-  sei.m_daMantissa =  TBD ;
-};
+    }
 
-Void SEIDepthRepInfoElement::setupFromCfgFile(const Char* cfgFile)
-{ 
-  // Set default values
-  IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
-
-  // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-  defAppLayerIds    .push_back( TBD );
-  defAppPocs        .push_back( TBD );
-  defAppTids        .push_back( TBD );
-  defAppVclNaluTypes.push_back( TBD );
-
-  Int      defSeiNaluId                  = 0; 
-  Int      defPositionInSeiNalu          = 0; 
-  Bool     defModifyByEncoder            = TBD; 
-
-  // Setup config file options
-  po::Options opts;     
-  xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder ); 
-
-  opts.addOptions()
-    ("DaSignFlag"                     , m_daSignFlag                       , false                          , "DaSignFlag"                       )
-    ("DaExponent"                     , m_daExponent                       , 0                              , "DaExponent"                       )
-    ("DaMantissaLenMinus1"            , m_daMantissaLenMinus1              , 0                              , "DaMantissaLenMinus1"              )
-    ("DaMantissa"                     , m_daMantissa                       , 0                              , "DaMantissa"                       )
-    ;
-
-  po::setDefaults(opts);
-
-  // Parse the cfg file
-  po::ErrorReporter err;
-  po::parseConfigFile( opts, cfgFile, err );
-};
-
-Bool SEIDepthRepInfoElement::checkCfg( const TComSlice* slice )
-{ 
-  // Check config values
-  Bool wrongConfig = false; 
-
-  // TBD: Add constraints on presence of SEI here. 
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-
-  // TBD: Modify constraints according to the SEI semantics.   
-  xCheckCfgRange( wrongConfig, m_daSignFlag                     , MINVAL , MAXVAL, "da_sign_flag"                     );
-  xCheckCfgRange( wrongConfig, m_daExponent                     , MINVAL , MAXVAL, "da_exponent"                      );
-  xCheckCfgRange( wrongConfig, m_daMantissaLenMinus1            , MINVAL , MAXVAL, "da_mantissa_len_minus1"           );
-  xCheckCfgRange( wrongConfig, m_daMantissa                     , MINVAL , MAXVAL, "da_mantissa"                      );
-
-  return wrongConfig; 
-};
+    return wrongConfig; 
+}
 #endif
 
 Void SEIMultiviewSceneInfo::setupFromCfgFile(const Char* cfgFile)

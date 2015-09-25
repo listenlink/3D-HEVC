@@ -101,9 +101,9 @@ protected:
   Void xWriteSEIFrameFieldInfo                ( const SEIFrameFieldInfo& sei);
 #endif
   Void xWriteSEIThreeDimensionalReferenceDisplaysInfo ( const SEIThreeDimensionalReferenceDisplaysInfo& sei);
-#if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
+  Void xWriteSEIDepthRepInfoElement           ( double f);
   Void xWriteSEIDepthRepresentationInfo       ( const SEIDepthRepresentationInfo& sei);
-  Void xWriteSEIDepthRepInfoElement           ( const SEIDepthRepInfoElement& sei);
 #endif
   Void xWriteSEIMultiviewSceneInfo            ( const SEIMultiviewSceneInfo& sei);
   Void xWriteSEIMultiviewAcquisitionInfo      ( const SEIMultiviewAcquisitionInfo& sei);

@@ -924,44 +924,74 @@ private:
   UInt xGetSyntaxElementLen( Int expo, Int prec, Int val ) const; 
 };
 
-#if NH_MV_SEI_TBD
+#if SEI_DRI_F0169
 class SEIDepthRepresentationInfo : public SEI
 {
-public:
-  PayloadType payloadType( ) const { return DEPTH_REPRESENTATION_INFO; }
-  SEIDepthRepresentationInfo ( ) { };
-  ~SEIDepthRepresentationInfo( ) { };
-  SEI* getCopy( ) const { return new SEIDepthRepresentationInfo(*this); }; 
+    public:
+        PayloadType payloadType( ) const { return DEPTH_REPRESENTATION_INFO; }
+        SEIDepthRepresentationInfo ( ) 
+        {
+            m_currLayerID=-1;
+        };
+        ~SEIDepthRepresentationInfo( ) { };
+        SEI* getCopy( ) const { return new SEIDepthRepresentationInfo(*this); }; 
 
-  Void setupFromCfgFile( const Char*      cfgFile );
-  Void setupFromSlice  ( const TComSlice* slice   );
-  Bool checkCfg        ( const TComSlice* slice   );
+        Void setupFromCfgFile( const Char*      cfgFile );
+        Void setupFromSlice  ( const TComSlice* slice   );
+        Bool checkCfg        ( const TComSlice* slice   );
+        Void clear()
+        {
+            int i;
+            m_zNearFlag.clear();
+            m_zFarFlag.clear();
+            m_dMinFlag.clear();
+            m_dMaxFlag.clear();
 
-  Bool      m_zNearFlag;
-  Bool      m_zFarFlag;
-  Bool      m_dMinFlag;
-  Bool      m_dMaxFlag;
-  Int       m_depthRepresentationType;
-  Int       m_disparityRefViewId;
-  Int       m_depthNonlinearRepresentationNumMinus1;
-};
+            for(i=0;i<m_zNear.size();i++)
+                m_zNear[i].clear();
+            m_zNear.clear();
 
-class SEIDepthRepInfoElement : public SEI
-{
-public:
-  PayloadType payloadType( ) const { return DEPTH_REP_INFO_ELEMENT; }
-  SEIDepthRepInfoElement ( ) { };
-  ~SEIDepthRepInfoElement( ) { };
-  SEI* getCopy( ) const { return new SEIDepthRepInfoElement(*this); }; 
+            for(i=0;i<m_zFar.size();i++)
+                m_zFar[i].clear();
+            m_zFar.clear();
 
-  Void setupFromCfgFile( const Char*      cfgFile );
-  Void setupFromSlice  ( const TComSlice* slice   );
-  Bool checkCfg        ( const TComSlice* slice   );
+            for(i=0;i<m_dMin.size();i++)
+                m_dMin[i].clear();
+            m_dMin.clear();
 
-  Bool      m_daSignFlag;
-  Int       m_daExponent;
-  Int       m_daMantissaLenMinus1;
-  Int       m_daMantissa;
+            for(i=0;i<m_dMax.size();i++)
+                m_dMax[i].clear();
+            m_dMax.clear();
+
+            for(i=0;i<m_depthRepresentationType.size();i++)
+                m_depthRepresentationType[i].clear();
+            m_depthRepresentationType.clear();
+
+            for(i=0;i<m_disparityRefViewId.size();i++)
+                m_disparityRefViewId[i].clear();
+            m_disparityRefViewId.clear();
+
+            for(i=0;i<m_depthNonlinearRepresentationNumMinus1.size();i++)
+                m_depthNonlinearRepresentationNumMinus1[i].clear();
+            m_depthNonlinearRepresentationNumMinus1.clear();
+
+            for(i=0;i<m_depth_nonlinear_representation_model.size();i++)
+                m_depth_nonlinear_representation_model[i].clear();
+            m_depth_nonlinear_representation_model.clear();            
+
+        }
+        int m_currLayerID;
+        BoolAry1d      m_zNearFlag;
+        BoolAry1d      m_zFarFlag;
+        BoolAry1d      m_dMinFlag;
+        BoolAry1d      m_dMaxFlag;
+        BoolAry2d      m_depthRepresentationInfoSeiPresentFlag;
+        std::vector<std::vector<Double>> m_zNear,m_zFar,m_dMin,m_dMax;
+
+        IntAry2d       m_depthRepresentationType;
+        IntAry2d       m_disparityRefViewId;
+        IntAry2d       m_depthNonlinearRepresentationNumMinus1;
+        IntAry2d m_depth_nonlinear_representation_model;
 };
 #endif
 
