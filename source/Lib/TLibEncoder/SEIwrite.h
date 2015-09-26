@@ -71,7 +71,9 @@ protected:
   Void xWriteSEISOPDescription(const SEISOPDescription& sei);
   Void xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, const TComSPS *sps);
 #if NH_MV
+#if !NH_MV_SEI
   Void xWriteSEISubBitstreamProperty(const SEISubBitstreamProperty &sei);
+#endif
 #endif
   Void xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstrainedTileSets& sei);
   Void xWriteSEITimeCode(const SEITimeCode& sei);
@@ -80,8 +82,38 @@ protected:
   Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
   Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
 
+#if NH_MV_SEI
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+  Void xWriteSEILayersNotPresent              ( const SEILayersNotPresent& sei);
+#endif
+  Void xWriteSEIInterLayerConstrainedTileSets ( const SEIInterLayerConstrainedTileSets& sei);
+#if NH_MV_SEI_TBD
+  Void xWriteSEIBspNesting                    ( const SEIBspNesting& sei);
+  Void xWriteSEIBspInitialArrivalTime         ( const SEIBspInitialArrivalTime& sei);
+#endif
+  Void xWriteSEISubBitstreamProperty          ( const SEISubBitstreamProperty& sei);
+  Void xWriteSEIAlphaChannelInfo              ( const SEIAlphaChannelInfo& sei);
+#if NH_MV_SEI_TBD
+  Void xWriteSEIOverlayInfo                   ( const SEIOverlayInfo& sei);
+#endif
+  Void xWriteSEITemporalMvPredictionConstraints ( const SEITemporalMvPredictionConstraints& sei);
+#if NH_MV_SEI_TBD
+  Void xWriteSEIFrameFieldInfo                ( const SEIFrameFieldInfo& sei);
+#endif
+  Void xWriteSEIThreeDimensionalReferenceDisplaysInfo ( const SEIThreeDimensionalReferenceDisplaysInfo& sei);
+#if SEI_DRI_F0169
+  Void xWriteSEIDepthRepInfoElement           ( double f);
+  Void xWriteSEIDepthRepresentationInfo       ( const SEIDepthRepresentationInfo& sei);
+#endif
+  Void xWriteSEIMultiviewSceneInfo            ( const SEIMultiviewSceneInfo& sei);
+  Void xWriteSEIMultiviewAcquisitionInfo      ( const SEIMultiviewAcquisitionInfo& sei);
+  Void xWriteSEIMultiviewViewPosition         ( const SEIMultiviewViewPosition& sei);
+#if NH_MV_SEI_TBD
+  Void xWriteSEIAlternativeDepthInfo          ( const SEIAlternativeDepthInfo& sei);
+#endif
   Void xWriteByteAlign();
 };
+#endif
 
 //! \}
 

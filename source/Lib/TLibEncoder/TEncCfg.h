@@ -50,6 +50,10 @@
 #include "TLibRenderer/TRenModSetupStrParser.h"
 #endif
 
+#if NH_MV
+#include "TLibCommon/SEI.h"
+#endif
+
 struct GOPEntry
 {
   Int m_POC;
@@ -349,6 +353,9 @@ protected:
   Int*      m_kneeSEIInputKneePoint;
   Int*      m_kneeSEIOutputKneePoint;
   TComSEIMasteringDisplay m_masteringDisplay;
+#if NH_MV_SEI
+  SEIMessages* m_seiMessages; 
+#endif
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -431,6 +438,7 @@ protected:
   UInt        m_summaryVerboseness;                           ///< Specifies the level of the verboseness of the text output.
 
 #if NH_MV
+#if !NH_MV_SEI
   Bool              m_subBistreamPropSEIEnabled;
   Int               m_numAdditionalSubStreams;
   std::vector<Int>  m_subBitstreamMode;
@@ -438,6 +446,7 @@ protected:
   std::vector<Int>  m_highestSublayerId;
   std::vector<Int>  m_avgBitRate;
   std::vector<Int>  m_maxBitRate;
+#endif
 #endif
 
 #if NH_MV
@@ -932,6 +941,10 @@ public:
   Void  setMasteringDisplaySEI(const TComSEIMasteringDisplay &src)   { m_masteringDisplay = src; }
   const TComSEIMasteringDisplay &getMasteringDisplaySEI() const      { return m_masteringDisplay; }
 #if NH_MV
+#if NH_MV_SEI
+  Void setSeiMessages(SEIMessages *p)                                { m_seiMessages = p;    }
+  const SEIMessages*  getSeiMessages()                               { return m_seiMessages; }
+#else
   Bool   getSubBitstreamPropSEIEnabled()                             { return m_subBistreamPropSEIEnabled;}
   Void   setSubBitstreamPropSEIEnabled(Bool x)                       { m_subBistreamPropSEIEnabled = x;}
                                                                      
@@ -957,7 +970,7 @@ public:
   std::vector<Int> const &getMaxBitRate()                            { return m_maxBitRate;}
   Int   getMaxBitRate(Int idx)                                       { return m_maxBitRate[idx];}
   Void  setMaxBitRate(std::vector<Int> &x)                           { m_maxBitRate = x;}
-
+#endif
 #endif
 
   Void         setUseWP               ( Bool b )                     { m_useWeightedPred   = b;    }
