@@ -233,9 +233,7 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
 #endif
   case SEI::SUB_BITSTREAM_PROPERTY                :               return new SEISubBitstreamProperty;
   case SEI::ALPHA_CHANNEL_INFO                    :               return new SEIAlphaChannelInfo;
-#if NH_MV_SEI_TBD
   case SEI::OVERLAY_INFO                          :               return new SEIOverlayInfo;
-#endif
   case SEI::TEMPORAL_MV_PREDICTION_CONSTRAINTS    :               return new SEITemporalMvPredictionConstraints;
 #if NH_MV_SEI_TBD
   case SEI::FRAME_FIELD_INFO                      :               return new SEIFrameFieldInfo;
@@ -739,63 +737,35 @@ Bool SEIAlphaChannelInfo::checkCfg( const TComSlice* slice )
   return wrongConfig; 
 
 };
-#if NH_MV_SEI_TBD
-Void SEIOverlayInfo::setupFromSlice  ( const TComSlice* slice )
+
+SEIOverlayInfo::SEIOverlayInfo ( ) 
+  : m_numOverlaysMax(16)
+  , m_numOverlayElementsMax(256)
+  , m_numStringBytesMax(256) //incl. null termination byte
+{ };
+
+Void SEIOverlayInfo::initStringElements ( )  
 {
-  sei.m_overlayInfoCancelFlag =  TBD ;
-  if( !sei.m_overlayInfoCancelFlag )
+  // Set some string values for syntax elements of declarator type st(v)
+  m_overlayLanguage.resize(m_numOverlaysMax);
+  m_overlayName.resize(m_numOverlaysMax);
+  m_overlayElementName.resize(m_numOverlaysMax);
+  char* cstr = new char[m_numStringBytesMax];
+  for ( Int i=0 ; i<m_numOverlaysMax ; i++ )
   {
-    sei.m_overlayContentAuxIdMinus128 =  TBD ;
-    sei.m_overlayLabelAuxIdMinus128 =  TBD ;
-    sei.m_overlayAlphaAuxIdMinus128 =  TBD ;
-    sei.m_overlayElementLabelValueLengthMinus8 =  TBD ;
-    sei.m_numOverlaysMinus1 =  TBD ;
-    for( Int i = 0; i  <=  NumOverlaysMinus1( ); i++ )
+    sprintf(cstr, "LanguageTag%02d", i);
+    m_overlayLanguage[i] = std::string(cstr);
+    sprintf(cstr, "Overlay%02dName", i);
+    m_overlayName[i] = std::string(cstr);
+
+    m_overlayElementName[i].resize(m_numOverlayElementsMax);
+    for ( Int j=0 ; j<m_numOverlayElementsMax ; j++ )
     {
-      sei.m_overlayIdx[i] =  TBD ;
-      sei.m_languageOverlayPresentFlag[i] =  TBD ;
-      sei.m_overlayContentLayerId[i] =  TBD ;
-      sei.m_overlayLabelPresentFlag[i] =  TBD ;
-      if( sei.m_overlayLabelPresentFlag( i ) )
-      {
-        sei.m_overlayLabelLayerId[i] =  TBD ;
-      }
-      sei.m_overlayAlphaPresentFlag[i] =  TBD ;
-      if( sei.m_overlayAlphaPresentFlag( i ) )
-      {
-        sei.m_overlayAlphaLayerId[i] =  TBD ;
-      }
-      if( sei.m_overlayLabelPresentFlag( i ) )
-      {
-        sei.m_numOverlayElementsMinus1[i] =  TBD ;
-        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1( i ); j++ )
-        {
-          sei.m_overlayElementLabelMin[i][j] =  TBD ;
-          sei.m_overlayElementLabelMax[i][j] =  TBD ;
-        }
-      }
+      sprintf(cstr, "Overlay%02dElement%03dName", i, j);
+      m_overlayElementName[i][j] = std::string(cstr);
     }
-    while( !ByteaLigned(() ) );
-    {
-      sei.m_overlayZeroBit =  TBD ;
-    }
-    for( Int i = 0; i  <=  NumOverlaysMinus1( ); i++ )
-    {
-      if( sei.m_languageOverlayPresentFlag( i ) )
-      {
-        sei.m_overlayLanguage[i] =  TBD ;
-      }
-      sei.m_overlayName[i] =  TBD ;
-      if( sei.m_overlayLabelPresentFlag( i ) )
-      {
-        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1( i ); j++ )
-        {
-          sei.m_overlayElementName[i][j] =  TBD ;
-        }
-      }
-    }
-    sei.m_overlayInfoPersistenceFlag =  TBD ;
   }
+  delete [] cstr;
 };
 
 Void SEIOverlayInfo::setupFromCfgFile(const Char* cfgFile)
@@ -803,87 +773,84 @@ Void SEIOverlayInfo::setupFromCfgFile(const Char* cfgFile)
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
-  // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-  defAppLayerIds    .push_back( TBD );
-  defAppPocs        .push_back( TBD );
-  defAppTids        .push_back( TBD );
-  defAppVclNaluTypes.push_back( TBD );
+  // Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
+  defAppLayerIds    .clear();
+  defAppPocs        .push_back( 0 );
+  defAppTids        .push_back( 0 );
+  defAppVclNaluTypes = IDR_NAL_UNIT_TYPES;
 
   Int      defSeiNaluId                  = 0; 
   Int      defPositionInSeiNalu          = 0; 
-  Bool     defModifyByEncoder            = TBD; 
+  Bool     defModifyByEncoder            = false; 
 
   // Setup config file options
   po::Options opts;     
   xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder ); 
 
   opts.addOptions()
-    ("OverlayInfoCancelFlag"          , m_overlayInfoCancelFlag            , false                          , "OverlayInfoCancelFlag"            )
-    ("OverlayContentAuxIdMinus128"    , m_overlayContentAuxIdMinus128      , 0                              , "OverlayContentAuxIdMinus128"      )
-    ("OverlayLabelAuxIdMinus128"      , m_overlayLabelAuxIdMinus128        , 0                              , "OverlayLabelAuxIdMinus128"        )
-    ("OverlayAlphaAuxIdMinus128"      , m_overlayAlphaAuxIdMinus128        , 0                              , "OverlayAlphaAuxIdMinus128"        )
-    ("OverlayElementLabelValueLengthMinus8", m_overlayElementLabelValueLengthMinus8, 0                              , "OverlayElementLabelValueLengthMinus8")
-    ("NumOverlaysMinus1"              , m_numOverlaysMinus1                , 0                              , "NumOverlaysMinus1"                )
-    ("OverlayIdx"                     , m_overlayIdx                       , IntAry1d (1,0)                 , "OverlayIdx"                       )
-    ("LanguageOverlayPresentFlag"     , m_languageOverlayPresentFlag       , BoolAry1d(1,0)                 , "LanguageOverlayPresentFlag"       )
-    ("OverlayContentLayerId"          , m_overlayContentLayerId            , IntAry1d (1,0)                 , "OverlayContentLayerId"            )
-    ("OverlayLabelPresentFlag"        , m_overlayLabelPresentFlag          , BoolAry1d(1,0)                 , "OverlayLabelPresentFlag"          )
-    ("OverlayLabelLayerId"            , m_overlayLabelLayerId              , IntAry1d (1,0)                 , "OverlayLabelLayerId"              )
-    ("OverlayAlphaPresentFlag"        , m_overlayAlphaPresentFlag          , BoolAry1d(1,0)                 , "OverlayAlphaPresentFlag"          )
-    ("OverlayAlphaLayerId"            , m_overlayAlphaLayerId              , IntAry1d (1,0)                 , "OverlayAlphaLayerId"              )
-    ("NumOverlayElementsMinus1"       , m_numOverlayElementsMinus1         , IntAry1d (1,0)                 , "NumOverlayElementsMinus1"         )
-    ("OverlayElementLabelMin_%d"      , m_overlayElementLabelMin           , IntAry1d (1,0) ,ADDNUM         , "OverlayElementLabelMin"           )
-    ("OverlayElementLabelMax_%d"      , m_overlayElementLabelMax           , IntAry1d (1,0) ,ADDNUM         , "OverlayElementLabelMax"           )
-    ("OverlayZeroBit"                 , m_overlayZeroBit                   , 0                              , "OverlayZeroBit"                   )
-    ("OverlayLanguage"                , m_overlayLanguage                  , IntAry1d (1,0)                 , "OverlayLanguage"                  )
-    ("OverlayName"                    , m_overlayName                      , IntAry1d (1,0)                 , "OverlayName"                      )
-    ("OverlayElementName_%d"          , m_overlayElementName               , IntAry1d (1,0) ,ADDNUM         , "OverlayElementName"               )
-    ("OverlayInfoPersistenceFlag"     , m_overlayInfoPersistenceFlag       , false                          , "OverlayInfoPersistenceFlag"       )
-    ;
+    ("OverlayInfoCancelFlag"          , m_overlayInfoCancelFlag            , false                           , "OverlayInfoCancelFlag"            )
+    ("OverlayContentAuxIdMinus128"    , m_overlayContentAuxIdMinus128      , 0                               , "OverlayContentAuxIdMinus128"      )
+    ("OverlayLabelAuxIdMinus128"      , m_overlayLabelAuxIdMinus128        , 0                               , "OverlayLabelAuxIdMinus128"        )
+    ("OverlayAlphaAuxIdMinus128"      , m_overlayAlphaAuxIdMinus128        , 0                               , "OverlayAlphaAuxIdMinus128"        )
+    ("OverlayElementLabelValueLengthMinus8", m_overlayElementLabelValueLengthMinus8, 0                       , "OverlayElementLabelValueLengthMinus8")
+    ("NumOverlaysMinus1"              , m_numOverlaysMinus1                , 0                               , "NumOverlaysMinus1"                )
+    ("OverlayIdx"                     , m_overlayIdx                       , IntAry1d (16,0)                 , "OverlayIdx"                       )
+    ("LanguageOverlayPresentFlag"     , m_languageOverlayPresentFlag       , BoolAry1d(16,0)                 , "LanguageOverlayPresentFlag"       )
+    ("OverlayContentLayerId"          , m_overlayContentLayerId            , IntAry1d (16,0)                 , "OverlayContentLayerId"            )
+    ("OverlayLabelPresentFlag"        , m_overlayLabelPresentFlag          , BoolAry1d(16,0)                 , "OverlayLabelPresentFlag"          )
+    ("OverlayLabelLayerId"            , m_overlayLabelLayerId              , IntAry1d (16,0)                 , "OverlayLabelLayerId"              )
+    ("OverlayAlphaPresentFlag"        , m_overlayAlphaPresentFlag          , BoolAry1d(16,0)                 , "OverlayAlphaPresentFlag"          )
+    ("OverlayAlphaLayerId"            , m_overlayAlphaLayerId              , IntAry1d (16,0)                 , "OverlayAlphaLayerId"              )
+    ("NumOverlayElementsMinus1"       , m_numOverlayElementsMinus1         , IntAry1d (16,0)                 , "NumOverlayElementsMinus1"         )
+    ("OverlayElementLabelMin_%d"      , m_overlayElementLabelMin           , IntAry1d (256,0) ,16            , "OverlayElementLabelMin"           )
+    ("OverlayElementLabelMax_%d"      , m_overlayElementLabelMax           , IntAry1d (256,0) ,16            , "OverlayElementLabelMax"           )        
+    ("OverlayInfoPersistenceFlag"     , m_overlayInfoPersistenceFlag       , false                           , "OverlayInfoPersistenceFlag"       )
+    ; 
 
   po::setDefaults(opts);
 
   // Parse the cfg file
   po::ErrorReporter err;
   po::parseConfigFile( opts, cfgFile, err );
+
+  // Initialize some values for syntax elements with declaration type st(v) (i.e. string type syntax elements)
+  initStringElements();
 };
+
 
 Bool SEIOverlayInfo::checkCfg( const TComSlice* slice )
 { 
   // Check config values
-  Bool wrongConfig = false; 
+  Bool wrongConfig = false;   
 
-  // TBD: Add constraints on presence of SEI here. 
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-
-  // TBD: Modify constraints according to the SEI semantics.   
-  xCheckCfgRange( wrongConfig, m_overlayInfoCancelFlag          , MINVAL , MAXVAL, "overlay_info_cancel_flag"         );
-  xCheckCfgRange( wrongConfig, m_overlayContentAuxIdMinus128    , MINVAL , MAXVAL, "overlay_content_aux_id_minus128"  );
-  xCheckCfgRange( wrongConfig, m_overlayLabelAuxIdMinus128      , MINVAL , MAXVAL, "overlay_label_aux_id_minus128"    );
-  xCheckCfgRange( wrongConfig, m_overlayAlphaAuxIdMinus128      , MINVAL , MAXVAL, "overlay_alpha_aux_id_minus128"    );
-  xCheckCfgRange( wrongConfig, m_overlayElementLabelValueLengthMinus8, MINVAL , MAXVAL, "overlay_element_label_value_length_minus8");
-  xCheckCfgRange( wrongConfig, m_numOverlaysMinus1              , MINVAL , MAXVAL, "num_overlays_minus1"  );
-  xCheckCfgRange( wrongConfig, m_overlayIdx[i]                  , MINVAL , MAXVAL, "overlay_idx"          );
-  xCheckCfgRange( wrongConfig, m_languageOverlayPresentFlag[i]  , MINVAL , MAXVAL, "language_overlay_present_flag"    );
-  xCheckCfgRange( wrongConfig, m_overlayContentLayerId[i]       , MINVAL , MAXVAL, "overlay_content_layer_id"         );
-  xCheckCfgRange( wrongConfig, m_overlayLabelPresentFlag[i]     , MINVAL , MAXVAL, "overlay_label_present_flag"       );
-  xCheckCfgRange( wrongConfig, m_overlayLabelLayerId[i]         , MINVAL , MAXVAL, "overlay_label_layer_id"           );
-  xCheckCfgRange( wrongConfig, m_overlayAlphaPresentFlag[i]     , MINVAL , MAXVAL, "overlay_alpha_present_flag"       );
-  xCheckCfgRange( wrongConfig, m_overlayAlphaLayerId[i]         , MINVAL , MAXVAL, "overlay_alpha_layer_id"           );
-  xCheckCfgRange( wrongConfig, m_numOverlayElementsMinus1[i]    , MINVAL , MAXVAL, "num_overlay_elements_minus1"       );
-  xCheckCfgRange( wrongConfig, m_overlayElementLabelMin[i][j]   , MINVAL , MAXVAL, "overlay_element_label_min"        );
-  xCheckCfgRange( wrongConfig, m_overlayElementLabelMax[i][j]   , MINVAL , MAXVAL, "overlay_element_label_max"        );
-  xCheckCfgRange( wrongConfig, m_overlayZeroBit                 , MINVAL , MAXVAL, "overlay_zero_bit"                 );
-  xCheckCfgRange( wrongConfig, m_overlayLanguage[i]             , MINVAL , MAXVAL, "overlay_language"                 );
-  xCheckCfgRange( wrongConfig, m_overlayName[i]                 , MINVAL , MAXVAL, "overlay_name"                     );
-  xCheckCfgRange( wrongConfig, m_overlayElementName[i][j]       , MINVAL , MAXVAL, "overlay_element_name"             );
-  xCheckCfgRange( wrongConfig, m_overlayInfoPersistenceFlag     , MINVAL , MAXVAL, "overlay_info_persistence_flag"    );
+  xCheckCfgRange( wrongConfig, m_overlayInfoCancelFlag          , 0 ,   1, "overlay_info_cancel_flag"         );
+  xCheckCfgRange( wrongConfig, m_overlayContentAuxIdMinus128    , 0 ,  31, "overlay_content_aux_id_minus128"  );
+  xCheckCfgRange( wrongConfig, m_overlayLabelAuxIdMinus128      , 0 ,  31, "overlay_label_aux_id_minus128"    );
+  xCheckCfgRange( wrongConfig, m_overlayAlphaAuxIdMinus128      , 0 ,  31, "overlay_alpha_aux_id_minus128"    );
+  xCheckCfgRange( wrongConfig, m_numOverlaysMinus1              , 0 ,  m_numOverlaysMax-1, "num_overlays_minus1"  );
+  for (Int i=0 ; i<=m_numOverlaysMinus1 ; ++i)
+  {
+    xCheckCfgRange( wrongConfig, m_overlayIdx[i]                  , 0 , 255, "overlay_idx"          );
+    xCheckCfgRange( wrongConfig, m_languageOverlayPresentFlag[i]  , 0 ,   1, "language_overlay_present_flag"    );
+    xCheckCfgRange( wrongConfig, m_overlayLabelPresentFlag[i]     , 0 ,   1, "overlay_label_present_flag"       );  
+    xCheckCfgRange( wrongConfig, m_overlayAlphaPresentFlag[i]     , 0 ,   1, "overlay_alpha_present_flag"       );
+    xCheckCfgRange( wrongConfig, m_overlayContentLayerId[i]       , 0 ,   63, "overlay_content_layer_id"    );
+    xCheckCfgRange( wrongConfig, m_overlayLabelLayerId[i]         , 0 ,   63, "overlay_label_layer_id"    );
+    xCheckCfgRange( wrongConfig, m_overlayAlphaLayerId[i]         , 0 ,   63, "overlay_alpha_layer_id"    );    
+    xCheckCfgRange( wrongConfig, m_numOverlayElementsMinus1[i]    , 0 , m_numOverlayElementsMax-1, "num_overlay_elements_minus1"       );     
+    for (Int j=0 ; j<=m_numOverlayElementsMinus1[i] ; ++j)
+    {      
+      Int maxLabelMinMaxValue = ( 1 << ( m_overlayElementLabelValueLengthMinus8 + 8 ) )-1;
+      xCheckCfgRange( wrongConfig, m_overlayElementLabelMin[i][j] , 0 , maxLabelMinMaxValue , "overlay_element_label_min"    );
+      xCheckCfgRange( wrongConfig, m_overlayElementLabelMax[i][j] , 0 , maxLabelMinMaxValue , "overlay_element_label_max"    );        
+    }        
+  }  
+  xCheckCfgRange( wrongConfig, m_overlayInfoPersistenceFlag     , 0 ,   1, "overlay_info_persistence_flag"    );
 
   return wrongConfig; 
 
 };
-#endif
+
 
 Void SEITemporalMvPredictionConstraints::setupFromCfgFile(const Char* cfgFile)
 { 

@@ -98,6 +98,15 @@ Void SEIReader::sei_read_flag(std::ostream *pOS, UInt& ruiCode, const Char *pSym
   }
 }
 
+Void SEIReader::sei_read_string(std::ostream *pOS, UInt uiBufSize, UChar* pucCode, UInt& ruiLength, const Char *pSymbolName)
+{  
+  READ_STRING(uiBufSize, pucCode, ruiLength, pSymbolName);
+  if (pOS)
+  {
+    (*pOS) << "  " << pSymbolName << ": " << (const char*) pucCode << "\n";
+  }
+}
+
 #if NH_MV_SEI
 inline Void SEIReader::output_sei_message_header(SEI &sei, std::ostream *pDecodedMessageOutputStream, UInt payloadSize)
 #else
@@ -339,12 +348,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIAlphaChannelInfo;
       xParseSEIAlphaChannelInfo((SEIAlphaChannelInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#if NH_MV_SEI_TBD
     case SEI::OVERLAY_INFO:
       sei = new SEIOverlayInfo;
       xParseSEIOverlayInfo((SEIOverlayInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#endif
     case SEI::TEMPORAL_MV_PREDICTION_CONSTRAINTS:
       sei = new SEITemporalMvPredictionConstraints;
       xParseSEITemporalMvPredictionConstraints((SEITemporalMvPredictionConstraints&) *sei, payloadSize, pDecodedMessageOutputStream );
@@ -1356,7 +1363,6 @@ Void SEIReader::xParseSEIAlphaChannelInfo(SEIAlphaChannelInfo& sei, UInt payload
   }
 };
 
-#if NH_MV_SEI_TBD
 Void SEIReader::xParseSEIOverlayInfo(SEIOverlayInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;
@@ -1365,59 +1371,85 @@ Void SEIReader::xParseSEIOverlayInfo(SEIOverlayInfo& sei, UInt payloadSize, std:
   sei_read_flag( pDecodedMessageOutputStream, code, "overlay_info_cancel_flag" ); sei.m_overlayInfoCancelFlag = (code == 1);
   if( !sei.m_overlayInfoCancelFlag )
   {
-    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_content_aux_id_minus128" ); sei.m_overlayContentAuxIdMinus128 = code;
-    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_label_aux_id_minus128" ); sei.m_overlayLabelAuxIdMinus128 = code;
-    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_alpha_aux_id_minus128" ); sei.m_overlayAlphaAuxIdMinus128 = code;
-    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_element_label_value_length_minus8" ); sei.m_overlayElementLabelValueLengthMinus8 = code;
-    sei_read_uvlc( pDecodedMessageOutputStream, code, "num_overlays_minus1" ); sei.m_numOverlaysMinus1 = code;
-    for( Int i = 0; i  <=  NumOverlaysMinus1( ); i++ )
+    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_content_aux_id_minus128" );            sei.m_overlayContentAuxIdMinus128 = code;
+    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_label_aux_id_minus128" );              sei.m_overlayLabelAuxIdMinus128 = code;
+    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_alpha_aux_id_minus128" );              sei.m_overlayAlphaAuxIdMinus128 = code;
+    sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_element_label_value_length_minus8" );  sei.m_overlayElementLabelValueLengthMinus8 = code;
+    sei_read_uvlc( pDecodedMessageOutputStream, code, "num_overlays_minus1" );                        sei.m_numOverlaysMinus1 = code;
+
+    sei.m_overlayIdx.resize( sei.m_numOverlaysMinus1+1 );
+    sei.m_languageOverlayPresentFlag.resize( sei.m_numOverlaysMinus1+1 );
+    sei.m_overlayContentLayerId.resize     ( sei.m_numOverlaysMinus1+1 );
+    sei.m_overlayLabelPresentFlag.resize   ( sei.m_numOverlaysMinus1+1 );
+    sei.m_overlayLabelLayerId.resize       ( sei.m_numOverlaysMinus1+1 );
+    sei.m_overlayAlphaPresentFlag.resize   ( sei.m_numOverlaysMinus1+1 );
+    sei.m_overlayAlphaLayerId.resize       ( sei.m_numOverlaysMinus1+1 );
+    sei.m_numOverlayElementsMinus1.resize  ( sei.m_numOverlaysMinus1+1 );
+    sei.m_overlayElementLabelMin.resize    ( sei.m_numOverlaysMinus1+1 );
+    sei.m_overlayElementLabelMax.resize    ( sei.m_numOverlaysMinus1+1 );
+    for( Int i = 0; i  <=  sei.m_numOverlaysMinus1; i++ )
     {
-      sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_idx" ); sei.m_overlayIdx[i] = code;
-      sei_read_flag( pDecodedMessageOutputStream, code, "language_overlay_present_flag" ); sei.m_languageOverlayPresentFlag[i] = (code == 1);
-      sei_read_code( pDecodedMessageOutputStream, 6, code, "overlay_content_layer_id" ); sei.m_overlayContentLayerId[i] = code;
-      sei_read_flag( pDecodedMessageOutputStream, code, "overlay_label_present_flag" ); sei.m_overlayLabelPresentFlag[i] = (code == 1);
-      if( sei.m_overlayLabelPresentFlag( i ) )
+      sei_read_uvlc( pDecodedMessageOutputStream, code, "overlay_idx" );                    sei.m_overlayIdx[i]                 = code;
+      sei_read_flag( pDecodedMessageOutputStream, code, "language_overlay_present_flag" );  sei.m_languageOverlayPresentFlag[i] = (code == 1);
+      sei_read_code( pDecodedMessageOutputStream, 6, code, "overlay_content_layer_id" );    sei.m_overlayContentLayerId[i]      = code;
+      sei_read_flag( pDecodedMessageOutputStream, code, "overlay_label_present_flag" );     sei.m_overlayLabelPresentFlag[i]    = (code == 1);
+      if( sei.m_overlayLabelPresentFlag[i] )
       {
-        sei_read_code( pDecodedMessageOutputStream, 6, code, "overlay_label_layer_id" ); sei.m_overlayLabelLayerId[i] = code;
+        sei_read_code( pDecodedMessageOutputStream, 6, code, "overlay_label_layer_id" );     sei.m_overlayLabelLayerId[i]       = code;
       }
-      sei_read_flag( pDecodedMessageOutputStream, code, "overlay_alpha_present_flag" ); sei.m_overlayAlphaPresentFlag[i] = (code == 1);
-      if( sei.m_overlayAlphaPresentFlag( i ) )
+      sei_read_flag( pDecodedMessageOutputStream, code, "overlay_alpha_present_flag" );      sei.m_overlayAlphaPresentFlag[i]   = (code == 1);
+      if( sei.m_overlayAlphaPresentFlag[i] )
       {
-        sei_read_code( pDecodedMessageOutputStream, 6, code, "overlay_alpha_layer_id" ); sei.m_overlayAlphaLayerId[i] = code;
+        sei_read_code( pDecodedMessageOutputStream, 6, code, "overlay_alpha_layer_id" );     sei.m_overlayAlphaLayerId[i]       = code;
       }
-      if( sei.m_overlayLabelPresentFlag( i ) )
+      if( sei.m_overlayLabelPresentFlag[i] )
       {
-        sei_read_uvlc( pDecodedMessageOutputStream, code, "num_overlay_elements_minus1" ); sei.m_numOverlayElementsMinus1[i] = code;
-        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1( i ); j++ )
+        sei_read_uvlc( pDecodedMessageOutputStream, code, "num_overlay_elements_minus1" );   sei.m_numOverlayElementsMinus1[i]  = code;
+        sei.m_overlayElementLabelMin[i].resize( sei.m_numOverlayElementsMinus1[i]+1 );
+        sei.m_overlayElementLabelMax[i].resize( sei.m_numOverlayElementsMinus1[i]+1 );
+        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1[i]; j++ )
         {
-          sei_read_code( pDecodedMessageOutputStream, getOverlayElementLabelMinLen ), code, "overlay_element_label_min" ); sei.m_overlayElementLabelMin[i][j] = code;
-          sei_read_code( pDecodedMessageOutputStream, getOverlayElementLabelMaxLen ), code, "overlay_element_label_max" ); sei.m_overlayElementLabelMax[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_overlayElementLabelValueLengthMinus8 + 8, code, "overlay_element_label_min" ); sei.m_overlayElementLabelMin[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_overlayElementLabelValueLengthMinus8 + 8, code, "overlay_element_label_max" ); sei.m_overlayElementLabelMax[i][j] = code;
         }
       }
     }
-    while( !ByteaLigned(() ) );
+
+    // byte alignment
+    while ( m_pcBitstream->getNumBitsRead() % 8 != 0 )
     {
-      sei_read_code( pDecodedMessageOutputStream, *equalto0*/f1, code, "overlay_zero_bit" ); sei.m_overlayZeroBit = code;
+      sei_read_flag( pDecodedMessageOutputStream, code, "overlay_zero_bit" ); 
+      assert( code==0 );      
     }
-    for( Int i = 0; i  <=  NumOverlaysMinus1( ); i++ )
+   
+    UChar* sval = new UChar[sei.m_numStringBytesMax];
+    UInt slen;    
+    sei.m_overlayLanguage.resize( sei.m_numOverlaysMinus1 + 1 );    
+    sei.m_overlayName.resize( sei.m_numOverlaysMinus1 + 1 );    
+    sei.m_overlayElementName.resize( sei.m_numOverlaysMinus1 + 1 );    
+    for( Int i = 0; i  <=  sei.m_numOverlaysMinus1; i++ )
     {
-      if( sei.m_languageOverlayPresentFlag( i ) )
-      {
-        sei_read_code( pDecodedMessageOutputStream, tv, code, "overlay_language" ); sei.m_overlayLanguage[i] = code;
+      if( sei.m_languageOverlayPresentFlag[i] )
+      {        
+        sei_read_string(pDecodedMessageOutputStream, sei.m_numStringBytesMax, sval, slen, "overlay_language");
+        sei.m_overlayLanguage[i] = std::string((const char*) sval);        
       }
-      sei_read_code( pDecodedMessageOutputStream, tv, code, "overlay_name" ); sei.m_overlayName[i] = code;
-      if( sei.m_overlayLabelPresentFlag( i ) )
+      sei_read_string(pDecodedMessageOutputStream, sei.m_numStringBytesMax, sval, slen, "overlay_name");
+      sei.m_overlayName[i] = std::string((const char*) sval);       
+      if( sei.m_overlayLabelPresentFlag[i] )
       {
-        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1( i ); j++ )
+        sei.m_overlayElementName[i].resize( sei.m_numOverlayElementsMinus1[i]+1 );        
+        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1[i]; j++ )
         {
-          sei_read_code( pDecodedMessageOutputStream, tv, code, "overlay_element_name" ); sei.m_overlayElementName[i][j] = code;
+          sei_read_string(pDecodedMessageOutputStream, sei.m_numStringBytesMax, sval, slen, "overlay_element_name");
+          sei.m_overlayElementName[i][j] = std::string((const char*) sval);            
         }
       }
     }
+    delete [] sval;
     sei_read_flag( pDecodedMessageOutputStream, code, "overlay_info_persistence_flag" ); sei.m_overlayInfoPersistenceFlag = (code == 1);
-  }
+  }  
 };
-#endif
 
 Void SEIReader::xParseSEITemporalMvPredictionConstraints(SEITemporalMvPredictionConstraints& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {

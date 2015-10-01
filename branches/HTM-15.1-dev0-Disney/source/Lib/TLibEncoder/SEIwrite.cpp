@@ -150,11 +150,9 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
    case SEI::ALPHA_CHANNEL_INFO:
      xWriteSEIAlphaChannelInfo(*static_cast<const SEIAlphaChannelInfo*>(&sei));
      break;
-#if NH_MV_SEI_TBD
    case SEI::OVERLAY_INFO:
      xWriteSEIOverlayInfo(*static_cast<const SEIOverlayInfo*>(&sei));
      break; 
-#endif
    case SEI::TEMPORAL_MV_PREDICTION_CONSTRAINTS:
      xWriteSEITemporalMvPredictionConstraints(*static_cast<const SEITemporalMvPredictionConstraints*>(&sei));
      break; 
@@ -997,7 +995,6 @@ Void SEIWriter::xWriteSEIAlphaChannelInfo( const SEIAlphaChannelInfo& sei)
   }
 };
 
-#if NH_MV_SEI_TBD
 Void SEIWriter::xWriteSEIOverlayInfo( const SEIOverlayInfo& sei)
 {
   WRITE_FLAG( ( sei.m_overlayInfoCancelFlag ? 1 : 0 ), "overlay_info_cancel_flag" );
@@ -1008,54 +1005,67 @@ Void SEIWriter::xWriteSEIOverlayInfo( const SEIOverlayInfo& sei)
     WRITE_UVLC( sei.m_overlayAlphaAuxIdMinus128, "overlay_alpha_aux_id_minus128" );
     WRITE_UVLC( sei.m_overlayElementLabelValueLengthMinus8, "overlay_element_label_value_length_minus8" );
     WRITE_UVLC( sei.m_numOverlaysMinus1, "num_overlays_minus1" );
-    for( Int i = 0; i  <=  NumOverlaysMinus1( ); i++ )
+    for( Int i = 0; i  <=  sei.m_numOverlaysMinus1 ; i++ )
     {
       WRITE_UVLC( sei.m_overlayIdx[i], "overlay_idx" );
       WRITE_FLAG( ( sei.m_languageOverlayPresentFlag[i] ? 1 : 0 ), "language_overlay_present_flag" );
       WRITE_CODE( sei.m_overlayContentLayerId[i], 6, "overlay_content_layer_id" );
       WRITE_FLAG( ( sei.m_overlayLabelPresentFlag[i] ? 1 : 0 ), "overlay_label_present_flag" );
-      if( sei.m_overlayLabelPresentFlag( i ) )
+      if( sei.m_overlayLabelPresentFlag[i] )
       {
         WRITE_CODE( sei.m_overlayLabelLayerId[i], 6, "overlay_label_layer_id" );
       }
       WRITE_FLAG( ( sei.m_overlayAlphaPresentFlag[i] ? 1 : 0 ), "overlay_alpha_present_flag" );
-      if( sei.m_overlayAlphaPresentFlag( i ) )
+      if( sei.m_overlayAlphaPresentFlag[i] )
       {
         WRITE_CODE( sei.m_overlayAlphaLayerId[i], 6, "overlay_alpha_layer_id" );
       }
-      if( sei.m_overlayLabelPresentFlag( i ) )
+      if( sei.m_overlayLabelPresentFlag[i] )
       {
         WRITE_UVLC( sei.m_numOverlayElementsMinus1[i], "num_overlay_elements_minus1" );
-        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1( i ); j++ )
+        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1[i]; j++ )
         {
-          WRITE_CODE( sei.m_overlayElementLabelMin[i][j], getOverlayElementLabelMinLen ), "overlay_element_label_min" );
-          WRITE_CODE( sei.m_overlayElementLabelMax[i][j], getOverlayElementLabelMaxLen ), "overlay_element_label_max" );
+          WRITE_CODE( sei.m_overlayElementLabelMin[i][j], (sei.m_overlayElementLabelValueLengthMinus8 + 8), "overlay_element_label_min" );
+          WRITE_CODE( sei.m_overlayElementLabelMax[i][j], (sei.m_overlayElementLabelValueLengthMinus8 + 8), "overlay_element_label_max" );
         }
       }
     }
-    while( !ByteaLigned(() ) );
+
+    // byte alignment
+    while ( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0 )  
     {
-      WRITE_CODE( sei.m_overlayZeroBit, *equalto0*/f1, "overlay_zero_bit" );
+      WRITE_FLAG( 0, "overlay_zero_bit" );
     }
-    for( Int i = 0; i  <=  NumOverlaysMinus1( ); i++ )
+   
+    UChar* stmp;
+    UInt ilength;
+    for( Int i = 0; i  <=  sei.m_numOverlaysMinus1; i++ )
     {
-      if( sei.m_languageOverlayPresentFlag( i ) )
+      if( sei.m_languageOverlayPresentFlag[i] )
       {
-        WRITE_CODE( sei.m_overlayLanguage[i], tv, "overlay_language" );
+        stmp = (UChar*) strdup( sei.m_overlayLanguage[i].c_str() );        
+        ilength = (UInt) sei.m_overlayLanguage[i].size();
+        WRITE_STRING( stmp, ilength, "overlay_language" );
+        free(stmp);
       }
-      WRITE_CODE( sei.m_overlayName[i], tv, "overlay_name" );
-      if( sei.m_overlayLabelPresentFlag( i ) )
+      stmp = (UChar*) strdup( sei.m_overlayName[i].c_str() );
+      ilength = (UInt) sei.m_overlayName[i].size();
+      WRITE_STRING( stmp, ilength, "overlay_name" );
+      free(stmp);
+      if( sei.m_overlayLabelPresentFlag[i] )
       {
-        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1( i ); j++ )
+        for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1[i]; j++ )
         {
-          WRITE_CODE( sei.m_overlayElementName[i][j], tv, "overlay_element_name" );
+          stmp = (UChar*) strdup( sei.m_overlayElementName[i][j].c_str() );
+          ilength = (UInt) sei.m_overlayElementName[i][j].size();
+          WRITE_STRING( stmp, ilength, "overlay_element_name" );
+          free(stmp);
         }
       }
     }
     WRITE_FLAG( ( sei.m_overlayInfoPersistenceFlag ? 1 : 0 ), "overlay_info_persistence_flag" );
-  }
+  }  
 };
-#endif
 
 Void SEIWriter::xWriteSEITemporalMvPredictionConstraints( const SEITemporalMvPredictionConstraints& sei)
 {

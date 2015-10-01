@@ -48,6 +48,7 @@
 #define READ_UVLC(        code, name)     xReadUvlcTr (         code, name )
 #define READ_SVLC(        code, name)     xReadSvlcTr (         code, name )
 #define READ_FLAG(        code, name)     xReadFlagTr (         code, name )
+#define READ_STRING(bufSize, code, length, name)   xReadStringTr ( bufSize, code, length, name )
 
 #else
 
@@ -57,6 +58,7 @@
 #define READ_UVLC(        code, name)     xReadUvlc (         code, name )
 #define READ_SVLC(        code, name)     xReadSvlc (         code, name )
 #define READ_FLAG(        code, name)     xReadFlag (         code, name )
+#define READ_STRING(bufSize, code, length, name)   xReadString ( bufSize, code, length, name )
 
 #else
 
@@ -64,6 +66,7 @@
 #define READ_UVLC(        code, name)     xReadUvlc (         code )
 #define READ_SVLC(        code, name)     xReadSvlc (         code )
 #define READ_FLAG(        code, name)     xReadFlag (         code )
+#define READ_STRING(bufSize, code, length, name)   xReadString ( bufSize, code, length )
 
 #endif
 
@@ -91,17 +94,20 @@ protected:
   Void  xReadUvlc    ( UInt&  val, const Char *pSymbolName );
   Void  xReadSvlc    ( Int&   val, const Char *pSymbolName );
   Void  xReadFlag    ( UInt&  val, const Char *pSymbolName );
+  Void  xReadString  ( UInt bufSize, UChar *val, UInt& length, const Char *pSymbolName);
 #else
   Void  xReadCode    ( UInt   length, UInt& val );
   Void  xReadUvlc    ( UInt&  val );
   Void  xReadSvlc    ( Int&   val );
   Void  xReadFlag    ( UInt&  val );
+  Void  xReadString  ( UInt bufSize, UChar *val, UInt& length);
 #endif
 #if ENC_DEC_TRACE
   Void  xReadCodeTr  (UInt  length, UInt& rValue, const Char *pSymbolName);
   Void  xReadUvlcTr  (              UInt& rValue, const Char *pSymbolName);
   Void  xReadSvlcTr  (               Int& rValue, const Char *pSymbolName);
   Void  xReadFlagTr  (              UInt& rValue, const Char *pSymbolName);
+  Void  xReadStringTr(UInt bufSize, UChar *pValue, UInt& rLength, const Char *pSymbolName);
 #endif
 public:
   Void  setBitstream ( TComInputBitstream* p )   { m_pcBitstream = p; }

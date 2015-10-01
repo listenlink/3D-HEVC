@@ -802,19 +802,22 @@ public:
   Bool      m_alphaChannelClipTypeFlag;
 };
 
-#if NH_MV_SEI_TBD
 class SEIOverlayInfo : public SEI
 {
 public:
   PayloadType payloadType( ) const { return OVERLAY_INFO; }
-  SEIOverlayInfo ( ) { };
+  SEIOverlayInfo ( );  
   ~SEIOverlayInfo( ) { };
   SEI* getCopy( ) const { return new SEIOverlayInfo(*this); }; 
 
-  Void setupFromCfgFile( const Char*      cfgFile );
-  Void setupFromSlice  ( const TComSlice* slice   );
+  Void setupFromCfgFile( const Char*      cfgFile );  
   Bool checkCfg        ( const TComSlice* slice   );
+  Void initStringElements ( );
 
+  const Int m_numOverlaysMax; 
+  const Int m_numOverlayElementsMax; 
+  const Int m_numStringBytesMax;  //incl. null termination byte
+  
   Bool      m_overlayInfoCancelFlag;
   Int       m_overlayContentAuxIdMinus128;
   Int       m_overlayLabelAuxIdMinus128;
@@ -830,15 +833,12 @@ public:
   IntAry1d  m_overlayAlphaLayerId;
   IntAry1d  m_numOverlayElementsMinus1;
   IntAry2d  m_overlayElementLabelMin;
-  IntAry2d  m_overlayElementLabelMax;
-  Int       m_overlayZeroBit;
-  IntAry1d  m_overlayLanguage;
-  IntAry1d  m_overlayName;
-  IntAry2d  m_overlayElementName;
+  IntAry2d  m_overlayElementLabelMax;  
+  std::vector< std::string >  m_overlayLanguage;
+  std::vector< std::string >  m_overlayName;
+  std::vector< std::vector< std::string > >  m_overlayElementName;
   Bool      m_overlayInfoPersistenceFlag;
 };
-
-#endif
 
 class SEITemporalMvPredictionConstraints : public SEI
 {

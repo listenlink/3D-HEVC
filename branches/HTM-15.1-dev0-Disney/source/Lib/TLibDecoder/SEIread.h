@@ -111,9 +111,7 @@ protected:
 #endif
   Void xParseSEISubBitstreamProperty          (SEISubBitstreamProperty& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIAlphaChannelInfo              (SEIAlphaChannelInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
-#if NH_MV_SEI_TBD
   Void xParseSEIOverlayInfo                   (SEIOverlayInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
-#endif
   Void xParseSEITemporalMvPredictionConstraints(SEITemporalMvPredictionConstraints& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #if NH_MV_SEI_TBD
   Void xParseSEIFrameFieldInfo                (SEIFrameFieldInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
@@ -138,6 +136,7 @@ protected:
   Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
   Void sei_read_svlc(std::ostream *pOS,                Int&  ruiCode, const Char *pSymbolName);
   Void sei_read_flag(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
+  Void sei_read_string(std::ostream *pOS, UInt uiBufSize, UChar* pucCode, UInt& ruiLength, const Char *pSymbolName);
 #if NH_MV_SEI
   inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMessageOutputStream, UInt payloadSize);
 private: 
