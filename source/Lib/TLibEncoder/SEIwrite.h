@@ -93,9 +93,7 @@ protected:
 #endif
   Void xWriteSEISubBitstreamProperty          ( const SEISubBitstreamProperty& sei);
   Void xWriteSEIAlphaChannelInfo              ( const SEIAlphaChannelInfo& sei);
-#if NH_MV_SEI_TBD
   Void xWriteSEIOverlayInfo                   ( const SEIOverlayInfo& sei);
-#endif
   Void xWriteSEITemporalMvPredictionConstraints ( const SEITemporalMvPredictionConstraints& sei);
 #if NH_MV_SEI_TBD
   Void xWriteSEIFrameFieldInfo                ( const SEIFrameFieldInfo& sei);

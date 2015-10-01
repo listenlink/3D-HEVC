@@ -55,6 +55,7 @@
 #define WRITE_UVLC( value,         name)    xWriteUvlcTr ( value,         name )
 #define WRITE_SVLC( value,         name)    xWriteSvlcTr ( value,         name )
 #define WRITE_FLAG( value,         name)    xWriteFlagTr ( value,         name )
+#define WRITE_STRING( value, length, name)   xWriteStringTr( value, length, name )
 
 #else
 
@@ -62,6 +63,7 @@
 #define WRITE_UVLC( value,         name)     xWriteUvlc ( value )
 #define WRITE_SVLC( value,         name)     xWriteSvlc ( value )
 #define WRITE_FLAG( value,         name)     xWriteFlag ( value )
+#define WRITE_STRING( value, length, name)   xWriteString( value, length )
 
 #endif
 
@@ -81,11 +83,13 @@ protected:
   Void  xWriteUvlc            ( UInt uiCode );
   Void  xWriteSvlc            ( Int  iCode   );
   Void  xWriteFlag            ( UInt uiCode );
+  Void  xWriteString          ( UChar* sCode, UInt uiLength);
 #if ENC_DEC_TRACE
   Void  xWriteCodeTr          ( UInt value, UInt  length, const Char *pSymbolName);
   Void  xWriteUvlcTr          ( UInt value,               const Char *pSymbolName);
   Void  xWriteSvlcTr          ( Int  value,               const Char *pSymbolName);
   Void  xWriteFlagTr          ( UInt value,               const Char *pSymbolName);
+  Void  xWriteStringTr        ( UChar* value, UInt length, const Char *pSymbolName);
 #endif
   Void xWriteRbspTrailingBits();
 
