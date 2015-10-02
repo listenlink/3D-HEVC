@@ -179,11 +179,9 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
    case SEI::MULTIVIEW_VIEW_POSITION:
      xWriteSEIMultiviewViewPosition(*static_cast<const SEIMultiviewViewPosition*>(&sei));
      break; 
-#if NH_MV_SEI_TBD
    case SEI::ALTERNATIVE_DEPTH_INFO:
      xWriteSEIAlternativeDepthInfo(*static_cast<const SEIAlternativeDepthInfo*>(&sei));
      break; 
-#endif
 #endif
 
 
@@ -1308,13 +1306,15 @@ Void SEIWriter::xWriteSEIMultiviewViewPosition( const SEIMultiviewViewPosition& 
 };
 #endif
 
-#if NH_MV_SEI_TBD
+
 Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& sei)
 {
   WRITE_FLAG( ( sei.m_alternativeDepthInfoCancelFlag ? 1 : 0 ), "alternative_depth_info_cancel_flag" );
   if( sei.m_alternativeDepthInfoCancelFlag  ==  0 )
   {
     WRITE_CODE( sei.m_depthType, 2, "depth_type" );
+
+#if NH_MV_SEI_TBD
     if( sei.m_depthType  ==  0 )
     {
       WRITE_UVLC( sei.m_numConstituentViewsGvdMinus1, "num_constituent_views_gvd_minus1" );
@@ -1387,6 +1387,8 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
         }
       }
     }
+#endif
+
     if( sei.m_depthType  ==  1 )
     {
       WRITE_SVLC( sei.m_minOffsetXInt, "min_offset_x_int" );
@@ -1411,6 +1413,6 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
   }
 };
 
-#endif
+
 
 //! \}

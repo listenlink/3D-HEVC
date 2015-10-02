@@ -386,12 +386,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIMultiviewViewPosition;
       xParseSEIMultiviewViewPosition((SEIMultiviewViewPosition&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#if NH_MV_TBD
     case SEI::ALTERNATIVE_DEPTH_INFO:
       sei = new SEIAlternativeDepthInfo;
       xParseSEIAlternativeDepthInfo((SEIAlternativeDepthInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#endif
 #endif
     default:
       for (UInt i = 0; i < payloadSize; i++)
@@ -1691,16 +1689,18 @@ Void SEIReader::xParseSEIMultiviewViewPosition(SEIMultiviewViewPosition& sei, UI
   }
 };
 
-#if NH_MV_SEI_TBD
+
 Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;
+  Int scode;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
   sei_read_flag( pDecodedMessageOutputStream, code, "alternative_depth_info_cancel_flag" ); sei.m_alternativeDepthInfoCancelFlag = (code == 1);
   if( sei.m_alternativeDepthInfoCancelFlag  ==  0 )
   {
     sei_read_code( pDecodedMessageOutputStream, 2, code, "depth_type" ); sei.m_depthType = code;
+#if NH_MV_SEI_TBD
     if( sei.m_depthType  ==  0 )
     {
       sei_read_uvlc( pDecodedMessageOutputStream, code, "num_constituent_views_gvd_minus1" ); sei.m_numConstituentViewsGvdMinus1 = code;
@@ -1773,18 +1773,20 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
         }
       }
     }
+#endif
+
     if( sei.m_depthType  ==  1 )
     {
-      sei_read_svlc( pDecodedMessageOutputStream, code, "min_offset_x_int" ); sei.m_minOffsetXInt = code;
+      sei_read_svlc( pDecodedMessageOutputStream, scode, "min_offset_x_int" ); sei.m_minOffsetXInt = scode;
       sei_read_code( pDecodedMessageOutputStream, 8, code, "min_offset_x_frac" ); sei.m_minOffsetXFrac = code;
-      sei_read_svlc( pDecodedMessageOutputStream, code, "max_offset_x_int" ); sei.m_maxOffsetXInt = code;
+      sei_read_svlc( pDecodedMessageOutputStream, scode, "max_offset_x_int" ); sei.m_maxOffsetXInt = scode;
       sei_read_code( pDecodedMessageOutputStream, 8, code, "max_offset_x_frac" ); sei.m_maxOffsetXFrac = code;
       sei_read_flag( pDecodedMessageOutputStream, code, "offset_y_present_flag" ); sei.m_offsetYPresentFlag = (code == 1);
       if( sei.m_offsetYPresentFlag )
       {
-        sei_read_svlc( pDecodedMessageOutputStream, code, "min_offset_y_int" ); sei.m_minOffsetYInt = code;
+        sei_read_svlc( pDecodedMessageOutputStream, scode, "min_offset_y_int" ); sei.m_minOffsetYInt = scode;
         sei_read_code( pDecodedMessageOutputStream, 8, code, "min_offset_y_frac" ); sei.m_minOffsetYFrac = code;
-        sei_read_svlc( pDecodedMessageOutputStream, code, "max_offset_y_int" ); sei.m_maxOffsetYInt = code;
+        sei_read_svlc( pDecodedMessageOutputStream, scode, "max_offset_y_int" ); sei.m_maxOffsetYInt = scode;
         sei_read_code( pDecodedMessageOutputStream, 8, code, "max_offset_y_frac" ); sei.m_maxOffsetYFrac = code;
       }
       sei_read_flag( pDecodedMessageOutputStream, code, "warp_map_size_present_flag" ); sei.m_warpMapSizePresentFlag = (code == 1);
@@ -1796,6 +1798,6 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
     }
   }
 };
-#endif
+
 
 //! \}
