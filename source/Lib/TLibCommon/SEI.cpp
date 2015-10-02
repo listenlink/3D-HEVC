@@ -245,10 +245,8 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
   case SEI::MULTIVIEW_SCENE_INFO                  :               return new SEIMultiviewSceneInfo;
   case SEI::MULTIVIEW_ACQUISITION_INFO            :               return new SEIMultiviewAcquisitionInfo;
   case SEI::MULTIVIEW_VIEW_POSITION               :               return new SEIMultiviewViewPosition;
-#if NH_MV_SEI_TBD
 #if NH_3D
   case SEI::ALTERNATIVE_DEPTH_INFO                :               return new SEIAlternativeDepthInfo;
-#endif
 #endif
 #endif
   default:                                        assert( false ); return NULL;
@@ -1469,121 +1467,21 @@ Bool SEIMultiviewViewPosition::checkCfg( const TComSlice* slice )
 
 };
 
-#if NH_MV_SEI_TBD
-Void SEIAlternativeDepthInfo::setupFromSlice  ( const TComSlice* slice )
-{
-  sei.m_alternativeDepthInfoCancelFlag =  TBD ;
-  if( sei.m_alternativeDepthInfoCancelFlag  = =  0 )
-  {
-    sei.m_depthType =  TBD ;
-    if( sei.m_depthType  = =  0 )
-    {
-      sei.m_numConstituentViewsGvdMinus1 =  TBD ;
-      sei.m_depthPresentGvdFlag =  TBD ;
-      sei.m_zGvdFlag =  TBD ;
-      sei.m_intrinsicParamGvdFlag =  TBD ;
-      sei.m_rotationGvdFlag =  TBD ;
-      sei.m_translationGvdFlag =  TBD ;
-      if( sei.m_zGvdFlag )
-      {
-        for( Int i = 0; i  <=  sei.m_numConstituentViewsGvdMinus1 + 1; i++ )
-        {
-          sei.m_signGvdZNearFlag[i] =  TBD ;
-          sei.m_expGvdZNear[i] =  TBD ;
-          sei.m_manLenGvdZNearMinus1[i] =  TBD ;
-          sei.m_manGvdZNear[i] =  TBD ;
-          sei.m_signGvdZFarFlag[i] =  TBD ;
-          sei.m_expGvdZFar[i] =  TBD ;
-          sei.m_manLenGvdZFarMinus1[i] =  TBD ;
-          sei.m_manGvdZFar[i] =  TBD ;
-        }
-      }
-      if( sei.m_intrinsicParamGvdFlag )
-      {
-        sei.m_precGvdFocalLength =  TBD ;
-        sei.m_precGvdPrincipalPoint =  TBD ;
-      }
-      if( sei.m_rotationGvdFlag )
-      {
-        sei.m_precGvdRotationParam =  TBD ;
-      }
-      if( sei.m_translationGvdFlag )
-      {
-        sei.m_precGvdTranslationParam =  TBD ;
-      }
-      for( Int i = 0; i  <=  sei.m_numConstituentViewsGvdMinus1 + 1; i++ )
-      {
-        if( sei.m_intrinsicParamGvdFlag )
-        {
-          sei.m_signGvdFocalLengthX[i] =  TBD ;
-          sei.m_expGvdFocalLengthX[i] =  TBD ;
-          sei.m_manGvdFocalLengthX[i] =  TBD ;
-          sei.m_signGvdFocalLengthY[i] =  TBD ;
-          sei.m_expGvdFocalLengthY[i] =  TBD ;
-          sei.m_manGvdFocalLengthY[i] =  TBD ;
-          sei.m_signGvdPrincipalPointX[i] =  TBD ;
-          sei.m_expGvdPrincipalPointX[i] =  TBD ;
-          sei.m_manGvdPrincipalPointX[i] =  TBD ;
-          sei.m_signGvdPrincipalPointY[i] =  TBD ;
-          sei.m_expGvdPrincipalPointY[i] =  TBD ;
-          sei.m_manGvdPrincipalPointY[i] =  TBD ;
-        }
-        if( sei.m_rotationGvdFlag )
-        {
-          for( Int j = 10; j  <=  3; j++ ) /* row */
-          {
-            for( Int k = 10; k  <=  3; k++ )  /* column */
-            {
-              sei.m_signGvdR[i][j][k] =  TBD ;
-              sei.m_expGvdR[i][j][k] =  TBD ;
-              sei.m_manGvdR[i][j][k] =  TBD ;
-            }
-          }
-        }
-        if( sei.m_translationGvdFlag )
-        {
-          sei.m_signGvdTX[i] =  TBD ;
-          sei.m_expGvdTX[i] =  TBD ;
-          sei.m_manGvdTX[i] =  TBD ;
-        }
-      }
-    }
-    if( sei.m_depthType  = =  1 )
-    {
-      sei.m_minOffsetXInt =  TBD ;
-      sei.m_minOffsetXFrac =  TBD ;
-      sei.m_maxOffsetXInt =  TBD ;
-      sei.m_maxOffsetXFrac =  TBD ;
-      sei.m_offsetYPresentFlag =  TBD ;
-      if( sei.m_offsetYPresentFlag )
-      {
-        sei.m_minOffsetYInt =  TBD ;
-        sei.m_minOffsetYFrac =  TBD ;
-        sei.m_maxOffsetYInt =  TBD ;
-        sei.m_maxOffsetYFrac =  TBD ;
-      }
-      sei.m_warpMapSizePresentFlag =  TBD ;
-      if( sei.m_warpMapSizePresentFlag )
-      {
-        sei.m_warpMapWidthMinus2 =  TBD ;
-        sei.m_warpMapHeightMinus2 =  TBD ;
-      }
-    }
-  }
-};
+
+
 Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
 { 
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
-  defAppLayerIds    .push_back( TBD );
-  defAppPocs        .push_back( TBD );
-  defAppTids        .push_back( TBD );
-  defAppVclNaluTypes.push_back( TBD );
-
+  defAppLayerIds    .clear();
+  defAppPocs        .clear();
+  defAppTids        .clear();
+  defAppVclNaluTypes.clear();
+    
   Int      defSeiNaluId                  = 0; 
   Int      defPositionInSeiNalu          = 0; 
-  Bool     defModifyByEncoder            = TBD; 
+  Bool     defModifyByEncoder            = 0; 
 
   // Setup config file options
   po::Options opts;     
@@ -1591,7 +1489,8 @@ Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
 
   opts.addOptions()
     ("AlternativeDepthInfoCancelFlag"   , m_alternativeDepthInfoCancelFlag   , false                            , "AlternativeDepthInfoCancelFlag"   )
-    ("DepthType"                        , m_depthType                        , 0                                , "DepthType"                        )
+    ("DepthType"                        , m_depthType                        , 1                                , "DepthType"                        )
+#if NH_MV_SEI_TBD
     ("NumConstituentViewsGvdMinus1"     , m_numConstituentViewsGvdMinus1     , 0                                , "NumConstituentViewsGvdMinus1"     )
     ("DepthPresentGvdFlag"              , m_depthPresentGvdFlag              , false                            , "DepthPresentGvdFlag"              )
     ("ZGvdFlag"                         , m_zGvdFlag                         , false                            , "ZGvdFlag"                         )
@@ -1628,6 +1527,7 @@ Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
     ("SignGvdTX"                        , m_signGvdTX                        , BoolAry1d(1,0)                   , "SignGvdTX"                        )
     ("ExpGvdTX"                         , m_expGvdTX                         , IntAry1d (1,0)                   , "ExpGvdTX"                         )
     ("ManGvdTX"                         , m_manGvdTX                         , IntAry1d (1,0)                   , "ManGvdTX"                         )
+#endif
     ("MinOffsetXInt"                    , m_minOffsetXInt                    , 0                                , "MinOffsetXInt"                    )
     ("MinOffsetXFrac"                   , m_minOffsetXFrac                   , 0                                , "MinOffsetXFrac"                   )
     ("MaxOffsetXInt"                    , m_maxOffsetXInt                    , 0                                , "MaxOffsetXInt"                    )
@@ -1649,18 +1549,18 @@ Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
   po::parseConfigFile( opts, cfgFile, err );
 };
 
+
 Bool SEIAlternativeDepthInfo::checkCfg( const TComSlice* slice )
 { 
   // Check config values
   Bool wrongConfig = false; 
 
-  // TBD: Add constraints on presence of SEI here. 
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
-  xCheckCfg     ( wrongConfig, TBD , "TBD" );
+  
+  xCheckCfgRange( wrongConfig, m_alternativeDepthInfoCancelFlag , 0 , 1, "alternative_depth_info_cancel_flag");
+  xCheckCfgRange( wrongConfig, m_depthType                      , 0 , 1, "depth_type"                       );
 
   // TBD: Modify constraints according to the SEI semantics.   
-  xCheckCfgRange( wrongConfig, m_alternativeDepthInfoCancelFlag , MINVAL , MAXVAL, "alternative_depth_info_cancel_flag");
-  xCheckCfgRange( wrongConfig, m_depthType                      , MINVAL , MAXVAL, "depth_type"                       );
+#if NH_MV_SEI_TBD
   xCheckCfgRange( wrongConfig, m_numConstituentViewsGvdMinus1   , MINVAL , MAXVAL, "num_constituent_views_gvd_minus1 ");
   xCheckCfgRange( wrongConfig, m_depthPresentGvdFlag            , MINVAL , MAXVAL, "depth_present_gvd_flag"           );
   xCheckCfgRange( wrongConfig, m_zGvdFlag                       , MINVAL , MAXVAL, "z_gvd_flag"                       );
@@ -1697,22 +1597,19 @@ Bool SEIAlternativeDepthInfo::checkCfg( const TComSlice* slice )
   xCheckCfgRange( wrongConfig, m_signGvdTX[i]                   , MINVAL , MAXVAL, "sign_gvd_t_x"                     );
   xCheckCfgRange( wrongConfig, m_expGvdTX[i]                    , MINVAL , MAXVAL, "exp_gvd_t_x"                      );
   xCheckCfgRange( wrongConfig, m_manGvdTX[i]                    , MINVAL , MAXVAL, "man_gvd_t_x"                      );
-  xCheckCfgRange( wrongConfig, m_minOffsetXInt                  , MINVAL , MAXVAL, "min_offset_x_int"                 );
-  xCheckCfgRange( wrongConfig, m_minOffsetXFrac                 , MINVAL , MAXVAL, "min_offset_x_frac"                );
-  xCheckCfgRange( wrongConfig, m_maxOffsetXInt                  , MINVAL , MAXVAL, "max_offset_x_int"                 );
-  xCheckCfgRange( wrongConfig, m_maxOffsetXFrac                 , MINVAL , MAXVAL, "max_offset_x_frac"                );
-  xCheckCfgRange( wrongConfig, m_offsetYPresentFlag             , MINVAL , MAXVAL, "offset_y_present_flag"            );
-  xCheckCfgRange( wrongConfig, m_minOffsetYInt                  , MINVAL , MAXVAL, "min_offset_y_int"                 );
-  xCheckCfgRange( wrongConfig, m_minOffsetYFrac                 , MINVAL , MAXVAL, "min_offset_y_frac"                );
-  xCheckCfgRange( wrongConfig, m_maxOffsetYInt                  , MINVAL , MAXVAL, "max_offset_y_int"                 );
-  xCheckCfgRange( wrongConfig, m_maxOffsetYFrac                 , MINVAL , MAXVAL, "max_offset_y_frac"                );
-  xCheckCfgRange( wrongConfig, m_warpMapSizePresentFlag         , MINVAL , MAXVAL, "warp_map_size_present_flag"       );
-  xCheckCfgRange( wrongConfig, m_warpMapWidthMinus2             , MINVAL , MAXVAL, "warp_map_width_minus2"            );
-  xCheckCfgRange( wrongConfig, m_warpMapHeightMinus2            , MINVAL , MAXVAL, "warp_map_height_minus2"           );
+#endif  
+  xCheckCfgRange( wrongConfig, m_minOffsetXFrac                 , 0 , 255, "min_offset_x_frac"                );  
+  xCheckCfgRange( wrongConfig, m_maxOffsetXFrac                 , 0 , 255, "max_offset_x_frac"                );
+  xCheckCfgRange( wrongConfig, m_offsetYPresentFlag             , 0 , 1, "offset_y_present_flag"            );  
+  xCheckCfgRange( wrongConfig, m_minOffsetYFrac                 , 0 , 255, "min_offset_y_frac"                );  
+  xCheckCfgRange( wrongConfig, m_maxOffsetYFrac                 , 0 , 255, "max_offset_y_frac"                );
+  xCheckCfgRange( wrongConfig, m_warpMapSizePresentFlag         , 0 , 1, "warp_map_size_present_flag"       );
+  xCheckCfgRange( wrongConfig, m_warpMapWidthMinus2             , 0 , (slice->getSPS()->getPicWidthInLumaSamples()-2), "warp_map_width_minus2"            );
+  xCheckCfgRange( wrongConfig, m_warpMapHeightMinus2            , 0 , ((slice->getSPS()->getPicHeightInLumaSamples()>>(Int)m_offsetYPresentFlag)-2), "warp_map_height_minus2"           );
 
   return wrongConfig; 
 
 };
-#endif
+
 
 #endif

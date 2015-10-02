@@ -1139,7 +1139,7 @@ public:
   IntAry1d  m_viewPosition;
 };
 
-#if NH_MV_SEI_TBD
+
 class SEIAlternativeDepthInfo : public SEI
 {
 public:
@@ -1148,12 +1148,13 @@ public:
   ~SEIAlternativeDepthInfo( ) { };
   SEI* getCopy( ) const { return new SEIAlternativeDepthInfo(*this); }; 
 
-  Void setupFromCfgFile( const Char*      cfgFile );
-  Void setupFromSlice  ( const TComSlice* slice   );
+  Void setupFromCfgFile( const Char*      cfgFile );  
   Bool checkCfg        ( const TComSlice* slice   );
+
 
   Bool      m_alternativeDepthInfoCancelFlag;
   Int       m_depthType;
+#if NH_MV_SEI_TBD
   Int       m_numConstituentViewsGvdMinus1;
   Bool      m_depthPresentGvdFlag;
   Bool      m_zGvdFlag;
@@ -1190,6 +1191,7 @@ public:
   BoolAry1d m_signGvdTX;
   IntAry1d  m_expGvdTX;
   IntAry1d  m_manGvdTX;
+#endif
   Int       m_minOffsetXInt;
   Int       m_minOffsetXFrac;
   Int       m_maxOffsetXInt;
@@ -1203,7 +1205,7 @@ public:
   Int       m_warpMapWidthMinus2;
   Int       m_warpMapHeightMinus2;
 };
-#endif
+
 
 #endif
 

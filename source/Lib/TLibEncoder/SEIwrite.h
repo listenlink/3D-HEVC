@@ -106,9 +106,7 @@ protected:
   Void xWriteSEIMultiviewSceneInfo            ( const SEIMultiviewSceneInfo& sei);
   Void xWriteSEIMultiviewAcquisitionInfo      ( const SEIMultiviewAcquisitionInfo& sei);
   Void xWriteSEIMultiviewViewPosition         ( const SEIMultiviewViewPosition& sei);
-#if NH_MV_SEI_TBD
   Void xWriteSEIAlternativeDepthInfo          ( const SEIAlternativeDepthInfo& sei);
-#endif
   Void xWriteByteAlign();
 };
 #endif
