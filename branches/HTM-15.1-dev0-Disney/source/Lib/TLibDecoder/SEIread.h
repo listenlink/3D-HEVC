@@ -128,7 +128,9 @@ protected:
 #if NH_MV_SEI
   Void xParseSEIMultiviewViewPosition         (SEIMultiviewViewPosition& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #endif
+#if NH_3D
   Void xParseSEIAlternativeDepthInfo          (SEIAlternativeDepthInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
+#endif
 
   Void sei_read_code(std::ostream *pOS, UInt uiLength, UInt& ruiCode, const Char *pSymbolName);
   Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);

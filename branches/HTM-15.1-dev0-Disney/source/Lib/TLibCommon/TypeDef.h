@@ -491,6 +491,8 @@ typedef       UInt64          Distortion;        ///< distortion measurement
 typedef       UInt            Distortion;        ///< distortion measurement
 #endif
 #if NH_MV                         
+typedef std::vector< std::string > StringAry1d; 
+typedef std::vector< StringAry1d > StringAry2d; 
 typedef std::vector< Int >        IntAry1d;
 typedef std::vector< IntAry1d >   IntAry2d; 
 typedef std::vector< IntAry2d >   IntAry3d; 

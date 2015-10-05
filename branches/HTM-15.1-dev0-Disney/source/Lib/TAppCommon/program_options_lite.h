@@ -487,6 +487,23 @@ namespace df
 
     template<>
     inline void
+      Option< StringAry1d  >::parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter& err )
+    {
+
+      opt_storage[ idcs[ 0 ] ] = arg;
+    };
+
+    template<>
+    inline void
+      Option< StringAry2d  >::parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter& err )
+    {
+
+      opt_storage[idcs[0]][idcs[1]] = arg;
+    };
+
+
+    template<>
+    inline void
       Option< std::vector< char*>  >::parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter& err )
     {
       
@@ -642,6 +659,7 @@ namespace df
 
         return *this;
       }
+
       template<typename T>
       OptionSpecific&
         operator()(const std::string& name, std::vector< std::vector<T> >& storage, T default_val, unsigned uiMaxNumDim1, unsigned uiMaxNumDim2, const std::string& desc = "" )
