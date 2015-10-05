@@ -179,9 +179,11 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
    case SEI::MULTIVIEW_VIEW_POSITION:
      xWriteSEIMultiviewViewPosition(*static_cast<const SEIMultiviewViewPosition*>(&sei));
      break; 
+#if NH_3D
    case SEI::ALTERNATIVE_DEPTH_INFO:
      xWriteSEIAlternativeDepthInfo(*static_cast<const SEIAlternativeDepthInfo*>(&sei));
      break; 
+#endif
 #endif
 
 
@@ -1200,7 +1202,8 @@ Void SEIWriter::xWriteSEIDepthRepInfoElement( double f)
 
                 if (f<thr)
                     break;
-            }else
+            }
+            else
             {
                 s_mantissa[i]=0;
             }
@@ -1219,7 +1222,8 @@ Void SEIWriter::xWriteSEIDepthRepInfoElement( double f)
                 x_mantissa += (1u)<<(x_mantissa_len-1-i) ;
         }
 
-    }else
+    }
+    else
     {
         x_mantissa=0;
         x_mantissa_len=1;
@@ -1306,7 +1310,7 @@ Void SEIWriter::xWriteSEIMultiviewViewPosition( const SEIMultiviewViewPosition& 
 };
 #endif
 
-
+#if NH_3D
 Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& sei)
 {
   WRITE_FLAG( ( sei.m_alternativeDepthInfoCancelFlag ? 1 : 0 ), "alternative_depth_info_cancel_flag" );
@@ -1412,7 +1416,7 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
     }
   }
 };
-
+#endif
 
 
 //! \}

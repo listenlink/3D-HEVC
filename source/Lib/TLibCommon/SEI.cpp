@@ -370,7 +370,7 @@ Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
   // Parse the cfg file
   po::ErrorReporter err;
   po::parseConfigFile( opts, cfgFile, err );
-  m_lnpSeiMaxLayers = m_layerNotPresentFlag.size();
+  m_lnpSeiMaxLayers = (UInt) m_layerNotPresentFlag.size();
 };
 
   Bool SEILayersNotPresent::checkCfg( const TComSlice* slice )
@@ -381,6 +381,7 @@ Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
     const TComVPS* vps = slice->getVPS(); 
 //  // TBD: Add constraints on presence of SEI here. 
     xCheckCfg     ( wrongConfig, m_lnpSeiActiveVpsId == vps->getVPSId(), "The value of lnp_sei_active_vps_id shall be equal to the value of vps_video_parameter_set_id of the active VPS for the VCL NAL units of the access unit containing the SEI message." );
+    xCheckCfg     ( wrongConfig, m_lnpSeiMaxLayers == vps->getMaxLayersMinus1(), "The number of LayerNotPresent flags shall be equal to vpsMaxLayersMinus1." );
 
 
     for (Int i = 0; i < vps->getMaxLayersMinus1(); i++)
@@ -752,9 +753,9 @@ Void SEIOverlayInfo::initStringElements ( )
   for ( Int i=0 ; i<m_numOverlaysMax ; i++ )
   {
     sprintf(cstr, "LanguageTag%02d", i);
-    m_overlayLanguage[i] = std::string(cstr);
+    //m_overlayLanguage[i] = std::string(cstr);
     sprintf(cstr, "Overlay%02dName", i);
-    m_overlayName[i] = std::string(cstr);
+    //m_overlayName[i] = std::string(cstr);
 
     m_overlayElementName[i].resize(m_numOverlayElementsMax);
     for ( Int j=0 ; j<m_numOverlayElementsMax ; j++ )
@@ -802,6 +803,9 @@ Void SEIOverlayInfo::setupFromCfgFile(const Char* cfgFile)
     ("NumOverlayElementsMinus1"       , m_numOverlayElementsMinus1         , IntAry1d (16,0)                 , "NumOverlayElementsMinus1"         )
     ("OverlayElementLabelMin_%d"      , m_overlayElementLabelMin           , IntAry1d (256,0) ,16            , "OverlayElementLabelMin"           )
     ("OverlayElementLabelMax_%d"      , m_overlayElementLabelMax           , IntAry1d (256,0) ,16            , "OverlayElementLabelMax"           )        
+    ("OverlayLanguage_%d"             , m_overlayLanguage                  , std::string(""), 16             , "OverlayLanguage"                  )
+    ("OverlayName_%d"                 , m_overlayName                      , std::string(""), 16             , "OverlayName"                      )
+    ("OverlayElementName_%d_%d"       , m_overlayElementName               , std::string(""), 256 ,16        , "OverlayElementName"               )
     ("OverlayInfoPersistenceFlag"     , m_overlayInfoPersistenceFlag       , false                           , "OverlayInfoPersistenceFlag"       )
     ; 
 
@@ -812,7 +816,7 @@ Void SEIOverlayInfo::setupFromCfgFile(const Char* cfgFile)
   po::parseConfigFile( opts, cfgFile, err );
 
   // Initialize some values for syntax elements with declaration type st(v) (i.e. string type syntax elements)
-  initStringElements();
+  // initStringElements();
 };
 
 
@@ -1468,7 +1472,7 @@ Bool SEIMultiviewViewPosition::checkCfg( const TComSlice* slice )
 };
 
 
-
+#if NH_3D
 Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
 { 
   // Set default values
@@ -1548,8 +1552,6 @@ Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
   po::ErrorReporter err;
   po::parseConfigFile( opts, cfgFile, err );
 };
-
-
 Bool SEIAlternativeDepthInfo::checkCfg( const TComSlice* slice )
 { 
   // Check config values
@@ -1610,6 +1612,6 @@ Bool SEIAlternativeDepthInfo::checkCfg( const TComSlice* slice )
   return wrongConfig; 
 
 };
-
+#endif
 
 #endif

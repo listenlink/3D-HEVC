@@ -834,9 +834,9 @@ public:
   IntAry1d  m_numOverlayElementsMinus1;
   IntAry2d  m_overlayElementLabelMin;
   IntAry2d  m_overlayElementLabelMax;  
-  std::vector< std::string >  m_overlayLanguage;
-  std::vector< std::string >  m_overlayName;
-  std::vector< std::vector< std::string > >  m_overlayElementName;
+  StringAry1d  m_overlayLanguage;
+  StringAry1d  m_overlayName;
+  StringAry2d  m_overlayElementName;
   Bool      m_overlayInfoPersistenceFlag;
 };
 
@@ -980,7 +980,7 @@ class SEIDepthRepresentationInfo : public SEI
             m_depth_nonlinear_representation_model.clear();            
 
         }
-        int m_currLayerID;
+        Int m_currLayerID;
         BoolAry1d      m_zNearFlag;
         BoolAry1d      m_zFarFlag;
         BoolAry1d      m_dMinFlag;
@@ -991,7 +991,7 @@ class SEIDepthRepresentationInfo : public SEI
         IntAry2d       m_depthRepresentationType;
         IntAry2d       m_disparityRefViewId;
         IntAry2d       m_depthNonlinearRepresentationNumMinus1;
-        IntAry2d m_depth_nonlinear_representation_model;
+        IntAry2d       m_depth_nonlinear_representation_model;
 };
 #endif
 
@@ -1139,7 +1139,7 @@ public:
   IntAry1d  m_viewPosition;
 };
 
-
+#if NH_3D
 class SEIAlternativeDepthInfo : public SEI
 {
 public:
@@ -1206,7 +1206,7 @@ public:
   Int       m_warpMapHeightMinus2;
 };
 
-
+#endif
 #endif
 
 #endif

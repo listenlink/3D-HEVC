@@ -386,10 +386,12 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIMultiviewViewPosition;
       xParseSEIMultiviewViewPosition((SEIMultiviewViewPosition&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
+#if NH_3D
     case SEI::ALTERNATIVE_DEPTH_INFO:
       sei = new SEIAlternativeDepthInfo;
       xParseSEIAlternativeDepthInfo((SEIAlternativeDepthInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
+#endif
 #endif
     default:
       for (UInt i = 0; i < payloadSize; i++)
@@ -1422,8 +1424,8 @@ Void SEIReader::xParseSEIOverlayInfo(SEIOverlayInfo& sei, UInt payloadSize, std:
    
     UChar* sval = new UChar[sei.m_numStringBytesMax];
     UInt slen;    
-    sei.m_overlayLanguage.resize( sei.m_numOverlaysMinus1 + 1 );    
-    sei.m_overlayName.resize( sei.m_numOverlaysMinus1 + 1 );    
+    sei.m_overlayLanguage   .resize( sei.m_numOverlaysMinus1 + 1 );    
+    sei.m_overlayName       .resize( sei.m_numOverlaysMinus1 + 1 );    
     sei.m_overlayElementName.resize( sei.m_numOverlaysMinus1 + 1 );    
     for( Int i = 0; i  <=  sei.m_numOverlaysMinus1; i++ )
     {
@@ -1689,7 +1691,7 @@ Void SEIReader::xParseSEIMultiviewViewPosition(SEIMultiviewViewPosition& sei, UI
   }
 };
 
-
+#if NH_3D
 Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;
@@ -1798,6 +1800,6 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
     }
   }
 };
-
+#endif
 
 //! \}
