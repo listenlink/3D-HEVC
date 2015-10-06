@@ -590,6 +590,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setSOPDescriptionSEIEnabled                          ( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled                         ( m_scalableNestingSEIEnabled );
 #if NH_MV
+#if !NH_MV_SEI
   m_cTEncTop.setSubBitstreamPropSEIEnabled                        ( m_subBistreamPropSEIEnabled );
   if( m_subBistreamPropSEIEnabled )                               
   {                                                               
@@ -600,6 +601,7 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setAvgBitRate                                      ( m_sbPropAvgBitRate );
     m_cTEncTop.setMaxBitRate                                      ( m_sbPropMaxBitRate );
   }
+#endif
 #endif
 
   m_cTEncTop.setTMCTSSEIEnabled                                   ( m_tmctsSEIEnabled );
@@ -621,6 +623,10 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setKneeSEIInputKneePoint                             ( m_kneeSEIInputKneePoint );
   m_cTEncTop.setKneeSEIOutputKneePoint                            ( m_kneeSEIOutputKneePoint );
   m_cTEncTop.setMasteringDisplaySEI                               ( m_masteringDisplay );
+
+#if NH_MV_SEI
+  m_cTEncTop.setSeiMessages                                       ( &m_seiMessages ); 
+#endif
 
   m_cTEncTop.setTileUniformSpacingFlag                            ( m_tileUniformSpacingFlag );
   m_cTEncTop.setNumColumnsMinus1                                  ( m_numTileColumnsMinus1 );
