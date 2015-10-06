@@ -743,30 +743,6 @@ SEIOverlayInfo::SEIOverlayInfo ( )
   , m_numStringBytesMax(256) //incl. null termination byte
 { };
 
-Void SEIOverlayInfo::initStringElements ( )  
-{
-  // Set some string values for syntax elements of declarator type st(v)
-  m_overlayLanguage.resize(m_numOverlaysMax);
-  m_overlayName.resize(m_numOverlaysMax);
-  m_overlayElementName.resize(m_numOverlaysMax);
-  char* cstr = new char[m_numStringBytesMax];
-  for ( Int i=0 ; i<m_numOverlaysMax ; i++ )
-  {
-    sprintf(cstr, "LanguageTag%02d", i);
-    //m_overlayLanguage[i] = std::string(cstr);
-    sprintf(cstr, "Overlay%02dName", i);
-    //m_overlayName[i] = std::string(cstr);
-
-    m_overlayElementName[i].resize(m_numOverlayElementsMax);
-    for ( Int j=0 ; j<m_numOverlayElementsMax ; j++ )
-    {
-      sprintf(cstr, "Overlay%02dElement%03dName", i, j);
-      m_overlayElementName[i][j] = std::string(cstr);
-    }
-  }
-  delete [] cstr;
-};
-
 Void SEIOverlayInfo::setupFromCfgFile(const Char* cfgFile)
 { 
   // Set default values
@@ -814,9 +790,6 @@ Void SEIOverlayInfo::setupFromCfgFile(const Char* cfgFile)
   // Parse the cfg file
   po::ErrorReporter err;
   po::parseConfigFile( opts, cfgFile, err );
-
-  // Initialize some values for syntax elements with declaration type st(v) (i.e. string type syntax elements)
-  // initStringElements();
 };
 
 

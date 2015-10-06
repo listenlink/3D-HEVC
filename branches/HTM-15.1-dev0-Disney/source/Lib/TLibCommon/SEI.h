@@ -113,7 +113,7 @@ public:
     MULTIVIEW_ACQUISITION_INFO                = 179,
     MULTIVIEW_VIEW_POSITION                   = 180
 #if NH_3D
-    ,    ALTERNATIVE_DEPTH_INFO                    = 181
+    ,ALTERNATIVE_DEPTH_INFO                    = 181
 #endif
 #endif
 
@@ -811,8 +811,7 @@ public:
   SEI* getCopy( ) const { return new SEIOverlayInfo(*this); }; 
 
   Void setupFromCfgFile( const Char*      cfgFile );  
-  Bool checkCfg        ( const TComSlice* slice   );
-  Void initStringElements ( );
+  Bool checkCfg        ( const TComSlice* slice   );  
 
   const Int m_numOverlaysMax; 
   const Int m_numOverlayElementsMax; 
@@ -1150,7 +1149,6 @@ public:
 
   Void setupFromCfgFile( const Char*      cfgFile );  
   Bool checkCfg        ( const TComSlice* slice   );
-
 
   Bool      m_alternativeDepthInfoCancelFlag;
   Int       m_depthType;
