@@ -407,7 +407,7 @@ namespace df
 #if SEI_DRI_F0169
     template<>
     inline void
-    Option< std::vector<std::vector<double>> >::parse(const std::string& arg, const IntAry1d& idcs, ErrorReporter&)
+    Option< std::vector< std::vector<double> > >::parse(const std::string& arg, const IntAry1d& idcs, ErrorReporter&)
     {
         // xParseVec ( arg, opt_storage[ idcs[0] ] );
         char* pcNextStart = (char*) arg.data();

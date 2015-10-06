@@ -1026,132 +1026,141 @@ Void SEIDepthRepresentationInfo::setupFromSlice  ( const TComSlice* slice )
 
 Void SEIDepthRepresentationInfo::setupFromCfgFile(const Char* cfgFile)
 { 
-    // Set default values
-    IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
+  // Set default values
+  IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes; 
 
-    // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
-    //defAppLayerIds    .push_back( TBD );
-    defAppPocs        .push_back( 0 );
-    //defAppTids        .push_back( TBD );
-    //defAppVclNaluTypes.push_back( TBD );
+  // TBD: Add default values for which layers, POCS, Tids or Nalu types the SEI should be send. 
+  //defAppLayerIds    .push_back( TBD );
+  defAppPocs        .push_back( 0 );
+  //defAppTids        .push_back( TBD );
+  //defAppVclNaluTypes.push_back( TBD );
 
-    Int      defSeiNaluId                  = 0; 
-    Int      defPositionInSeiNalu          = 0; 
-    Bool     defModifyByEncoder            = true; 
+  Int      defSeiNaluId                  = 0; 
+  Int      defPositionInSeiNalu          = 0; 
+  Bool     defModifyByEncoder            = true; 
 
-    // Setup config file options
-    po::Options opts;  
+  // Setup config file options
+  po::Options opts;  
 
-    xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder ); 
+  xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder ); 
 
-    opts.addOptions()
-        ("ZNear_%d"                      , m_zNear               , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "ZNear"           )
-        ("ZFar_%d"                       , m_zFar                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "ZFar"            )
-        ("DMin_%d"                       , m_dMin                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "DMin"            )
-        ("DMax_%d"                       , m_dMax                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "DMax"            )
-        ("DepthRepresentationInfoSeiPresentFlag_%d",  m_depthRepresentationInfoSeiPresentFlag, BoolAry1d(1,0), MAX_NUM_LAYERS, "DepthRepresentationInfoSeiPresentFlag")
-        ("DepthRepresentationType_%d"        , m_depthRepresentationType          , IntAry1d(0,0), MAX_NUM_LAYERS,  "DepthRepresentationType"        )
-        ("DisparityRefViewId_%d"             , m_disparityRefViewId               ,  IntAry1d(0,0), MAX_NUM_LAYERS,  "DisparityRefViewId"             )
-        ("DepthNonlinearRepresentationNumMinus1_%d", m_depthNonlinearRepresentationNumMinus1, IntAry1d(0,0), MAX_NUM_LAYERS, "DepthNonlinearRepresentationNumMinus1")
-        ("DepthNonlinearRepresentationModel_%d"    , m_depth_nonlinear_representation_model ,   IntAry1d(0,0), MAX_NUM_LAYERS, "DepthNonlinearRepresentationModel") ;
+  opts.addOptions()
+    ("ZNear_%d"                      , m_zNear               , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "ZNear"           )
+    ("ZFar_%d"                       , m_zFar                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "ZFar"            )
+    ("DMin_%d"                       , m_dMin                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "DMin"            )
+    ("DMax_%d"                       , m_dMax                , std::vector<double>(0,0)       , MAX_NUM_LAYERS , "DMax"            )
+    ("DepthRepresentationInfoSeiPresentFlag_%d",  m_depthRepresentationInfoSeiPresentFlag, BoolAry1d(1,0), MAX_NUM_LAYERS, "DepthRepresentationInfoSeiPresentFlag")
+    ("DepthRepresentationType_%d"        , m_depthRepresentationType          , IntAry1d(0,0), MAX_NUM_LAYERS,  "DepthRepresentationType"        )
+    ("DisparityRefViewId_%d"             , m_disparityRefViewId               ,  IntAry1d(0,0), MAX_NUM_LAYERS,  "DisparityRefViewId"             )
+    ("DepthNonlinearRepresentationNumMinus1_%d", m_depthNonlinearRepresentationNumMinus1, IntAry1d(0,0), MAX_NUM_LAYERS, "DepthNonlinearRepresentationNumMinus1")
+    ("DepthNonlinearRepresentationModel_%d"    , m_depth_nonlinear_representation_model ,   IntAry1d(0,0), MAX_NUM_LAYERS, "DepthNonlinearRepresentationModel") ;
 
 
-    po::setDefaults(opts);
+  po::setDefaults(opts);
 
-    // Parse the cfg file
-    po::ErrorReporter err;
-    po::parseConfigFile( opts, cfgFile, err );
+  // Parse the cfg file
+  po::ErrorReporter err;
+  po::parseConfigFile( opts, cfgFile, err );
 
-    Bool wrongConfig = false; 
 
-    for(int i=0;i<MAX_NUM_LAYERS;i++)
+  for(int i=0;i<MAX_NUM_LAYERS;i++)
+  {
+    if (m_zNear[i].size()>0)
     {
-        if (m_zNear[i].size()>0)
-            m_zNearFlag.push_back(true);
-        else
-            m_zNearFlag.push_back(false);
+      m_zNearFlag.push_back(true);
+    }
+    else
+    {
+      m_zNearFlag.push_back(false);
+    }
 
-        if (m_zFar[i].size()>0)
-            m_zFarFlag.push_back(true);
-        else
-            m_zFarFlag.push_back(false);
+    if (m_zFar[i].size()>0)
+    {
+      m_zFarFlag.push_back(true);
+    }
+    else
+    {
+      m_zFarFlag.push_back(false);
+    }
 
-        if (m_dMin[i].size()>0)
-            m_dMinFlag.push_back(true);
-        else
-            m_dMinFlag.push_back(false);
+    if (m_dMin[i].size()>0)
+    {
+      m_dMinFlag.push_back(true);
+    }
+    else
+    {
+      m_dMinFlag.push_back(false);
+    }
 
-        if (m_dMax[i].size()>0)
-            m_dMaxFlag.push_back(true);
-        else
-            m_dMaxFlag.push_back(false);
+    if (m_dMax[i].size()>0)
+    {
+      m_dMaxFlag.push_back(true);
+    }
+    else
+    {
+      m_dMaxFlag.push_back(false);
+    }
 
 
-        if (m_depthRepresentationInfoSeiPresentFlag[i][0])
+    if (m_depthRepresentationInfoSeiPresentFlag[i][0])
+    {
+      if ( m_depthRepresentationType[i].size()<=0 )
+      {
+        printf("DepthRepresentationType_%d must be present for layer %d\n",i,i );
+        return;
+      }
+
+      if (  m_depthRepresentationType[i][0]<0 )
+      {
+        printf("DepthRepresentationType_%d must be equal to or greater than 0\n",i );
+        return;
+      }
+
+      if (m_dMinFlag[i] || m_dMaxFlag[i])
+      {
+        if (m_disparityRefViewId[i].size()<=0)
         {
-            if ( m_depthRepresentationType[i].size()<=0 )
-            {
-                printf("DepthRepresentationType_%d must be present for layer %d\n",i,i );
-                return;
-            }
+          printf("DisparityRefViewId_%d must be present for layer %d\n",i,i );
+          assert(false);
+          return;
+        }
+        if (m_disparityRefViewId[i][0]<0)
+        {
+          printf("DisparityRefViewId_%d must be equal to or greater than 0\n",i );
+          assert(false);
+          return;
+        }
+      }
 
-            if (  m_depthRepresentationType[i][0]<0 )
-            {
-                printf("DepthRepresentationType_%d must be equal to or greater than 0\n",i );
-                return;
-            }
-
-            if (m_dMinFlag[i] || m_dMaxFlag[i])
-            {
-                if (m_disparityRefViewId[i].size()<=0)
-                {
-                    printf("DisparityRefViewId_%d must be present for layer %d\n",i,i );
-                    assert(false);
-                    return;
-                }
-                if (m_disparityRefViewId[i][0]<0)
-                {
-                    printf("DisparityRefViewId_%d must be equal to or greater than 0\n",i );
-                    assert(false);
-                    return;
-                }
-            }
-
-            if (m_depthRepresentationType[i][0]==3)
-            {
-                if (m_depthNonlinearRepresentationNumMinus1[i].size()<=0)
-                {
-                    printf("DepthNonlinearRepresentationNumMinus1_%d must be present for layer %d\n",i,i );
-                    assert(false);
-                    return;
-                }
-                if (m_depthNonlinearRepresentationNumMinus1[i][0]<0)
-                {
-                    printf("DepthNonlinearRepresentationNumMinus1_%d must be equal to or greater than 0\n",i );
-                    assert(false);
-                    return;
-                }
-
-                if (m_depth_nonlinear_representation_model[i].size() != m_depthNonlinearRepresentationNumMinus1[i][0]+1)
-                {
-                    printf("the number of values in Depth_nonlinear_representation_model must be equal to DepthNonlinearRepresentationNumMinus1+1 in layer %d\n",i );
-                    assert(false);
-                    return;
-                }
-
-
-            }
-
-
+      if (m_depthRepresentationType[i][0]==3)
+      {
+        if (m_depthNonlinearRepresentationNumMinus1[i].size()<=0)
+        {
+          printf("DepthNonlinearRepresentationNumMinus1_%d must be present for layer %d\n",i,i );
+          assert(false);
+          return;
+        }
+        if (m_depthNonlinearRepresentationNumMinus1[i][0]<0)
+        {
+          printf("DepthNonlinearRepresentationNumMinus1_%d must be equal to or greater than 0\n",i );
+          assert(false);
+          return;
         }
 
+        if (m_depth_nonlinear_representation_model[i].size() != m_depthNonlinearRepresentationNumMinus1[i][0]+1)
+        {
+          printf("the number of values in Depth_nonlinear_representation_model must be equal to DepthNonlinearRepresentationNumMinus1+1 in layer %d\n",i );
+          assert(false);
+          return;
+        }
+      }
+    }
+  }
 
-   }
-
-    assert(m_zNearFlag.size()==MAX_NUM_LAYERS);
-    assert(m_zFarFlag.size()==MAX_NUM_LAYERS);
-    assert(m_dMinFlag.size()==MAX_NUM_LAYERS);
-    assert(m_dMaxFlag.size()==MAX_NUM_LAYERS);
+  assert(m_zNearFlag.size()==MAX_NUM_LAYERS);
+  assert(m_zFarFlag.size()==MAX_NUM_LAYERS);
+  assert(m_dMinFlag.size()==MAX_NUM_LAYERS);
+  assert(m_dMaxFlag.size()==MAX_NUM_LAYERS);
 }
 
 Bool SEIDepthRepresentationInfo::checkCfg( const TComSlice* slice )
