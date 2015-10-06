@@ -985,7 +985,7 @@ class SEIDepthRepresentationInfo : public SEI
         BoolAry1d      m_dMinFlag;
         BoolAry1d      m_dMaxFlag;
         BoolAry2d      m_depthRepresentationInfoSeiPresentFlag;
-        std::vector<std::vector<Double>> m_zNear,m_zFar,m_dMin,m_dMax;
+        std::vector< std::vector<Double> > m_zNear,m_zFar,m_dMin,m_dMax;
 
         IntAry2d       m_depthRepresentationType;
         IntAry2d       m_disparityRefViewId;
