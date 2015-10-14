@@ -1744,16 +1744,26 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
         {
           sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_focal_length_x" ); sei.m_signGvdFocalLengthX[i][j] = (code == 1);
           sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_focal_length_x" ); sei.m_expGvdFocalLengthX[i][j] = code;
-          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdFocalLength, code, "man_gvd_focal_length_x" ); sei.m_manGvdFocalLengthX[i][j] = code;
+          //sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdFocalLength, code, "man_gvd_focal_length_x" ); sei.m_manGvdFocalLengthX[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.getManGvdFocalLengthXLen(i,j), code, "man_gvd_focal_length_x" ); sei.m_manGvdFocalLengthX[i][j] = code;
           sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_focal_length_y" ); sei.m_signGvdFocalLengthY[i][j] = (code == 1);
           sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_focal_length_y" ); sei.m_expGvdFocalLengthY[i][j] = code;
-          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdFocalLength, code, "man_gvd_focal_length_y" ); sei.m_manGvdFocalLengthY[i][j] = code;
+          //sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdFocalLength, code, "man_gvd_focal_length_y" ); sei.m_manGvdFocalLengthY[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.getManGvdFocalLengthYLen(i,j), code, "man_gvd_focal_length_y" ); sei.m_manGvdFocalLengthY[i][j] = code;
           sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_principal_point_x" ); sei.m_signGvdPrincipalPointX[i][j] = (code == 1);
           sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_principal_point_x" ); sei.m_expGvdPrincipalPointX[i][j] = code;
-          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdPrincipalPoint, code, "man_gvd_principal_point_x" ); sei.m_manGvdPrincipalPointX[i][j] = code;
+          //sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdPrincipalPoint, code, "man_gvd_principal_point_x" ); sei.m_manGvdPrincipalPointX[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.getManGvdPrincipalPointXLen(i,j), code, "man_gvd_principal_point_x" ); sei.m_manGvdPrincipalPointX[i][j] = code;
           sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_principal_point_y" ); sei.m_signGvdPrincipalPointY[i][j] = (code == 1);
           sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_principal_point_y" ); sei.m_expGvdPrincipalPointY[i][j] = code;
-          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdPrincipalPoint, code, "man_gvd_principal_point_y" ); sei.m_manGvdPrincipalPointY[i][j] = code;
+          //sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdPrincipalPoint, code, "man_gvd_principal_point_y" ); sei.m_manGvdPrincipalPointY[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.getManGvdPrincipalPointYLen(i,j), code, "man_gvd_principal_point_y" ); sei.m_manGvdPrincipalPointY[i][j] = code;
+#if DEBUG_NH_3D_SEI
+          printf("manLEN_gvd_focal_length_x     : sei.getManGvdFocalLengthXLen(%d,%d): %u\n", i, j, sei.getManGvdFocalLengthXLen(i,j));
+          printf("manLEN_gvd_focal_length_y     : sei.getManGvdFocalLengthYLen(%d,%d): %u\n", i, j, sei.getManGvdFocalLengthYLen(i,j));
+          printf("manLEN_gvd_principal_point_x  : sei.getManGvdPrincipalPointXLen(%d,%d): %u\n", i, j, sei.getManGvdPrincipalPointXLen(i,j));
+          printf("manLEN_gvd_principal_point_x  : sei.getManGvdPrincipalPointYLen(%d,%d): %u\n", i, j, sei.getManGvdPrincipalPointYLen(i,j));
+#endif
         }
         if( sei.m_rotationGvdFlag )
         {
@@ -1762,14 +1772,17 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
             sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r" ); sei.m_signGvdR[i][j][k] = (code == 1);
             sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r" ); sei.m_expGvdR[i][j][k] = code;
             sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r" ); sei.m_manGvdR[i][j][k] = code;
+            //sei_read_code( pDecodedMessageOutputStream, sei.getManGvdRLen(i,j,k), code, "man_gvd_r" ); sei.m_manGvdR[i][j][k] = code;
           }
         }
         if( sei.m_translationGvdFlag )
         {
-#if NH_MV_SEI_TBD
           sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_t_x" ); sei.m_signGvdTX[i][j] = (code == 1);
           sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_t_x" ); sei.m_expGvdTX[i][j] = code;
-          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdTranslationParam, code, "man_gvd_t_x" ); sei.m_manGvdTX[i][j] = code;
+          //sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdTranslationParam, code, "man_gvd_t_x" ); sei.m_manGvdTX[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.getManGvdTXLen(i,j), code, "man_gvd_t_x" ); sei.m_manGvdTX[i][j] = code;
+#if DEBUG_NH_3D_SEI
+          printf("manLEN_gvd_t_x                : sei.getManGvdTXLen(%d,%d): %u\n", i, j, sei.getManGvdTXLen(i,j));
 #endif
         }
       }

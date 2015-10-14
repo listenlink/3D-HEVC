@@ -1384,28 +1384,36 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
           printf("sign_gvd_focal_length_x       : sei.m_signGvdFocalLengthX[%d][%d]: %u\n", i, j, sei.m_signGvdFocalLengthX[i][j]);
           printf("exp_gvd_focal_length_x        : sei.m_expGvdFocalLengthX[%d][%d]: %u\n", i, j, sei.m_expGvdFocalLengthX[i][j]);
           printf("man_gvd_focal_length_x        : sei.m_manGvdFocalLengthX[%d][%d]: %u\n", i, j, sei.m_manGvdFocalLengthX[i][j]);
+          printf("manLEN_gvd_focal_length_x     : sei.getManGvdFocalLengthXLen(%d,%d): %u\n", i, j, sei.getManGvdFocalLengthXLen(i,j));
           printf("sign_gvd_focal_length_y       : sei.m_signGvdFocalLengthY[%d][%d]: %u\n", i, j, sei.m_signGvdFocalLengthY[i][j]);
           printf("exp_gvd_focal_length_y        : sei.m_expGvdFocalLengthY[%d][%d]: %u\n", i, j, sei.m_expGvdFocalLengthY[i][j]);
           printf("man_gvd_focal_length_y        : sei.m_manGvdFocalLengthY[%d][%d]: %u\n", i, j, sei.m_manGvdFocalLengthY[i][j]);
+          printf("manLEN_gvd_focal_length_y     : sei.getManGvdFocalLengthYLen(%d,%d): %u\n", i, j, sei.getManGvdFocalLengthYLen(i,j));
           printf("sign_gvd_principal_point_x    : sei.m_signGvdPrincipalPointX[%d][%d]: %u\n", i, j, sei.m_signGvdPrincipalPointX[i][j]);
           printf("exp_gvd_principal_point_x     : sei.m_expGvdPrincipalPointX[%d][%d]: %u\n", i, j, sei.m_expGvdPrincipalPointX[i][j]);
           printf("man_gvd_principal_point_x     : sei.m_manGvdPrincipalPointX[%d][%d]: %u\n", i, j, sei.m_manGvdPrincipalPointX[i][j]);
+          printf("manLEN_gvd_principal_point_x  : sei.getManGvdPrincipalPointXLen(%d,%d): %u\n", i, j, sei.getManGvdPrincipalPointXLen(i,j));
           printf("sign_gvd_principal_point_y    : sei.m_signGvdPrincipalPointY[%d][%d]: %u\n", i, j, sei.m_signGvdPrincipalPointY[i][j]);
           printf("exp_gvd_principal_point_y     : sei.m_expGvdPrincipalPointY[%d][%d]: %u\n", i, j, sei.m_expGvdPrincipalPointY[i][j]);
           printf("man_gvd_principal_point_y     : sei.m_manGvdPrincipalPointY[%d][%d]: %u\n", i, j, sei.m_manGvdPrincipalPointY[i][j]);
+          printf("manLEN_gvd_principal_point_x  : sei.getManGvdPrincipalPointYLen(%d,%d): %u\n", i, j, sei.getManGvdPrincipalPointYLen(i,j));
 #endif
           WRITE_FLAG( ( sei.m_signGvdFocalLengthX[i][j] ? 1 : 0 ), "sign_gvd_focal_length_x" );
           WRITE_CODE( sei.m_expGvdFocalLengthX[i][j], 6, "exp_gvd_focal_length_x" );
-          WRITE_CODE( sei.m_manGvdFocalLengthX[i][j], sei.m_precGvdFocalLength, "man_gvd_focal_length_x" );
+          //WRITE_CODE( sei.m_manGvdFocalLengthX[i][j], sei.m_precGvdFocalLength, "man_gvd_focal_length_x" );
+          WRITE_CODE( sei.m_manGvdFocalLengthX[i][j], sei.getManGvdFocalLengthXLen(i,j), "man_gvd_focal_length_x" );
           WRITE_FLAG( ( sei.m_signGvdFocalLengthY[i][j] ? 1 : 0 ), "sign_gvd_focal_length_y" );
           WRITE_CODE( sei.m_expGvdFocalLengthY[i][j], 6, "exp_gvd_focal_length_y" );
-          WRITE_CODE( sei.m_manGvdFocalLengthY[i][j], sei.m_precGvdFocalLength, "man_gvd_focal_length_y" );
+          //WRITE_CODE( sei.m_manGvdFocalLengthY[i][j], sei.m_precGvdFocalLength, "man_gvd_focal_length_y" );
+          WRITE_CODE( sei.m_manGvdFocalLengthY[i][j], sei.getManGvdFocalLengthYLen(i,j), "man_gvd_focal_length_y" );
           WRITE_FLAG( ( sei.m_signGvdPrincipalPointX[i][j] ? 1 : 0 ), "sign_gvd_principal_point_x" );
           WRITE_CODE( sei.m_expGvdPrincipalPointX[i][j], 6, "exp_gvd_principal_point_x" );
-          WRITE_CODE( sei.m_manGvdPrincipalPointX[i][j], sei.m_precGvdPrincipalPoint, "man_gvd_principal_point_x" );
+          //WRITE_CODE( sei.m_manGvdPrincipalPointX[i][j], sei.m_precGvdPrincipalPoint, "man_gvd_principal_point_x" );
+          WRITE_CODE( sei.m_manGvdPrincipalPointX[i][j], sei.getManGvdPrincipalPointXLen(i,j), "man_gvd_principal_point_x" );
           WRITE_FLAG( ( sei.m_signGvdPrincipalPointY[i][j] ? 1 : 0 ), "sign_gvd_principal_point_y" );
           WRITE_CODE( sei.m_expGvdPrincipalPointY[i][j], 6, "exp_gvd_principal_point_y" );
-          WRITE_CODE( sei.m_manGvdPrincipalPointY[i][j], sei.m_precGvdPrincipalPoint, "man_gvd_principal_point_y" );
+          //WRITE_CODE( sei.m_manGvdPrincipalPointY[i][j], sei.m_precGvdPrincipalPoint, "man_gvd_principal_point_y" );
+          WRITE_CODE( sei.m_manGvdPrincipalPointY[i][j], sei.getManGvdPrincipalPointYLen(i,j), "man_gvd_principal_point_y" );
         }
         if( sei.m_rotationGvdFlag )
         {
@@ -1415,10 +1423,12 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
             printf("sign_gvd_r                    : sei.m_signGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_signGvdR[i][j][k]);
             printf("exp_gvd_r                     : sei.m_expGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_expGvdR[i][j][k]);
             printf("man_gvd_r                     : sei.m_manGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_manGvdR[i][j][k]);
+            printf("manLEN_gvd_r                  : sei.getManGvdRLen(%d,%d,%d): %u\n", i, j, k, sei.getManGvdRLen(i,j,k));
 #endif
             WRITE_FLAG( ( sei.m_signGvdR[i][j][k] ? 1 : 0 ), "sign_gvd_r" );
             WRITE_CODE( sei.m_expGvdR[i][j][k], 6, "exp_gvd_r" );
-            WRITE_CODE( sei.m_manGvdR[i][j][k], sei.m_precGvdTranslationParam, "man_gvd_r" );
+            WRITE_CODE( sei.m_manGvdR[i][j][k], sei.m_precGvdRotationParam, "man_gvd_r" );
+            //WRITE_CODE( sei.m_manGvdR[i][j][k], sei.getManGvdRLen(i,j,k), "man_gvd_r" );
           }
         }
         if( sei.m_translationGvdFlag )
@@ -1427,10 +1437,12 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
           printf("sign_gvd_t_x                  : sei.m_signGvdTX[%d][%d]: %u\n", i, j, sei.m_signGvdTX[i][j]);
           printf("exp_gvd_t_x                   : sei.m_expGvdTX[%d][%d]: %u\n", i, j, sei.m_expGvdTX[i][j]);
           printf("man_gvd_t_x                   : sei.m_manGvdTX[%d][%d]: %u\n", i, j, sei.m_manGvdTX[i][j]);
+          printf("manLEN_gvd_t_x                : sei.getManGvdTXLen(%d,%d): %u\n", i, j, sei.getManGvdTXLen(i,j));
 #endif
           WRITE_FLAG( ( sei.m_signGvdTX[i][j] ? 1 : 0 ), "sign_gvd_t_x" );
           WRITE_CODE( sei.m_expGvdTX[i][j], 6, "exp_gvd_t_x" );
-          WRITE_CODE( sei.m_manGvdTX[i][j], sei.m_numConstituentViewsGvdMinus1, "man_gvd_t_x" );
+          //WRITE_CODE( sei.m_manGvdTX[i][j], sei.m_precGvdTranslationParam, "man_gvd_t_x" );
+          WRITE_CODE( sei.m_manGvdTX[i][j], sei.getManGvdTXLen(i,j), "man_gvd_t_x" );
         }
       }
     }
