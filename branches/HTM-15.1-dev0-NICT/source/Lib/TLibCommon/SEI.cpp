@@ -1553,6 +1553,56 @@ Bool SEIAlternativeDepthInfo::checkCfg( const TComSlice* slice )
 
 };
 
+UInt SEIAlternativeDepthInfo::getManGvdFocalLengthXLen       ( Int i, int j ) const
+{
+  return xGetSyntaxElementLen( m_expGvdFocalLengthX[i][j], m_precGvdFocalLength, m_manGvdFocalLengthX[i][j]  );
+};
+
+UInt SEIAlternativeDepthInfo::getManGvdFocalLengthYLen       ( Int i, int j ) const
+{
+  return xGetSyntaxElementLen( m_expGvdFocalLengthY[i][j], m_precGvdFocalLength, m_manGvdFocalLengthY[i][j]  );
+};
+
+UInt SEIAlternativeDepthInfo::getManGvdPrincipalPointXLen    ( Int i, int j ) const
+{
+  return xGetSyntaxElementLen( m_expGvdPrincipalPointX[i][j], m_precGvdPrincipalPoint, m_manGvdPrincipalPointX[i][j]  );
+};
+
+UInt SEIAlternativeDepthInfo::getManGvdPrincipalPointYLen    ( Int i, int j ) const
+{
+  return xGetSyntaxElementLen( m_expGvdPrincipalPointY[i][j], m_precGvdPrincipalPoint, m_manGvdPrincipalPointY[i][j]  );
+};
+
+UInt SEIAlternativeDepthInfo::getManGvdRLen                  ( Int i, int j, int k ) const
+{
+  return xGetSyntaxElementLen( m_expGvdR[i][j][k], m_precGvdRotationParam, m_manGvdR[i][j][k] );
+};
+
+UInt SEIAlternativeDepthInfo::getManGvdTXLen                 ( Int i, int j ) const
+{
+  return xGetSyntaxElementLen( m_expGvdTX[i][j], m_precGvdTranslationParam, m_manGvdTX[i][j]  );
+};
+
+UInt SEIAlternativeDepthInfo::xGetSyntaxElementLen( Int expo, Int prec, Int val ) const
+{
+  UInt len;
+  if( expo == 0 )
+  {
+    len = std::max(0, prec - 30 );
+  }
+  else
+  {
+    len = std::max( 0, expo + prec - 31 );
+  }
+
+#if DEBUG_NH_3D_SEI
+  printf("DEBUG: SEIAlternativeDepthInfo::xGetSyntaxElementLen(): val: %d, len %u\n", val, len);
+#endif
+  assert( val >= 0 );
+  assert( val <= ( ( 1 << len )- 1) );
+  return len;
+}
+
 #endif
 
 #endif

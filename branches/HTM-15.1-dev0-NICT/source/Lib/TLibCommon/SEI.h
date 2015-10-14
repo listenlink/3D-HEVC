@@ -1150,6 +1150,14 @@ public:
   Void setupFromCfgFile( const Char*      cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
+  UInt getManGvdFocalLengthXLen       ( Int i, Int j ) const;
+  UInt getManGvdFocalLengthYLen       ( Int i, Int j ) const;
+  UInt getManGvdPrincipalPointXLen    ( Int i, Int j ) const;
+  UInt getManGvdPrincipalPointYLen    ( Int i, Int j ) const;
+  UInt getManGvdRLen                  ( Int i, int j, int k ) const;
+  UInt getManGvdTXLen                 ( Int i, Int j ) const;
+  UInt xGetSyntaxElementLen           ( Int expo, Int prec, Int val ) const;
+
   Void resizeArrays( )
   {
     const Int numViews = 3; // getNumConstituentViewsGvdMinus1() + 1;
