@@ -112,7 +112,9 @@ Void TComOutputBitstream::clear()
 Void TComOutputBitstream::write   ( UInt uiBits, UInt uiNumberOfBits )
 {
   assert( uiNumberOfBits <= 32 );
+#if !NH_3D
   assert( uiNumberOfBits == 32 || (uiBits & (~0 << uiNumberOfBits)) == 0 );
+#endif
 
   /* any modulo 8 remainder of num_total_bits cannot be written this time,
    * and will be held until next time. */
@@ -263,9 +265,9 @@ Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
   if ( g_traceBitsRead )
   {
       Bool oldJustDoIt = g_bJustDoIt;
-      g_bJustDoIt = true; 
+      g_bJustDoIt = true;
       writeToTraceFile( "Bits: ", m_numBitsRead, true );
-      g_bJustDoIt = oldJustDoIt; 
+      g_bJustDoIt = oldJustDoIt;
   }
 #endif
 

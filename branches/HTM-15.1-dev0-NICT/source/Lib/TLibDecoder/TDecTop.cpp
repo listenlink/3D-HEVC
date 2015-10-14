@@ -58,8 +58,8 @@ CamParsCollector::CamParsCollector()
   xCreateLUTs( (UInt)MAX_NUM_LAYERS, (UInt)MAX_NUM_LAYERS, m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
   m_iLog2Precision   = LOG2_DISP_PREC_LUT;
   m_uiBitDepthForLUT = 8; // fixed
-  m_receivedIdc = NULL; 
-  m_vps         = NULL; 
+  m_receivedIdc = NULL;
+  m_vps         = NULL;
 }
 
 CamParsCollector::~CamParsCollector()
@@ -74,7 +74,8 @@ CamParsCollector::~CamParsCollector()
 
   xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
   xDeleteArray( m_aiBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
-  xDeleteArray( m_receivedIdc, m_vps->getNumViews() );
+  if (m_receivedIdc != nullptr) // NICT FIX
+    xDeleteArray( m_receivedIdc, m_vps->getNumViews() );
 }
 
 
@@ -83,39 +84,39 @@ CamParsCollector::init( const TComVPS* vps)
 {
   assert( !isInitialized() ); // Only one initialization currently supported
   m_bInitialized            = true;
-  m_vps                     = vps; 
-  m_bCamParsVaryOverTime    = false;   
-  m_lastPoc                 = -1;   
-  m_firstReceivedPoc        = -2; 
+  m_vps                     = vps;
+  m_bCamParsVaryOverTime    = false;
+  m_lastPoc                 = -1;
+  m_firstReceivedPoc        = -2;
 
   for (Int i = 0; i <= vps->getMaxLayersMinus1(); i++)
   {
-    Int curViewIdxInVps = m_vps->getVoiInVps( m_vps->getViewIndex( m_vps->getLayerIdInNuh( i ) ) ) ; 
-    m_bCamParsVaryOverTime = m_bCamParsVaryOverTime || vps->getCpInSliceSegmentHeaderFlag( curViewIdxInVps );    
+    Int curViewIdxInVps = m_vps->getVoiInVps( m_vps->getViewIndex( m_vps->getLayerIdInNuh( i ) ) ) ;
+    m_bCamParsVaryOverTime = m_bCamParsVaryOverTime || vps->getCpInSliceSegmentHeaderFlag( curViewIdxInVps );
   }
 
-  assert( m_receivedIdc == NULL ); 
-  m_receivedIdc = new Int*[ m_vps->getNumViews() ]; 
+  assert( m_receivedIdc == NULL );
+  m_receivedIdc = new Int*[ m_vps->getNumViews() ];
   for (Int i = 0; i < m_vps->getNumViews(); i++)
   {
-    m_receivedIdc[i] = new Int[ m_vps->getNumViews() ]; 
+    m_receivedIdc[i] = new Int[ m_vps->getNumViews() ];
   }
 
-  xResetReceivedIdc( true ); 
+  xResetReceivedIdc( true );
 
   for (Int voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
   {
-    if( !m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) ) 
+    if( !m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) )
     {
       for (Int baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
-      { 
+      {
         if( m_vps->getCpPresentFlag( voiInVps, baseVoiInVps ) )
         {
-          m_receivedIdc   [ baseVoiInVps ][ voiInVps ] = -1; 
+          m_receivedIdc   [ baseVoiInVps ][ voiInVps ] = -1;
           m_aaiCodedScale [ baseVoiInVps ][ voiInVps ] = m_vps->getCodedScale    (voiInVps) [ baseVoiInVps ];
           m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ] = m_vps->getCodedOffset   (voiInVps) [ baseVoiInVps ];
 
-          m_receivedIdc   [ voiInVps ][ baseVoiInVps ] = -1; 
+          m_receivedIdc   [ voiInVps ][ baseVoiInVps ] = -1;
           m_aaiCodedScale [ voiInVps ][ baseVoiInVps ] = m_vps->getInvCodedScale (voiInVps) [ baseVoiInVps ];
           m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ] = m_vps->getInvCodedOffset(voiInVps) [ baseVoiInVps ];
           xInitLUTs( baseVoiInVps, voiInVps, m_aaiCodedScale[ baseVoiInVps ][ voiInVps ], m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
@@ -130,13 +131,13 @@ Void
 CamParsCollector::xResetReceivedIdc( Bool overWriteFlag )
 {
   for (Int i = 0; i < m_vps->getNumViews(); i++)
-  {  
+  {
     for (Int j = 0; j < m_vps->getNumViews(); j++)
     {
       if ( overWriteFlag ||  ( m_receivedIdc[i][j] != -1 ) )
       {
-        m_receivedIdc[i][j] = 0; 
-      }      
+        m_receivedIdc[i][j] = 0;
+      }
     }
   }
 }
@@ -170,7 +171,7 @@ CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetView
   }
 }
 
-Void 
+Void
   CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
 {
   Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCpPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
@@ -233,56 +234,56 @@ Void CamParsCollector::setSlice( const TComSlice* pcSlice )
   Int curPoc = pcSlice->getPOC();
   if( m_firstReceivedPoc == -2 )
   {
-    m_firstReceivedPoc = curPoc; 
+    m_firstReceivedPoc = curPoc;
   }
 
-  Bool newPocFlag = ( m_lastPoc != curPoc );  
+  Bool newPocFlag = ( m_lastPoc != curPoc );
 
   if ( newPocFlag )
-  {    
+  {
     if( m_lastPoc != -1 )
     {
       xOutput( m_lastPoc );
     }
 
-    xResetReceivedIdc( false ); 
+    xResetReceivedIdc( false );
     m_lastPoc = pcSlice->getPOC();
   }
 
-  UInt voiInVps          = m_vps->getVoiInVps(pcSlice->getViewIndex());  
+  UInt voiInVps          = m_vps->getVoiInVps(pcSlice->getViewIndex());
   if( m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) ) // check consistency of slice parameters here
-  {   
+  {
     for( Int baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
-    {        
+    {
       if ( m_vps->getCpPresentFlag( voiInVps, baseVoiInVps ) )
       {
         if ( m_receivedIdc[ voiInVps ][ baseVoiInVps ] != 0 )
-        {      
+        {
           AOF( m_aaiCodedScale [ voiInVps ][ baseVoiInVps ] == pcSlice->getInvCodedScale () [ baseVoiInVps ] );
           AOF( m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ] == pcSlice->getInvCodedOffset() [ baseVoiInVps ] );
         }
         else
-        {          
-          m_receivedIdc   [ voiInVps ][ baseVoiInVps ]  = 1; 
+        {
+          m_receivedIdc   [ voiInVps ][ baseVoiInVps ]  = 1;
           m_aaiCodedScale [ voiInVps ][ baseVoiInVps ]  = pcSlice->getInvCodedScale () [ baseVoiInVps ];
           m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ]  = pcSlice->getInvCodedOffset() [ baseVoiInVps ];
           xInitLUTs( voiInVps, baseVoiInVps, m_aaiCodedScale[ voiInVps ][ baseVoiInVps ], m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
         }
         if ( m_receivedIdc[ baseVoiInVps ][ voiInVps ] != 0 )
-        {      
+        {
           AOF( m_aaiCodedScale [ baseVoiInVps ][ voiInVps ] == pcSlice->getCodedScale    () [ baseVoiInVps ] );
           AOF( m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ] == pcSlice->getCodedOffset   () [ baseVoiInVps ] );
         }
         else
-        {        
-          m_receivedIdc   [ baseVoiInVps ][ voiInVps ]  = 1; 
+        {
+          m_receivedIdc   [ baseVoiInVps ][ voiInVps ]  = 1;
           m_aaiCodedScale [ baseVoiInVps ][ voiInVps ]  = pcSlice->getCodedScale    () [ baseVoiInVps ];
           m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ]  = pcSlice->getCodedOffset   () [ baseVoiInVps ];
           xInitLUTs( baseVoiInVps, voiInVps, m_aaiCodedScale[ baseVoiInVps ][ voiInVps ], m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
         }
       }
     }
-  }  
+  }
 }
 
 Void
@@ -294,7 +295,7 @@ CamParsCollector::xOutput( Int iPOC )
     {
       fprintf( m_pCodedScaleOffsetFile, "#ViewOrderIdx     ViewIdVal\n" );
       fprintf( m_pCodedScaleOffsetFile, "#------------ -------------\n" );
-      
+
       for( UInt voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
       {
         fprintf( m_pCodedScaleOffsetFile, "%13d %13d\n", m_vps->getViewOIdxList( voiInVps ), m_vps->getViewIdVal( m_vps->getViewOIdxList( voiInVps ) ) );
@@ -314,12 +315,12 @@ CamParsCollector::xOutput( Int iPOC )
           if( voiInVps != baseVoiInVps )
           {
             if ( m_receivedIdc[baseVoiInVps][voiInVps] != 0 )
-            {            
+            {
               fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
-                iS, iE, m_vps->getViewOIdxList( voiInVps ), m_vps->getViewOIdxList( baseVoiInVps ), 
-                m_aaiCodedScale [ baseVoiInVps ][ voiInVps ], 
+                iS, iE, m_vps->getViewOIdxList( voiInVps ), m_vps->getViewOIdxList( baseVoiInVps ),
+                m_aaiCodedScale [ baseVoiInVps ][ voiInVps ],
                 m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_vps->getCpPrecision() );
-            }            
+            }
           }
         }
       }
@@ -333,7 +334,7 @@ TDecTop::TDecTop()
   : m_iMaxRefPicNum(0)
 #if !NH_MV
   , m_associatedIRAPType(NAL_UNIT_INVALID)
-  , m_pocCRA(0)  
+  , m_pocCRA(0)
   , m_pocRandomAccess(MAX_INT)
   , m_cListPic()
   , m_parameterSetManager()
@@ -425,7 +426,7 @@ TDecTop::~TDecTop()
   {
     fclose( g_hTrace );
   }
-#endif  
+#endif
 #endif
   while (!m_prefixSEINALUs.empty())
   {
@@ -464,7 +465,7 @@ Void TDecTop::init()
   initROM();
 #endif
 #if NH_MV
-  m_cCavlcDecoder.setDecTop( this ); 
+  m_cCavlcDecoder.setDecTop( this );
 #endif
   m_cGopDecoder.init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cSAO);
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
@@ -652,8 +653,8 @@ Void TDecTop::xActivateParameterSets()
     m_parameterSetManager.clearPPSChangedFlag(pps->getPPSId());
 #if NH_MV
     const TComVPS* vps = m_parameterSetManager.getVPS(sps->getVPSId());
-    assert (vps != 0); 
-    // TBD: check the condition on m_firstPicInLayerDecodedFlag 
+    assert (vps != 0);
+    // TBD: check the condition on m_firstPicInLayerDecodedFlag
     if (!m_parameterSetManager.activatePPS(m_apcSlicePilot->getPPSId(),m_apcSlicePilot->isIRAP() || !m_firstPicInLayerDecodedFlag[m_layerId] , m_layerId ) )
 #else
     if (false == m_parameterSetManager.activatePPS(m_apcSlicePilot->getPPSId(),m_apcSlicePilot->isIRAP()))
@@ -670,21 +671,21 @@ Void TDecTop::xActivateParameterSets()
       if ( vps->getVpsNumRepFormatsMinus1() == 0 )
       {
         //, it is a requirement of bitstream conformance that the value of update_rep_format_flag shall be equal to 0.
-        assert( sps->getUpdateRepFormatFlag() == false ); 
+        assert( sps->getUpdateRepFormatFlag() == false );
       }
-      sps->checkRpsMaxNumPics( vps, getLayerId() ); 
+      sps->checkRpsMaxNumPics( vps, getLayerId() );
 
-      // It is a requirement of bitstream conformance that, when the SPS is referred to by 
-      // any current picture that belongs to an independent non-base layer, the value of 
+      // It is a requirement of bitstream conformance that, when the SPS is referred to by
+      // any current picture that belongs to an independent non-base layer, the value of
       // MultiLayerExtSpsFlag derived from the SPS shall be equal to 0.
 
       if ( m_layerId > 0 && vps->getNumRefLayers( m_layerId ) == 0 )
-      {  
-        assert( sps->getMultiLayerExtSpsFlag() == 0 ); 
+      {
+        assert( sps->getMultiLayerExtSpsFlag() == 0 );
       }
     }
 #if NH_MV_SEI
-    m_seiReader.setLayerId ( newPic->getLayerId      ( ) ); 
+    m_seiReader.setLayerId ( newPic->getLayerId      ( ) );
     m_seiReader.setDecOrder( newPic->getDecodingOrder( ) );
 #endif
 #endif
@@ -710,7 +711,7 @@ Void TDecTop::xActivateParameterSets()
 
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
 #else
-    m_pcPic = newPic; 
+    m_pcPic = newPic;
 #endif
 
     // make the slice-pilot a real slice, and set up the slice-pilot for the next slice
@@ -726,9 +727,9 @@ Void TDecTop::xActivateParameterSets()
 
 #if NH_MV
     pSlice->setPic( m_pcPic );
-    vps=pSlice->getVPS();  
+    vps=pSlice->getVPS();
     // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
-    assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, pps->getLayerId() ) );   
+    assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, pps->getLayerId() ) );
     // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
     assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, sps->getLayerId() ) );
 #endif
@@ -778,8 +779,8 @@ Void TDecTop::xActivateParameterSets()
   else
   {
 #if NH_MV
-    assert( m_pcPic != NULL ); 
-    assert( newPic  == NULL ); 
+    assert( m_pcPic != NULL );
+    assert( newPic  == NULL );
 #endif
     // make the slice-pilot a real slice, and set up the slice-pilot for the next slice
     m_pcPic->allocateNewSlice();
@@ -862,14 +863,14 @@ Void TDecTop::decodeSliceHeader(InputNALUnit &nalu )
   m_cEntropyDecoder.setEntropyDecoder (&m_cCavlcDecoder);
   m_cEntropyDecoder.setBitstream      (&(nalu.getBitstream()));
 
-  assert( nalu.m_nuhLayerId == m_layerId );   
+  assert( nalu.m_nuhLayerId == m_layerId );
   m_apcSlicePilot->initSlice(); // the slice pilot is an object to prepare for a new slice
   // it is not associated with picture, sps or pps structures.
-  m_apcSlicePilot->setLayerId( nalu.m_nuhLayerId ); 
-  m_cEntropyDecoder.decodeFirstSliceSegmentInPicFlag( m_apcSlicePilot );   
+  m_apcSlicePilot->setLayerId( nalu.m_nuhLayerId );
+  m_cEntropyDecoder.decodeFirstSliceSegmentInPicFlag( m_apcSlicePilot );
   if ( m_apcSlicePilot->getFirstSliceSegementInPicFlag() )
   {
-#endif  
+#endif
     m_uiSliceIdx = 0;
   }
   else
@@ -915,7 +916,7 @@ Void TDecTop::decodeSliceHeader(InputNALUnit &nalu )
   //For inference of NoOutputOfPriorPicsFlag
   if (m_apcSlicePilot->getRapPicFlag())
   {
-      if ((m_apcSlicePilot->getNalUnitType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && m_apcSlicePilot->getNalUnitType() <= NAL_UNIT_CODED_SLICE_IDR_N_LP) || 
+      if ((m_apcSlicePilot->getNalUnitType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && m_apcSlicePilot->getNalUnitType() <= NAL_UNIT_CODED_SLICE_IDR_N_LP) ||
         (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA && m_bFirstSliceInSequence) ||
         (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA && m_apcSlicePilot->getHandleCraAsBlaFlag()))
       {
@@ -931,7 +932,7 @@ Void TDecTop::decodeSliceHeader(InputNALUnit &nalu )
     }
     else
     {
-      m_apcSlicePilot->setNoOutputPriorPicsFlag(false); 
+      m_apcSlicePilot->setNoOutputPriorPicsFlag(false);
     }
 
     if(m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA)
@@ -957,7 +958,7 @@ Void TDecTop::decodeSliceHeader(InputNALUnit &nalu )
       m_apcSlicePilot->setPicOutputFlag(false);
     }
   }
-  
+
   if (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA && m_craNoRaslOutputFlag) //Reset POC MSB when CRA has NoRaslOutputFlag equal to 1
   {
     TComPPS *pps = m_parameterSetManager.getPPS(m_apcSlicePilot->getPPSId());
@@ -1051,13 +1052,13 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
   else
   {
     //Check Multiview Main profile constraint in G.11.1.1
-    //  When ViewOrderIdx[ i ] derived according to any active VPS is equal to 1 
-    //  for the layer with nuh_layer_id equal to i in subBitstream, 
-    //  inter_view_mv_vert_constraint_flag shall be equal to 1 
+    //  When ViewOrderIdx[ i ] derived according to any active VPS is equal to 1
+    //  for the layer with nuh_layer_id equal to i in subBitstream,
+    //  inter_view_mv_vert_constraint_flag shall be equal to 1
     //  in the sps_multilayer_extension( ) syntax structure in each active SPS for that layer.
     if( pcSlice->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc()==Profile::MULTIVIEWMAIN
       &&
-      pcSlice->getVPS()->getViewOrderIdx(pcSlice->getVPS()->getLayerIdInNuh(getLayerId()))==1 
+      pcSlice->getVPS()->getViewOrderIdx(pcSlice->getVPS()->getLayerIdInNuh(getLayerId()))==1
       )
     {
       assert( pcSlice->getSPS()->getInterViewMvVertConstraintFlag()==1 );
@@ -1068,10 +1069,10 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
 #if NH_3D
     m_pcPic->setViewIndex( getViewIndex() );
     m_pcPic->setIsDepth  ( getIsDepth  () );
-    pcSlice->setIvPicLists( m_dpb );         
+    pcSlice->setIvPicLists( m_dpb );
 #endif
 #endif
-    
+
     // When decoding the slice header, the stored start and end addresses were actually RS addresses, not TS addresses.
     // Now, having set up the maps, convert them to the correct form.
     pcSlice->setSliceSegmentCurStartCtuTsAddr( m_pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceSegmentCurStartCtuTsAddr()) );
@@ -1104,16 +1105,16 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
         }
         else
         {
-          assert( false ); 
+          assert( false );
         }
       }
 #if NH_3D_NBDV
       pcSlice->setDefaultRefView();
 #endif
 #if NH_3D_ARP
-      pcSlice->setPocsInCurrRPSs(); 
+      pcSlice->setPocsInCurrRPSs();
       pcSlice->setARPStepNum(m_dpb);
-#endif     
+#endif
 #endif
 
       // For generalized B
@@ -1198,7 +1199,7 @@ Void TDecTop::decodeSliceSegment(InputNALUnit &nalu )
 #if NH_3D
     if ( decProcAnnexI() )
     {
-      pcSlice->checkInCompPredRefLayers(); 
+      pcSlice->checkInCompPredRefLayers();
     }
 #endif
 
@@ -1237,7 +1238,7 @@ Void TDecTop::xDecodeSPS(const std::vector<UChar> &naluData)
 {
   TComSPS* sps = new TComSPS();
 #if NH_MV
-  sps->setLayerId( getLayerId() ); 
+  sps->setLayerId( getLayerId() );
 #endif
 #if O0043_BEST_EFFORT_DECODING
   sps->setForceDecodeBitDepth(m_forceDecodeBitDepth);
@@ -1253,7 +1254,7 @@ Void TDecTop::xDecodePPS(const std::vector<UChar> &naluData)
 {
   TComPPS* pps = new TComPPS();
 #if NH_MV
-  pps->setLayerId( getLayerId() ); 
+  pps->setLayerId( getLayerId() );
 #endif
 #if NH_3D_DLT
   // create mapping from depth layer indexes to layer ids
@@ -1343,8 +1344,8 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_RASL_R:
 #if NH_MV
-      assert( false ); 
-      return 1; 
+      assert( false );
+      return 1;
 #else
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
 #endif
@@ -1517,54 +1518,54 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay )
 Int TDecTop::preDecodePoc( Bool firstPicInLayerDecodedFlag, Bool isFstPicOfAllLayOfPocResetPer, Bool isPocResettingPicture )
 {
   //Output of this process is PicOrderCntVal, the picture order count of the current picture.
-  //  Picture order counts are used to identify pictures, for deriving motion parameters in merge mode and 
+  //  Picture order counts are used to identify pictures, for deriving motion parameters in merge mode and
   //  motion vector prediction and for decoder conformance checking (see clause F.13.5).
 
   //  Each coded picture is associated with a picture order count variable, denoted as PicOrderCntVal.
 
   TComSlice* slice = m_apcSlicePilot;
   const Int nuhLayerId   = slice->getLayerId();
-  const TComVPS*   vps   = slice->getVPS(); 
-  const TComSPS*   sps   = slice->getSPS(); 
+  const TComVPS*   vps   = slice->getVPS();
+  const TComSPS*   sps   = slice->getSPS();
 
-  Int pocDecrementedInDpbFlag = m_pocDecrementedInDpbFlag[ nuhLayerId ]; 
+  Int pocDecrementedInDpbFlag = m_pocDecrementedInDpbFlag[ nuhLayerId ];
 
   if ( isFstPicOfAllLayOfPocResetPer )
   {
-    //  When the current picture is the first picture among all layers of a POC resetting period, 
+    //  When the current picture is the first picture among all layers of a POC resetting period,
     //  the variable PocDecrementedInDPBFlag[ i ] is set equal to 0 for each value of i in the range of 0 to 62, inclusive.
-    pocDecrementedInDpbFlag = false; 
+    pocDecrementedInDpbFlag = false;
   }
 
   //  The variable pocResettingFlag is derived as follows:
-  Bool pocResettingFlag; 
+  Bool pocResettingFlag;
   if ( isPocResettingPicture )
   {
-    //-  If the current picture is a POC resetting picture, the following applies:    
+    //-  If the current picture is a POC resetting picture, the following applies:
     if( vps->getVpsPocLsbAlignedFlag()  )
     {
       //  -  If vps_poc_lsb_aligned_flag is equal to 0, pocResettingFlag is set equal to 1.
-      pocResettingFlag = true; 
+      pocResettingFlag = true;
     }
     else if ( pocDecrementedInDpbFlag )
     {
       //  -  Otherwise, if PocDecrementedInDPBFlag[ nuh_layer_id ] is equal to 1, pocResettingFlag is set equal to 0.
-      pocResettingFlag = false; 
+      pocResettingFlag = false;
     }
     else
     {
       //  -  Otherwise, pocResettingFlag is set equal to 1.
-      pocResettingFlag = true; 
+      pocResettingFlag = true;
     }
   }
   else
   {
     //  -  Otherwise, pocResettingFlag is set equal to 0.
-    pocResettingFlag = false; 
+    pocResettingFlag = false;
   }
 
-  Int picOrderCntMsb; 
-  Int picOrderCntVal; 
+  Int picOrderCntMsb;
+  Int picOrderCntVal;
 
   //  Depending on pocResettingFlag, the following applies:
   if ( pocResettingFlag )
@@ -1572,16 +1573,16 @@ Int TDecTop::preDecodePoc( Bool firstPicInLayerDecodedFlag, Bool isFstPicOfAllLa
     //-  The PicOrderCntVal of the current picture is derived as follows:
     if( slice->getPocResetIdc()  ==  1 )
     {
-      picOrderCntVal = slice->getSlicePicOrderCntLsb(); 
+      picOrderCntVal = slice->getSlicePicOrderCntLsb();
     }
-    else if (slice->getPocResetIdc()  ==  2 ) 
+    else if (slice->getPocResetIdc()  ==  2 )
     {
-      picOrderCntVal = 0; 
+      picOrderCntVal = 0;
     }
     else
     {
-      picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), slice->getFullPocResetFlag() ? 0 : slice->getPocLsbVal(), 0, sps->getMaxPicOrderCntLsb() ); 
-      picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb(); 
+      picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), slice->getFullPocResetFlag() ? 0 : slice->getPocLsbVal(), 0, sps->getMaxPicOrderCntLsb() );
+      picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb();
     }
   }
   else
@@ -1591,21 +1592,21 @@ Int TDecTop::preDecodePoc( Bool firstPicInLayerDecodedFlag, Bool isFstPicOfAllLa
 
     if( slice->getPocMsbCycleValPresentFlag() )
     {
-      picOrderCntMsb = slice->getPocMsbCycleVal() * sps->getMaxPicOrderCntLsb(); 
+      picOrderCntMsb = slice->getPocMsbCycleVal() * sps->getMaxPicOrderCntLsb();
     }
     else if( !firstPicInLayerDecodedFlag  ||
       slice->getNalUnitType()  ==  NAL_UNIT_CODED_SLICE_IDR_N_LP || slice->getNalUnitType() ==  NAL_UNIT_CODED_SLICE_IDR_W_RADL )
     {
       picOrderCntMsb = 0; //     (F 62)
-    }    
+    }
     else
     {
       Int prevPicOrderCntLsb = m_prevPicOrderCnt & ( sps->getMaxPicOrderCntLsb() - 1 );
-      Int prevPicOrderCntMsb = m_prevPicOrderCnt - prevPicOrderCntLsb; 
-      picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), prevPicOrderCntLsb, prevPicOrderCntMsb, sps->getMaxPicOrderCntLsb() ); 
+      Int prevPicOrderCntMsb = m_prevPicOrderCnt - prevPicOrderCntLsb;
+      picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), prevPicOrderCntLsb, prevPicOrderCntMsb, sps->getMaxPicOrderCntLsb() );
     }
-    picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb(); 
-  }  
+    picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb();
+  }
   return picOrderCntVal;
 }
 
@@ -1618,41 +1619,41 @@ Void TDecTop::inferPocResetPeriodId()
   {
     if ( m_lastPresentPocResetIdc[ m_apcSlicePilot->getLayerId() ] != MIN_INT )
     {
-      // - If the previous picture picA that has poc_reset_period_id present in the slice segment header is present in the same layer 
-      //   of the bitstream as the current picture, the value of poc_reset_period_id is inferred to be equal to the value of the 
+      // - If the previous picture picA that has poc_reset_period_id present in the slice segment header is present in the same layer
+      //   of the bitstream as the current picture, the value of poc_reset_period_id is inferred to be equal to the value of the
       //   poc_reset_period_id of picA.
 
-      m_apcSlicePilot->setPocResetPeriodId( m_lastPresentPocResetIdc[ m_apcSlicePilot->getLayerId() ] ); 
+      m_apcSlicePilot->setPocResetPeriodId( m_lastPresentPocResetIdc[ m_apcSlicePilot->getLayerId() ] );
     }
     else
     {
       //- Otherwise, the value of poc_reset_period_id is inferred to be equal to 0.
-      m_apcSlicePilot->setPocResetPeriodId( 0 ); 
+      m_apcSlicePilot->setPocResetPeriodId( 0 );
     }
   }
   else
   {
-    m_lastPresentPocResetIdc[ m_apcSlicePilot->getLayerId() ] = m_apcSlicePilot->getPocResetPeriodId();  
+    m_lastPresentPocResetIdc[ m_apcSlicePilot->getLayerId() ] = m_apcSlicePilot->getPocResetPeriodId();
   }
 }
 
 
 Void TDecTop::decodePocAndRps( )
-{ 
+{
   assert( m_uiSliceIdx == 0 );
   Int nuhLayerId = m_pcPic->getLayerId();
   if ( m_decProcPocAndRps == CLAUSE_8 )
   {
     // 8.1.3 Decoding process for a coded picture with nuh_layer_id equal to 0
 
-    // Variables and functions relating to picture order count are derived as 
-    // specified in clause 8.3.1. This needs to be invoked only for the first slice 
+    // Variables and functions relating to picture order count are derived as
+    // specified in clause 8.3.1. This needs to be invoked only for the first slice
     // segment of a picture.
     x831DecProcForPicOrderCount( );
 
-    // The decoding process for RPS in clause 8.3.2 is invoked, wherein reference 
-    // pictures may be marked as "unused for reference" or "used for long-term 
-    // reference". This needs to be invoked only for the first slice segment of a 
+    // The decoding process for RPS in clause 8.3.2 is invoked, wherein reference
+    // pictures may be marked as "unused for reference" or "used for long-term
+    // reference". This needs to be invoked only for the first slice segment of a
     // picture.
     x832DecProcForRefPicSet    (  false );
   }
@@ -1665,14 +1666,14 @@ Void TDecTop::decodePocAndRps( )
       // F.8.1.4 Decoding process for a coded picture with nuh_layer_id equal to
       // --> Clause 8.1.3 is invoked with replacments of 8.3.1, 8.3.2, and 8.3.3 by F.8.3.1, 8.3.2, and 8.3.3
 
-      // Variables and functions relating to picture order count are derived as 
-      // specified in clause 8.3.1. This needs to be invoked only for the first slice 
+      // Variables and functions relating to picture order count are derived as
+      // specified in clause 8.3.1. This needs to be invoked only for the first slice
       // segment of a picture.
       xF831DecProcForPicOrderCount( );
 
-      // The decoding process for RPS in clause 8.3.2 is invoked, wherein reference 
-      // pictures may be marked as "unused for reference" or "used for long-term 
-      // reference". This needs to be invoked only for the first slice segment of a 
+      // The decoding process for RPS in clause 8.3.2 is invoked, wherein reference
+      // pictures may be marked as "unused for reference" or "used for long-term
+      // reference". This needs to be invoked only for the first slice segment of a
       // picture.
       xF832DecProcForRefPicSet( );
     }
@@ -1681,27 +1682,27 @@ Void TDecTop::decodePocAndRps( )
       // F.8.1.5 Decoding process for starting the decoding of a coded picture with
       // nuh_layer_id greater than 0
 
-      // Variables and functions relating to picture order count are derived in clause F.8.3.1. 
-      // This needs to be invoked only for the first slice segment of a picture. It is a requirement 
-      // of bitstream conformance that PicOrderCntVal of each picture in an access unit shall have the 
+      // Variables and functions relating to picture order count are derived in clause F.8.3.1.
+      // This needs to be invoked only for the first slice segment of a picture. It is a requirement
+      // of bitstream conformance that PicOrderCntVal of each picture in an access unit shall have the
       // same value during and at the end of decoding of the access unit
       xF831DecProcForPicOrderCount( );
 
-      // The decoding process for RPS in clause F.8.3.2 is invoked, wherein only reference pictures with 
-      // nuh_layer_id equal to that of CurrPic may be marked as "unused for reference" or "used for 
-      // long-term reference" and any picture with a different value of nuh_layer_id is not marked. 
+      // The decoding process for RPS in clause F.8.3.2 is invoked, wherein only reference pictures with
+      // nuh_layer_id equal to that of CurrPic may be marked as "unused for reference" or "used for
+      // long-term reference" and any picture with a different value of nuh_layer_id is not marked.
       // This needs to be invoked only for the first slice segment of a picture.
       xF832DecProcForRefPicSet( );
     }
   }
   else
   {
-    assert( false ); 
+    assert( false );
   }
 }
 
 Void TDecTop::genUnavailableRefPics( )
-{ 
+{
   assert( m_uiSliceIdx == 0 );
   Int nuhLayerId = m_pcPic->getLayerId();
   if ( m_decProcPocAndRps == CLAUSE_8 )
@@ -1710,11 +1711,11 @@ Void TDecTop::genUnavailableRefPics( )
 
     if ( m_pcPic->isBla() || ( m_pcPic->isCra() && m_pcPic->getNoRaslOutputFlag() ) )
     {
-      // When the current picture is a BLA picture or is a CRA picture 
-      // with NoRaslOutputFlag equal to 1, the decoding process for generating 
-      // unavailable reference pictures specified in clause 8.3.3 is invoked, 
+      // When the current picture is a BLA picture or is a CRA picture
+      // with NoRaslOutputFlag equal to 1, the decoding process for generating
+      // unavailable reference pictures specified in clause 8.3.3 is invoked,
       // which needs to be invoked only for the first slice segment of a picture.
-      x8331GenDecProcForGenUnavilRefPics();       
+      x8331GenDecProcForGenUnavilRefPics();
     }
   }
   else if( m_decProcPocAndRps == ANNEX_F )
@@ -1728,16 +1729,16 @@ Void TDecTop::genUnavailableRefPics( )
 
       if ( m_pcPic->isBla() || ( m_pcPic->isCra() && m_pcPic->getNoRaslOutputFlag() ) )
       {
-        // When the current picture is a BLA picture or is a CRA picture 
-        // with NoRaslOutputFlag equal to 1, the decoding process for generating 
-        // unavailable reference pictures specified in clause 8.3.3 is invoked, 
+        // When the current picture is a BLA picture or is a CRA picture
+        // with NoRaslOutputFlag equal to 1, the decoding process for generating
+        // unavailable reference pictures specified in clause 8.3.3 is invoked,
         // which needs to be invoked only for the first slice segment of a picture.
-        xF833DecProcForGenUnavRefPics(); 
+        xF833DecProcForGenUnavRefPics();
       }
 #if NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS
-      TComDecodedRps* decRps = m_pcPic->getDecodedRps(); 
+      TComDecodedRps* decRps = m_pcPic->getDecodedRps();
       decRps->m_numActiveRefLayerPics0 = 0;
-      decRps->m_numActiveRefLayerPics1 = 0;      
+      decRps->m_numActiveRefLayerPics1 = 0;
 #endif
     }
     else
@@ -1747,19 +1748,19 @@ Void TDecTop::genUnavailableRefPics( )
 
       if ( !m_firstPicInLayerDecodedFlag[ nuhLayerId ] )
       {
-        // When FirstPicInLayerDecodedFlag[ nuh_layer_id ] is equal to 0, the decoding process for generating 
-        // unavailable reference pictures for pictures first in decoding order within a layer specified in 
+        // When FirstPicInLayerDecodedFlag[ nuh_layer_id ] is equal to 0, the decoding process for generating
+        // unavailable reference pictures for pictures first in decoding order within a layer specified in
         // clause F.8.1.7 is invoked, which needs to be invoked only for the first slice segment of a picture.
         xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay();
       }
 
       if ( m_firstPicInLayerDecodedFlag[ nuhLayerId ] && ( m_pcPic->isIrap() && m_pcPic->getNoRaslOutputFlag() ) )
       {
-        // When FirstPicInLayerDecodedFlag[ nuh_layer_id ] is equal to 1 and the current picture is an IRAP 
-        // picture with NoRaslOutputFlag equal to 1, the decoding process for generating unavailable reference 
-        // pictures specified in clause F.8.3.3 is invoked, which needs to be invoked only for the first slice 
+        // When FirstPicInLayerDecodedFlag[ nuh_layer_id ] is equal to 1 and the current picture is an IRAP
+        // picture with NoRaslOutputFlag equal to 1, the decoding process for generating unavailable reference
+        // pictures specified in clause F.8.3.3 is invoked, which needs to be invoked only for the first slice
         // segment of a picture.
-        xF833DecProcForGenUnavRefPics(); 
+        xF833DecProcForGenUnavRefPics();
       }
 
       if ( decProcAnnexG() )
@@ -1771,14 +1772,14 @@ Void TDecTop::genUnavailableRefPics( )
   }
   else
   {
-    assert( false ); 
+    assert( false );
   }
 
-  xCheckUnavailableRefPics();      
+  xCheckUnavailableRefPics();
 }
 Void TDecTop::executeLoopFilters( )
 {
-  assert( m_pcPic != NULL ); 
+  assert( m_pcPic != NULL );
   if ( !m_pcPic->getHasGeneratedRefPics() && !m_pcPic->getIsGenerated() )
   {
     m_cGopDecoder.filterPicture( m_pcPic );
@@ -1790,8 +1791,8 @@ Void TDecTop::finalizePic()
 {
   if( m_pcPic->isIrap() )
   {
-    m_prevIrapPoc           = m_pcPic->getPOC(); 
-    m_prevIrapDecodingOrder = m_pcPic->getDecodingOrder(); 
+    m_prevIrapPoc           = m_pcPic->getPOC();
+    m_prevIrapDecodingOrder = m_pcPic->getDecodingOrder();
   }
   if( m_pcPic->isStsa() )
   {
@@ -1802,66 +1803,66 @@ Void TDecTop::finalizePic()
 
 
 Void TDecTop::initFromActiveVps( const TComVPS* vps )
-{   
-  setViewId   ( vps->getViewId   ( getLayerId() )      );  
+{
+  setViewId   ( vps->getViewId   ( getLayerId() )      );
 #if NH_3D
-  setViewIndex( vps->getViewIndex( getLayerId() )      );  
-  setIsDepth  ( vps->getDepthId  ( getLayerId() ) == 1 );  
+  setViewIndex( vps->getViewIndex( getLayerId() )      );
+  setIsDepth  ( vps->getDepthId  ( getLayerId() ) == 1 );
 #endif
 
   if ( !vps->getVpsExtensionFlag() )
   {
-    m_decodingProcess = CLAUSE_8; 
+    m_decodingProcess = CLAUSE_8;
     m_isInOwnTargetDecLayerIdList = ( getLayerId() ==  0 );
   }
   else
-  {  
+  {
     if ( m_targetOlsIdx == -1 )
     {
-      // Corresponds to specification by "External Means". (Should be set equal to 0, when no external means available. ) 
-      m_targetOlsIdx = vps->getVpsNumLayerSetsMinus1(); 
+      // Corresponds to specification by "External Means". (Should be set equal to 0, when no external means available. )
+      m_targetOlsIdx = vps->getVpsNumLayerSetsMinus1();
     }
 
-    Int targetDecLayerSetIdx = vps->olsIdxToLsIdx( m_targetOlsIdx ); 
+    Int targetDecLayerSetIdx = vps->olsIdxToLsIdx( m_targetOlsIdx );
 
     if ( targetDecLayerSetIdx <= vps->getVpsNumLayerSetsMinus1() && vps->getVpsBaseLayerInternalFlag() )
     {
-      m_smallestLayerId = 0; 
+      m_smallestLayerId = 0;
     }
     else if ( targetDecLayerSetIdx <= vps->getVpsNumLayerSetsMinus1() && !vps->getVpsBaseLayerInternalFlag() )
     {
-      m_smallestLayerId = 0; 
+      m_smallestLayerId = 0;
     }
     else if ( targetDecLayerSetIdx > vps->getVpsNumLayerSetsMinus1() && vps->getNumLayersInIdList( targetDecLayerSetIdx) == 1 )
     {
-      
-      // m_smallestLayerId = 0;       
-      // For now don't do change of layer id here. 
-      m_smallestLayerId = vps->getTargetDecLayerIdList( targetDecLayerSetIdx )[ 0 ];    
+
+      // m_smallestLayerId = 0;
+      // For now don't do change of layer id here.
+      m_smallestLayerId = vps->getTargetDecLayerIdList( targetDecLayerSetIdx )[ 0 ];
     }
     else
     {
-      m_smallestLayerId = vps->getTargetDecLayerIdList( targetDecLayerSetIdx )[ 0 ];    
+      m_smallestLayerId = vps->getTargetDecLayerIdList( targetDecLayerSetIdx )[ 0 ];
     }
 
 
     // Set profile
     Int lsIdx = vps->olsIdxToLsIdx( m_targetOlsIdx );
-    Int lIdx = -1; 
+    Int lIdx = -1;
     for (Int j = 0; j < vps->getNumLayersInIdList( lsIdx ) ; j++ )
     {
       if ( vps->getLayerSetLayerIdList( lsIdx, j ) == getLayerId() )
-      {        
-        lIdx = j;         
-        break; 
-      }        
+      {
+        lIdx = j;
+        break;
+      }
     }
-    m_isInOwnTargetDecLayerIdList = (lIdx != -1); 
+    m_isInOwnTargetDecLayerIdList = (lIdx != -1);
 
     if ( m_isInOwnTargetDecLayerIdList )
     {
       Int profileIdc = vps->getPTL( vps->getProfileTierLevelIdx( m_targetOlsIdx, lIdx ) )->getGeneralPTL()->getProfileIdc();
-      assert( profileIdc == 1 || profileIdc == 6 || profileIdc == 8 ); 
+      assert( profileIdc == 1 || profileIdc == 6 || profileIdc == 8 );
 
       if (  profileIdc == 6 )
       {
@@ -1892,43 +1893,43 @@ Void TDecTop::x831DecProcForPicOrderCount()
   /////////////////////////////////////////////////////
 
   //  Output of this process is PicOrderCntVal, the picture order count of the current picture.
-  //  Picture order counts are used to identify pictures, for deriving motion parameters in merge mode and 
+  //  Picture order counts are used to identify pictures, for deriving motion parameters in merge mode and
   //  motion vector prediction, and for decoder conformance checking (see clause C.5).
   //  Each coded picture is associated with a picture order count variable, denoted as PicOrderCntVal.
 
-  const TComSlice* curSlice = m_pcPic->getSlice(0); 
+  const TComSlice* curSlice = m_pcPic->getSlice(0);
 
-  Int prevPicOrderCntLsb = MIN_INT; 
-  Int prevPicOrderCntMsb = MIN_INT;  
-  if (!(m_pcPic->isIrap() && m_pcPic->getNoRaslOutputFlag() )  )  
+  Int prevPicOrderCntLsb = MIN_INT;
+  Int prevPicOrderCntMsb = MIN_INT;
+  if (!(m_pcPic->isIrap() && m_pcPic->getNoRaslOutputFlag() )  )
   {
-    //  When the current picture is not an IRAP picture with NoRaslOutputFlag equal to 1, 
+    //  When the current picture is not an IRAP picture with NoRaslOutputFlag equal to 1,
     //  the variables prevPicOrderCntLsb and prevPicOrderCntMsb are derived as follows:
 
-    //  -  Let prevTid0Pic be the previous picture in decoding order that has TemporalId equal to 0 and that is not a RASL picture, 
+    //  -  Let prevTid0Pic be the previous picture in decoding order that has TemporalId equal to 0 and that is not a RASL picture,
     //     a RADL picture or an SLNR picture.
 
     //  -  The variable prevPicOrderCntLsb is set equal to slice_pic_order_cnt_lsb of prevTid0Pic.
-    prevPicOrderCntLsb = m_prevTid0PicSlicePicOrderCntLsb; 
+    prevPicOrderCntLsb = m_prevTid0PicSlicePicOrderCntLsb;
 
     //  -  The variable prevPicOrderCntMsb is set equal to PicOrderCntMsb of prevTid0Pic.
-    prevPicOrderCntMsb = m_prevTid0PicPicOrderCntMsb; 
+    prevPicOrderCntMsb = m_prevTid0PicPicOrderCntMsb;
   }
 
-  //  The variable PicOrderCntMsb of the current picture is derived as follows:  
-  
+  //  The variable PicOrderCntMsb of the current picture is derived as follows:
+
   Int slicePicOrderCntLsb = curSlice->getSlicePicOrderCntLsb();
 
-  Int picOrderCntMsb; 
+  Int picOrderCntMsb;
 
   if (m_pcPic->isIrap() && m_pcPic->getNoRaslOutputFlag()  )
   {
     //-  If the current picture is an IRAP picture with NoRaslOutputFlag equal to 1, PicOrderCntMsb is set equal to 0.
-    picOrderCntMsb = 0; 
+    picOrderCntMsb = 0;
   }
   else
   {
-    Int maxPicOrderCntLsb   = curSlice->getSPS()->getMaxPicOrderCntLsb(); 
+    Int maxPicOrderCntLsb   = curSlice->getSPS()->getMaxPicOrderCntLsb();
 
   //  -  Otherwise, PicOrderCntMsb is derived as follows:
 
@@ -1944,98 +1945,98 @@ Void TDecTop::x831DecProcForPicOrderCount()
     }
     else
     {
-      picOrderCntMsb = prevPicOrderCntMsb; 
+      picOrderCntMsb = prevPicOrderCntMsb;
     }
   }
-  
+
   //PicOrderCntVal is derived as follows:
   Int picOrderCntVal = picOrderCntMsb + slicePicOrderCntLsb; //   (8 2)
 
-  //  NOTE 1 - All IDR pictures will have PicOrderCntVal equal to 0 since slice_pic_order_cnt_lsb is inferred to be 0 for IDR 
+  //  NOTE 1 - All IDR pictures will have PicOrderCntVal equal to 0 since slice_pic_order_cnt_lsb is inferred to be 0 for IDR
   //  pictures and prevPicOrderCntLsb and prevPicOrderCntMsb are both set equal to 0.
 
-  m_pcPic->getSlice(0)->setPOC( picOrderCntVal ); 
+  m_pcPic->getSlice(0)->setPOC( picOrderCntVal );
 
   // Update prevTid0Pic
   //   Let prevTid0Pic be the previous picture in decoding order that has TemporalId equal to 0 and that is not a RASL picture, a RADL picture or an SLNR picture.
   if( curSlice->getTemporalId() == 0  && !m_pcPic->isRasl() && !m_pcPic->isRadl() && !m_pcPic->isSlnr() )
   {
-    m_prevTid0PicSlicePicOrderCntLsb = slicePicOrderCntLsb;     
-    m_prevTid0PicPicOrderCntMsb      = picOrderCntMsb;  
+    m_prevTid0PicSlicePicOrderCntLsb = slicePicOrderCntLsb;
+    m_prevTid0PicPicOrderCntMsb      = picOrderCntMsb;
   }
 }
 
 Void TDecTop::xF831DecProcForPicOrderCount()
 {
   //Output of this process is PicOrderCntVal, the picture order count of the current picture.
-  //  Picture order counts are used to identify pictures, for deriving motion parameters in merge mode and 
+  //  Picture order counts are used to identify pictures, for deriving motion parameters in merge mode and
   //  motion vector prediction and for decoder conformance checking (see clause F.13.5).
 
   //  Each coded picture is associated with a picture order count variable, denoted as PicOrderCntVal.
 
-  const TComSlice* slice = m_pcPic->getSlice(0); 
-  const Int nuhLayerId   = m_pcPic->getLayerId(); 
-  const TComVPS*   vps   = slice->getVPS(); 
-  const TComSPS*   sps   = slice->getSPS(); 
+  const TComSlice* slice = m_pcPic->getSlice(0);
+  const Int nuhLayerId   = m_pcPic->getLayerId();
+  const TComVPS*   vps   = slice->getVPS();
+  const TComSPS*   sps   = slice->getSPS();
   if ( m_pcPic->getIsFstPicOfAllLayOfPocResetPer() )
   {
-    //  When the current picture is the first picture among all layers of a POC resetting period, 
+    //  When the current picture is the first picture among all layers of a POC resetting period,
     //  the variable PocDecrementedInDPBFlag[ i ] is set equal to 0 for each value of i in the range of 0 to 62, inclusive.
     for (Int i = 0; i <= 62; i++)
     {
-      m_pocDecrementedInDpbFlag[ i ] = 0; 
+      m_pocDecrementedInDpbFlag[ i ] = 0;
     }
   }
 
   //  The variable pocResettingFlag is derived as follows:
-  Bool pocResettingFlag; 
+  Bool pocResettingFlag;
   if (m_pcPic->getIsPocResettingPic() )
   {
-    //-  If the current picture is a POC resetting picture, the following applies:    
+    //-  If the current picture is a POC resetting picture, the following applies:
     if( vps->getVpsPocLsbAlignedFlag()  )
     {
       //  -  If vps_poc_lsb_aligned_flag is equal to 0, pocResettingFlag is set equal to 1.
-      pocResettingFlag = true; 
+      pocResettingFlag = true;
     }
     else if ( m_pocDecrementedInDpbFlag[ nuhLayerId ] )
     {
       //  -  Otherwise, if PocDecrementedInDPBFlag[ nuh_layer_id ] is equal to 1, pocResettingFlag is set equal to 0.
-      pocResettingFlag = false; 
+      pocResettingFlag = false;
     }
     else
     {
       //  -  Otherwise, pocResettingFlag is set equal to 1.
-      pocResettingFlag = true; 
+      pocResettingFlag = true;
     }
   }
   else
   {
     //  -  Otherwise, pocResettingFlag is set equal to 0.
-    pocResettingFlag = false; 
+    pocResettingFlag = false;
   }
 
   //  The list affectedLayerList is derived as follows:
-  std::vector<Int> affectedLayerList; 
+  std::vector<Int> affectedLayerList;
   if (! vps->getVpsPocLsbAlignedFlag() )
   {
     //-  If vps_poc_lsb_aligned_flag is equal to 0, affectedLayerList consists of the nuh_layer_id of the current picture.
-    affectedLayerList.push_back( nuhLayerId ); 
+    affectedLayerList.push_back( nuhLayerId );
   }
   else
   {
-    //  -  Otherwise, affectedLayerList consists of the nuh_layer_id of the current picture and the nuh_layer_id values 
-    //     equal to IdPredictedLayer[ currNuhLayerId ][ j ] for all values of j in the range of 0 to NumPredictedLayers[ currNuhLayerId ] - 1, 
+    //  -  Otherwise, affectedLayerList consists of the nuh_layer_id of the current picture and the nuh_layer_id values
+    //     equal to IdPredictedLayer[ currNuhLayerId ][ j ] for all values of j in the range of 0 to NumPredictedLayers[ currNuhLayerId ] - 1,
     //     inclusive, where currNuhLayerId is the nuh_layer_id value of the current picture.
-    affectedLayerList.push_back( nuhLayerId ); 
-    Int currNuhLayerId = nuhLayerId; 
+    affectedLayerList.push_back( nuhLayerId );
+    Int currNuhLayerId = nuhLayerId;
     for (Int j = 0; j <= vps->getNumPredictedLayers( currNuhLayerId )-1; j++ )
     {
       affectedLayerList.push_back( vps->getIdPredictedLayer(currNuhLayerId, j ) );
     }
   }
-  
-  Int picOrderCntMsb; 
-  Int picOrderCntVal; 
+
+  Int picOrderCntMsb;
+  Int picOrderCntVal;
 
   //  Depending on pocResettingFlag, the following applies:
   if ( pocResettingFlag )
@@ -2044,145 +2045,145 @@ Void TDecTop::xF831DecProcForPicOrderCount()
     if ( m_firstPicInLayerDecodedFlag[ nuhLayerId ] )
     {
       //-  The variables pocMsbDelta, pocLsbDelta and DeltaPocVal are derived as follows:
-      Int pocMsbDelta; 
-      Int pocLsbDelta; 
-      Int deltaPocVal;       
+      Int pocMsbDelta;
+      Int pocLsbDelta;
+      Int deltaPocVal;
 
       {
-        Int pocLsbVal; 
-        Int prevPicOrderCntLsb; 
-        Int prevPicOrderCntMsb; 
+        Int pocLsbVal;
+        Int prevPicOrderCntLsb;
+        Int prevPicOrderCntMsb;
 
         if( slice->getPocResetIdc() ==  3 )
         {
-          pocLsbVal = slice->getPocLsbVal(); 
-        }      
+          pocLsbVal = slice->getPocLsbVal();
+        }
         else
         {
-          pocLsbVal = slice->getSlicePicOrderCntLsb(); 
+          pocLsbVal = slice->getSlicePicOrderCntLsb();
         }
 
         if( slice->getPocMsbCycleValPresentFlag() )
         {
           pocMsbDelta = slice->getPocMsbCycleVal() * sps->getMaxPicOrderCntLsb();   // (F 60)
-        }      
+        }
         else
         {
-          prevPicOrderCntLsb = m_prevPicOrderCnt & ( sps->getMaxPicOrderCntLsb() - 1 ); 
-          prevPicOrderCntMsb = m_prevPicOrderCnt - prevPicOrderCntLsb; 
+          prevPicOrderCntLsb = m_prevPicOrderCnt & ( sps->getMaxPicOrderCntLsb() - 1 );
+          prevPicOrderCntMsb = m_prevPicOrderCnt - prevPicOrderCntLsb;
 
-          pocMsbDelta = xGetCurrMsb( pocLsbVal, prevPicOrderCntLsb, prevPicOrderCntMsb, sps->getMaxPicOrderCntLsb() ); 
+          pocMsbDelta = xGetCurrMsb( pocLsbVal, prevPicOrderCntLsb, prevPicOrderCntMsb, sps->getMaxPicOrderCntLsb() );
         }
 
         if( slice->getPocResetIdc() == 2 ||  ( slice->getPocResetIdc() == 3  &&  slice->getFullPocResetFlag() ) )
         {
-          pocLsbDelta = pocLsbVal; 
+          pocLsbDelta = pocLsbVal;
         }
         else
         {
-          pocLsbDelta = 0; 
+          pocLsbDelta = 0;
         }
-        deltaPocVal = pocMsbDelta + pocLsbDelta; 
+        deltaPocVal = pocMsbDelta + pocLsbDelta;
       }
 
-      //-  The PicOrderCntVal of each picture that has nuh_layer_id value nuhLayerId for which PocDecrementedInDPBFlag[ nuhLayerId ] is equal to 0 
+      //-  The PicOrderCntVal of each picture that has nuh_layer_id value nuhLayerId for which PocDecrementedInDPBFlag[ nuhLayerId ] is equal to 0
       //   and that is equal to any value in affectedLayerList is decremented by DeltaPocVal.
       for (Int i = 0; i < (Int) affectedLayerList.size(); i++ )
       {
         if ( !m_pocDecrementedInDpbFlag[ affectedLayerList[i] ] )
         {
-          m_dpb->decrementPocsInSubDpb( affectedLayerList[i], deltaPocVal ); 
+          m_dpb->decrementPocsInSubDpb( affectedLayerList[i], deltaPocVal );
         }
       }
 
       //-  PocDecrementedInDPBFlag[ nuhLayerId ] is set equal to 1 for each value of nuhLayerId included in affectedLayerList.
       for (Int i = 0; i < (Int) affectedLayerList.size(); i++ )
       {
-        m_pocDecrementedInDpbFlag[ affectedLayerList[i] ] = true; 
+        m_pocDecrementedInDpbFlag[ affectedLayerList[i] ] = true;
       }
-    } 
+    }
 
     //-  The PicOrderCntVal of the current picture is derived as follows:
     if( slice->getPocResetIdc()  ==  1 )
     {
-      picOrderCntVal = slice->getSlicePicOrderCntLsb(); 
+      picOrderCntVal = slice->getSlicePicOrderCntLsb();
     }
-    else if (slice->getPocResetIdc()  ==  2 ) 
+    else if (slice->getPocResetIdc()  ==  2 )
     {
-      picOrderCntVal = 0; 
+      picOrderCntVal = 0;
     }
     else
     {
-       picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), slice->getFullPocResetFlag() ? 0 : slice->getPocLsbVal(), 0, sps->getMaxPicOrderCntLsb() ); 
-       picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb(); 
+       picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), slice->getFullPocResetFlag() ? 0 : slice->getPocLsbVal(), 0, sps->getMaxPicOrderCntLsb() );
+       picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb();
     }
   }
   else
   {
     //-  Otherwise (pocResettingFlag is equal to 0), the following applies:
     //-  The PicOrderCntVal of the current picture is derived as follows:
-    
+
     if( slice->getPocMsbCycleValPresentFlag() )
     {
-      picOrderCntMsb = slice->getPocMsbCycleVal() * sps->getMaxPicOrderCntLsb(); 
+      picOrderCntMsb = slice->getPocMsbCycleVal() * sps->getMaxPicOrderCntLsb();
     }
     else if( !m_firstPicInLayerDecodedFlag[ nuhLayerId ]  ||
     slice->getNalUnitType()  ==  NAL_UNIT_CODED_SLICE_IDR_N_LP || slice->getNalUnitType() ==  NAL_UNIT_CODED_SLICE_IDR_W_RADL )
     {
       picOrderCntMsb = 0; //     (F 62)
-    }    
+    }
     else
     {
         Int prevPicOrderCntLsb = m_prevPicOrderCnt & ( sps->getMaxPicOrderCntLsb() - 1 );
-        Int prevPicOrderCntMsb = m_prevPicOrderCnt - prevPicOrderCntLsb; 
-        picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), prevPicOrderCntLsb, prevPicOrderCntMsb, sps->getMaxPicOrderCntLsb() ); 
+        Int prevPicOrderCntMsb = m_prevPicOrderCnt - prevPicOrderCntLsb;
+        picOrderCntMsb = xGetCurrMsb( slice->getSlicePicOrderCntLsb(), prevPicOrderCntLsb, prevPicOrderCntMsb, sps->getMaxPicOrderCntLsb() );
     }
-    picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb(); 
+    picOrderCntVal = picOrderCntMsb + slice->getSlicePicOrderCntLsb();
   }
-  
-  m_pcPic->getSlice(0)->setPOC( picOrderCntVal ); 
-  
+
+  m_pcPic->getSlice(0)->setPOC( picOrderCntVal );
+
   for (Int lId = 0; lId < (Int) affectedLayerList.size(); lId++ )
-  {  
+  {
     //  The value of PrevPicOrderCnt[ lId ] for each of the lId values included in affectedLayerList is derived as follows:
 
     if (!m_pcPic->isRasl() && !m_pcPic->isRadl() && !m_pcPic->isSlnr() && slice->getTemporalId() == 0 && !slice->getDiscardableFlag() )
     {
-      //-  If the current picture is not a RASL picture, a RADL picture or a sub-layer non-reference picture, and the current picture 
+      //-  If the current picture is not a RASL picture, a RADL picture or a sub-layer non-reference picture, and the current picture
       //   has TemporalId equal to 0 and discardable_flag equal to 0, PrevPicOrderCnt[ lId ] is set equal to PicOrderCntVal.
-      m_prevPicOrderCnt = picOrderCntVal; 
+      m_prevPicOrderCnt = picOrderCntVal;
     }
     else if ( slice->getPocResetIdc() == 3 &&  (
-      ( !m_firstPicInLayerDecodedFlag[ nuhLayerId ]) || 
-      ( m_firstPicInLayerDecodedFlag[ nuhLayerId ] && m_pcPic->getIsPocResettingPic() ) 
+      ( !m_firstPicInLayerDecodedFlag[ nuhLayerId ]) ||
+      ( m_firstPicInLayerDecodedFlag[ nuhLayerId ] && m_pcPic->getIsPocResettingPic() )
       ) )
     {
       //  -  Otherwise, when poc_reset_idc is equal to 3 and one of the following conditions is true, PrevPicOrderCnt[ lId ] is set equal to ( full_poc_reset_flag ? 0 : poc_lsb_val ):
       //     -  FirstPicInLayerDecodedFlag[ nuh_layer_id ] is equal to 0.
       //     -  FirstPicInLayerDecodedFlag[ nuh_layer_id ] is equal to 1 and the current picture is a POC resetting picture.
-      m_prevPicOrderCnt = ( slice->getFullPocResetFlag() ? 0 : slice->getPocLsbVal() ); 
+      m_prevPicOrderCnt = ( slice->getFullPocResetFlag() ? 0 : slice->getPocLsbVal() );
     }
   }
 }
 
 Int TDecTop::xGetCurrMsb( Int cl, Int pl, Int pm, Int ml )
 {
-  Int currMsb; 
+  Int currMsb;
   if ((pl - cl) >= (ml/ 2))
   {
     currMsb = pm + ml;
   }
   else if ( (cl - pl) > (ml / 2))
   {
-    currMsb = pm - ml; 
+    currMsb = pm - ml;
   }
   else
   {
-    currMsb = pm; 
+    currMsb = pm;
   }
 
-  return currMsb;  
-}   
+  return currMsb;
+}
 
 
 
@@ -2192,32 +2193,32 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   // 8.3.2 8.3.2 Decoding process for reference picture set
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  TComSlice* slice = m_pcPic->getSlice( 0 ); 
-  const TComSPS* sps = slice->getSPS(); 
-  //  This process is invoked once per picture, after decoding of a slice header but prior to the decoding of any coding unit and prior 
-  //  to the decoding process for reference picture list construction for the slice as specified in clause 8.3.3. 
-  //  This process may result in one or more reference pictures in the DPB being marked as "unused for reference" or 
+  TComSlice* slice = m_pcPic->getSlice( 0 );
+  const TComSPS* sps = slice->getSPS();
+  //  This process is invoked once per picture, after decoding of a slice header but prior to the decoding of any coding unit and prior
+  //  to the decoding process for reference picture list construction for the slice as specified in clause 8.3.3.
+  //  This process may result in one or more reference pictures in the DPB being marked as "unused for reference" or
   //  "used for long-term reference".
 
   // The variable currPicLayerId is set equal to nuh_layer_id of the current picture.
-  Int currPicLayerId = m_pcPic->getLayerId(); 
-  Int picOrderCntVal = m_pcPic->getPOC(); 
+  Int currPicLayerId = m_pcPic->getLayerId();
+  Int picOrderCntVal = m_pcPic->getPOC();
 
   if (m_pcPic->isIrap() && m_pcPic->getNoRaslOutputFlag()  )
-  {     
-    // When the current picture is an IRAP picture with NoRaslOutputFlag equal to 1, 
-    // all reference pictures with nuh_layer_id equal to currPicLayerId currently in the 
+  {
+    // When the current picture is an IRAP picture with NoRaslOutputFlag equal to 1,
+    // all reference pictures with nuh_layer_id equal to currPicLayerId currently in the
     // DPB (if any) are marked as "unused for reference".
-    m_dpb->markSubDpbAsUnusedForReference( currPicLayerId ); 
+    m_dpb->markSubDpbAsUnusedForReference( currPicLayerId );
   }
-  // Short-term reference pictures are identified by their PicOrderCntVal values. Long-term reference pictures are identified either by 
+  // Short-term reference pictures are identified by their PicOrderCntVal values. Long-term reference pictures are identified either by
   // their PicOrderCntVal values or their slice_pic_order_cnt_lsb values.
 
-  // Five lists of picture order count values are constructed to derive the RPS. These five lists are PocStCurrBefore, 
-  // PocStCurrAfter, PocStFoll, PocLtCurr and PocLtFoll, with NumPocStCurrBefore, NumPocStCurrAfter, NumPocStFoll, 
+  // Five lists of picture order count values are constructed to derive the RPS. These five lists are PocStCurrBefore,
+  // PocStCurrAfter, PocStFoll, PocLtCurr and PocLtFoll, with NumPocStCurrBefore, NumPocStCurrAfter, NumPocStFoll,
   // NumPocLtCurr and NumPocLtFoll number of elements, respectively. The five lists and the five variables are derived as follows:
-  
-  TComDecodedRps* decRps = m_pcPic->getDecodedRps(); 
+
+  TComDecodedRps* decRps = m_pcPic->getDecodedRps();
 
   std::vector<Int>& pocStCurrBefore = decRps->m_pocStCurrBefore;
   std::vector<Int>& pocStCurrAfter  = decRps->m_pocStCurrAfter;
@@ -2225,18 +2226,18 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   std::vector<Int>& pocLtCurr       = decRps->m_pocLtCurr;
   std::vector<Int>& pocLtFoll       = decRps->m_pocLtFoll;
 
-  Int& numPocStCurrBefore = decRps->m_numPocStCurrBefore; 
+  Int& numPocStCurrBefore = decRps->m_numPocStCurrBefore;
   Int& numPocStCurrAfter  = decRps->m_numPocStCurrAfter;
   Int& numPocStFoll       = decRps->m_numPocStFoll;
   Int& numPocLtCurr       = decRps->m_numPocLtCurr;
-  Int& numPocLtFoll       = decRps->m_numPocLtFoll;   
+  Int& numPocLtFoll       = decRps->m_numPocLtFoll;
 
-  std::vector<Int> currDeltaPocMsbPresentFlag, follDeltaPocMsbPresentFlag; 
+  std::vector<Int> currDeltaPocMsbPresentFlag, follDeltaPocMsbPresentFlag;
 
   if (m_pcPic->isIdr() )
   {
-    // - If the current picture is an IDR picture, PocStCurrBefore, PocStCurrAfter, PocStFoll, 
-    //   PocLtCurr and PocLtFoll are all set to be empty, and NumPocStCurrBefore, 
+    // - If the current picture is an IDR picture, PocStCurrBefore, PocStCurrAfter, PocStFoll,
+    //   PocLtCurr and PocLtFoll are all set to be empty, and NumPocStCurrBefore,
     //   NumPocStCurrAfter, NumPocStFoll, NumPocLtCurr and NumPocLtFoll are all set equal to 0.
 
     pocStCurrBefore.clear();
@@ -2244,19 +2245,19 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
     pocStFoll      .clear();
     pocLtCurr      .clear();
     pocLtFoll      .clear();
-    numPocStCurrBefore = 0; 
-    numPocStCurrAfter  = 0; 
-    numPocStFoll       = 0; 
-    numPocLtCurr       = 0; 
-    numPocLtFoll       = 0; 
+    numPocStCurrBefore = 0;
+    numPocStCurrAfter  = 0;
+    numPocStFoll       = 0;
+    numPocLtCurr       = 0;
+    numPocLtFoll       = 0;
   }
   else
   {
     const TComStRefPicSet* stRps  = slice->getStRps( slice->getCurrRpsIdx() );
     // -  Otherwise, the following applies:
 
-    Int j = 0; 
-    Int k = 0; 
+    Int j = 0;
+    Int k = 0;
     for( Int i = 0; i < stRps->getNumNegativePicsVar() ; i++ )
     {
       if( stRps->getUsedByCurrPicS0Var( i  ) )
@@ -2268,14 +2269,14 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
         pocStFoll      .push_back( picOrderCntVal + stRps->getDeltaPocS0Var( i ) ); k++;
       }
     }
-    numPocStCurrBefore = j;    
+    numPocStCurrBefore = j;
 
-    j = 0; 
+    j = 0;
     for (Int i = 0; i < stRps->getNumPositivePicsVar(); i++ )
     {
       if (stRps->getUsedByCurrPicS1Var( i ) )
       {
-        pocStCurrAfter.push_back( picOrderCntVal + stRps->getDeltaPocS1Var( i ) ); j++; 
+        pocStCurrAfter.push_back( picOrderCntVal + stRps->getDeltaPocS1Var( i ) ); j++;
       }
       else
       {
@@ -2286,26 +2287,26 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
     numPocStFoll = k; //    (8 5)
 
 
-    j = 0; 
-    k = 0; 
+    j = 0;
+    k = 0;
     for( Int i = 0; i < slice->getNumLongTermSps( ) + slice->getNumLongTermPics(); i++ )
     {
-      Int pocLt = slice->getPocLsbLtVar( i ); 
+      Int pocLt = slice->getPocLsbLtVar( i );
       if( slice->getDeltaPocMsbPresentFlag( i ) )
       {
         pocLt  +=  picOrderCntVal - slice->getDeltaPocMsbCycleLtVar( i ) * sps->getMaxPicOrderCntLsb() -
           ( picOrderCntVal & ( sps->getMaxPicOrderCntLsb() - 1 ) );
       }
 
-      if( slice->getUsedByCurrPicLtVar(i)) 
+      if( slice->getUsedByCurrPicLtVar(i))
       {
         pocLtCurr.push_back( pocLt );
-        currDeltaPocMsbPresentFlag.push_back( slice->getDeltaPocMsbPresentFlag( i ) ); j++; 
-      } 
+        currDeltaPocMsbPresentFlag.push_back( slice->getDeltaPocMsbPresentFlag( i ) ); j++;
+      }
       else
       {
         pocLtFoll.push_back( pocLt );
-        follDeltaPocMsbPresentFlag.push_back( slice->getDeltaPocMsbPresentFlag( i ) ); k++; 
+        follDeltaPocMsbPresentFlag.push_back( slice->getDeltaPocMsbPresentFlag( i ) ); k++;
       }
     }
     numPocLtCurr = j;
@@ -2314,51 +2315,51 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
 
   assert(numPocStCurrAfter  == pocStCurrAfter   .size() );
   assert(numPocStCurrBefore == pocStCurrBefore  .size() );
-  assert(numPocStFoll       == pocStFoll        .size() );  
-  assert(numPocLtCurr       == pocLtCurr        .size() );  
+  assert(numPocStFoll       == pocStFoll        .size() );
+  assert(numPocLtCurr       == pocLtCurr        .size() );
   assert(numPocLtFoll       == pocLtFoll        .size() );
 
   // where PicOrderCntVal is the picture order count of the current picture as specified in clause 8.3.1.
 
-  //   NOTE 2 - A value of CurrRpsIdx in the range of 0 to num_short_term_ref_pic_sets - 1, inclusive, 
-  //   indicates that a candidate short-term RPS from the active SPS for the current layer is being used, 
-  //   where CurrRpsIdx is the index of the candidate short-term RPS into the list of candidate short-term RPSs signalled 
-  //   in the active SPS for the current layer. CurrRpsIdx equal to num_short_term_ref_pic_sets indicates that 
+  //   NOTE 2 - A value of CurrRpsIdx in the range of 0 to num_short_term_ref_pic_sets - 1, inclusive,
+  //   indicates that a candidate short-term RPS from the active SPS for the current layer is being used,
+  //   where CurrRpsIdx is the index of the candidate short-term RPS into the list of candidate short-term RPSs signalled
+  //   in the active SPS for the current layer. CurrRpsIdx equal to num_short_term_ref_pic_sets indicates that
   //   the short-term RPS of the current picture is directly signalled in the slice header.
 
   for (Int i = 0; i <= numPocLtCurr - 1; i++  )
   {
-      // For each i in the range of 0 to NumPocLtCurr - 1, inclusive, when CurrDeltaPocMsbPresentFlag[ i ] is equal to 1, 
+      // For each i in the range of 0 to NumPocLtCurr - 1, inclusive, when CurrDeltaPocMsbPresentFlag[ i ] is equal to 1,
       // it is a requirement of bitstream conformance that the following conditions apply:
     if ( currDeltaPocMsbPresentFlag[i] )
     {
-      // -  There shall be no j in the range of 0 to NumPocStCurrBefore - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocStCurrBefore - 1, inclusive,
       //    for which PocLtCurr[ i ] is equal to PocStCurrBefore[ j ].
       for (Int j = 0; j <= numPocStCurrBefore - 1; j++ )
       {
         assert(!( pocLtCurr[ i ] == pocStCurrBefore[ j ] ) );
       }
 
-      // -  There shall be no j in the range of 0 to NumPocStCurrAfter - 1, inclusive, 
-      //    for which PocLtCurr[ i ] is equal to PocStCurrAfter[ j ]. 
+      // -  There shall be no j in the range of 0 to NumPocStCurrAfter - 1, inclusive,
+      //    for which PocLtCurr[ i ] is equal to PocStCurrAfter[ j ].
       for (Int j = 0; j <= numPocStCurrAfter - 1; j++ )
       {
         assert(!( pocLtCurr[ i ] == pocStCurrAfter[ j ] ) );
       }
 
-      // -  There shall be no j in the range of 0 to NumPocStFoll - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocStFoll - 1, inclusive,
       //    for which PocLtCurr[ i ] is equal to PocStFoll[ j ].
       for (Int j = 0; j <= numPocStFoll - 1; j++ )
       {
         assert(!( pocLtCurr[ i ] == pocStFoll[ j ] ) );
       }
 
-      // -  There shall be no j in the range of 0 to NumPocLtCurr - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocLtCurr - 1, inclusive,
       //    where j is not equal to i, for which PocLtCurr[ i ] is equal to PocLtCurr[ j ].
       for (Int j = 0; j <= numPocLtCurr - 1; j++ )
       {
         if ( i != j )
-        {        
+        {
           assert(!( pocLtCurr[ i ] == pocLtCurr[ j ] ) );
         }
       }
@@ -2367,32 +2368,32 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
 
   for (Int i = 0; i <= numPocLtFoll - 1; i++  )
   {
-    // For each i in the range of 0 to NumPocLtFoll - 1, inclusive, when FollDeltaPocMsbPresentFlag[ i ] is equal to 1, 
+    // For each i in the range of 0 to NumPocLtFoll - 1, inclusive, when FollDeltaPocMsbPresentFlag[ i ] is equal to 1,
     // it is a requirement of bitstream conformance that the following conditions apply:
     if ( follDeltaPocMsbPresentFlag[i] )
     {
-      // -  There shall be no j in the range of 0 to NumPocStCurrBefore - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocStCurrBefore - 1, inclusive,
       //    for which PocLtFoll[ i ] is equal to PocStCurrBefore[ j ].
       for (Int j = 0; j <= numPocStCurrBefore - 1; j++ )
       {
         assert(!( pocLtFoll[ i ] == pocStCurrBefore[ j ] ) );
       }
 
-      // -  There shall be no j in the range of 0 to NumPocStCurrAfter - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocStCurrAfter - 1, inclusive,
       //    for which PocLtFoll[ i ] is equal to PocStCurrAfter[ j ].
       for (Int j = 0; j <= numPocStCurrAfter - 1; j++ )
       {
         assert(!( pocLtFoll[ i ] == pocStCurrAfter[ j ] ) );
       }
 
-      // -  There shall be no j in the range of 0 to NumPocStFoll - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocStFoll - 1, inclusive,
       //    for which PocLtFoll[ i ] is equal to PocStFoll[ j ].
       for (Int j = 0; j <= numPocStFoll - 1; j++ )
       {
         assert(!( pocLtFoll[ i ] == pocStFoll[ j ] ) );
       }
 
-      // -  There shall be no j in the range of 0 to NumPocLtFoll - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocLtFoll - 1, inclusive,
       //    where j is not equal to i, for which PocLtFoll[ i ] is equal to PocLtFoll[ j ].
       for (Int j = 0; j <= numPocLtFoll - 1; j++ )
       {
@@ -2402,7 +2403,7 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
         }
       }
 
-      // -  There shall be no j in the range of 0 to NumPocLtCurr - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocLtCurr - 1, inclusive,
       //    for which PocLtFoll[ i ] is equal to PocLtCurr[ j ].
       for (Int j = 0; j <= numPocLtCurr - 1; j++ )
       {
@@ -2411,14 +2412,14 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
     }
   }
 
-  Int maxPicOrderCntLsb = sps->getMaxPicOrderCntLsb(); 
+  Int maxPicOrderCntLsb = sps->getMaxPicOrderCntLsb();
   for (Int i = 0; i <= numPocLtCurr - 1; i++  )
   {
-    // For each i in the range of 0 to NumPocLtCurr - 1, inclusive, when CurrDeltaPocMsbPresentFlag[ i ] is equal to 0, 
+    // For each i in the range of 0 to NumPocLtCurr - 1, inclusive, when CurrDeltaPocMsbPresentFlag[ i ] is equal to 0,
     // it is a requirement of bitstream conformance that the following conditions apply:
     if ( currDeltaPocMsbPresentFlag[ i ] == 0  )
     {
-      // -  There shall be no j in the range of 0 to NumPocStCurrBefore - 1, inclusive, 
+      // -  There shall be no j in the range of 0 to NumPocStCurrBefore - 1, inclusive,
       //    for which PocLtCurr[ i ] is equal to ( PocStCurrBefore[ j ] & ( MaxPicOrderCntLsb - 1 ) ).
       for (Int j = 0; j <= numPocStCurrBefore - 1; j++ )
       {
@@ -2453,7 +2454,7 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
 
   for (Int i = 0; i <= numPocLtFoll - 1; i++  )
   {
-    // For each i in the range of 0 to NumPocLtFoll - 1, inclusive, when FollDeltaPocMsbPresentFlag[ i ] is equal to 0, 
+    // For each i in the range of 0 to NumPocLtFoll - 1, inclusive, when FollDeltaPocMsbPresentFlag[ i ] is equal to 0,
     // it is a requirement of bitstream conformance that the following conditions apply:
     if ( follDeltaPocMsbPresentFlag[ i ] == 0  )
     {
@@ -2485,7 +2486,7 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
         if (j != i)
         {
           assert(!( pocLtFoll[ i ] == ( pocLtFoll[ j ] & ( maxPicOrderCntLsb - 1 ) ) ) );
-        }          
+        }
       }
 
       // -  There shall be no j in the range of 0 to NumPocLtCurr - 1, inclusive,
@@ -2498,28 +2499,28 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   }
 
   if ( !annexFModifications )
-  {  
-    // The variable NumPicTotalCurr is derived as specified in clause 7.4.7.2. 
+  {
+    // The variable NumPicTotalCurr is derived as specified in clause 7.4.7.2.
 
     // It is a requirement of bitstream conformance that the following applies to the value of NumPicTotalCurr:
     if ( m_pcPic->isBla() || m_pcPic->isCra() )
     {
       // -  If the current picture is a BLA or CRA picture, the value of NumPicTotalCurr shall be equal to 0.
-      assert( slice->getNumPicTotalCurr() == 0 ); 
+      assert( slice->getNumPicTotalCurr() == 0 );
     }
     else
     {
-      // -  Otherwise, 
+      // -  Otherwise,
       if ( slice->isInterP() || slice->isInterB() )
       {
         // when the current picture contains a P or B slice, the value of NumPicTotalCurr shall not be equal to 0.
-        assert( slice->getNumPicTotalCurr() != 0 ); 
+        assert( slice->getNumPicTotalCurr() != 0 );
       }
     }
   }
-    
-  // The RPS of the current picture consists of five RPS lists; RefPicSetStCurrBefore, RefPicSetStCurrAfter, RefPicSetStFoll, 
-  // RefPicSetLtCurr and RefPicSetLtFoll. RefPicSetStCurrBefore, RefPicSetStCurrAfter and RefPicSetStFoll are collectively 
+
+  // The RPS of the current picture consists of five RPS lists; RefPicSetStCurrBefore, RefPicSetStCurrAfter, RefPicSetStFoll,
+  // RefPicSetLtCurr and RefPicSetLtFoll. RefPicSetStCurrBefore, RefPicSetStCurrAfter and RefPicSetStFoll are collectively
   // referred to as the short-term RPS. RefPicSetLtCurr and RefPicSetLtFoll are collectively referred to as the long-term RPS.
 
   std::vector<TComPic*>& refPicSetStCurrBefore = decRps->m_refPicSetStCurrBefore;
@@ -2527,30 +2528,30 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   std::vector<TComPic*>& refPicSetStFoll       = decRps->m_refPicSetStFoll      ;
   std::vector<TComPic*>& refPicSetLtCurr       = decRps->m_refPicSetLtCurr      ;
   std::vector<TComPic*>& refPicSetLtFoll       = decRps->m_refPicSetLtFoll      ;
-  
+
   std::vector<TComPic*>** refPicSetsCurr       = decRps->m_refPicSetsCurr       ;
   std::vector<TComPic*>** refPicSetsLt         = decRps->m_refPicSetsLt         ;
   std::vector<TComPic*>** refPicSetsAll        = decRps->m_refPicSetsAll        ;
-  //   NOTE 3 - RefPicSetStCurrBefore, RefPicSetStCurrAfter and RefPicSetLtCurr contain all reference pictures that may be 
+  //   NOTE 3 - RefPicSetStCurrBefore, RefPicSetStCurrAfter and RefPicSetLtCurr contain all reference pictures that may be
   //   used for inter prediction of the current picture and one or more pictures that follow the current picture in decoding order.
-  //   RefPicSetStFoll and RefPicSetLtFoll consist of all reference pictures that are not used for inter prediction of the current 
+  //   RefPicSetStFoll and RefPicSetLtFoll consist of all reference pictures that are not used for inter prediction of the current
   //   picture but may be used in inter prediction for one or more pictures that follow the current picture in decoding order.
 
   // The derivation process for the RPS and picture marking are performed according to the following ordered steps:
   // 1.  The following applies:
 
-  TComSubDpb* dpb = m_dpb->getSubDpb( getLayerId(), false );   
+  TComSubDpb* dpb = m_dpb->getSubDpb( getLayerId(), false );
   assert( refPicSetLtCurr.empty() );
-  for( Int i = 0; i < numPocLtCurr; i++ ) 
+  for( Int i = 0; i < numPocLtCurr; i++ )
   {
-    if( !currDeltaPocMsbPresentFlag[ i ] ) 
-    {    
-      refPicSetLtCurr.push_back( dpb->getPicFromLsb( pocLtCurr[ i ], maxPicOrderCntLsb ) );       
+    if( !currDeltaPocMsbPresentFlag[ i ] )
+    {
+      refPicSetLtCurr.push_back( dpb->getPicFromLsb( pocLtCurr[ i ], maxPicOrderCntLsb ) );
     }
     else
     {
-      refPicSetLtCurr.push_back(dpb->getPic( pocLtCurr[ i ] ));       
-    }    
+      refPicSetLtCurr.push_back(dpb->getPic( pocLtCurr[ i ] ));
+    }
   }
 
   assert( refPicSetLtFoll.empty() );
@@ -2562,143 +2563,143 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
    }
    else
    {
-     refPicSetLtFoll.push_back(dpb->getPic( pocLtFoll[ i ] ));       
+     refPicSetLtFoll.push_back(dpb->getPic( pocLtFoll[ i ] ));
    }
   }
-  
-  // 2.  All reference pictures that are included in RefPicSetLtCurr or RefPicSetLtFoll and have nuh_layer_id equal 
+
+  // 2.  All reference pictures that are included in RefPicSetLtCurr or RefPicSetLtFoll and have nuh_layer_id equal
   //     to currPicLayerId are marked as "used for long-term reference".
   for (Int i = 0; i < numPocLtCurr; i++)
   {
     if ( refPicSetLtCurr[i] != NULL )
     {
-      refPicSetLtCurr[i]->markAsUsedForLongTermReference(); 
-    }    
+      refPicSetLtCurr[i]->markAsUsedForLongTermReference();
+    }
   }
 
   for (Int i = 0; i < numPocLtFoll; i++)
   {
     if ( refPicSetLtFoll[i] != NULL )
     {
-      refPicSetLtFoll[i]->markAsUsedForLongTermReference(); 
-    }    
+      refPicSetLtFoll[i]->markAsUsedForLongTermReference();
+    }
   }
 
   // 3.  The following applies:
   assert( refPicSetStCurrBefore.empty() );
   for( Int i = 0; i < numPocStCurrBefore; i++ )
   {
-    refPicSetStCurrBefore.push_back(dpb->getShortTermRefPic( pocStCurrBefore[ i ] )); 
+    refPicSetStCurrBefore.push_back(dpb->getShortTermRefPic( pocStCurrBefore[ i ] ));
   }
 
   assert( refPicSetStCurrAfter.empty() );
   for( Int i = 0; i < numPocStCurrAfter; i++ )
   {
-    refPicSetStCurrAfter.push_back(dpb->getShortTermRefPic( pocStCurrAfter[ i ] )); 
+    refPicSetStCurrAfter.push_back(dpb->getShortTermRefPic( pocStCurrAfter[ i ] ));
   }
 
   assert( refPicSetStFoll.empty() );
   for( Int i = 0; i < numPocStFoll; i++ )
   {
-    refPicSetStFoll.push_back(dpb->getShortTermRefPic( pocStFoll[ i ] )); 
+    refPicSetStFoll.push_back(dpb->getShortTermRefPic( pocStFoll[ i ] ));
   }
-  
-  // 4.  All reference pictures in the DPB that are not included in RefPicSetLtCurr, RefPicSetLtFoll, RefPicSetStCurrBefore, 
+
+  // 4.  All reference pictures in the DPB that are not included in RefPicSetLtCurr, RefPicSetLtFoll, RefPicSetStCurrBefore,
   //     RefPicSetStCurrAfter, or RefPicSetStFoll and have nuh_layer_id equal to currPicLayerId are marked as "unused for reference".
-  TComSubDpb picsToMark = (*dpb); 
+  TComSubDpb picsToMark = (*dpb);
   for (Int j = 0; j < 5; j++ )
   {
-    picsToMark.removePics( *refPicSetsAll[j] ); 
-  }  
-  picsToMark.markAllAsUnusedForReference(); 
-  
-  //     NOTE 4 - There may be one or more entries in the RPS lists that are equal to "no reference picture" because 
-  //     the corresponding pictures are not present in the DPB. Entries in RefPicSetStFoll or RefPicSetLtFoll that are equal 
-  //     to "no reference picture" should be ignored. An unintentional picture loss should be inferred for each entry in 
+    picsToMark.removePics( *refPicSetsAll[j] );
+  }
+  picsToMark.markAllAsUnusedForReference();
+
+  //     NOTE 4 - There may be one or more entries in the RPS lists that are equal to "no reference picture" because
+  //     the corresponding pictures are not present in the DPB. Entries in RefPicSetStFoll or RefPicSetLtFoll that are equal
+  //     to "no reference picture" should be ignored. An unintentional picture loss should be inferred for each entry in
   //     RefPicSetStCurrBefore, RefPicSetStCurrAfter, or RefPicSetLtCurr that is equal to "no reference picture".
 
   //     NOTE 5 - A picture cannot be included in more than one of the five RPS lists.
 
-  
+
   // It is a requirement of bitstream conformance that the RPS is restricted as follows:
 
 
 #if NH_MV_FIX_NO_REF_PICS_CHECK
   if ( !annexFModifications || m_firstPicInLayerDecodedFlag[ m_pcPic->getLayerId() ] )
-  { 
+  {
 #endif
     for (Int j = 0; j < 3; j++ )
     {
-      // -  There shall be no entry in RefPicSetStCurrBefore, RefPicSetStCurrAfter or RefPicSetLtCurr 
+      // -  There shall be no entry in RefPicSetStCurrBefore, RefPicSetStCurrAfter or RefPicSetLtCurr
       //    for which one or more of the following are true:
 
-      std::vector<TComPic*>* currSet = refPicSetsCurr[j]; 
+      std::vector<TComPic*>* currSet = refPicSetsCurr[j];
       for (Int i = 0; i < currSet->size(); i++)
       {
-        TComPic* pic = (*currSet)[i]; 
+        TComPic* pic = (*currSet)[i];
 
         // -  The entry is equal to "no reference picture".
-        assert( ! (pic == NULL ) ); 
+        assert( ! (pic == NULL ) );
 
         // -  The entry is an SLNR picture and has TemporalId equal to that of the current picture.
-        assert( !( pic->isSlnr() && pic->getTemporalId() == m_pcPic->getTemporalId() ) ); 
+        assert( !( pic->isSlnr() && pic->getTemporalId() == m_pcPic->getTemporalId() ) );
 
         // -  The entry is a picture that has TemporalId greater than that of the current picture.
-        assert( !(  pic->getTemporalId() > m_pcPic->getTemporalId() ) ); 
-      }      
+        assert( !(  pic->getTemporalId() > m_pcPic->getTemporalId() ) );
+      }
     }
 #if NH_MV_FIX_NO_REF_PICS_CHECK
   }
 #endif
-  
-  //  -  There shall be no entry in RefPicSetLtCurr or RefPicSetLtFoll for which the 
-  //     difference between the picture order count value of the current picture and the picture order count 
+
+  //  -  There shall be no entry in RefPicSetLtCurr or RefPicSetLtFoll for which the
+  //     difference between the picture order count value of the current picture and the picture order count
   //     value of the entry is greater than or equal to 2^24.
   for (Int j = 0; j < 2; j++ )
-  {    
-    std::vector<TComPic*>* ltSet = refPicSetsLt[j]; 
+  {
+    std::vector<TComPic*>* ltSet = refPicSetsLt[j];
     for (Int i = 0; i < ltSet->size(); i++)
     {
-      TComPic* pic = (*ltSet)[i]; 
+      TComPic* pic = (*ltSet)[i];
       if( pic != NULL )
       {
-        assert(!( abs( m_pcPic->getPOC() - pic->getPOC() ) >= (1 << 24) )); 
+        assert(!( abs( m_pcPic->getPOC() - pic->getPOC() ) >= (1 << 24) ));
       }
     }
   }
 
-  //   -  When the current picture is a temporal sub-layer access (TSA) picture, there shall be no picture 
+  //   -  When the current picture is a temporal sub-layer access (TSA) picture, there shall be no picture
   //      included in the RPS with TemporalId greater than or equal to the TemporalId of the current picture.
   if (m_pcPic->isTsa() )
   {
     for (Int j = 0; j < 5; j++ )
-    {    
-      std::vector<TComPic*>* aSet = refPicSetsAll[j]; 
+    {
+      std::vector<TComPic*>* aSet = refPicSetsAll[j];
       for (Int i = 0; i < aSet->size(); i++)
       {
-        TComPic* pic = (*aSet)[i]; 
+        TComPic* pic = (*aSet)[i];
         if( pic != NULL )
         {
-          assert( ! (pic->getTemporalId() >= m_pcPic->getTemporalId() ) ); 
+          assert( ! (pic->getTemporalId() >= m_pcPic->getTemporalId() ) );
         }
       }
     }
   }
 
-  //   -  When the current picture is a step-wise temporal sub-layer access (STSA) picture, 
+  //   -  When the current picture is a step-wise temporal sub-layer access (STSA) picture,
   //      there shall be no picture included in RefPicSetStCurrBefore, RefPicSetStCurrAfter or RefPicSetLtCurr that has
   //      TemporalId equal to that of the current picture.
   if (m_pcPic->isStsa() )
   {
     for (Int j = 0; j < 3; j++ )
-    {    
-      std::vector<TComPic*>* cSet = refPicSetsCurr[j]; 
+    {
+      std::vector<TComPic*>* cSet = refPicSetsCurr[j];
       for (Int i = 0; i < cSet->size(); i++)
       {
-        TComPic* pic = (*cSet)[i]; 
+        TComPic* pic = (*cSet)[i];
         if( pic != NULL )
         {
-          assert( ! (pic->getTemporalId() == m_pcPic->getTemporalId() ) ); 
+          assert( ! (pic->getTemporalId() == m_pcPic->getTemporalId() ) );
         }
       }
     }
@@ -2711,39 +2712,39 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   if ( m_pcPic->getDecodingOrder() > m_prevStsaDecOrder && m_pcPic->getTemporalId() == m_prevStsaTemporalId  )
   {
     for (Int j = 0; j < 3; j++ )
-    {    
-      std::vector<TComPic*>* cSet = refPicSetsCurr[j]; 
+    {
+      std::vector<TComPic*>* cSet = refPicSetsCurr[j];
       for (Int i = 0; i < cSet->size(); i++)
       {
-        TComPic* pic = (*cSet)[i]; 
+        TComPic* pic = (*cSet)[i];
         if( pic != NULL )
         {
-          assert( ! (pic->getTemporalId() == m_pcPic->getTemporalId() && pic->getDecodingOrder() < m_prevStsaDecOrder  ) ); 
+          assert( ! (pic->getTemporalId() == m_pcPic->getTemporalId() && pic->getDecodingOrder() < m_prevStsaDecOrder  ) );
         }
       }
     }
   }
-  
+
   //   -  When the current picture is a CRA picture, there shall be no picture included in the RPS that
   //      precedes, in output order or decoding order, any preceding IRAP picture in decoding order (when present).
   if ( m_pcPic->isCra() )
   {
     for (Int j = 0; j < 5; j++ )
-    {    
-      std::vector<TComPic*>* aSet = refPicSetsAll[j]; 
+    {
+      std::vector<TComPic*>* aSet = refPicSetsAll[j];
       for (Int i = 0; i < aSet->size(); i++)
       {
         // TBD check whether it sufficient to test only the last IRAP
-        TComPic* pic = (*aSet)[i]; 
+        TComPic* pic = (*aSet)[i];
         if( pic != NULL )
-        {        
-          assert( ! (pic->getPOC()           < m_prevIrapPoc           ) );           
-          assert( ! (pic->getDecodingOrder() < m_prevIrapDecodingOrder ) ); 
+        {
+          assert( ! (pic->getPOC()           < m_prevIrapPoc           ) );
+          assert( ! (pic->getDecodingOrder() < m_prevIrapDecodingOrder ) );
         }
       }
     }
   }
-  
+
   Bool isTrailingPicture = ( !m_pcPic->isIrap() ) && ( m_pcPic->getPOC() > m_prevIrapPoc );
   //   -  When the current picture is a trailing picture, there shall be no picture in RefPicSetStCurrBefore,
   //      RefPicSetStCurrAfter or RefPicSetLtCurr that was generated by the decoding process for generating unavailable
@@ -2751,14 +2752,14 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   if ( isTrailingPicture )
   {
     for (Int j = 0; j < 3; j++ )
-    {    
-      std::vector<TComPic*>* cSet = refPicSetsCurr[j]; 
+    {
+      std::vector<TComPic*>* cSet = refPicSetsCurr[j];
       for (Int i = 0; i < cSet->size(); i++)
       {
-        TComPic* pic = (*cSet)[i]; 
+        TComPic* pic = (*cSet)[i];
         if( pic != NULL )
         {
-          assert( ! (pic->getIsGeneratedCl833() ) ); 
+          assert( ! (pic->getIsGeneratedCl833() ) );
         }
       }
     }
@@ -2769,16 +2770,16 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   if ( isTrailingPicture )
   {
     for (Int j = 0; j < 5; j++ )
-    {    
-      std::vector<TComPic*>* aSet = refPicSetsAll[j]; 
+    {
+      std::vector<TComPic*>* aSet = refPicSetsAll[j];
       for (Int i = 0; i < aSet->size(); i++)
       {
         // TBD check whether it sufficient to test only the last IRAP
-         TComPic* pic = (*aSet)[i]; 
+         TComPic* pic = (*aSet)[i];
         if( pic != NULL )
-        {         
-          assert( ! (pic->getPOC()           < m_prevIrapPoc           ) ); 
-          assert( ! (pic->getDecodingOrder() < m_prevIrapDecodingOrder ) ); 
+        {
+          assert( ! (pic->getPOC()           < m_prevIrapPoc           ) );
+          assert( ! (pic->getDecodingOrder() < m_prevIrapDecodingOrder ) );
         }
       }
     }
@@ -2789,57 +2790,57 @@ Void TDecTop::x832DecProcForRefPicSet(  Bool annexFModifications )
   if ( m_pcPic->isRadl() )
   {
     for (Int j = 0; j < 3; j++ )
-    {    
-      std::vector<TComPic*>* cSet = refPicSetsCurr[j]; 
+    {
+      std::vector<TComPic*>* cSet = refPicSetsCurr[j];
       for (Int i = 0; i < cSet->size(); i++)
-      {        
-        TComPic* pic = (*cSet)[i]; 
+      {
+        TComPic* pic = (*cSet)[i];
         if( pic != NULL )
-        {        
+        {
           // -  A RASL picture
-          assert( ! (pic->isRasl() ) ); 
-          // -  A picture that was generated by the decoding process for generating unavailable reference pictures 
+          assert( ! (pic->isRasl() ) );
+          // -  A picture that was generated by the decoding process for generating unavailable reference pictures
           //    as specified in clause 8.3.3
-          assert( ! (pic->getIsGeneratedCl833() ) ); 
+          assert( ! (pic->getIsGeneratedCl833() ) );
           // -  A picture that precedes the associated IRAP picture in decoding order
-          assert( ! (pic->getDecodingOrder() < m_prevIrapDecodingOrder ) ); 
+          assert( ! (pic->getDecodingOrder() < m_prevIrapDecodingOrder ) );
         }
       }
     }
   }
-  
-  
+
+
   if ( sps->getTemporalIdNestingFlag() )
   {
     // -  When sps_temporal_id_nesting_flag is equal to 1, the following applies:
     //    -  Let tIdA be the value of TemporalId of the current picture picA.
-    TComPic* picA = m_pcPic; 
+    TComPic* picA = m_pcPic;
     Int      tIdA = picA->getTemporalId();
-    //   -  Any picture picB with TemporalId equal to tIdB that is less than or equal to tIdA shall not be included in 
-    //      RefPicSetStCurrBefore, RefPicSetStCurrAfter or RefPicSetLtCurr of picA when there exists a picture picC that 
+    //   -  Any picture picB with TemporalId equal to tIdB that is less than or equal to tIdA shall not be included in
+    //      RefPicSetStCurrBefore, RefPicSetStCurrAfter or RefPicSetLtCurr of picA when there exists a picture picC that
     //      has TemporalId less than tIdB, follows picB in decoding order, and precedes picA in decoding order.
     for (Int j = 0; j < 3; j++ )
-    {    
-      std::vector<TComPic*>* cSet = refPicSetsCurr[j]; 
+    {
+      std::vector<TComPic*>* cSet = refPicSetsCurr[j];
       for (Int i = 0; i < cSet->size(); i++)
       {
-        TComPic* picB = (*cSet)[i]; 
+        TComPic* picB = (*cSet)[i];
         if( picB != NULL )
         {
-          Int tIdB = picB->getTemporalId(); 
+          Int tIdB = picB->getTemporalId();
 
           if (tIdB <= tIdA)
           {
             for ( TComSubDpb::iterator itP = dpb->begin(); itP != dpb->end(); itP++ )
             {
-              TComPic* picC = (*itP); 
-              assert(! ( picC->getTemporalId() < tIdB && picC->getDecodingOrder() > picB->getDecodingOrder() && picC->getDecodingOrder() < picA->getDecodingOrder()  )  ); 
+              TComPic* picC = (*itP);
+              assert(! ( picC->getTemporalId() < tIdB && picC->getDecodingOrder() > picB->getDecodingOrder() && picC->getDecodingOrder() < picA->getDecodingOrder()  )  );
             }
           }
         }
       }
     }
-  }    
+  }
 }
 
 
@@ -2850,16 +2851,16 @@ Void TDecTop::xF832DecProcForRefPicSet()
   ///////////////////////////////////////////////////////////////////////////////////////
 
   // The specifications in clause 8.3.2 apply with the following changes:
-  // -  The references to clauses 7.4.7.2, 8.3.1, 8.3.3 and 8.3.4 are replaced with references to 
+  // -  The references to clauses 7.4.7.2, 8.3.1, 8.3.3 and 8.3.4 are replaced with references to
   //    clauses F.7.4.7.2, F.8.3.1, F.8.3.3 and F.8.3.4, respectively.
 
-  x832DecProcForRefPicSet( true ); 
+  x832DecProcForRefPicSet( true );
 
   // -  The following specifications are added:
   if (m_pcPic->isIrap() && m_pcPic->getLayerId() == m_smallestLayerId )
   {
-    // -  When the current picture is an IRAP picture with nuh_layer_id equal to SmallestLayerId, 
-    //    all reference pictures with any value of nuh_layer_id currently in the DPB (if any) are marked 
+    // -  When the current picture is an IRAP picture with nuh_layer_id equal to SmallestLayerId,
+    //    all reference pictures with any value of nuh_layer_id currently in the DPB (if any) are marked
     //    as "unused for reference" when at least one of the following conditions is true:
 
     if ( m_pcPic->getNoClrasOutputFlag() || m_pcPic->getActivatesNewVps() )
@@ -2871,30 +2872,30 @@ Void TDecTop::xF832DecProcForRefPicSet()
   }
 
   // -  It is a requirement of bitstream conformance that the RPS is restricted as follows:
-  // -  When the current picture is a CRA picture, there shall be no picture in RefPicSetStCurrBefore, RefPicSetStCurrAfter 
+  // -  When the current picture is a CRA picture, there shall be no picture in RefPicSetStCurrBefore, RefPicSetStCurrAfter
   //    or RefPicSetLtCurr.
 
   std::vector<TComPic*>** refPicSetsCurr       = m_pcPic->getDecodedRps()->m_refPicSetsCurr;
 
   if ( m_pcPic->isCra() )
   {
-    for (Int j = 0; j < 3; j++ )   
-    {    
-      std::vector<TComPic*>* cSet = refPicSetsCurr[j]; 
-      assert ( cSet->size() == 0 ); 
+    for (Int j = 0; j < 3; j++ )
+    {
+      std::vector<TComPic*>* cSet = refPicSetsCurr[j];
+      assert ( cSet->size() == 0 );
     }
   }
 
   // -  The constraints specified in clause 8.3.2 on the value of NumPicTotalCurr are replaced with the following:
   //    -  It is a requirement of bitstream conformance that the following applies to the value of NumPicTotalCurr:
-  Int numPicTotalCurr = m_pcPic->getSlice(0)->getNumPicTotalCurr(); 
-  Int currPicLayerId  = m_pcPic->getLayerId(); 
-  const TComVPS* vps  = m_pcPic->getSlice(0)->getVPS(); 
+  Int numPicTotalCurr = m_pcPic->getSlice(0)->getNumPicTotalCurr();
+  Int currPicLayerId  = m_pcPic->getLayerId();
+  const TComVPS* vps  = m_pcPic->getSlice(0)->getVPS();
 
   if ( ( m_pcPic->isBla() || m_pcPic->isCra() ) && (  (currPicLayerId == 0 ) || ( vps->getNumDirectRefLayers( currPicLayerId ) == 0 ) ) )
-  {   
-    assert( numPicTotalCurr == 0 ); 
-    // -  If the current picture is a BLA or CRA picture and either currPicLayerId is equal to 0 or 
+  {
+    assert( numPicTotalCurr == 0 );
+    // -  If the current picture is a BLA or CRA picture and either currPicLayerId is equal to 0 or
     //     NumDirectRefLayers[ currPicLayerId ] is equal to 0, the value of NumPicTotalCurr shall be equal to 0.
   }
   else
@@ -2903,7 +2904,7 @@ Void TDecTop::xF832DecProcForRefPicSet()
     if ( m_pcPic->getSlice(0)->getSliceType() == P_SLICE  ||  m_pcPic->getSlice(0)->getSliceType() == B_SLICE )
     {
       // -  Otherwise, when the current picture contains a P or B slice, the value of NumPicTotalCurr shall not be equal to 0.
-      assert( numPicTotalCurr != 0 ); 
+      assert( numPicTotalCurr != 0 );
     }
   }
 }
@@ -2915,37 +2916,37 @@ Void TDecTop::xG813DecProcForInterLayerRefPicSet()
   // G.8.1.3 Decoding process for inter-layer reference picture set //
   ////////////////////////////////////////////////////////////////////
 
-  // Outputs of this process are updated lists of inter-layer reference pictures RefPicSetInterLayer0 and RefPicSetInterLayer1 
+  // Outputs of this process are updated lists of inter-layer reference pictures RefPicSetInterLayer0 and RefPicSetInterLayer1
   // and the variables NumActiveRefLayerPics0 and NumActiveRefLayerPics1.
 
-  TComDecodedRps* decRps = m_pcPic->getDecodedRps(); 
-  TComSlice* slice       = m_pcPic->getSlice( 0 ); 
-  const TComVPS* vps     =  slice->getVPS(); 
+  TComDecodedRps* decRps = m_pcPic->getDecodedRps();
+  TComSlice* slice       = m_pcPic->getSlice( 0 );
+  const TComVPS* vps     =  slice->getVPS();
 
   Int&                   numActiveRefLayerPics0 = decRps->m_numActiveRefLayerPics0;
   Int&                   numActiveRefLayerPics1 = decRps->m_numActiveRefLayerPics1;
 
   std::vector<TComPic*>& refPicSetInterLayer0   = decRps->m_refPicSetInterLayer0;
-  std::vector<TComPic*>& refPicSetInterLayer1   = decRps->m_refPicSetInterLayer1; 
+  std::vector<TComPic*>& refPicSetInterLayer1   = decRps->m_refPicSetInterLayer1;
 
   // The variable currLayerId is set equal to nuh_layer_id of the current picture.
-  Int currLayerId = getLayerId(); 
+  Int currLayerId = getLayerId();
 
-  // The lists RefPicSetInterLayer0 and RefPicSetInterLayer1 are first emptied, NumActiveRefLayerPics0 and NumActiveRefLayerPics1 
+  // The lists RefPicSetInterLayer0 and RefPicSetInterLayer1 are first emptied, NumActiveRefLayerPics0 and NumActiveRefLayerPics1
   // are set equal to 0 and the following applies:
 
-  refPicSetInterLayer0.clear(); 
-  refPicSetInterLayer1.clear(); 
+  refPicSetInterLayer0.clear();
+  refPicSetInterLayer1.clear();
 
-  numActiveRefLayerPics0 = 0; 
-  numActiveRefLayerPics1 = 0; 
+  numActiveRefLayerPics0 = 0;
+  numActiveRefLayerPics1 = 0;
 
-  Int viewIdCurrLayerId  = vps->getViewId( currLayerId ); 
+  Int viewIdCurrLayerId  = vps->getViewId( currLayerId );
   Int viewId0            = vps->getViewId( 0   );
 
-  for( Int i = 0; i < slice->getNumActiveRefLayerPics(); i++ )   
+  for( Int i = 0; i < slice->getNumActiveRefLayerPics(); i++ )
   {
-    Int viewIdRefPicLayerIdi = vps->getViewId( slice->getRefPicLayerId( i ) ); 
+    Int viewIdRefPicLayerIdi = vps->getViewId( slice->getRefPicLayerId( i ) );
 
     Bool refPicSet0Flag =
       ( ( viewIdCurrLayerId <=  viewId0  &&  viewIdCurrLayerId <=  viewIdRefPicLayerIdi )  ||
@@ -2955,7 +2956,7 @@ Void TDecTop::xG813DecProcForInterLayerRefPicSet()
     if ( picX != NULL )
     {
       // there is a picture picX in the DPB that is in the same access unit as the current picture and has
-      // nuh_layer_id equal to RefPicLayerId[ i ] 
+      // nuh_layer_id equal to RefPicLayerId[ i ]
 
       if ( refPicSet0Flag )
       {
@@ -2971,7 +2972,7 @@ Void TDecTop::xG813DecProcForInterLayerRefPicSet()
       // There shall be no picture that has discardable_flag equal to 1 in RefPicSetInterLayer0 or RefPicSetInterLayer1.
       assert( ! picX->getSlice(0)->getDiscardableFlag() );
 
-      // If the current picture is a RADL picture, there shall be no entry in RefPicSetInterLayer0 or RefPicSetInterLayer1 
+      // If the current picture is a RADL picture, there shall be no entry in RefPicSetInterLayer0 or RefPicSetInterLayer1
       // that is a RASL picture.
       if ( m_pcPic->isRadl() )
       {
@@ -3003,35 +3004,35 @@ Void TDecTop::x8331GenDecProcForGenUnavilRefPics()
   // 8.3.3.1  General decoding process for generating unavailable reference pictures ////
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  // This process is invoked once per coded picture when the current picture is a 
+  // This process is invoked once per coded picture when the current picture is a
   // BLA picture or is a CRA picture with NoRaslOutputFlag equal to 1.
 
   assert( m_pcPic->isBla() || (m_pcPic->isCra() && m_pcPic->getNoRaslOutputFlag() ) );
-  TComDecodedRps* decRps = m_pcPic->getDecodedRps(); 
+  TComDecodedRps* decRps = m_pcPic->getDecodedRps();
 
   std::vector<TComPic*>& refPicSetStFoll      = decRps->m_refPicSetStFoll;
-  std::vector<TComPic*>& refPicSetLtFoll      = decRps->m_refPicSetLtFoll; 
+  std::vector<TComPic*>& refPicSetLtFoll      = decRps->m_refPicSetLtFoll;
 
   const std::vector<Int>& pocStFoll             = decRps->m_pocStFoll;
   const std::vector<Int>& pocLtFoll             = decRps->m_pocLtFoll;
 
   const Int               numPocStFoll          = decRps->m_numPocStFoll;
-  const Int               numPocLtFoll          = decRps->m_numPocLtFoll;   
+  const Int               numPocLtFoll          = decRps->m_numPocLtFoll;
 
   // When this process is invoked, the following applies:
   for ( Int i = 0 ; i <= numPocStFoll - 1; i++ )
   {
     if ( refPicSetStFoll[ i ] == NULL )
     {
-      //-  For each RefPicSetStFoll[ i ], with i in the range of 0 to NumPocStFoll - 1, inclusive, that is equal 
+      //-  For each RefPicSetStFoll[ i ], with i in the range of 0 to NumPocStFoll - 1, inclusive, that is equal
       //   to "no reference picture", a picture is generated as specified in clause 8.3.3.2, and the following applies:
-      TComPic* genPic = x8332GenOfOneUnavailPic( true );  
+      TComPic* genPic = x8332GenOfOneUnavailPic( true );
 
       // -  The value of PicOrderCntVal for the generated picture is set equal to PocStFoll[ i ].
       genPic->getSlice(0)->setPOC( pocStFoll[ i ] );
 
-      //-  The value of PicOutputFlag for the generated picture is set equal to 0.  
-      genPic->setPicOutputFlag( false ); 
+      //-  The value of PicOutputFlag for the generated picture is set equal to 0.
+      genPic->setPicOutputFlag( false );
 
       // -  The generated picture is marked as "used for short-term reference".
       genPic->markAsUsedForShortTermReference();
@@ -3040,10 +3041,10 @@ Void TDecTop::x8331GenDecProcForGenUnavilRefPics()
       refPicSetStFoll[ i ] = genPic;
 
       // -  The value of nuh_layer_id for the generated picture is set equal to nuh_layer_id of the current picture.
-      genPic->setLayerId( m_pcPic-> getLayerId() ); 
+      genPic->setLayerId( m_pcPic-> getLayerId() );
 
       // Insert to DPB
-      m_dpb->addNewPic( genPic ); 
+      m_dpb->addNewPic( genPic );
     }
   }
 
@@ -3051,18 +3052,18 @@ Void TDecTop::x8331GenDecProcForGenUnavilRefPics()
   {
     if ( refPicSetLtFoll[ i ] == NULL )
     {
-      //-  For each RefPicSetLtFoll[ i ], with i in the range of 0 to NumPocLtFoll - 1, inclusive, that is equal to 
+      //-  For each RefPicSetLtFoll[ i ], with i in the range of 0 to NumPocLtFoll - 1, inclusive, that is equal to
       //   "no reference picture", a picture is generated as specified in clause 8.3.3.2, and the following applies:
-      TComPic* genPic = x8332GenOfOneUnavailPic( true );  
+      TComPic* genPic = x8332GenOfOneUnavailPic( true );
 
       //-  The value of PicOrderCntVal for the generated picture is set equal to PocLtFoll[ i ].
       genPic->getSlice(0)->setPOC( pocStFoll[ i ] );
 
       //  -  The value of slice_pic_order_cnt_lsb for the generated picture is inferred to be equal to ( PocLtFoll[ i ] & ( MaxPicOrderCntLsb - 1 ) ).
-      genPic->getSlice(0)->setSlicePicOrderCntLsb( ( pocLtFoll[ i ] & ( m_pcPic->getSlice(0)->getSPS()->getMaxPicOrderCntLsb() - 1 ) ) ); 
+      genPic->getSlice(0)->setSlicePicOrderCntLsb( ( pocLtFoll[ i ] & ( m_pcPic->getSlice(0)->getSPS()->getMaxPicOrderCntLsb() - 1 ) ) );
 
-      //  -  The value of PicOutputFlag for the generated picture is set equal to 0.    
-      genPic->setPicOutputFlag( false ); 
+      //  -  The value of PicOutputFlag for the generated picture is set equal to 0.
+      genPic->setPicOutputFlag( false );
 
       //  -  The generated picture is marked as "used for long-term reference".
       genPic->markAsUsedForLongTermReference();
@@ -3071,10 +3072,10 @@ Void TDecTop::x8331GenDecProcForGenUnavilRefPics()
       refPicSetLtFoll[ i ] = genPic;
 
       //  -  The value of nuh_layer_id for the generated picture is set equal to nuh_layer_id of the current picture.
-      genPic->setLayerId( m_pcPic-> getLayerId() ); 
+      genPic->setLayerId( m_pcPic-> getLayerId() );
 
       // Insert to DPB
-      m_dpb->addNewPic( genPic ); 
+      m_dpb->addNewPic( genPic );
     }
   }
 }
@@ -3086,10 +3087,10 @@ TComPic* TDecTop::x8332GenOfOneUnavailPic( Bool calledFromCl8331 )
   // 8.3.3.2 Generation of one unavailable picture
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  TComPic* genPic = new TComPic; 
-  genPic->create( *m_pcPic->getSlice(0)->getSPS(), *m_pcPic->getSlice(0)->getPPS(), true ); 
-  genPic->setIsGenerated( true );     
-  genPic->setIsGeneratedCl833( calledFromCl8331 ); 
+  TComPic* genPic = new TComPic;
+  genPic->create( *m_pcPic->getSlice(0)->getSPS(), *m_pcPic->getSlice(0)->getPPS(), true );
+  genPic->setIsGenerated( true );
+  genPic->setIsGeneratedCl833( calledFromCl8331 );
   return genPic;
 }
 
@@ -3097,21 +3098,21 @@ TComPic* TDecTop::x8332GenOfOneUnavailPic( Bool calledFromCl8331 )
 Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
 {
   ///////////////////////////////////////////////////////////////////////////////////////
-  // F.8.1.7 Decoding process for generating unavailable reference pictures for pictures 
+  // F.8.1.7 Decoding process for generating unavailable reference pictures for pictures
   //         first in decoding order within a layer
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  //  This process is invoked for a picture with nuh_layer_id equal to layerId, when FirstPicInLayerDecodedFlag[layerId ] is equal to 0.   
+  //  This process is invoked for a picture with nuh_layer_id equal to layerId, when FirstPicInLayerDecodedFlag[layerId ] is equal to 0.
   assert( !m_firstPicInLayerDecodedFlag[ getLayerId() ] );
 
 
-  TComDecodedRps* decRps = m_pcPic->getDecodedRps(); 
+  TComDecodedRps* decRps = m_pcPic->getDecodedRps();
 
-  std::vector<TComPic*>& refPicSetStCurrBefore = decRps->m_refPicSetStCurrBefore; 
+  std::vector<TComPic*>& refPicSetStCurrBefore = decRps->m_refPicSetStCurrBefore;
   std::vector<TComPic*>& refPicSetStCurrAfter  = decRps->m_refPicSetStCurrAfter;
   std::vector<TComPic*>& refPicSetStFoll       = decRps->m_refPicSetStFoll;
-  std::vector<TComPic*>& refPicSetLtCurr       = decRps->m_refPicSetLtCurr; 
-  std::vector<TComPic*>& refPicSetLtFoll       = decRps->m_refPicSetLtFoll; 
+  std::vector<TComPic*>& refPicSetLtCurr       = decRps->m_refPicSetLtCurr;
+  std::vector<TComPic*>& refPicSetLtFoll       = decRps->m_refPicSetLtFoll;
 
 
   const std::vector<Int>& pocStCurrBefore      = decRps->m_pocStCurrBefore;
@@ -3120,26 +3121,26 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
   const std::vector<Int>& pocLtCurr            = decRps->m_pocLtCurr;
   const std::vector<Int>& pocLtFoll            = decRps->m_pocLtFoll;
 
-  const Int numPocStCurrBefore                 = decRps->m_numPocStCurrBefore; 
+  const Int numPocStCurrBefore                 = decRps->m_numPocStCurrBefore;
   const Int numPocStCurrAfter                  = decRps->m_numPocStCurrAfter;
   const Int numPocStFoll                       = decRps->m_numPocStFoll;
   const Int numPocLtCurr                       = decRps->m_numPocLtCurr;
-  const Int numPocLtFoll                       = decRps->m_numPocLtFoll;   
+  const Int numPocLtFoll                       = decRps->m_numPocLtFoll;
 
-  Int nuhLayerId = m_pcPic-> getLayerId(); 
+  Int nuhLayerId = m_pcPic-> getLayerId();
   for ( Int i = 0 ; i <= numPocStCurrBefore - 1; i++ )
   {
     if ( refPicSetStCurrBefore[ i ] == NULL )
     {
-      //-  For each RefPicSetStCurrBefore[ i ], with i in the range of 0 to NumPocStCurrBefore - 1, inclusive, that is 
+      //-  For each RefPicSetStCurrBefore[ i ], with i in the range of 0 to NumPocStCurrBefore - 1, inclusive, that is
       //  equal to "no reference picture", a picture is generated as specified in clause 8.3.3.2 and the following applies:
-      TComPic* genPic = x8332GenOfOneUnavailPic( false );  
+      TComPic* genPic = x8332GenOfOneUnavailPic( false );
 
       //-  The value of PicOrderCntVal for the generated picture is set equal to PocStCurrBefore[ i ].
       genPic->getSlice(0)->setPOC( pocStCurrBefore[ i ] );
 
       //  -  The value of PicOutputFlag for the generated picture is set equal to 0.
-      genPic->setPicOutputFlag( false ); 
+      genPic->setPicOutputFlag( false );
 
       //  -  The generated picture is marked as "used for short-term reference".
       genPic->markAsUsedForShortTermReference();
@@ -3148,10 +3149,10 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
       refPicSetStCurrBefore[ i ] = genPic;
 
       //  -  The value of nuh_layer_id for the generated picture is set equal to nuh_layer_id.
-      genPic->setLayerId( nuhLayerId ); 
+      genPic->setLayerId( nuhLayerId );
 
       // Insert to DPB
-      m_dpb->addNewPic( genPic ); 
+      m_dpb->addNewPic( genPic );
     }
   }
 
@@ -3159,15 +3160,15 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
   {
     if ( refPicSetStCurrAfter[ i ] == NULL )
     {
-      //  -  For each RefPicSetStCurrAfter[ i ], with i in the range of 0 to NumPocStCurrAfter - 1, inclusive, that is equal 
+      //  -  For each RefPicSetStCurrAfter[ i ], with i in the range of 0 to NumPocStCurrAfter - 1, inclusive, that is equal
       //     to "no reference picture", a picture is generated as specified in clause 8.3.3.2 and the following applies:
-      TComPic* genPic = x8332GenOfOneUnavailPic( false );  
+      TComPic* genPic = x8332GenOfOneUnavailPic( false );
 
       //  -  The value of PicOrderCntVal for the generated picture is set equal to PocStCurrAfter[ i ].
       genPic->getSlice(0)->setPOC( pocStCurrAfter[ i ] );
 
       //  -  The value of PicOutputFlag for the generated picture is set equal to 0.
-      genPic->setPicOutputFlag( false ); 
+      genPic->setPicOutputFlag( false );
 
       //  -  The generated picture is marked as "used for short-term reference".
       genPic->markAsUsedForShortTermReference();
@@ -3176,10 +3177,10 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
       refPicSetStCurrAfter[ i ] = genPic;
 
       //  -  The value of nuh_layer_id for the generated picture is set equal to nuh_layer_id.
-      genPic->setLayerId( nuhLayerId ); 
+      genPic->setLayerId( nuhLayerId );
 
       // Insert to DPB
-      m_dpb->addNewPic( genPic ); 
+      m_dpb->addNewPic( genPic );
 
     }
   }
@@ -3188,15 +3189,15 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
   {
     if ( refPicSetStFoll[ i ] == NULL )
     {
-      //  -  For each RefPicSetStFoll[ i ], with i in the range of 0 to NumPocStFoll - 1, inclusive, that is equal to "no 
+      //  -  For each RefPicSetStFoll[ i ], with i in the range of 0 to NumPocStFoll - 1, inclusive, that is equal to "no
       //     reference picture", a picture is generated as specified in clause 8.3.3.2 and the following applies:
-      TComPic* genPic = x8332GenOfOneUnavailPic( false );  
+      TComPic* genPic = x8332GenOfOneUnavailPic( false );
 
       //  -  The value of PicOrderCntVal for the generated picture is set equal to PocStFoll[ i ].
       genPic->getSlice(0)->setPOC( pocStFoll[ i ] );
 
       //  -  The value of PicOutputFlag for the generated picture is set equal to 0.
-      genPic->setPicOutputFlag( false ); 
+      genPic->setPicOutputFlag( false );
 
       //  -  The generated picture is marked as "used for short-term reference".
       genPic->markAsUsedForShortTermReference();
@@ -3205,31 +3206,31 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
       refPicSetStFoll[ i ] = genPic;
 
       //  -  The value of nuh_layer_id for the generated picture is set equal to nuh_layer_id.
-      genPic->setLayerId( nuhLayerId ); 
+      genPic->setLayerId( nuhLayerId );
 
       // Insert to DPB
-      m_dpb->addNewPic( genPic ); 
+      m_dpb->addNewPic( genPic );
     }
   }
 
-  Int maxPicOrderCntLsb = m_pcPic->getSlice(0)->getSPS()->getMaxPicOrderCntLsb();  
+  Int maxPicOrderCntLsb = m_pcPic->getSlice(0)->getSPS()->getMaxPicOrderCntLsb();
   for ( Int i = 0 ; i <= numPocLtCurr - 1; i++ )
   {
     if ( refPicSetLtCurr[ i ] == NULL )
     {
-      //  -  For each RefPicSetLtCurr[ i ], with i in the range of 0 to NumPocLtCurr - 1, inclusive, that is equal to "no 
+      //  -  For each RefPicSetLtCurr[ i ], with i in the range of 0 to NumPocLtCurr - 1, inclusive, that is equal to "no
       //     reference picture", a picture is generated as specified in clause 8.3.3.2 and the following applies:
-      TComPic* genPic = x8332GenOfOneUnavailPic( false );  
+      TComPic* genPic = x8332GenOfOneUnavailPic( false );
 
       //  -  The value of PicOrderCntVal for the generated picture is set equal to PocLtCurr[ i ].
       genPic->getSlice(0)->setPOC( pocLtCurr[ i ] );
 
-      //  -  The value of slice_pic_order_cnt_lsb for the generated picture is inferred to be equal to ( PocLtCurr[ i ] & ( 
+      //  -  The value of slice_pic_order_cnt_lsb for the generated picture is inferred to be equal to ( PocLtCurr[ i ] & (
       //     MaxPicOrderCntLsb - 1 ) ).
-      genPic->getSlice(0)->setSlicePicOrderCntLsb( ( pocLtCurr[ i ] & ( maxPicOrderCntLsb - 1 ) ) ); 
+      genPic->getSlice(0)->setSlicePicOrderCntLsb( ( pocLtCurr[ i ] & ( maxPicOrderCntLsb - 1 ) ) );
 
       //  -  The value of PicOutputFlag for the generated picture is set equal to 0.
-      genPic->setPicOutputFlag( false ); 
+      genPic->setPicOutputFlag( false );
 
       //  -  The generated picture is marked as "used for long-term reference".
       genPic->markAsUsedForLongTermReference();
@@ -3238,10 +3239,10 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
       refPicSetLtCurr[ i ] = genPic;
 
       //  -  The value of nuh_layer_id for the generated picture is set equal to nuh_layer_id.
-      genPic->setLayerId( nuhLayerId ); 
+      genPic->setLayerId( nuhLayerId );
 
       // Insert to DPB
-      m_dpb->addNewPic( genPic ); 
+      m_dpb->addNewPic( genPic );
     }
   }
 
@@ -3249,19 +3250,19 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
   {
     if ( refPicSetLtFoll[ i ] == NULL )
     {
-      //  -  For each RefPicSetLtFoll[ i ], with i in the range of 0 to NumPocLtFoll - 1, inclusive, that is equal to "no 
+      //  -  For each RefPicSetLtFoll[ i ], with i in the range of 0 to NumPocLtFoll - 1, inclusive, that is equal to "no
       //     reference picture", a picture is generated as specified in clause 8.3.3.2 and the following applies:
-      TComPic* genPic = x8332GenOfOneUnavailPic( false );  
+      TComPic* genPic = x8332GenOfOneUnavailPic( false );
 
       //  -  The value of PicOrderCntVal for the generated picture is set equal to PocLtFoll[ i ].
       genPic->getSlice(0)->setPOC( pocLtFoll[ i ] );
 
-      //  -  The value of slice_pic_order_cnt_lsb for the generated picture is inferred to be equal to ( PocLtCurr[ i ] & ( 
+      //  -  The value of slice_pic_order_cnt_lsb for the generated picture is inferred to be equal to ( PocLtCurr[ i ] & (
       //     MaxPicOrderCntLsb - 1 ) ).
-      genPic->getSlice(0)->setSlicePicOrderCntLsb( ( pocLtCurr[ i ] & ( maxPicOrderCntLsb - 1 ) ) ); 
+      genPic->getSlice(0)->setSlicePicOrderCntLsb( ( pocLtCurr[ i ] & ( maxPicOrderCntLsb - 1 ) ) );
 
       //  -  The value of PicOutputFlag for the generated picture is set equal to 0.
-      genPic->setPicOutputFlag( false ); 
+      genPic->setPicOutputFlag( false );
 
       //  -  The generated picture is marked as "used for long-term reference".
       genPic->markAsUsedForLongTermReference();
@@ -3270,10 +3271,10 @@ Void TDecTop::xF817DecProcForGenUnavRefPicForPicsFrstInDecOrderInLay()
       refPicSetLtFoll[ i ] = genPic;
 
       //  -  The value of nuh_layer_id for the generated picture is set equal to nuh_layer_id.
-      genPic->setLayerId( nuhLayerId ); 
+      genPic->setLayerId( nuhLayerId );
 
       // Insert to DPB
-      m_dpb->addNewPic( genPic ); 
+      m_dpb->addNewPic( genPic );
     }
   }
 }
@@ -3291,20 +3292,20 @@ Void TDecTop::xCheckUnavailableRefPics()
 {
   std::vector<TComPic*>** refPicSetsCurr       = m_pcPic->getDecodedRps()->m_refPicSetsCurr;
 
-  Bool hasGeneratedRefPic = false; 
-  for (Int j = 0; j < 3; j++ )   
-  {    
-    std::vector<TComPic*>* cSet = refPicSetsCurr[j]; 
+  Bool hasGeneratedRefPic = false;
+  for (Int j = 0; j < 3; j++ )
+  {
+    std::vector<TComPic*>* cSet = refPicSetsCurr[j];
     for (Int i = 0 ; i < cSet->size();  i++ )
     {
       assert( (*cSet)[i] != NULL );
       if ((*cSet)[i]->getIsGenerated() )
       {
-        hasGeneratedRefPic = true; 
+        hasGeneratedRefPic = true;
       }
     }
   }
-  m_pcPic->setHasGeneratedRefPics( hasGeneratedRefPic ); 
+  m_pcPic->setHasGeneratedRefPics( hasGeneratedRefPic );
 }
 
 #endif

@@ -1,31 +1,31 @@
 
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppDecoder", "vc10\TAppDecoder_vc10.vcxproj", "{A7A515D9-E917-4706-BD5B-57DC6C78D612}"
+# Visual Studio Pro 2013
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppDecoder", "vc12\TAppDecoder_vc12.vcxproj", "{A7A515D9-E917-4706-BD5B-57DC6C78D612}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppEncoder", "vc10\TAppEncoder_vc10.vcxproj", "{D759E4E1-D33A-4483-B57B-0FD248E022FE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppEncoder", "vc12\TAppEncoder_vc12.vcxproj", "{D759E4E1-D33A-4483-B57B-0FD248E022FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppCommon", "vc10\TAppCommon_vc10.vcxproj", "{D1E8A1C2-15DB-4C94-80E8-4F70CF0A2DC5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppCommon", "vc12\TAppCommon_vc12.vcxproj", "{D1E8A1C2-15DB-4C94-80E8-4F70CF0A2DC5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibCommon", "vc10\TLibCommon_vc10.vcxproj", "{78018D78-F890-47E3-A0B7-09D273F0B11D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibCommon", "vc12\TLibCommon_vc12.vcxproj", "{78018D78-F890-47E3-A0B7-09D273F0B11D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibDecoder", "vc10\TLibDecoder_vc10.vcxproj", "{F8B77A48-AF6C-4746-A89F-B706ABA6AD94}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibDecoder", "vc12\TLibDecoder_vc12.vcxproj", "{F8B77A48-AF6C-4746-A89F-B706ABA6AD94}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibEncoder", "vc10\TLibEncoder_vc10.vcxproj", "{47E90995-1FC5-4EE4-A94D-AD474169F0E1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibEncoder", "vc12\TLibEncoder_vc12.vcxproj", "{47E90995-1FC5-4EE4-A94D-AD474169F0E1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibVideoIO", "vc10\TLibVideoIO_vc10.vcxproj", "{5280C25A-D316-4BE7-AE50-29D72108624F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibVideoIO", "vc12\TLibVideoIO_vc12.vcxproj", "{5280C25A-D316-4BE7-AE50-29D72108624F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppRenderer", "vc10\TAppRenderer_vc10.vcxproj", "{3A5A8B26-8CA4-4690-944E-AB78559DE848}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppRenderer", "vc12\TAppRenderer_vc12.vcxproj", "{3A5A8B26-8CA4-4690-944E-AB78559DE848}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibRenderer", "vc10\TLibRenderer_vc10.vcxproj", "{2B298BE6-DFF0-4BD2-8F26-395FFE7F9EB4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibRenderer", "vc12\TLibRenderer_vc12.vcxproj", "{2B298BE6-DFF0-4BD2-8F26-395FFE7F9EB4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibExtractor", "vc10\TLibExtractor_vc10.vcxproj", "{27E2C758-E3CE-44CA-A226-83491EC7F798}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibExtractor", "vc12\TLibExtractor_vc12.vcxproj", "{27E2C758-E3CE-44CA-A226-83491EC7F798}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppExtractor", "vc10\TAppExtractor_vc10.vcxproj", "{F46F95E9-7174-4328-90DD-092450E4DCF6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppExtractor", "vc12\TAppExtractor_vc12.vcxproj", "{F46F95E9-7174-4328-90DD-092450E4DCF6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibDecoderAnalyser", "vc10\TLibDecoderAnalyser_vc10.vcxproj", "{68C1251A-55D8-47C9-9052-62F785BD437A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibDecoderAnalyser", "vc12\TLibDecoderAnalyser_vc12.vcxproj", "{68C1251A-55D8-47C9-9052-62F785BD437A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppDecoderAnalyser", "vc10\TAppDecoderAnalyser_vc10.vcxproj", "{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppDecoderAnalyser", "vc12\TAppDecoderAnalyser_vc12.vcxproj", "{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

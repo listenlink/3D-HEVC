@@ -131,58 +131,58 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
 #if NH_MV_LAYERS_NOT_PRESENT_SEI
    case SEI::LAYERS_NOT_PRESENT:
        xWriteSEILayersNotPresent(*static_cast<const SEILayersNotPresent*>(&sei));
-     break; 
+     break;
 #endif
    case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS:
      xWriteSEIInterLayerConstrainedTileSets(*static_cast<const SEIInterLayerConstrainedTileSets*>(&sei));
-     break; 
+     break;
 #if NH_MV_SEI_TBD
    case SEI::BSP_NESTING:
      xWriteSEIBspNesting(*static_cast<const SEIBspNesting*>(&sei));
-     break; 
+     break;
    case SEI::BSP_INITIAL_ARRIVAL_TIME:
      xWriteSEIBspInitialArrivalTime(*static_cast<const SEIBspInitialArrivalTime*>(&sei));
-     break; 
+     break;
 #endif
    case SEI::SUB_BITSTREAM_PROPERTY:
      xWriteSEISubBitstreamProperty(*static_cast<const SEISubBitstreamProperty*>(&sei));
-     break; 
+     break;
    case SEI::ALPHA_CHANNEL_INFO:
      xWriteSEIAlphaChannelInfo(*static_cast<const SEIAlphaChannelInfo*>(&sei));
      break;
    case SEI::OVERLAY_INFO:
      xWriteSEIOverlayInfo(*static_cast<const SEIOverlayInfo*>(&sei));
-     break; 
+     break;
    case SEI::TEMPORAL_MV_PREDICTION_CONSTRAINTS:
      xWriteSEITemporalMvPredictionConstraints(*static_cast<const SEITemporalMvPredictionConstraints*>(&sei));
-     break; 
+     break;
 #if NH_MV_SEI_TBD
    case SEI::FRAME_FIELD_INFO:
      xWriteSEIFrameFieldInfo(*static_cast<const SEIFrameFieldInfo*>(&sei));
-     break; 
+     break;
 #endif
    case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:
      xWriteSEIThreeDimensionalReferenceDisplaysInfo(*static_cast<const SEIThreeDimensionalReferenceDisplaysInfo*>(&sei));
-     break; 
+     break;
 #if SEI_DRI_F0169
    case SEI::DEPTH_REPRESENTATION_INFO:
        xWriteSEIDepthRepresentationInfo(*static_cast<const SEIDepthRepresentationInfo*>(&sei));
        break;
-#endif 
+#endif
    case SEI::MULTIVIEW_SCENE_INFO:
      xWriteSEIMultiviewSceneInfo(*static_cast<const SEIMultiviewSceneInfo*>(&sei));
-     break; 
+     break;
    case SEI::MULTIVIEW_ACQUISITION_INFO:
      xWriteSEIMultiviewAcquisitionInfo(*static_cast<const SEIMultiviewAcquisitionInfo*>(&sei));
-     break; 
+     break;
 
    case SEI::MULTIVIEW_VIEW_POSITION:
      xWriteSEIMultiviewViewPosition(*static_cast<const SEIMultiviewViewPosition*>(&sei));
-     break; 
+     break;
 #if NH_3D
    case SEI::ALTERNATIVE_DEPTH_INFO:
      xWriteSEIAlternativeDepthInfo(*static_cast<const SEIAlternativeDepthInfo*>(&sei));
-     break; 
+     break;
 #endif
 #endif
 
@@ -306,7 +306,7 @@ Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
 
   for (Int i = 0; i < sei.activeSeqParameterSetId.size(); i++)
   {
-    WRITE_UVLC(sei.activeSeqParameterSetId[i], "active_seq_parameter_set_id"); 
+    WRITE_UVLC(sei.activeSeqParameterSetId[i], "active_seq_parameter_set_id");
   }
 }
 
@@ -444,7 +444,7 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
 Void SEIWriter::xWriteSEISegmentedRectFramePacking(const SEISegmentedRectFramePacking& sei)
 {
   WRITE_FLAG( sei.m_arrangementCancelFlag,          "segmented_rect_frame_packing_arrangement_cancel_flag" );
-  if( sei.m_arrangementCancelFlag == 0 ) 
+  if( sei.m_arrangementCancelFlag == 0 )
   {
     WRITE_CODE( sei.m_contentInterpretationType, 2, "segmented_rect_content_interpretation_type" );
     WRITE_FLAG( sei.m_arrangementPersistenceFlag,   "segmented_rect_frame_packing_arrangement_persistence" );
@@ -613,7 +613,7 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
 Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstrainedTileSets& sei)
 {
   //UInt code;
-  WRITE_FLAG((sei.m_mc_all_tiles_exact_sample_value_match_flag ? 1 : 0), "mc_all_tiles_exact_sample_value_match_flag"); 
+  WRITE_FLAG((sei.m_mc_all_tiles_exact_sample_value_match_flag ? 1 : 0), "mc_all_tiles_exact_sample_value_match_flag");
   WRITE_FLAG((sei.m_each_tile_one_tile_set_flag                ? 1 : 0), "each_tile_one_tile_set_flag"               );
 
   if(!sei.m_each_tile_one_tile_set_flag)
@@ -628,21 +628,21 @@ Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstr
         WRITE_UVLC(sei.tileSetData(i).m_mcts_id, "mcts_id");
 
         if(sei.m_limited_tile_set_display_flag)
-        { 
-          WRITE_FLAG((sei.tileSetData(i).m_display_tile_set_flag ? 1 : 0), "display_tile_set_flag");  
+        {
+          WRITE_FLAG((sei.tileSetData(i).m_display_tile_set_flag ? 1 : 0), "display_tile_set_flag");
         }
 
-        WRITE_UVLC((sei.tileSetData(i).getNumberOfTileRects() - 1), "num_tile_rects_in_set_minus1"); 
-        
+        WRITE_UVLC((sei.tileSetData(i).getNumberOfTileRects() - 1), "num_tile_rects_in_set_minus1");
+
         for(Int j = 0; j < sei.tileSetData(i).getNumberOfTileRects(); j++)
         {
-          WRITE_UVLC(sei.tileSetData(i).topLeftTileIndex    (j), "top_left_tile_index");  
-          WRITE_UVLC(sei.tileSetData(i).bottomRightTileIndex(j), "bottom_right_tile_index");  
+          WRITE_UVLC(sei.tileSetData(i).topLeftTileIndex    (j), "top_left_tile_index");
+          WRITE_UVLC(sei.tileSetData(i).bottomRightTileIndex(j), "bottom_right_tile_index");
         }
 
         if(!sei.m_mc_all_tiles_exact_sample_value_match_flag)
         {
-          WRITE_FLAG((sei.tileSetData(i).m_exact_sample_value_match_flag ? 1 : 0), "exact_sample_value_match_flag");  
+          WRITE_FLAG((sei.tileSetData(i).m_exact_sample_value_match_flag ? 1 : 0), "exact_sample_value_match_flag");
         }
 
         WRITE_FLAG((sei.tileSetData(i).m_mcts_tier_level_idc_present_flag ? 1 : 0), "mcts_tier_level_idc_present_flag");
@@ -650,7 +650,7 @@ Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstr
         if(sei.tileSetData(i).m_mcts_tier_level_idc_present_flag)
         {
           WRITE_FLAG((sei.tileSetData(i).m_mcts_tier_flag ? 1 : 0), "mcts_tier_flag");
-          WRITE_CODE( sei.tileSetData(i).m_mcts_level_idc, 8,       "mcts_level_idc"); 
+          WRITE_CODE( sei.tileSetData(i).m_mcts_level_idc, 8,       "mcts_level_idc");
         }
       }
     }
@@ -661,8 +661,8 @@ Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstr
 
     if(sei.m_max_mcs_tier_level_idc_present_flag)
     {
-      WRITE_FLAG((sei.m_max_mcts_tier_flag ? 1 : 0), "max_mcts_tier_flag");  
-      WRITE_CODE( sei.m_max_mcts_level_idc, 8,       "max_mcts_level_idc"); 
+      WRITE_FLAG((sei.m_max_mcts_tier_flag ? 1 : 0), "max_mcts_tier_flag");
+      WRITE_CODE( sei.m_max_mcts_level_idc, 8,       "max_mcts_level_idc");
     }
   }
 }
@@ -762,7 +762,7 @@ Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &
   userVerticalCoefficients[2][1] = 186;
   userVerticalCoefficients[2][2] = 100;
   userVerticalCoefficients[2][3] = -10;
-  
+
   Int const iNumHorizontalFilters = 1;
   Int horizontalTapLength_minus1[iNumHorizontalFilters] = {3};
   Int* userHorizontalCoefficients[iNumHorizontalFilters];
@@ -831,7 +831,7 @@ Void SEIWriter::xWriteSEISubBitstreamProperty(const SEISubBitstreamProperty &sei
 Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 {
   WRITE_UVLC( sei.m_kneeId, "knee_function_id" );
-  WRITE_FLAG( sei.m_kneeCancelFlag, "knee_function_cancel_flag" ); 
+  WRITE_FLAG( sei.m_kneeCancelFlag, "knee_function_cancel_flag" );
   if ( !sei.m_kneeCancelFlag )
   {
     WRITE_FLAG( sei.m_kneePersistenceFlag, "knee_function_persistence_flag" );
@@ -862,7 +862,7 @@ Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayC
 
   WRITE_CODE( sei.values.whitePoint[0],    16,  "white_point_x" );
   WRITE_CODE( sei.values.whitePoint[1],    16,  "white_point_y" );
-    
+
   WRITE_CODE( sei.values.maxLuminance,     32,  "max_display_mastering_luminance" );
   WRITE_CODE( sei.values.minLuminance,     32,  "min_display_mastering_luminance" );
 }
@@ -1032,18 +1032,18 @@ Void SEIWriter::xWriteSEIOverlayInfo( const SEIOverlayInfo& sei)
     }
 
     // byte alignment
-    while ( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0 )  
+    while ( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0 )
     {
       WRITE_FLAG( 0, "overlay_zero_bit" );
     }
-   
+
     UChar* stmp;
     UInt ilength;
     for( Int i = 0; i  <=  sei.m_numOverlaysMinus1; i++ )
     {
       if( sei.m_languageOverlayPresentFlag[i] )
       {
-        stmp = (UChar*) strdup( sei.m_overlayLanguage[i].c_str() );        
+        stmp = (UChar*) strdup( sei.m_overlayLanguage[i].c_str() );
         ilength = (UInt) sei.m_overlayLanguage[i].size();
         WRITE_STRING( stmp, ilength, "overlay_language" );
         free(stmp);
@@ -1064,7 +1064,7 @@ Void SEIWriter::xWriteSEIOverlayInfo( const SEIOverlayInfo& sei)
       }
     }
     WRITE_FLAG( ( sei.m_overlayInfoPersistenceFlag ? 1 : 0 ), "overlay_info_persistence_flag" );
-  }  
+  }
 };
 
 Void SEIWriter::xWriteSEITemporalMvPredictionConstraints( const SEITemporalMvPredictionConstraints& sei)
@@ -1156,7 +1156,7 @@ Void SEIWriter::xWriteSEIDepthRepresentationInfo( const SEIDepthRepresentationIn
 Void SEIWriter::xWriteSEIDepthRepInfoElement( double f)
 {
     UInt x_sign, x_exp, x_mantissa,x_mantissa_len;
-    if (f < 0) 
+    if (f < 0)
     {
         f = f * (-1);
         x_sign = 1;
@@ -1316,9 +1316,11 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
   WRITE_FLAG( ( sei.m_alternativeDepthInfoCancelFlag ? 1 : 0 ), "alternative_depth_info_cancel_flag" );
   if( sei.m_alternativeDepthInfoCancelFlag  ==  0 )
   {
+#if DEBUG_NH_3D_SEI
+    printf("\n################## xWriteSEIAlternativeDepthInfo() ################\n");
+#endif
     WRITE_CODE( sei.m_depthType, 2, "depth_type" );
 
-#if NH_MV_SEI_TBD
     if( sei.m_depthType  ==  0 )
     {
       WRITE_UVLC( sei.m_numConstituentViewsGvdMinus1, "num_constituent_views_gvd_minus1" );
@@ -1329,69 +1331,109 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
       WRITE_FLAG( ( sei.m_translationGvdFlag ? 1 : 0 ), "translation_gvd_flag" );
       if( sei.m_zGvdFlag )
       {
-        for( Int i = 0; i  <=  sei.m_numConstituentViewsGvdMinus1 + 1; i++ )
+        for( Int i = 0, j = 0; j  <=  sei.m_numConstituentViewsGvdMinus1 + 1; j++ )
         {
-          WRITE_FLAG( ( sei.m_signGvdZNearFlag[i] ? 1 : 0 ), "sign_gvd_z_near_flag" );
-          WRITE_CODE( sei.m_expGvdZNear[i], 7, "exp_gvd_z_near" );
-          WRITE_CODE( sei.m_manLenGvdZNearMinus1[i], 5, "man_len_gvd_z_near_minus1" );
-          WRITE_CODE( sei.m_manGvdZNear[i], getManGvdZNearLen ), "man_gvd_z_near" );
-          WRITE_FLAG( ( sei.m_signGvdZFarFlag[i] ? 1 : 0 ), "sign_gvd_z_far_flag" );
-          WRITE_CODE( sei.m_expGvdZFar[i], 7, "exp_gvd_z_far" );
-          WRITE_CODE( sei.m_manLenGvdZFarMinus1[i], 5, "man_len_gvd_z_far_minus1" );
-          WRITE_CODE( sei.m_manGvdZFar[i], getManGvdZFarLen ), "man_gvd_z_far" );
+#if DEBUG_NH_3D_SEI
+          printf("sign_gvd_z_near_flag          : sei.m_signGvdZNearFlag[%d][%d]: %u\n", i, j, sei.m_signGvdZNearFlag[i][j]);
+          printf("exp_gvd_z_near                : sei.m_expGvdZNear[%d][%d]: %u\n", i, j, sei.m_expGvdZNear[i][j]);
+          printf("man_len_gvd_z_near_minus1     : sei.m_manLenGvdZNearMinus1[%d][%d]: %u\n", i, j, sei.m_manLenGvdZNearMinus1[i][j]);
+          printf("man_gvd_z_near                : sei.m_manGvdZNear[%d][%d]: %u\n", i, j, sei.m_manGvdZNear[i][j]);
+          printf("sign_gvd_z_far_flag           : sei.m_signGvdZFarFlag[%d][%d]: %u\n", i, j, sei.m_signGvdZFarFlag[i][j]);
+          printf("exp_gvd_z_far                 : sei.m_expGvdZFar[%d][%d]: %u\n", i, j, sei.m_expGvdZFar[i][j]);
+          printf("man_len_gvd_z_far_minus1      : sei.m_manLenGvdZFarMinus1[%d][%d]: %u\n", i, j, sei.m_manLenGvdZFarMinus1[i][j]);
+          printf("man_gvd_z_far                 : sei.m_manGvdZFar[%d][%d]: %u\n", i, j, sei.m_manGvdZFar[i][j]);
+#endif
+          WRITE_FLAG( ( sei.m_signGvdZNearFlag[i][j] ? 1 : 0 ), "sign_gvd_z_near_flag" );
+          WRITE_CODE( sei.m_expGvdZNear[i][j], 7, "exp_gvd_z_near" );
+          WRITE_CODE( sei.m_manLenGvdZNearMinus1[i][j], 5, "man_len_gvd_z_near_minus1" );
+          WRITE_CODE( sei.m_manGvdZNear[i][j], sei.m_manLenGvdZNearMinus1[i][j] + 1, "man_gvd_z_near" );
+          WRITE_FLAG( ( sei.m_signGvdZFarFlag[i][j] ? 1 : 0 ), "sign_gvd_z_far_flag" );
+          WRITE_CODE( sei.m_expGvdZFar[i][j], 7, "exp_gvd_z_far" );
+          WRITE_CODE( sei.m_manLenGvdZFarMinus1[i][j], 5, "man_len_gvd_z_far_minus1" );
+          WRITE_CODE( sei.m_manGvdZFar[i][j], sei.m_manLenGvdZFarMinus1[i][j] + 1, "man_gvd_z_far" );
         }
       }
       if( sei.m_intrinsicParamGvdFlag )
       {
+#if DEBUG_NH_3D_SEI
+        printf("prec_gvd_focal_length         : sei.m_precGvdFocalLength: %u\n", sei.m_precGvdFocalLength);
+        printf("prec_gvd_principal_point      : sei.m_precGvdPrincipalPoint: %u\n", sei.m_precGvdPrincipalPoint);
+#endif
         WRITE_UVLC( sei.m_precGvdFocalLength, "prec_gvd_focal_length" );
         WRITE_UVLC( sei.m_precGvdPrincipalPoint, "prec_gvd_principal_point" );
       }
       if( sei.m_rotationGvdFlag )
       {
+#if DEBUG_NH_3D_SEI
+        printf("prec_gvd_focal_length         : sei.m_precGvdFocalLength: %u\n", sei.m_precGvdFocalLength);
+#endif
         WRITE_UVLC( sei.m_precGvdRotationParam, "prec_gvd_rotation_param" );
       }
       if( sei.m_translationGvdFlag )
       {
+#if DEBUG_NH_3D_SEI
+        printf("prec_gvd_focal_length         : sei.m_precGvdFocalLength: %u\n", sei.m_precGvdFocalLength);
+#endif
         WRITE_UVLC( sei.m_precGvdTranslationParam, "prec_gvd_translation_param" );
       }
-      for( Int i = 0; i  <=  sei.m_numConstituentViewsGvdMinus1 + 1; i++ )
+      for( Int i = 0, j = 0; j  <=  sei.m_numConstituentViewsGvdMinus1 + 1; j++ )
       {
         if( sei.m_intrinsicParamGvdFlag )
         {
-          WRITE_FLAG( ( sei.m_signGvdFocalLengthX[i] ? 1 : 0 ), "sign_gvd_focal_length_x" );
-          WRITE_CODE( sei.m_expGvdFocalLengthX[i], 6, "exp_gvd_focal_length_x" );
-          WRITE_CODE( sei.m_manGvdFocalLengthX[i], getManGvdFocalLengthXLen ), "man_gvd_focal_length_x" );
-          WRITE_FLAG( ( sei.m_signGvdFocalLengthY[i] ? 1 : 0 ), "sign_gvd_focal_length_y" );
-          WRITE_CODE( sei.m_expGvdFocalLengthY[i], 6, "exp_gvd_focal_length_y" );
-          WRITE_CODE( sei.m_manGvdFocalLengthY[i], getManGvdFocalLengthYLen ), "man_gvd_focal_length_y" );
-          WRITE_FLAG( ( sei.m_signGvdPrincipalPointX[i] ? 1 : 0 ), "sign_gvd_principal_point_x" );
-          WRITE_CODE( sei.m_expGvdPrincipalPointX[i], 6, "exp_gvd_principal_point_x" );
-          WRITE_CODE( sei.m_manGvdPrincipalPointX[i], getManGvdPrincipalPointXLen ), "man_gvd_principal_point_x" );
-          WRITE_FLAG( ( sei.m_signGvdPrincipalPointY[i] ? 1 : 0 ), "sign_gvd_principal_point_y" );
-          WRITE_CODE( sei.m_expGvdPrincipalPointY[i], 6, "exp_gvd_principal_point_y" );
-          WRITE_CODE( sei.m_manGvdPrincipalPointY[i], getManGvdPrincipalPointYLen ), "man_gvd_principal_point_y" );
+#if DEBUG_NH_3D_SEI
+          printf("sign_gvd_focal_length_x       : sei.m_signGvdFocalLengthX[%d][%d]: %u\n", i, j, sei.m_signGvdFocalLengthX[i][j]);
+          printf("exp_gvd_focal_length_x        : sei.m_expGvdFocalLengthX[%d][%d]: %u\n", i, j, sei.m_expGvdFocalLengthX[i][j]);
+          printf("man_gvd_focal_length_x        : sei.m_manGvdFocalLengthX[%d][%d]: %u\n", i, j, sei.m_manGvdFocalLengthX[i][j]);
+          printf("sign_gvd_focal_length_y       : sei.m_signGvdFocalLengthY[%d][%d]: %u\n", i, j, sei.m_signGvdFocalLengthY[i][j]);
+          printf("exp_gvd_focal_length_y        : sei.m_expGvdFocalLengthY[%d][%d]: %u\n", i, j, sei.m_expGvdFocalLengthY[i][j]);
+          printf("man_gvd_focal_length_y        : sei.m_manGvdFocalLengthY[%d][%d]: %u\n", i, j, sei.m_manGvdFocalLengthY[i][j]);
+          printf("sign_gvd_principal_point_x    : sei.m_signGvdPrincipalPointX[%d][%d]: %u\n", i, j, sei.m_signGvdPrincipalPointX[i][j]);
+          printf("exp_gvd_principal_point_x     : sei.m_expGvdPrincipalPointX[%d][%d]: %u\n", i, j, sei.m_expGvdPrincipalPointX[i][j]);
+          printf("man_gvd_principal_point_x     : sei.m_manGvdPrincipalPointX[%d][%d]: %u\n", i, j, sei.m_manGvdPrincipalPointX[i][j]);
+          printf("sign_gvd_principal_point_y    : sei.m_signGvdPrincipalPointY[%d][%d]: %u\n", i, j, sei.m_signGvdPrincipalPointY[i][j]);
+          printf("exp_gvd_principal_point_y     : sei.m_expGvdPrincipalPointY[%d][%d]: %u\n", i, j, sei.m_expGvdPrincipalPointY[i][j]);
+          printf("man_gvd_principal_point_y     : sei.m_manGvdPrincipalPointY[%d][%d]: %u\n", i, j, sei.m_manGvdPrincipalPointY[i][j]);
+#endif
+          WRITE_FLAG( ( sei.m_signGvdFocalLengthX[i][j] ? 1 : 0 ), "sign_gvd_focal_length_x" );
+          WRITE_CODE( sei.m_expGvdFocalLengthX[i][j], 6, "exp_gvd_focal_length_x" );
+          WRITE_CODE( sei.m_manGvdFocalLengthX[i][j], sei.m_precGvdFocalLength, "man_gvd_focal_length_x" );
+          WRITE_FLAG( ( sei.m_signGvdFocalLengthY[i][j] ? 1 : 0 ), "sign_gvd_focal_length_y" );
+          WRITE_CODE( sei.m_expGvdFocalLengthY[i][j], 6, "exp_gvd_focal_length_y" );
+          WRITE_CODE( sei.m_manGvdFocalLengthY[i][j], sei.m_precGvdFocalLength, "man_gvd_focal_length_y" );
+          WRITE_FLAG( ( sei.m_signGvdPrincipalPointX[i][j] ? 1 : 0 ), "sign_gvd_principal_point_x" );
+          WRITE_CODE( sei.m_expGvdPrincipalPointX[i][j], 6, "exp_gvd_principal_point_x" );
+          WRITE_CODE( sei.m_manGvdPrincipalPointX[i][j], sei.m_precGvdPrincipalPoint, "man_gvd_principal_point_x" );
+          WRITE_FLAG( ( sei.m_signGvdPrincipalPointY[i][j] ? 1 : 0 ), "sign_gvd_principal_point_y" );
+          WRITE_CODE( sei.m_expGvdPrincipalPointY[i][j], 6, "exp_gvd_principal_point_y" );
+          WRITE_CODE( sei.m_manGvdPrincipalPointY[i][j], sei.m_precGvdPrincipalPoint, "man_gvd_principal_point_y" );
         }
         if( sei.m_rotationGvdFlag )
         {
-          for( Int j = 10; j  <=  3; j++ ) /* row */
+          for( Int k = 0; k < 3; k++ )  // column
           {
-            for( Int k = 10; k  <=  3; k++ )  /* column */
-            {
-              WRITE_FLAG( ( sei.m_signGvdR[i][j][k] ? 1 : 0 ), "sign_gvd_r" );
-              WRITE_CODE( sei.m_expGvdR[i][j][k], 6, "exp_gvd_r" );
-              WRITE_CODE( sei.m_manGvdR[i][j][k], getManGvdRLen ), "man_gvd_r" );
-            }
+#if DEBUG_NH_3D_SEI
+            printf("sign_gvd_r                    : sei.m_signGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_signGvdR[i][j][k]);
+            printf("exp_gvd_r                     : sei.m_expGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_expGvdR[i][j][k]);
+            printf("man_gvd_r                     : sei.m_manGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_manGvdR[i][j][k]);
+#endif
+            WRITE_FLAG( ( sei.m_signGvdR[i][j][k] ? 1 : 0 ), "sign_gvd_r" );
+            WRITE_CODE( sei.m_expGvdR[i][j][k], 6, "exp_gvd_r" );
+            WRITE_CODE( sei.m_manGvdR[i][j][k], sei.m_precGvdTranslationParam, "man_gvd_r" );
           }
         }
         if( sei.m_translationGvdFlag )
         {
-          WRITE_FLAG( ( sei.m_signGvdTX[i] ? 1 : 0 ), "sign_gvd_t_x" );
-          WRITE_CODE( sei.m_expGvdTX[i], 6, "exp_gvd_t_x" );
-          WRITE_CODE( sei.m_manGvdTX[i], getManGvdTXLen ), "man_gvd_t_x" );
+#if DEBUG_NH_3D_SEI
+          printf("sign_gvd_t_x                  : sei.m_signGvdTX[%d][%d]: %u\n", i, j, sei.m_signGvdTX[i][j]);
+          printf("exp_gvd_t_x                   : sei.m_expGvdTX[%d][%d]: %u\n", i, j, sei.m_expGvdTX[i][j]);
+          printf("man_gvd_t_x                   : sei.m_manGvdTX[%d][%d]: %u\n", i, j, sei.m_manGvdTX[i][j]);
+#endif
+          WRITE_FLAG( ( sei.m_signGvdTX[i][j] ? 1 : 0 ), "sign_gvd_t_x" );
+          WRITE_CODE( sei.m_expGvdTX[i][j], 6, "exp_gvd_t_x" );
+          WRITE_CODE( sei.m_manGvdTX[i][j], sei.m_numConstituentViewsGvdMinus1, "man_gvd_t_x" );
         }
       }
     }
-#endif
 
     if( sei.m_depthType  ==  1 )
     {

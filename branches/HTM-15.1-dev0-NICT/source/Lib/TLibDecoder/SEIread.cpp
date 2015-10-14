@@ -99,7 +99,7 @@ Void SEIReader::sei_read_flag(std::ostream *pOS, UInt& ruiCode, const Char *pSym
 }
 
 Void SEIReader::sei_read_string(std::ostream *pOS, UInt uiBufSize, UChar* pucCode, UInt& ruiLength, const Char *pSymbolName)
-{  
+{
   READ_STRING(uiBufSize, pucCode, ruiLength, pSymbolName);
   if (pOS)
   {
@@ -118,7 +118,7 @@ static inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMes
     std::string seiMessageHdr(SEI::getSEIMessageString(sei.payloadType())); seiMessageHdr+=" SEI message";
     (*pDecodedMessageOutputStream) << std::setfill('-') << std::setw(seiMessageHdr.size()) << "-" << std::setfill(' ') << "\n" << seiMessageHdr << " (" << payloadSize << " bytes)"<< "\n";
 #if NH_MV_SEI
-    (*pDecodedMessageOutputStream) << std::setfill(' ') << "LayerId: " << m_layerId << std::setw(2) << " Picture: " << m_decOrder << std::setw( 5 ) << std::endl; 
+    (*pDecodedMessageOutputStream) << std::setfill(' ') << "LayerId: " << m_layerId << std::setw(2) << " Picture: " << m_decOrder << std::setw( 5 ) << std::endl;
 #endif
   }
 }
@@ -565,7 +565,7 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
 
 Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
-  UInt val; 
+  UInt val;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
   sei_read_code( pDecodedMessageOutputStream, 4, val, "active_video_parameter_set_id");   sei.activeVPSId = val;
@@ -991,7 +991,7 @@ Void SEIReader::xParseSEISubBitstreamProperty(SEISubBitstreamProperty &sei, UInt
     sei_read_code( pDecodedMessageOutputStream,   3, code, "highest_sub_layer_id[i]"         ); sei.m_highestSublayerId[i] = code;
     sei_read_code( pDecodedMessageOutputStream,  16, code, "avg_bit_rate[i]"                 ); sei.m_avgBitRate[i] = code;
     sei_read_code( pDecodedMessageOutputStream,  16, code, "max_bit_rate[i]"                 ); sei.m_maxBitRate[i] = code;
-  }  
+  }
 }
 
 Void SEIReader::xResizeSubBitstreamPropertySeiArrays(SEISubBitstreamProperty &sei)
@@ -1234,7 +1234,7 @@ Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent &sei, UInt payload
   sei.resizeDimI(sei.m_lnpSeiMaxLayers);
   for (Int i = 0; i < sei.m_lnpSeiMaxLayers; i++)
   {
-    sei_read_flag( pDecodedMessageOutputStream, code, "layer_not_present_flag" ); 
+    sei_read_flag( pDecodedMessageOutputStream, code, "layer_not_present_flag" );
     sei.m_layerNotPresentFlag[i] = (code == 1);
   }
 };
@@ -1255,13 +1255,13 @@ Void SEIReader::xParseSEIInterLayerConstrainedTileSets(SEIInterLayerConstrainedT
       sei_read_flag( pDecodedMessageOutputStream, code, "skipped_tile_set_present_flag" ); sei.m_skippedTileSetPresentFlag = (code == 1);
     }
     Int numSignificantSets = sei.m_ilNumSetsInMessageMinus1 - sei.m_skippedTileSetPresentFlag + 1;
-    
+
     sei.resizeDimI( numSignificantSets );
     for( Int i = 0; i < numSignificantSets; i++ )
     {
       sei_read_uvlc( pDecodedMessageOutputStream, code, "ilcts_id"                        ); sei.m_ilctsId                  [i] = code;
       sei_read_uvlc( pDecodedMessageOutputStream, code, "il_num_tile_rects_in_set_minus1" ); sei.m_ilNumTileRectsInSetMinus1[i] = code;
-      
+
       sei.resizeDimJ( i, sei.m_ilNumTileRectsInSetMinus1[ i ] + 1 );
       for( Int j = 0; j  <=  sei.m_ilNumTileRectsInSetMinus1[ i ]; j++ )
       {
@@ -1331,7 +1331,7 @@ Void SEIReader::xParseSEISubBitstreamProperty(SEISubBitstreamProperty& sei, UInt
 
   sei_read_code( pDecodedMessageOutputStream, 4, code, "sb_property_active_vps_id" ); sei.m_sbPropertyActiveVpsId = code;
   sei_read_uvlc( pDecodedMessageOutputStream, code, "num_additional_sub_streams_minus1" ); sei.m_numAdditionalSubStreamsMinus1 = code;
-  sei.resizeArrays( ); 
+  sei.resizeArrays( );
   for( Int i = 0; i  <=  sei.m_numAdditionalSubStreamsMinus1; i++ )
   {
     sei_read_code( pDecodedMessageOutputStream, 2, code, "sub_bitstream_mode" ); sei.m_subBitstreamMode[i] = code;
@@ -1418,37 +1418,37 @@ Void SEIReader::xParseSEIOverlayInfo(SEIOverlayInfo& sei, UInt payloadSize, std:
     // byte alignment
     while ( m_pcBitstream->getNumBitsRead() % 8 != 0 )
     {
-      sei_read_flag( pDecodedMessageOutputStream, code, "overlay_zero_bit" ); 
-      assert( code==0 );      
+      sei_read_flag( pDecodedMessageOutputStream, code, "overlay_zero_bit" );
+      assert( code==0 );
     }
-   
+
     UChar* sval = new UChar[sei.m_numStringBytesMax];
-    UInt slen;    
-    sei.m_overlayLanguage   .resize( sei.m_numOverlaysMinus1 + 1 );    
-    sei.m_overlayName       .resize( sei.m_numOverlaysMinus1 + 1 );    
-    sei.m_overlayElementName.resize( sei.m_numOverlaysMinus1 + 1 );    
+    UInt slen;
+    sei.m_overlayLanguage   .resize( sei.m_numOverlaysMinus1 + 1 );
+    sei.m_overlayName       .resize( sei.m_numOverlaysMinus1 + 1 );
+    sei.m_overlayElementName.resize( sei.m_numOverlaysMinus1 + 1 );
     for( Int i = 0; i  <=  sei.m_numOverlaysMinus1; i++ )
     {
       if( sei.m_languageOverlayPresentFlag[i] )
-      {        
+      {
         sei_read_string(pDecodedMessageOutputStream, sei.m_numStringBytesMax, sval, slen, "overlay_language");
-        sei.m_overlayLanguage[i] = std::string((const char*) sval);        
+        sei.m_overlayLanguage[i] = std::string((const char*) sval);
       }
       sei_read_string(pDecodedMessageOutputStream, sei.m_numStringBytesMax, sval, slen, "overlay_name");
-      sei.m_overlayName[i] = std::string((const char*) sval);       
+      sei.m_overlayName[i] = std::string((const char*) sval);
       if( sei.m_overlayLabelPresentFlag[i] )
       {
-        sei.m_overlayElementName[i].resize( sei.m_numOverlayElementsMinus1[i]+1 );        
+        sei.m_overlayElementName[i].resize( sei.m_numOverlayElementsMinus1[i]+1 );
         for( Int j = 0; j  <=  sei.m_numOverlayElementsMinus1[i]; j++ )
         {
           sei_read_string(pDecodedMessageOutputStream, sei.m_numStringBytesMax, sval, slen, "overlay_element_name");
-          sei.m_overlayElementName[i][j] = std::string((const char*) sval);            
+          sei.m_overlayElementName[i][j] = std::string((const char*) sval);
         }
       }
     }
     delete [] sval;
     sei_read_flag( pDecodedMessageOutputStream, code, "overlay_info_persistence_flag" ); sei.m_overlayInfoPersistenceFlag = (code == 1);
-  }  
+  }
 };
 
 Void SEIReader::xParseSEITemporalMvPredictionConstraints(SEITemporalMvPredictionConstraints& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
@@ -1612,7 +1612,7 @@ Void SEIReader::xParseSEIDepthRepresentationInfo(SEIDepthRepresentationInfo& sei
 Void SEIReader::xParseSEIMultiviewSceneInfo(SEIMultiviewSceneInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt  code;
-  Int  sCode; 
+  Int  sCode;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
   sei_read_svlc( pDecodedMessageOutputStream, sCode, "min_disparity" )      ; sei.m_minDisparity      = sCode;
@@ -1635,7 +1635,7 @@ Void SEIReader::xParseSEIMultiviewAcquisitionInfo(SEIMultiviewAcquisitionInfo& s
     sei_read_uvlc( pDecodedMessageOutputStream, code, "prec_skew_factor"            ); sei.m_precSkewFactor           =  code      ;
 
     for( Int i = 0; i  <=  ( sei.m_intrinsicParamsEqualFlag ? 0 : sei.getNumViewsMinus1() ); i++ )
-    {      
+    {
       sei_read_flag( pDecodedMessageOutputStream,                                         code, "sign_focal_length_x"        ); sei.m_signFocalLengthX       [i] = (code == 1);
       sei_read_code( pDecodedMessageOutputStream, 6,                                      code, "exponent_focal_length_x"    ); sei.m_exponentFocalLengthX   [i] =  code      ;
       sei_read_code( pDecodedMessageOutputStream, sei.getMantissaFocalLengthXLen   ( i ), code, "mantissa_focal_length_x"    ); sei.m_mantissaFocalLengthX   [i] =  code      ;
@@ -1684,7 +1684,7 @@ Void SEIReader::xParseSEIMultiviewViewPosition(SEIMultiviewViewPosition& sei, UI
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
   sei_read_uvlc( pDecodedMessageOutputStream, code, "num_views_minus1" ); sei.m_numViewsMinus1 = code;
-  sei.m_viewPosition.resize( sei.m_numViewsMinus1 + 1 ); 
+  sei.m_viewPosition.resize( sei.m_numViewsMinus1 + 1 );
   for( Int i = 0; i  <=  sei.m_numViewsMinus1; i++ )
   {
     sei_read_uvlc( pDecodedMessageOutputStream, code, "view_position" ); sei.m_viewPosition[i] = code;
@@ -1698,11 +1698,11 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
   Int scode;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
+  sei.resizeArrays( );
   sei_read_flag( pDecodedMessageOutputStream, code, "alternative_depth_info_cancel_flag" ); sei.m_alternativeDepthInfoCancelFlag = (code == 1);
   if( sei.m_alternativeDepthInfoCancelFlag  ==  0 )
   {
     sei_read_code( pDecodedMessageOutputStream, 2, code, "depth_type" ); sei.m_depthType = code;
-#if NH_MV_SEI_TBD
     if( sei.m_depthType  ==  0 )
     {
       sei_read_uvlc( pDecodedMessageOutputStream, code, "num_constituent_views_gvd_minus1" ); sei.m_numConstituentViewsGvdMinus1 = code;
@@ -1713,16 +1713,16 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
       sei_read_flag( pDecodedMessageOutputStream, code, "translation_gvd_flag" ); sei.m_translationGvdFlag = (code == 1);
       if( sei.m_zGvdFlag )
       {
-        for( Int i = 0; i  <=  sei.m_numConstituentViewsGvdMinus1 + 1; i++ )
+        for( Int i = 0, j = 0; j <=  sei.m_numConstituentViewsGvdMinus1 + 1; j++ )
         {
-          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_z_near_flag" ); sei.m_signGvdZNearFlag[i] = (code == 1);
-          sei_read_code( pDecodedMessageOutputStream, 7, code, "exp_gvd_z_near" ); sei.m_expGvdZNear[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, 5, code, "man_len_gvd_z_near_minus1" ); sei.m_manLenGvdZNearMinus1[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, getManGvdZNearLen ), code, "man_gvd_z_near" ); sei.m_manGvdZNear[i] = code;
-          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_z_far_flag" ); sei.m_signGvdZFarFlag[i] = (code == 1);
-          sei_read_code( pDecodedMessageOutputStream, 7, code, "exp_gvd_z_far" ); sei.m_expGvdZFar[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, 5, code, "man_len_gvd_z_far_minus1" ); sei.m_manLenGvdZFarMinus1[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, getManGvdZFarLen ), code, "man_gvd_z_far" ); sei.m_manGvdZFar[i] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_z_near_flag" ); sei.m_signGvdZNearFlag[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 7, code, "exp_gvd_z_near" ); sei.m_expGvdZNear[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, 5, code, "man_len_gvd_z_near_minus1" ); sei.m_manLenGvdZNearMinus1[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_manLenGvdZNearMinus1[i][j]+1, code, "man_gvd_z_near" ); sei.m_manGvdZNear[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_z_far_flag" ); sei.m_signGvdZFarFlag[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 7, code, "exp_gvd_z_far" ); sei.m_expGvdZFar[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, 5, code, "man_len_gvd_z_far_minus1" ); sei.m_manLenGvdZFarMinus1[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_manLenGvdZFarMinus1[i][j]+1, code, "man_gvd_z_far" ); sei.m_manGvdZFar[i][j] = code;
         }
       }
       if( sei.m_intrinsicParamGvdFlag )
@@ -1738,44 +1738,42 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
       {
         sei_read_uvlc( pDecodedMessageOutputStream, code, "prec_gvd_translation_param" ); sei.m_precGvdTranslationParam = code;
       }
-      for( Int i = 0; i  <=  sei.m_numConstituentViewsGvdMinus1 + 1; i++ )
+      for( Int i = 0, j = 0; j <= sei.m_numConstituentViewsGvdMinus1 + 1; j++ )
       {
         if( sei.m_intrinsicParamGvdFlag )
         {
-          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_focal_length_x" ); sei.m_signGvdFocalLengthX[i] = (code == 1);
-          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_focal_length_x" ); sei.m_expGvdFocalLengthX[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, getManGvdFocalLengthXLen ), code, "man_gvd_focal_length_x" ); sei.m_manGvdFocalLengthX[i] = code;
-          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_focal_length_y" ); sei.m_signGvdFocalLengthY[i] = (code == 1);
-          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_focal_length_y" ); sei.m_expGvdFocalLengthY[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, getManGvdFocalLengthYLen ), code, "man_gvd_focal_length_y" ); sei.m_manGvdFocalLengthY[i] = code;
-          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_principal_point_x" ); sei.m_signGvdPrincipalPointX[i] = (code == 1);
-          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_principal_point_x" ); sei.m_expGvdPrincipalPointX[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, getManGvdPrincipalPointXLen ), code, "man_gvd_principal_point_x" ); sei.m_manGvdPrincipalPointX[i] = code;
-          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_principal_point_y" ); sei.m_signGvdPrincipalPointY[i] = (code == 1);
-          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_principal_point_y" ); sei.m_expGvdPrincipalPointY[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, getManGvdPrincipalPointYLen ), code, "man_gvd_principal_point_y" ); sei.m_manGvdPrincipalPointY[i] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_focal_length_x" ); sei.m_signGvdFocalLengthX[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_focal_length_x" ); sei.m_expGvdFocalLengthX[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdFocalLength, code, "man_gvd_focal_length_x" ); sei.m_manGvdFocalLengthX[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_focal_length_y" ); sei.m_signGvdFocalLengthY[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_focal_length_y" ); sei.m_expGvdFocalLengthY[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdFocalLength, code, "man_gvd_focal_length_y" ); sei.m_manGvdFocalLengthY[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_principal_point_x" ); sei.m_signGvdPrincipalPointX[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_principal_point_x" ); sei.m_expGvdPrincipalPointX[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdPrincipalPoint, code, "man_gvd_principal_point_x" ); sei.m_manGvdPrincipalPointX[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_principal_point_y" ); sei.m_signGvdPrincipalPointY[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_principal_point_y" ); sei.m_expGvdPrincipalPointY[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdPrincipalPoint, code, "man_gvd_principal_point_y" ); sei.m_manGvdPrincipalPointY[i][j] = code;
         }
         if( sei.m_rotationGvdFlag )
         {
-          for( Int j = 10; j  <=  3; j++ ) /* row */
+          for( Int k = 0; k  <  3; k++ )  /* column */
           {
-            for( Int k = 10; k  <=  3; k++ )  /* column */
-            {
-              sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r" ); sei.m_signGvdR[i][j][k] = (code == 1);
-              sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r" ); sei.m_expGvdR[i][j][k] = code;
-              sei_read_code( pDecodedMessageOutputStream, getManGvdRLen ), code, "man_gvd_r" ); sei.m_manGvdR[i][j][k] = code;
-            }
+            sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r" ); sei.m_signGvdR[i][j][k] = (code == 1);
+            sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r" ); sei.m_expGvdR[i][j][k] = code;
+            sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r" ); sei.m_manGvdR[i][j][k] = code;
           }
         }
         if( sei.m_translationGvdFlag )
         {
-          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_t_x" ); sei.m_signGvdTX[i] = (code == 1);
-          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_t_x" ); sei.m_expGvdTX[i] = code;
-          sei_read_code( pDecodedMessageOutputStream, getManGvdTXLen ), code, "man_gvd_t_x" ); sei.m_manGvdTX[i] = code;
+#if NH_MV_SEI_TBD
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_t_x" ); sei.m_signGvdTX[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_t_x" ); sei.m_expGvdTX[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdTranslationParam, code, "man_gvd_t_x" ); sei.m_manGvdTX[i][j] = code;
+#endif
         }
       }
     }
-#endif
 
     if( sei.m_depthType  ==  1 )
     {
