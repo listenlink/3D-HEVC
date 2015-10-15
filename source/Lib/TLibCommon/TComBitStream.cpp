@@ -112,9 +112,7 @@ Void TComOutputBitstream::clear()
 Void TComOutputBitstream::write   ( UInt uiBits, UInt uiNumberOfBits )
 {
   assert( uiNumberOfBits <= 32 );
-#if !NH_3D
   assert( uiNumberOfBits == 32 || (uiBits & (~0 << uiNumberOfBits)) == 0 );
-#endif
 
   /* any modulo 8 remainder of num_total_bits cannot be written this time,
    * and will be held until next time. */
