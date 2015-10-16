@@ -1154,7 +1154,7 @@ public:
   UInt getManGvdFocalLengthYLen       ( Int i, Int j ) const;
   UInt getManGvdPrincipalPointXLen    ( Int i, Int j ) const;
   UInt getManGvdPrincipalPointYLen    ( Int i, Int j ) const;
-  UInt getManGvdRLen                  ( Int i, int j, int k ) const;
+  //UInt getManGvdRLen                  ( Int i, int j ) const;
   UInt getManGvdTXLen                 ( Int i, Int j ) const;
   UInt xGetSyntaxElementLen           ( Int expo, Int prec, Int val ) const;
 
@@ -1184,9 +1184,33 @@ public:
     m_expGvdPrincipalPointY.resize(3);
     m_manGvdPrincipalPointY.resize(3);
 
-    m_signGvdR.resize(3);
-    m_expGvdR.resize(3);
-    m_manGvdR.resize(3);
+    m_signGvdR00.resize(3);
+    m_expGvdR00.resize(3);
+    m_manGvdR00.resize(3);
+    m_signGvdR01.resize(3);
+    m_expGvdR01.resize(3);
+    m_manGvdR01.resize(3);
+    m_signGvdR02.resize(3);
+    m_expGvdR02.resize(3);
+    m_manGvdR02.resize(3);
+    m_signGvdR10.resize(3);
+    m_expGvdR10.resize(3);
+    m_manGvdR10.resize(3);
+    m_signGvdR11.resize(3);
+    m_expGvdR11.resize(3);
+    m_manGvdR11.resize(3);
+    m_signGvdR12.resize(3);
+    m_expGvdR12.resize(3);
+    m_manGvdR12.resize(3);
+    m_signGvdR20.resize(3);
+    m_expGvdR20.resize(3);
+    m_manGvdR20.resize(3);
+    m_signGvdR21.resize(3);
+    m_expGvdR21.resize(3);
+    m_manGvdR21.resize(3);
+    m_signGvdR22.resize(3);
+    m_expGvdR22.resize(3);
+    m_manGvdR22.resize(3);
 
     m_signGvdTX.resize(3);
     m_expGvdTX.resize(3);
@@ -1216,15 +1240,33 @@ public:
       m_expGvdPrincipalPointY[i].resize(3);
       m_manGvdPrincipalPointY[i].resize(3);
 
-      m_signGvdR[i].resize(3);
-      m_expGvdR[i].resize(3);
-      m_manGvdR[i].resize(3);
-      for( Int j = 0; j < 3; j++ )
-      {
-        m_signGvdR[i][j].resize(3);
-        m_expGvdR[i][j].resize(3);
-        m_manGvdR[i][j].resize(3);
-      }
+      m_signGvdR00[i].resize(3);
+      m_expGvdR00[i].resize(3);
+      m_manGvdR00[i].resize(3);
+      m_signGvdR01[i].resize(3);
+      m_expGvdR01[i].resize(3);
+      m_manGvdR01[i].resize(3);
+      m_signGvdR02[i].resize(3);
+      m_expGvdR02[i].resize(3);
+      m_manGvdR02[i].resize(3);
+      m_signGvdR10[i].resize(3);
+      m_expGvdR10[i].resize(3);
+      m_manGvdR10[i].resize(3);
+      m_signGvdR11[i].resize(3);
+      m_expGvdR11[i].resize(3);
+      m_manGvdR11[i].resize(3);
+      m_signGvdR12[i].resize(3);
+      m_expGvdR12[i].resize(3);
+      m_manGvdR12[i].resize(3);
+      m_signGvdR20[i].resize(3);
+      m_expGvdR20[i].resize(3);
+      m_manGvdR20[i].resize(3);
+      m_signGvdR21[i].resize(3);
+      m_expGvdR21[i].resize(3);
+      m_manGvdR21[i].resize(3);
+      m_signGvdR22[i].resize(3);
+      m_expGvdR22[i].resize(3);
+      m_manGvdR22[i].resize(3);
 
       m_signGvdTX[i].resize(3);
       m_expGvdTX[i].resize(3);
@@ -1265,12 +1307,39 @@ public:
   BoolAry2d m_signGvdPrincipalPointY;
   IntAry2d  m_expGvdPrincipalPointY;
   IntAry2d  m_manGvdPrincipalPointY;
-  BoolAry3d m_signGvdR;
-  IntAry3d  m_expGvdR;
-  IntAry3d  m_manGvdR;
+
+  BoolAry2d m_signGvdR00;
+  IntAry2d  m_expGvdR00;
+  IntAry2d  m_manGvdR00;
+  BoolAry2d m_signGvdR01;
+  IntAry2d  m_expGvdR01;
+  IntAry2d  m_manGvdR01;
+  BoolAry2d m_signGvdR02;
+  IntAry2d  m_expGvdR02;
+  IntAry2d  m_manGvdR02;
+  BoolAry2d m_signGvdR10;
+  IntAry2d  m_expGvdR10;
+  IntAry2d  m_manGvdR10;
+  BoolAry2d m_signGvdR11;
+  IntAry2d  m_expGvdR11;
+  IntAry2d  m_manGvdR11;
+  BoolAry2d m_signGvdR12;
+  IntAry2d  m_expGvdR12;
+  IntAry2d  m_manGvdR12;
+  BoolAry2d m_signGvdR20;
+  IntAry2d  m_expGvdR20;
+  IntAry2d  m_manGvdR20;
+  BoolAry2d m_signGvdR21;
+  IntAry2d  m_expGvdR21;
+  IntAry2d  m_manGvdR21;
+  BoolAry2d m_signGvdR22;
+  IntAry2d  m_expGvdR22;
+  IntAry2d  m_manGvdR22;
+
   BoolAry2d m_signGvdTX;
   IntAry2d  m_expGvdTX;
   IntAry2d  m_manGvdTX;
+
   Int       m_minOffsetXInt;
   Int       m_minOffsetXFrac;
   Int       m_maxOffsetXInt;

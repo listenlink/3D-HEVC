@@ -1767,13 +1767,34 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
         }
         if( sei.m_rotationGvdFlag )
         {
-          for( Int k = 0; k  <  3; k++ )  /* column */
-          {
-            sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r" ); sei.m_signGvdR[i][j][k] = (code == 1);
-            sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r" ); sei.m_expGvdR[i][j][k] = code;
-            sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r" ); sei.m_manGvdR[i][j][k] = code;
-            //sei_read_code( pDecodedMessageOutputStream, sei.getManGvdRLen(i,j,k), code, "man_gvd_r" ); sei.m_manGvdR[i][j][k] = code;
-          }
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r00" ); sei.m_signGvdR00[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r00" ); sei.m_expGvdR00[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r00" ); sei.m_manGvdR00[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r01" ); sei.m_signGvdR01[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r01" ); sei.m_expGvdR01[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r01" ); sei.m_manGvdR01[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r02" ); sei.m_signGvdR02[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r02" ); sei.m_expGvdR02[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r02" ); sei.m_manGvdR02[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r10" ); sei.m_signGvdR10[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r10" ); sei.m_expGvdR10[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r10" ); sei.m_manGvdR10[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r11" ); sei.m_signGvdR11[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r11" ); sei.m_expGvdR11[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r11" ); sei.m_manGvdR11[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r12" ); sei.m_signGvdR12[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r12" ); sei.m_expGvdR12[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r12" ); sei.m_manGvdR12[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r20" ); sei.m_signGvdR20[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r20" ); sei.m_expGvdR20[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r20" ); sei.m_manGvdR20[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r21" ); sei.m_signGvdR21[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r21" ); sei.m_expGvdR21[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r21" ); sei.m_manGvdR21[i][j] = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "sign_gvd_r22" ); sei.m_signGvdR22[i][j] = (code == 1);
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "exp_gvd_r22" ); sei.m_expGvdR22[i][j] = code;
+          sei_read_code( pDecodedMessageOutputStream, sei.m_precGvdRotationParam, code, "man_gvd_r22" ); sei.m_manGvdR22[i][j] = code;
+          //sei_read_code( pDecodedMessageOutputStream, sei.getManGvdRLen(i,j,k), code, "man_gvd_r" ); sei.m_manGvdR[i][j] = code;
         }
         if( sei.m_translationGvdFlag )
         {
