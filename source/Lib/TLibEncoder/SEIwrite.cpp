@@ -1417,19 +1417,47 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
         }
         if( sei.m_rotationGvdFlag )
         {
-          for( Int k = 0; k < 3; k++ )  // column
-          {
-#if DEBUG_NH_3D_SEI
-            printf("sign_gvd_r                    : sei.m_signGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_signGvdR[i][j][k]);
-            printf("exp_gvd_r                     : sei.m_expGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_expGvdR[i][j][k]);
-            printf("man_gvd_r                     : sei.m_manGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_manGvdR[i][j][k]);
-            printf("manLEN_gvd_r                  : sei.getManGvdRLen(%d,%d,%d): %u\n", i, j, k, sei.getManGvdRLen(i,j,k));
+#if DEBUG_NH_3D_SEI/*
+          printf("sign_gvd_r                    : sei.m_signGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_signGvdR[i][j][k]);
+          printf("exp_gvd_r                     : sei.m_expGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_expGvdR[i][j][k]);
+          printf("man_gvd_r                     : sei.m_manGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_manGvdR[i][j][k]);
+          printf("sign_gvd_r                    : sei.m_signGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_signGvdR[i][j][k]);
+          printf("exp_gvd_r                     : sei.m_expGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_expGvdR[i][j][k]);
+          printf("man_gvd_r                     : sei.m_manGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_manGvdR[i][j][k]);
+          printf("sign_gvd_r                    : sei.m_signGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_signGvdR[i][j][k]);
+          printf("exp_gvd_r                     : sei.m_expGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_expGvdR[i][j][k]);
+          printf("man_gvd_r                     : sei.m_manGvdR[%d][%d][%d]: %u\n", i, j, k, sei.m_manGvdR[i][j][k]);
+          */
+          //printf("manLEN_gvd_r                  : sei.getManGvdRLen(%d,%d,%d): %u\n", i, j, k, sei.getManGvdRLen(i,j,k));
 #endif
-            WRITE_FLAG( ( sei.m_signGvdR[i][j][k] ? 1 : 0 ), "sign_gvd_r" );
-            WRITE_CODE( sei.m_expGvdR[i][j][k], 6, "exp_gvd_r" );
-            WRITE_CODE( sei.m_manGvdR[i][j][k], sei.m_precGvdRotationParam, "man_gvd_r" );
-            //WRITE_CODE( sei.m_manGvdR[i][j][k], sei.getManGvdRLen(i,j,k), "man_gvd_r" );
-          }
+          WRITE_FLAG( ( sei.m_signGvdR00[i][j] ? 1 : 0 ), "sign_gvd_r00" );
+          WRITE_CODE( sei.m_expGvdR00[i][j], 6, "exp_gvd_r00" );
+          WRITE_CODE( sei.m_manGvdR00[i][j], sei.m_precGvdRotationParam, "man_gvd_r00" );
+          WRITE_FLAG( ( sei.m_signGvdR01[i][j] ? 1 : 0 ), "sign_gvd_r01" );
+          WRITE_CODE( sei.m_expGvdR01[i][j], 6, "exp_gvd_r01" );
+          WRITE_CODE( sei.m_manGvdR01[i][j], sei.m_precGvdRotationParam, "man_gvd_r01" );
+          WRITE_FLAG( ( sei.m_signGvdR02[i][j] ? 1 : 0 ), "sign_gvd_r02" );
+          WRITE_CODE( sei.m_expGvdR02[i][j], 6, "exp_gvd_r02" );
+          WRITE_CODE( sei.m_manGvdR02[i][j], sei.m_precGvdRotationParam, "man_gvd_r02" );
+          WRITE_FLAG( ( sei.m_signGvdR10[i][j] ? 1 : 0 ), "sign_gvd_r10" );
+          WRITE_CODE( sei.m_expGvdR10[i][j], 6, "exp_gvd_r10" );
+          WRITE_CODE( sei.m_manGvdR10[i][j], sei.m_precGvdRotationParam, "man_gvd_r10" );
+          WRITE_FLAG( ( sei.m_signGvdR11[i][j] ? 1 : 0 ), "sign_gvd_r11" );
+          WRITE_CODE( sei.m_expGvdR11[i][j], 6, "exp_gvd_r11" );
+          WRITE_CODE( sei.m_manGvdR11[i][j], sei.m_precGvdRotationParam, "man_gvd_r11" );
+          WRITE_FLAG( ( sei.m_signGvdR12[i][j] ? 1 : 0 ), "sign_gvd_r12" );
+          WRITE_CODE( sei.m_expGvdR12[i][j], 6, "exp_gvd_r12" );
+          WRITE_CODE( sei.m_manGvdR12[i][j], sei.m_precGvdRotationParam, "man_gvd_r12" );
+          WRITE_FLAG( ( sei.m_signGvdR20[i][j] ? 1 : 0 ), "sign_gvd_r20" );
+          WRITE_CODE( sei.m_expGvdR20[i][j], 6, "exp_gvd_r20" );
+          WRITE_CODE( sei.m_manGvdR20[i][j], sei.m_precGvdRotationParam, "man_gvd_r20" );
+          WRITE_FLAG( ( sei.m_signGvdR21[i][j] ? 1 : 0 ), "sign_gvd_r21" );
+          WRITE_CODE( sei.m_expGvdR21[i][j], 6, "exp_gvd_r21" );
+          WRITE_CODE( sei.m_manGvdR21[i][j], sei.m_precGvdRotationParam, "man_gvd_r21" );
+          WRITE_FLAG( ( sei.m_signGvdR22[i][j] ? 1 : 0 ), "sign_gvd_r22" );
+          WRITE_CODE( sei.m_expGvdR22[i][j], 6, "exp_gvd_r22" );
+          WRITE_CODE( sei.m_manGvdR22[i][j], sei.m_precGvdRotationParam, "man_gvd_r22" );
+          //WRITE_CODE( sei.m_manGvdR2[i][j], sei.getManGvdRLen(i,j,k), "man_gvd_r" );
         }
         if( sei.m_translationGvdFlag )
         {

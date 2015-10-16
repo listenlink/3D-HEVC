@@ -1507,9 +1507,33 @@ Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
     ("SignGvdPrincipalPointY_%d"      , m_signGvdPrincipalPointY          , BoolAry1d(3,0), 3   ,"SignGvdPrincipalPointY"           )
     ("ExpGvdPrincipalPointY_%d"       , m_expGvdPrincipalPointY           , IntAry1d (3,0), 3   ,"ExpGvdPrincipalPointY"            )
     ("ManGvdPrincipalPointY_%d"       , m_manGvdPrincipalPointY           , IntAry1d (3,0), 3   ,"ManGvdPrincipalPointY"            )
-    ("SignGvdR_%d_%d"                 , m_signGvdR                        , BoolAry1d(3,0), 3, 3,"SignGvdR"                         )
-    ("ExpGvdR_%d_%d"                  , m_expGvdR                         , IntAry1d (3,0), 3, 3,"ExpGvdR"                          )
-    ("ManGvdR_%d_%d"                  , m_manGvdR                         , IntAry1d (3,0), 3, 3,"ManGvdR"                          )
+    ("SignGvdR00_%d"                  , m_signGvdR00                      , BoolAry1d(3,0), 3   ,"SignGvdR00"                       )
+    ("ExpGvdR00_%d"                   , m_expGvdR00                       , IntAry1d (3,0), 3   ,"ExpGvdR00"                        )
+    ("ManGvdR00_%d"                   , m_manGvdR00                       , IntAry1d (3,0), 3   ,"ManGvdR00"                        )
+    ("SignGvdR01_%d"                  , m_signGvdR01                      , BoolAry1d(3,0), 3   ,"SignGvdR01"                       )
+    ("ExpGvdR01_%d"                   , m_expGvdR01                       , IntAry1d (3,0), 3   ,"ExpGvdR01"                        )
+    ("ManGvdR01_%d"                   , m_manGvdR01                       , IntAry1d (3,0), 3   ,"ManGvdR01"                        )
+    ("SignGvdR02_%d"                  , m_signGvdR02                      , BoolAry1d(3,0), 3   ,"SignGvdR02"                       )
+    ("ExpGvdR02_%d"                   , m_expGvdR02                       , IntAry1d (3,0), 3   ,"ExpGvdR02"                        )
+    ("ManGvdR02_%d"                   , m_manGvdR02                       , IntAry1d (3,0), 3   ,"ManGvdR02"                        )
+    ("SignGvdR10_%d"                  , m_signGvdR10                      , BoolAry1d(3,0), 3   ,"SignGvdR10"                       )
+    ("ExpGvdR10_%d"                   , m_expGvdR10                       , IntAry1d (3,0), 3   ,"ExpGvdR10"                        )
+    ("ManGvdR10_%d"                   , m_manGvdR10                       , IntAry1d (3,0), 3   ,"ManGvdR10"                        )
+    ("SignGvdR11_%d"                  , m_signGvdR11                      , BoolAry1d(3,0), 3   ,"SignGvdR11"                       )
+    ("ExpGvdR11_%d"                   , m_expGvdR11                       , IntAry1d (3,0), 3   ,"ExpGvdR11"                        )
+    ("ManGvdR11_%d"                   , m_manGvdR11                       , IntAry1d (3,0), 3   ,"ManGvdR11"                        )
+    ("SignGvdR12_%d"                  , m_signGvdR12                      , BoolAry1d(3,0), 3   ,"SignGvdR12"                       )
+    ("ExpGvdR12_%d"                   , m_expGvdR12                       , IntAry1d (3,0), 3   ,"ExpGvdR12"                        )
+    ("ManGvdR12_%d"                   , m_manGvdR12                       , IntAry1d (3,0), 3   ,"ManGvdR12"                        )
+    ("SignGvdR20_%d"                  , m_signGvdR20                      , BoolAry1d(3,0), 3   ,"SignGvdR20"                       )
+    ("ExpGvdR20_%d"                   , m_expGvdR20                       , IntAry1d (3,0), 3   ,"ExpGvdR20"                        )
+    ("ManGvdR20_%d"                   , m_manGvdR20                       , IntAry1d (3,0), 3   ,"ManGvdR20"                        )
+    ("SignGvdR21_%d"                  , m_signGvdR21                      , BoolAry1d(3,0), 3   ,"SignGvdR21"                       )
+    ("ExpGvdR21_%d"                   , m_expGvdR21                       , IntAry1d (3,0), 3   ,"ExpGvdR21"                        )
+    ("ManGvdR21_%d"                   , m_manGvdR21                       , IntAry1d (3,0), 3   ,"ManGvdR21"                        )
+    ("SignGvdR22_%d"                  , m_signGvdR22                      , BoolAry1d(3,0), 3   ,"SignGvdR22"                       )
+    ("ExpGvdR22_%d"                   , m_expGvdR22                       , IntAry1d (3,0), 3   ,"ExpGvdR22"                        )
+    ("ManGvdR22_%d"                   , m_manGvdR22                       , IntAry1d (3,0), 3   ,"ManGvdR22"                        )
     ("SignGvdTX_%d"                   , m_signGvdTX                       , BoolAry1d(3,0), 3   ,"SignGvdTX"                        )
     ("ExpGvdTX_%d"                    , m_expGvdTX                        , IntAry1d (3,0), 3   ,"ExpGvdTX"                         )
     ("ManGvdTX_%d"                    , m_manGvdTX                        , IntAry1d (3,0), 3   ,"ManGvdTX"                         )
@@ -1555,32 +1579,64 @@ Bool SEIAlternativeDepthInfo::checkCfg( const TComSlice* slice )
 
 UInt SEIAlternativeDepthInfo::getManGvdFocalLengthXLen       ( Int i, int j ) const
 {
-  return xGetSyntaxElementLen( m_expGvdFocalLengthX[i][j], m_precGvdFocalLength, m_manGvdFocalLengthX[i][j]  );
+  UInt rval;
+  rval = xGetSyntaxElementLen( m_expGvdFocalLengthX[i][j], m_precGvdFocalLength, m_manGvdFocalLengthX[i][j]  );
+  if (rval == 0)
+    return m_precGvdFocalLength;
+  else
+    return rval;
 };
 
 UInt SEIAlternativeDepthInfo::getManGvdFocalLengthYLen       ( Int i, int j ) const
 {
-  return xGetSyntaxElementLen( m_expGvdFocalLengthY[i][j], m_precGvdFocalLength, m_manGvdFocalLengthY[i][j]  );
+  UInt rval;
+  rval = xGetSyntaxElementLen( m_expGvdFocalLengthY[i][j], m_precGvdFocalLength, m_manGvdFocalLengthY[i][j]  );
+  if (rval == 0)
+    return m_precGvdFocalLength;
+  else
+    return rval;
 };
 
 UInt SEIAlternativeDepthInfo::getManGvdPrincipalPointXLen    ( Int i, int j ) const
 {
-  return xGetSyntaxElementLen( m_expGvdPrincipalPointX[i][j], m_precGvdPrincipalPoint, m_manGvdPrincipalPointX[i][j]  );
+  UInt rval;
+  rval = xGetSyntaxElementLen( m_expGvdPrincipalPointX[i][j], m_precGvdPrincipalPoint, m_manGvdPrincipalPointX[i][j]  );
+  if (rval == 0)
+    return m_precGvdPrincipalPoint;
+  else
+    return rval;
 };
 
 UInt SEIAlternativeDepthInfo::getManGvdPrincipalPointYLen    ( Int i, int j ) const
 {
-  return xGetSyntaxElementLen( m_expGvdPrincipalPointY[i][j], m_precGvdPrincipalPoint, m_manGvdPrincipalPointY[i][j]  );
+  UInt rval;
+  rval = xGetSyntaxElementLen( m_expGvdPrincipalPointY[i][j], m_precGvdPrincipalPoint, m_manGvdPrincipalPointY[i][j]  );
+  if (rval == 0)
+    return m_precGvdPrincipalPoint;
+  else
+    return rval;
 };
 
+/*
 UInt SEIAlternativeDepthInfo::getManGvdRLen                  ( Int i, int j, int k ) const
 {
-  return xGetSyntaxElementLen( m_expGvdR[i][j][k], m_precGvdRotationParam, m_manGvdR[i][j][k] );
+  UInt rval;
+  rval = xGetSyntaxElementLen( m_expGvdR[i][j][k], m_precGvdRotationParam, m_manGvdR[i][j][k] );
+  if (rval == 0)
+    return m_precGvdRotationParam;
+  else
+    return rval;
 };
+*/
 
 UInt SEIAlternativeDepthInfo::getManGvdTXLen                 ( Int i, int j ) const
 {
-  return xGetSyntaxElementLen( m_expGvdTX[i][j], m_precGvdTranslationParam, m_manGvdTX[i][j]  );
+  UInt rval;
+  rval = xGetSyntaxElementLen( m_expGvdTX[i][j], m_precGvdTranslationParam, m_manGvdTX[i][j]  );
+  if (rval == 0)
+    return m_precGvdTranslationParam;
+  else
+    return rval;
 };
 
 UInt SEIAlternativeDepthInfo::xGetSyntaxElementLen( Int expo, Int prec, Int val ) const
