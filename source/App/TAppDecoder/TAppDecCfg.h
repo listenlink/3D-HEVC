@@ -93,7 +93,7 @@ protected:
   Bool          m_printPicOutput;                     ///< Print information on picture output
   Bool          m_printReceivedNalus;                 ///< Print information on received NAL units
 #if NH_3D
-  Char*         m_pchScaleOffsetFile = nullptr;         ///< output coded scale and offset parameters // NICT FIX
+  Char*         m_pchScaleOffsetFile;                   ///< output coded scale and offset parameters
   Bool          m_depth420OutputFlag;                   ///< output depth layers in 4:2:0
 #endif
 
@@ -123,6 +123,9 @@ public:
     {
       m_outputBitDepth[channelTypeIndex] = 0;
     }
+#if NH_3D
+    m_pchScaleOffsetFile = NULL;
+#endif
   }
 
   virtual ~TAppDecCfg() {}

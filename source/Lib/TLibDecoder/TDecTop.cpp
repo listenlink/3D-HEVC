@@ -74,8 +74,10 @@ CamParsCollector::~CamParsCollector()
 
   xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
   xDeleteArray( m_aiBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
-  if (m_receivedIdc != nullptr) // NICT FIX
+  if ( m_receivedIdc != NULL )
+  {
     xDeleteArray( m_receivedIdc, m_vps->getNumViews() );
+  }
 }
 
 

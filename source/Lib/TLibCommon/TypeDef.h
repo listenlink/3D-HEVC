@@ -76,6 +76,7 @@
 #endif
 #if NH_3D
 #define H_3D_FIX_ARP_CHECK_NOT_IN_DPB     1
+#define NH_3D_FIX_NBDV_COL                1
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////
@@ -357,9 +358,6 @@
 // This can be enabled by the makefile
 #ifndef RExt__DECODER_DEBUG_BIT_STATISTICS
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
-#endif
-#if NH_3D
-#define DEBUG_NH_3D_SEI                                   0 ///< When enabled, prints out SEI values
 #endif
 // This can be enabled by the makefile
 #if !NH_MV
