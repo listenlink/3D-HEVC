@@ -1473,7 +1473,6 @@ Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
   po::Options opts;
   xAddGeneralOpts( opts , defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes, defSeiNaluId, defPositionInSeiNalu, defModifyByEncoder );
 
-  // 3 = m_numConstituentViewsGvdMinus1 + 2
   opts.addOptions()
     ("AlternativeDepthInfoCancelFlag" , m_alternativeDepthInfoCancelFlag  , false               , "AlternativeDepthInfoCancelFlag"  )
     ("DepthType"                      , m_depthType                       , 1                   , "DepthType"                       )
@@ -1617,18 +1616,6 @@ UInt SEIAlternativeDepthInfo::getManGvdPrincipalPointYLen    ( Int i, int j ) co
     return rval;
 };
 
-/*
-UInt SEIAlternativeDepthInfo::getManGvdRLen                  ( Int i, int j, int k ) const
-{
-  UInt rval;
-  rval = xGetSyntaxElementLen( m_expGvdR[i][j][k], m_precGvdRotationParam, m_manGvdR[i][j][k] );
-  if (rval == 0)
-    return m_precGvdRotationParam;
-  else
-    return rval;
-};
-*/
-
 UInt SEIAlternativeDepthInfo::getManGvdTXLen                 ( Int i, int j ) const
 {
   UInt rval;
@@ -1651,9 +1638,6 @@ UInt SEIAlternativeDepthInfo::xGetSyntaxElementLen( Int expo, Int prec, Int val 
     len = std::max( 0, expo + prec - 31 );
   }
 
-#if DEBUG_NH_3D_SEI
-  printf("DEBUG: SEIAlternativeDepthInfo::xGetSyntaxElementLen(): val: %d, len %u\n", val, len);
-#endif
   assert( val >= 0 );
   assert( val <= ( ( 1 << len )- 1) );
   return len;

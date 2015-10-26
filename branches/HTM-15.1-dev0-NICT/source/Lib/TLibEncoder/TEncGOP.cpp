@@ -231,7 +231,6 @@ Void TEncGOP::xWriteSEI (NalUnitType naluType, SEIMessages& seiMessages, AccessU
 #else
   OutputNALUnit nalu(naluType, temporalId);
 #endif
-  printf("\nDEBUG: TEncGOP::xWriteSEI() call SEIWriter::writeSEImessages()\n");
   m_seiWriter.writeSEImessages(nalu.m_Bitstream, seiMessages, sps, false);
   auPos = accessUnit.insert(auPos, new NALUnitEBSP(nalu));
   auPos++;

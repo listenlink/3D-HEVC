@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppDecoder", "vc10\TAppDecoder_vc10.vcxproj", "{A7A515D9-E917-4706-BD5B-57DC6C78D612}"
@@ -23,9 +23,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibExtractor", "vc10\TLibE
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppExtractor", "vc10\TAppExtractor_vc10.vcxproj", "{F46F95E9-7174-4328-90DD-092450E4DCF6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibDecoderAnalyser", "vc10\TLibDecoderAnalyser_vc10.vcxproj", "{68C1251A-55D8-47C9-9052-62F785BD437A}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppDecoderAnalyser", "vc10\TAppDecoderAnalyser_vc10.vcxproj", "{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibDecoderAnalyser", "vc10\TLibDecoderAnalyser_vc10.vcxproj", "{68C1251A-55D8-47C9-9052-62F785BD437A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,14 +123,6 @@ Global
 		{F46F95E9-7174-4328-90DD-092450E4DCF6}.Release|Win32.Build.0 = Release|Win32
 		{F46F95E9-7174-4328-90DD-092450E4DCF6}.Release|x64.ActiveCfg = Release|x64
 		{F46F95E9-7174-4328-90DD-092450E4DCF6}.Release|x64.Build.0 = Release|x64
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|Win32.Build.0 = Debug|Win32
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|x64.ActiveCfg = Debug|x64
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|x64.Build.0 = Debug|x64
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|Win32.ActiveCfg = Release|Win32
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|Win32.Build.0 = Release|Win32
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|x64.ActiveCfg = Release|x64
-		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|x64.Build.0 = Release|x64
 		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Debug|Win32.ActiveCfg = Debug|Win32
 		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Debug|Win32.Build.0 = Debug|Win32
 		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Debug|x64.ActiveCfg = Debug|x64
@@ -139,6 +131,14 @@ Global
 		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Release|Win32.Build.0 = Release|Win32
 		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Release|x64.ActiveCfg = Release|x64
 		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Release|x64.Build.0 = Release|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|Win32.Build.0 = Debug|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|x64.ActiveCfg = Debug|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|x64.Build.0 = Debug|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|Win32.ActiveCfg = Release|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|Win32.Build.0 = Release|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|x64.ActiveCfg = Release|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
