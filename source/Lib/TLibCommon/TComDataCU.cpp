@@ -5465,7 +5465,14 @@ Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refi
       continue;
     }
 
+#if NH_3D_FIX_NBDV_COL
+    // The picture pColCU->getSlice()->getRefPic(eColRefPicList, iColRefIdx) might not be in DPB anymore
+    // So don't access it directly.
+    iColRefViewIdx = pColCU->getSlice()->getVPS()->getViewOrderIdx( pColCU->getSlice()->getRefLayerId( eColRefPicList, iColRefIdx ) );       
+#else
     iColRefViewIdx = pColCU->getSlice()->getRefPic(eColRefPicList, iColRefIdx)->getViewIndex();
+#endif
+
 
     if ( iColViewIdx    == iColRefViewIdx ) // temporal vector
     {

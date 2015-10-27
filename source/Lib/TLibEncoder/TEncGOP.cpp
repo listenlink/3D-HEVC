@@ -99,9 +99,9 @@ TEncGOP::TEncGOP()
 #if NH_MV
   m_layerId      = 0;
   m_viewId       = 0;
-  m_pocLastCoded = -1; 
+  m_pocLastCoded = -1;
 #if NH_3D
-  m_viewIndex  =   0; 
+  m_viewIndex  =   0;
   m_isDepth = false;
 #endif
 #endif
@@ -146,7 +146,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_totalCoded         = 0;
 
 #if NH_MV
-  m_ivPicLists           = pcTEncTop->getIvPicLists(); 
+  m_ivPicLists           = pcTEncTop->getIvPicLists();
   m_layerId              = pcTEncTop->getLayerId();
   m_viewId               = pcTEncTop->getViewId();
 #if NH_3D
@@ -155,8 +155,8 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 #endif
 #endif
 #if NH_3D_IC
-  m_aICEnableCandidate   = pcTEncTop->getICEnableCandidate(); 
-  m_aICEnableNum         = pcTEncTop->getICEnableNum(); 
+  m_aICEnableCandidate   = pcTEncTop->getICEnableCandidate();
+  m_aICEnableNum         = pcTEncTop->getICEnableNum();
 #endif
 #if KWU_FIX_URQ
   m_pcRateCtrl           = pcTEncTop->getRateCtrl();
@@ -206,7 +206,7 @@ Int TEncGOP::xWriteParameterSets (AccessUnit &accessUnit, TComSlice *slice)
 
 #if NH_MV
   if ( getLayerId() == 0 )
-  {  
+  {
     actualTotalBits += xWriteVPS(accessUnit, m_pcEncTop->getVPS());
   }
 #else
@@ -276,7 +276,7 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
   AccessUnit::iterator itNalu = accessUnit.begin();
 
   while ( (itNalu!=accessUnit.end())&&
-    ( (*itNalu)->m_nalUnitType==NAL_UNIT_ACCESS_UNIT_DELIMITER 
+    ( (*itNalu)->m_nalUnitType==NAL_UNIT_ACCESS_UNIT_DELIMITER
     || (*itNalu)->m_nalUnitType==NAL_UNIT_VPS
     || (*itNalu)->m_nalUnitType==NAL_UNIT_SPS
     || (*itNalu)->m_nalUnitType==NAL_UNIT_PPS
@@ -287,7 +287,7 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
 
   SEIMessages localMessages = seiMessages;
   SEIMessages currentMessages;
-  
+
 #if ENC_DEC_TRACE
   g_HLSTraceEnable = !testWrite;
 #endif
@@ -298,7 +298,7 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
   assert (currentMessages.size() <= 1);
   xWriteSEI(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(currentMessages, !testWrite);
-  
+
   // Buffering period SEI must always be following active parameter sets
   currentMessages = extractSeisByType(localMessages, SEI::BUFFERING_PERIOD);
   assert (currentMessages.size() <= 1);
@@ -327,6 +327,13 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
   currentMessages = extractSeisByType(localMessages, SEI::SCALABLE_NESTING);
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(currentMessages, !testWrite);
+
+#if NH_MV_LAYERS_NOT_PRESENT_SEI
+  // Layers not present SEI message
+  currentMessages = extractSeisByType(localMessages, SEI::LAYERS_NOT_PRESENT);
+  xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
+  xClearSEIs(currentMessages, !testWrite);
+#endif
 
   // And finally everything else one by one
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, localMessages, accessUnit, itNalu, temporalId, sps);
@@ -411,11 +418,8 @@ Void TEncGOP::xWriteDuSEIMessages (SEIMessages& duInfoSeiMessages, AccessUnit &a
 
 Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TComSPS *sps, const TComPPS *pps)
 {
-#if NH_MV
-  OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI, 0, getLayerId());
-#else
   OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI);
-#endif
+
   if(m_pcCfg->getActiveParameterSetsSEIEnabled())
   {
     SEIActiveParameterSets *sei = new SEIActiveParameterSets;
@@ -471,7 +475,7 @@ Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TCo
     m_seiEncoder.initSEIKneeFunctionInfo(sei);
     seiMessages.push_back(sei);
   }
-    
+
   if(m_pcCfg->getMasteringDisplaySEI().colourVolumeSEIEnabled)
   {
     const TComSEIMasteringDisplay &seiCfg=m_pcCfg->getMasteringDisplaySEI();
@@ -481,12 +485,14 @@ Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TCo
   }
 
 #if NH_MV
+#if !NH_MV_SEI
   if( m_pcCfg->getSubBitstreamPropSEIEnabled() && ( getLayerId() == 0 ) )
   {
     SEISubBitstreamProperty *sei = new SEISubBitstreamProperty;
-    m_seiEncoder.initSEISubBitstreamProperty( sei, sps );   
+    m_seiEncoder.initSEISubBitstreamProperty( sei, sps );
     seiMessages.push_back(sei);
   }
+#endif
 #endif
 }
 
@@ -678,7 +684,7 @@ Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages,
         }
       }
     }
-    
+
     if( m_pcCfg->getPictureTimingSEIEnabled() )
     {
       pictureTimingSEI->m_picStruct = (isField && slice->getPic()->isTopField())? 1 : isField? 2 : 0;
@@ -714,7 +720,7 @@ Void TEncGOP::xUpdateDuData(AccessUnit &testAU, std::deque<DUData> &duData)
   {
     return;
   }
-  // fix first 
+  // fix first
   UInt numNalUnits = (UInt)testAU.size();
   UInt numRBSPBytes = 0;
   for (AccessUnit::const_iterator it = testAU.begin(); it != testAU.end(); it++)
@@ -926,7 +932,7 @@ Void EfficientFieldIRAPMapping::initialize(const Bool isField, const Int gopSize
         { // if top field and following picture in enc order is associated bottom field
           IRAPGOPid = iGOPid;
           IRAPtoReorder = true;
-          swapIRAPForward = true; 
+          swapIRAPForward = true;
           break;
         }
         if(pocCurr%2 != 0 && iGOPid > 0 && pCfg->getGOPEntry(iGOPid).m_POC == pCfg->getGOPEntry(iGOPid-1).m_POC+1)
@@ -934,7 +940,7 @@ Void EfficientFieldIRAPMapping::initialize(const Bool isField, const Int gopSize
           // if picture is an IRAP remember to process it first
           IRAPGOPid = iGOPid;
           IRAPtoReorder = true;
-          swapIRAPForward = false; 
+          swapIRAPForward = false;
           break;
         }
       }
@@ -1065,8 +1071,8 @@ Void TEncGOP::initGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcList
 }
 #endif
 #if NH_MV
-Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, 
-                                TComList<TComPicYuv*>& rcListPicYuvRecOut,  std::list<AccessUnit>& accessUnitsInGOP, 
+Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic,
+                                TComList<TComPicYuv*>& rcListPicYuvRecOut,  std::list<AccessUnit>& accessUnitsInGOP,
                                 Bool isField, Bool isTff, const InputColourSpaceConversion snr_conversion, const Bool printFrameMSE, Int iGOPid )
 #else
 Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic,
@@ -1169,7 +1175,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_pcSliceEncoder->setSliceIdx(0);
     pcPic->setCurrSliceIdx(0);
 #if NH_MV
-    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iGOPid, pcSlice, m_pcEncTop->getVPS(), getLayerId(), isField  );     
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iGOPid, pcSlice, m_pcEncTop->getVPS(), getLayerId(), isField  );
 #else
     m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iGOPid, pcSlice, isField );
 #endif
@@ -1180,19 +1186,19 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setLastIDR(m_iLastIDR);
     pcSlice->setSliceIdx(0);
 #if NH_MV
-    pcSlice->setRefPicSetInterLayer ( &m_refPicSetInterLayer0, &m_refPicSetInterLayer1 ); 
+    pcSlice->setRefPicSetInterLayer ( &m_refPicSetInterLayer0, &m_refPicSetInterLayer1 );
     pcPic  ->setLayerId     ( getLayerId()   );
-    pcPic  ->setViewId      ( getViewId()    );    
+    pcPic  ->setViewId      ( getViewId()    );
 #if !NH_3D
     pcSlice->setLayerId     ( getLayerId() );
-    pcSlice->setViewId      ( getViewId()  );    
+    pcSlice->setViewId      ( getViewId()  );
     pcSlice->setVPS         ( m_pcEncTop->getVPS() );
 #else
-    pcPic  ->setViewIndex   ( getViewIndex() ); 
+    pcPic  ->setViewIndex   ( getViewIndex() );
     pcPic  ->setIsDepth( getIsDepth() );
-    pcSlice->setCamparaSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );    
+    pcSlice->setCamparaSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );
 #endif
-#endif 
+#endif
     //set default slice level flag to the same as SPS level flag
     pcSlice->setLFCrossSliceBoundaryFlag(  pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag()  );
 #if NH_MV
@@ -1200,8 +1206,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
     if( pcSlice->getSliceType() == B_SLICE )
     {
-      if( m_pcCfg->getGOPEntry( ( pcSlice->getRapPicFlag() && getLayerId() > 0 ) ? MAX_GOP : iGOPid ).m_sliceType == 'P' ) 
-      { 
+      if( m_pcCfg->getGOPEntry( ( pcSlice->getRapPicFlag() && getLayerId() > 0 ) ? MAX_GOP : iGOPid ).m_sliceType == 'P' )
+      {
         pcSlice->setSliceType( P_SLICE );
       }
     }
@@ -1209,8 +1215,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 // To be checked!
     if( pcSlice->getSliceType() == B_SLICE )
     {
-      if( m_pcCfg->getGOPEntry( ( pcSlice->getRapPicFlag() && getLayerId() > 0 ) ? MAX_GOP : iGOPid ).m_sliceType == 'I' ) 
-      { 
+      if( m_pcCfg->getGOPEntry( ( pcSlice->getRapPicFlag() && getLayerId() > 0 ) ? MAX_GOP : iGOPid ).m_sliceType == 'I' )
+      {
         pcSlice->setSliceType( I_SLICE );
       }
     }
@@ -1224,7 +1230,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType(I_SLICE);
     }
-    
+
     // Set the nal unit type
     pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
 #endif
@@ -1278,7 +1284,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
     pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
     }
-    if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false, m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3) != 0) || (pcSlice->isIRAP()) 
+    if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false, m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3) != 0) || (pcSlice->isIRAP())
       || (m_pcCfg->getEfficientFieldIRAPEnabled() && isField && pcSlice->getAssociatedIRAPType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && pcSlice->getAssociatedIRAPType() <= NAL_UNIT_CODED_SLICE_CRA && pcSlice->getAssociatedIRAPPOC() == pcSlice->getPOC()+1)
       )
     {
@@ -1287,7 +1293,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     pcSlice->applyReferencePictureSet(rcListPic, pcSlice->getRPS());
 
-    if(pcSlice->getTLayer() > 0 
+    if(pcSlice->getTLayer() > 0
       &&  !( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_RADL_N     // Check if not a leading picture
           || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_RADL_R
           || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N
@@ -1357,69 +1363,69 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if NH_MV
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > 0 )
     {
-      // Some more sophisticated algorithm to determine discardable_flag might be added here. 
-      pcSlice->setDiscardableFlag           ( false );     
-    }    
+      // Some more sophisticated algorithm to determine discardable_flag might be added here.
+      pcSlice->setDiscardableFlag           ( false );
+    }
 
-    const TComVPS*           vps = pcSlice->getVPS();     
+    const TComVPS*           vps = pcSlice->getVPS();
 #if NH_3D
-    Int numDirectRefLayers = vps    ->getNumRefListLayers( getLayerId() ); 
+    Int numDirectRefLayers = vps    ->getNumRefListLayers( getLayerId() );
 #else
-    Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
+    Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() );
 #endif
 #if NH_3D
-    pcSlice->setIvPicLists( m_ivPicLists );         
+    pcSlice->setIvPicLists( m_ivPicLists );
 
     Int gopNum = (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid;
-    GOPEntry gopEntry      = m_pcCfg->getGOPEntry( gopNum );     
+    GOPEntry gopEntry      = m_pcCfg->getGOPEntry( gopNum );
 #else
-    GOPEntry gopEntry      = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid );     
+    GOPEntry gopEntry      = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid );
 #endif
 
 
-    
-    Bool interLayerPredLayerIdcPresentFlag = false; 
+
+    Bool interLayerPredLayerIdcPresentFlag = false;
     if ( getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && numDirectRefLayers > 0 )
-    {         
-      pcSlice->setInterLayerPredEnabledFlag ( gopEntry.m_numActiveRefLayerPics > 0 );     
+    {
+      pcSlice->setInterLayerPredEnabledFlag ( gopEntry.m_numActiveRefLayerPics > 0 );
       if ( pcSlice->getInterLayerPredEnabledFlag() && numDirectRefLayers > 1 )
       {
         if ( !vps->getMaxOneActiveRefLayerFlag() )
-        {    
-          pcSlice->setNumInterLayerRefPicsMinus1( gopEntry.m_numActiveRefLayerPics - 1 ); 
+        {
+          pcSlice->setNumInterLayerRefPicsMinus1( gopEntry.m_numActiveRefLayerPics - 1 );
         }
 #if NH_3D
         if ( gopEntry.m_numActiveRefLayerPics != vps->getNumRefListLayers( getLayerId() ) )
 #else
         if ( gopEntry.m_numActiveRefLayerPics != vps->getNumDirectRefLayers( getLayerId() ) )
 #endif
-        {        
-          interLayerPredLayerIdcPresentFlag = true; 
+        {
+          interLayerPredLayerIdcPresentFlag = true;
           for (Int i = 0; i < gopEntry.m_numActiveRefLayerPics; i++ )
           {
-            pcSlice->setInterLayerPredLayerIdc( i, gopEntry.m_interLayerPredLayerIdc[ i ] ); 
+            pcSlice->setInterLayerPredLayerIdc( i, gopEntry.m_interLayerPredLayerIdc[ i ] );
           }
         }
       }
     }
     if ( !interLayerPredLayerIdcPresentFlag )
     {
-      for( Int i = 0; i < pcSlice->getNumActiveRefLayerPics(); i++ )   
+      for( Int i = 0; i < pcSlice->getNumActiveRefLayerPics(); i++ )
       {
         pcSlice->setInterLayerPredLayerIdc(i, pcSlice->getRefLayerPicIdc( i ) );
       }
     }
 
 
-    assert( pcSlice->getNumActiveRefLayerPics() == gopEntry.m_numActiveRefLayerPics ); 
-    
+    assert( pcSlice->getNumActiveRefLayerPics() == gopEntry.m_numActiveRefLayerPics );
+
 #if NH_3D
     if ( m_pcEncTop->decProcAnnexI() )
-    {    
-      pcSlice->deriveInCmpPredAndCpAvailFlag( ); 
+    {
+      pcSlice->deriveInCmpPredAndCpAvailFlag( );
       if ( pcSlice->getInCmpPredAvailFlag() )
-      {      
-        pcSlice->setInCompPredFlag( gopEntry.m_interCompPredFlag ); 
+      {
+        pcSlice->setInCompPredFlag( gopEntry.m_interCompPredFlag );
       }
       else
       {
@@ -1433,20 +1439,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           {
             printf( "\nError: Frame%d_l%d cannot enable inter-component prediction on slice level. All reference layers need to be available and at least one tool using inter-component prediction must be enabled in the SPS. \n", gopNum, pcSlice->getVPS()->getLayerIdInVps( getLayerId() ) );
           }
-          
+
           exit(EXIT_FAILURE);
         }
       }
-      pcSlice->init3dToolParameters(); 
-      pcSlice->checkInCompPredRefLayers(); 
-    }   
+      pcSlice->init3dToolParameters();
+      pcSlice->checkInCompPredRefLayers();
+    }
 #if NH_3D_IV_MERGE
     // This needs to be done after initialization of 3D tool parameters.
     pcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( pcSlice->getMpiFlag( ) || pcSlice->getIvMvPredFlag( ) || pcSlice->getViewSynthesisPredFlag( )   ) ? 1 : 0 ));
 #endif
 #endif
 
-    pcSlice->createInterLayerReferencePictureSet( m_ivPicLists, m_refPicSetInterLayer0, m_refPicSetInterLayer1 ); 
+    pcSlice->createInterLayerReferencePictureSet( m_ivPicLists, m_refPicSetInterLayer0, m_refPicSetInterLayer1 );
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer0.size() + (Int) m_refPicSetInterLayer1.size()) ) );
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer0.size() + (Int) m_refPicSetInterLayer1.size()) ) );
 
@@ -1455,16 +1461,16 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Int       numPocTotalCurr;
 
     pcSlice->getTempRefPicLists( rcListPic, m_refPicSetInterLayer0, m_refPicSetInterLayer1, tempRefPicLists, usedAsLongTerm, numPocTotalCurr, true );
-    
 
-    xSetRefPicListModificationsMv( tempRefPicLists, pcSlice, iGOPid );    
+
+    xSetRefPicListModificationsMv( tempRefPicLists, pcSlice, iGOPid );
 #else
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
 #endif
     //  Set reference list
-#if NH_MV    
-    pcSlice->setRefPicList( tempRefPicLists, usedAsLongTerm, numPocTotalCurr ); 
+#if NH_MV
+    pcSlice->setRefPicList( tempRefPicLists, usedAsLongTerm, numPocTotalCurr );
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
@@ -1476,17 +1482,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setARPStepNum(m_ivPicLists);
 #endif
 #if NH_3D_IC
-    pcSlice->setICEnableCandidate( m_aICEnableCandidate );         
-    pcSlice->setICEnableNum( m_aICEnableNum );         
+    pcSlice->setICEnableCandidate( m_aICEnableCandidate );
+    pcSlice->setICEnableNum( m_aICEnableNum );
 #endif
 
     //  Slice info. refinement
 #if NH_MV
     if ( pcSlice->getSliceType() == B_SLICE )
     {
-      if( m_pcCfg->getGOPEntry( ( pcSlice->getRapPicFlag() == true && getLayerId() > 0 ) ? MAX_GOP : iGOPid ).m_sliceType == 'P' ) 
-      { 
-        pcSlice->setSliceType( P_SLICE ); 
+      if( m_pcCfg->getGOPEntry( ( pcSlice->getRapPicFlag() == true && getLayerId() > 0 ) ? MAX_GOP : iGOPid ).m_sliceType == 'P' )
+      {
+        pcSlice->setSliceType( P_SLICE );
       }
     }
 #else
@@ -1565,10 +1571,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
 
 #if NH_3D_VSO
-  // Should be moved to TEncTop !!! 
+  // Should be moved to TEncTop !!!
   Bool bUseVSO = m_pcEncTop->getUseVSO();
-  
-  TComRdCost* pcRdCost = m_pcEncTop->getRdCost();   
+
+  TComRdCost* pcRdCost = m_pcEncTop->getRdCost();
 
   pcRdCost->setUseVSO( bUseVSO );
 
@@ -1724,7 +1730,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
 #endif
 #if NH_3D
-      pcSlice->setDepthToDisparityLUTs(); 
+      pcSlice->setDepthToDisparityLUTs();
 
 #endif
 
@@ -1833,6 +1839,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_bufferingPeriodSEIPresentInAU = false;
     // create prefix SEI associated with a picture
     xCreatePerPictureSEIMessages(iGOPid, leadingSeiMessages, nestedSeiMessages, pcSlice);
+
+#if NH_MV_SEI
+    m_seiEncoder.createAnnexFGISeiMessages( leadingSeiMessages, pcSlice );
+#endif
 
     /* use the main bitstream buffer for storing the marshalled picture */
     m_pcEntropyCoder->setBitstream(NULL);
@@ -1979,7 +1989,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // cabac_zero_words processing
     cabac_zero_word_padding(pcSlice, pcPic, binCountsInNalUnits, numBytesInVclNalUnits, accessUnit.back()->m_nalUnitData, m_pcCfg->getCabacZeroWordPaddingEnabled());
 #if NH_3D
-      pcPic->compressMotion(2); 
+      pcPic->compressMotion(2);
 #else
     pcPic->compressMotion();
 #endif
@@ -2054,9 +2064,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     pcPic->setReconMark   ( true );
 #if NH_MV
-      TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer0, m_refPicSetInterLayer1 );  
-      std::vector<Int> temp; 
-      TComSlice::markCurrPic( pcPic ); 
+      TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer0, m_refPicSetInterLayer1 );
+      std::vector<Int> temp;
+      TComSlice::markCurrPic( pcPic );
 #endif
     m_bFirst = false;
     m_iNumPicCoded++;
@@ -2093,7 +2103,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
 
   //-- all
 #if NH_MV
-  printf( "\n\nSUMMARY -------------------------------------------- LayerId %2d\n", getLayerId() );   
+  printf( "\n\nSUMMARY -------------------------------------------- LayerId %2d\n", getLayerId() );
 #else
   printf( "\n\nSUMMARY --------------------------------------------------------\n" );
 #endif
@@ -2401,8 +2411,8 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
 #if NH_3D_VSO
 #if H_3D_VSO_SYNTH_DIST_OUT
 }
-#endif 
-#endif  
+#endif
+#endif
   /* calculate the size of the access unit, excluding:
    *  - any AnnexB contributions (start_code_prefix, zero_byte, etc.,)
    *  - SEI NAL units
@@ -2525,7 +2535,7 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
 {
 
 #if  NH_MV
-  assert( 0 ); // Field coding and MV need to be aligned. 
+  assert( 0 ); // Field coding and MV need to be aligned.
 #else
 
   const TComSPS &sps=pcPicOrgFirstField->getPicSym()->getSPS();
@@ -2968,23 +2978,23 @@ Void TEncGOP::applyDeblockingFilterMetric( TComPic* pcPic, UInt uiNumSlices )
 
 #if NH_MV
 Void TEncGOP::xSetRefPicListModificationsMv( std::vector<TComPic*> tempPicLists[2], TComSlice* pcSlice, UInt iGOPid )
-{ 
-  
+{
+
   if( pcSlice->getSliceType() == I_SLICE || !(pcSlice->getPPS()->getListsModificationPresentFlag()) || pcSlice->getNumActiveRefLayerPics() == 0 )
   {
     return;
   }
-  
+
   GOPEntry ge = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && ( pcSlice->getLayerId( ) > 0) ) ? MAX_GOP : iGOPid );
-  assert( ge.m_numActiveRefLayerPics == pcSlice->getNumActiveRefLayerPics() ); 
+  assert( ge.m_numActiveRefLayerPics == pcSlice->getNumActiveRefLayerPics() );
 
-  Int numPicsInTempList     = pcSlice->getNumRpsCurrTempList();  
+  Int numPicsInTempList     = pcSlice->getNumRpsCurrTempList();
 
-  // GT: check if SliceType should be checked here. 
+  // GT: check if SliceType should be checked here.
   for (Int li = 0; li < 2; li ++) // Loop over lists L0 and L1
   {
-    Int numPicsInFinalRefList = pcSlice->getNumRefIdx( ( li == 0 ) ? REF_PIC_LIST_0 : REF_PIC_LIST_1 ); 
-            
+    Int numPicsInFinalRefList = pcSlice->getNumRefIdx( ( li == 0 ) ? REF_PIC_LIST_0 : REF_PIC_LIST_1 );
+
     Int finalIdxToTempIdxMap[16];
     for( Int k = 0; k < 16; k++ )
     {
@@ -2998,40 +3008,40 @@ Void TEncGOP::xSetRefPicListModificationsMv( std::vector<TComPic*> tempPicLists[
       {
         // get position in temp. list
         Int refPicLayerId = pcSlice->getRefPicLayerId(k);
-        Int idxInTempList = 0; 
+        Int idxInTempList = 0;
         for (; idxInTempList < numPicsInTempList; idxInTempList++)
         {
           if ( (tempPicLists[li][idxInTempList])->getLayerId() == refPicLayerId )
           {
-            break; 
+            break;
           }
         }
 
         Int idxInFinalList = ge.m_interViewRefPosL[ li ][ k ];
-        
-        // Add negative from behind 
-        idxInFinalList = ( idxInFinalList < 0 )? ( numPicsInTempList + idxInFinalList ) : idxInFinalList; 
-        
+
+        // Add negative from behind
+        idxInFinalList = ( idxInFinalList < 0 )? ( numPicsInTempList + idxInFinalList ) : idxInFinalList;
+
         Bool curIsModified = ( idxInFinalList != idxInTempList ) && ( ( idxInTempList < numPicsInFinalRefList ) || ( idxInFinalList < numPicsInFinalRefList ) ) ;
         if ( curIsModified )
         {
-          isModified = true; 
+          isModified = true;
           assert( finalIdxToTempIdxMap[ idxInFinalList ] == -1 ); // Assert when two inter layer reference pictures are sorted to the same position
         }
-        finalIdxToTempIdxMap[ idxInFinalList ] = idxInTempList;              
+        finalIdxToTempIdxMap[ idxInFinalList ] = idxInTempList;
       }
     }
 
     TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
-    refPicListModification->setRefPicListModificationFlagL( li, isModified );  
+    refPicListModification->setRefPicListModificationFlagL( li, isModified );
 
     if( isModified )
     {
       Int refIdx = 0;
-      
+
       for( Int i = 0; i < numPicsInFinalRefList; i++ )
       {
-        if( finalIdxToTempIdxMap[i] >= 0 ) 
+        if( finalIdxToTempIdxMap[i] >= 0 )
         {
           refPicListModification->setRefPicSetIdxL( li, i, finalIdxToTempIdxMap[i] );
         }
@@ -3041,7 +3051,7 @@ Void TEncGOP::xSetRefPicListModificationsMv( std::vector<TComPic*> tempPicLists[
           // Forward inter layer reference pictures
           while( ( refIdx < numPicsInTempList ) && ( tempPicLists[li][refIdx]->getLayerId() != getLayerId())  )
           {
-            refIdx++; 
+            refIdx++;
           }
           refPicListModification->setRefPicSetIdxL( li, i, refIdx );
           refIdx++;
