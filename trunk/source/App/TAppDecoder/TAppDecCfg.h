@@ -81,15 +81,15 @@ protected:
 
   Int           m_targetOptLayerSetIdx;                 ///< target output layer set index
   Int           m_targetDecLayerSetIdx;
-  Int           m_baseLayerOutputFlag; 
-  Int           m_baseLayerPicOutputFlag; 
-  Int           m_auOutputFlag; 
+  Int           m_baseLayerOutputFlag;
+  Int           m_baseLayerPicOutputFlag;
+  Int           m_auOutputFlag;
   Int           m_maxLayerId;                           ///< maximum nuh_layer_id decoded
-  std::ifstream m_bitstreamFile; 
+  std::ifstream m_bitstreamFile;
   Int           m_highestTid;
   Bool          m_targetDecLayerIdSetFileEmpty;       ///< indication if target layers are given by file
 
-  Bool          m_printVpsInfo;                      ///< Output VPS information 
+  Bool          m_printVpsInfo;                      ///< Output VPS information
   Bool          m_printPicOutput;                     ///< Print information on picture output
   Bool          m_printReceivedNalus;                 ///< Print information on received NAL units
 #if NH_3D
@@ -123,6 +123,9 @@ public:
     {
       m_outputBitDepth[channelTypeIndex] = 0;
     }
+#if NH_3D
+    m_pchScaleOffsetFile = NULL;
+#endif
   }
 
   virtual ~TAppDecCfg() {}

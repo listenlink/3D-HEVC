@@ -151,6 +151,18 @@ Void  SyntaxElementParser::xReadFlagTr           (UInt& rValue, const Char *pSym
   fflush ( g_hTrace );
 }
 
+Void  SyntaxElementParser::xReadStringTr        (UInt buSize, UChar *pValue, UInt& rLength, const Char *pSymbolName)
+{
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  xReadString (buSize, pValue, rLength, pSymbolName);
+#else
+  xReadString(buSize, pValue, rLength);
+#endif  
+  fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+  fprintf( g_hTrace, "%-50s st(v=%d)  : %s\n", pSymbolName, rLength, pValue ); 
+  fflush ( g_hTrace );
+}
+
 Void  xTraceAccessUnitDelimiter ()
 {
   fprintf( g_hTrace, "=========== Access Unit Delimiter ===========\n");
@@ -266,6 +278,28 @@ Void SyntaxElementParser::xReadFlag (UInt& ruiCode)
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   TComCodingStatistics::IncrementStatisticEP(pSymbolName, 1, Int(ruiCode));
 #endif
+}
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+Void  SyntaxElementParser::xReadString  (UInt bufSize, UChar *pVal, UInt& rLength, const Char *pSymbolName)
+#else
+Void  SyntaxElementParser::xReadString  (UInt bufSize, UChar *pVal, UInt& rLength)
+#endif
+{
+  assert( m_pcBitstream->getNumBitsRead() % 8 == 0 ); //always start reading at a byte-aligned position  
+  UInt val;
+  UInt i;
+  for (i=0 ; i<bufSize ; ++i ) 
+  {
+    m_pcBitstream->readByte( val );
+    pVal[i] = val;
+    if ( val == 0)
+    {
+      break;
+    }
+  }
+  rLength = i;
+  assert( pVal[rLength] == 0 );  
 }
 
 Void SyntaxElementParser::xReadRbspTrailingBits()
