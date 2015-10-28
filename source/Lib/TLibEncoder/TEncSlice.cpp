@@ -376,8 +376,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, const Int pocLast, const Int pocCu
     Int    NumberBFrames = ( m_pcCfg->getGOPSize() - 1 );
     Int    SHIFT_QP = 12;
 
-    Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? NumberBFrames/2 : NumberBFrames) );
-
 #if FULL_NBIT
     Int    bitdepth_luma_qp_scale = 6 * (rpcSlice->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) - 8);
 #else
