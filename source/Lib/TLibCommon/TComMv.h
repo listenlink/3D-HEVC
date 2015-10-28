@@ -152,6 +152,7 @@ public:
   }
 #endif
 #endif
+
 #if !ME_ENABLE_ROUNDING_OF_MVS
   const TComMv& operator>>= (const Int i)
   {
