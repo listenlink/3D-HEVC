@@ -1313,7 +1313,7 @@ Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourV
   sei_read_code( pDecodedMessageOutputStream, 32, code, "max_display_mastering_luminance" ); sei.values.maxLuminance = code;
   sei_read_code( pDecodedMessageOutputStream, 32, code, "min_display_mastering_luminance" ); sei.values.minLuminance = code;
 }
-
+#if NH_MV
 #if NH_MV_LAYERS_NOT_PRESENT_SEI
 Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent &sei, UInt payloadSize, const TComVPS *vps, std::ostream *pDecodedMessageOutputStream)
 {
@@ -1911,6 +1911,7 @@ Void SEIReader::xParseSEIAlternativeDepthInfo(SEIAlternativeDepthInfo& sei, UInt
     }
   }
 };
+#endif
 #endif
 
 //! \}
