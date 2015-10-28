@@ -87,11 +87,10 @@ public:
   Void filterHor(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast, const ChromaFormat fmt, const Int bitDepth );
 #endif
 
-  Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth 
 #if NH_3D_ARP
-  Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth , Bool filterType = false );
+  Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac,               Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth , Bool filterType = false );
 #else
-  Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth );
+  Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac,               Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth );
 #endif
 };
 

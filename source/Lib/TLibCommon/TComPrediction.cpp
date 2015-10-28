@@ -1911,20 +1911,25 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
     const Int vFilterSize = isLuma(compID) ? NTAPS_LUMA : NTAPS_CHROMA;
 
-    m_if.filterHor(compID, ref - ((vFilterSize>>1) -1)*refStride, refStride, tmp, tmpStride, cxWidth, cxHeight+vFilterSize-1, xFrac, false,      chFmt, bitDepth
 #if NH_3D_ARP 
-    , filterType
-#endif 
-);
-#if NH_3D_IC
-    m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi || bICFlag, chFmt, bitDepth
+    m_if.filterHor(compID, ref - ((vFilterSize>>1) -1)*refStride, refStride, tmp, tmpStride, cxWidth, cxHeight+vFilterSize-1, xFrac, false,      chFmt, bitDepth, filterType );
 #else
-    m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt, bitDepth
+    m_if.filterHor(compID, ref - ((vFilterSize>>1) -1)*refStride, refStride, tmp, tmpStride, cxWidth, cxHeight+vFilterSize-1, xFrac, false,      chFmt, bitDepth );
+#endif 
+
+#if NH_3D
+    m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi
+#if NH_3D_IC
+    || bICFlag
 #endif
+    , chFmt, bitDepth
 #if NH_3D_ARP
     , filterType
 #endif 
 );
+#else
+    m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt, bitDepth );
+#endif
   }
 
 #if NH_3D_IC
