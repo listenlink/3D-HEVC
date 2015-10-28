@@ -63,6 +63,7 @@
 ///////////////////////////////////   FIXES AND INTEGRATIONS     ////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
+#define H_MV_HLS_PTL_LIMITS                       0
 #define NH_MV_SEI_TBD                             0
 #define NH_MV_SEI                                 1
 #define NH_MV_FIX_TICKET_106                      1 // Identical motion check.

@@ -2245,8 +2245,6 @@ public:
           TComRefPicListModification();
   virtual ~TComRefPicListModification();
 
-  Void    create();
-  Void    destroy();
 
   Bool    getRefPicListModificationFlagL0() const        { return m_refPicListModificationFlagL0;                                  }
   Void    setRefPicListModificationFlagL0(Bool flag)     { m_refPicListModificationFlagL0 = flag;                                  }
@@ -2271,7 +2269,6 @@ public:
   Void    setListEntryL0( Int i, Int  val )                      { m_RefPicSetIdxL0[i] = val;                                          } 
   Void    setListEntryL1( Int i, Int  val )                      { m_RefPicSetIdxL1[i] = val;                                          } 
 #endif
-
 };
 
 
@@ -2527,7 +2524,6 @@ public:
 
   const TComPPSRExt&     getPpsRangeExtension() const                                     { return m_ppsRangeExtension;                   }
   TComPPSRExt&           getPpsRangeExtension()                                           { return m_ppsRangeExtension;                   }
-
 #if NH_MV
   Void    setLayerId( Int  val )                                                     { m_layerId = val;                                           }
   Int     getLayerId(  ) const                                                       { return m_layerId;                                          }
