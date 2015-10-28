@@ -136,12 +136,14 @@ protected:
   Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const TChar *pSymbolName);
   Void sei_read_svlc(std::ostream *pOS,                Int&  ruiCode, const TChar *pSymbolName);
   Void sei_read_flag(std::ostream *pOS,                UInt& ruiCode, const TChar *pSymbolName);
+#if NH_MV
   Void sei_read_string(std::ostream *pOS, UInt uiBufSize, UChar* pucCode, UInt& ruiLength, const TChar *pSymbolName);
 #if NH_MV_SEI
   inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMessageOutputStream, UInt payloadSize);
 private: 
   Int   m_layerId; 
   Int64 m_decOrder;   
+#endif
 #endif
 };
 
