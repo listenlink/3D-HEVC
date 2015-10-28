@@ -53,8 +53,6 @@
 #pragma warning(disable : 4503)
 // 
 #endif // _MSC_VER > 1000
-
-
 #include "TypeDef.h"
 #ifdef _MSC_VER
 #if _MSC_VER <= 1500

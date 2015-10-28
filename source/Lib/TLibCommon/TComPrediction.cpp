@@ -1826,6 +1826,7 @@ Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWi
  */
 
 
+#if NH_3D
 Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi, const Int bitDepth 
 #if NH_3D_ARP
     , Bool filterType
@@ -1834,6 +1835,9 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
     , Bool bICFlag
 #endif
 )
+#else
+Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi, const Int bitDepth )
+#endif
 {
 #if NH_MV
   assert( refPic->getBorderExtension() ); 
@@ -1869,27 +1873,36 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
   if ( yFrac == 0 )
   {
+#if NH_3D
+    m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi 
 #if NH_3D_IC
-    m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi || bICFlag, chFmt, bitDepth
-#else
-    m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi, chFmt, bitDepth
+     || bICFlag
 #endif
+    , chFmt, bitDepth
 #if NH_3D_ARP 
     , filterType
 #endif 
 );
+#else
+    m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi, chFmt, bitDepth );
+#endif
   }
   else if ( xFrac == 0 )
   {
+#if NH_3D
+  m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi 
 #if NH_3D_IC
-    m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi || bICFlag, chFmt, bitDepth
-#else
-    m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi, chFmt, bitDepth
+    || bICFlag
 #endif
+    , chFmt, bitDepth
 #if NH_3D_ARP
     , filterType
 #endif
 );
+#else
+    m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi, chFmt, bitDepth );
+
+#endif
   }
   else
   {

@@ -1120,11 +1120,11 @@ Void TComDataCU::copyDVInfoFrom (TComDataCU* pcCU, UInt uiAbsPartIdx)
 #endif
 
 // Copy inter prediction info from the biggest CU
-Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList 
 #if NH_3D_NBDV
-  , Bool bNBDV
+Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList   , Bool bNBDV )
+#else
+Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList )
 #endif
-)
 {
   m_pcPic              = pcCU->getPic();
   m_pcSlice            = pcCU->getSlice();
@@ -4371,11 +4371,11 @@ Void TComDataCU::fillMvpCand ( const UInt partIdx, const UInt partAddr, const Re
         absPartAddr = 0;
       }
     }
-    if ( ctuRsAddr >= 0 && xGetColMVP( eRefPicList, ctuRsAddr, absPartAddr, cColMv, refIdx_Col 
 #if NH_3D_TMVP
-      , 0
+        if ( ctuRsAddr >= 0 && xGetColMVP( eRefPicList, ctuRsAddr, absPartAddr, cColMv, refIdx_Col  , 0 ) )
+#else
+    if ( ctuRsAddr >= 0 && xGetColMVP( eRefPicList, ctuRsAddr, absPartAddr, cColMv, refIdx_Col ) )
 #endif
-      ) )
     {
       pInfo->m_acMvCand[pInfo->iN++] = cColMv;
     }
@@ -4383,11 +4383,11 @@ Void TComDataCU::fillMvpCand ( const UInt partIdx, const UInt partAddr, const Re
     {
       UInt uiPartIdxCenter;
       xDeriveCenterIdx( partIdx, uiPartIdxCenter );
-      if (xGetColMVP( eRefPicList, getCtuRsAddr(), uiPartIdxCenter,  cColMv, refIdx_Col 
 #if NH_3D_TMVP
-        , 0
+      if (xGetColMVP( eRefPicList, getCtuRsAddr(), uiPartIdxCenter,  cColMv, refIdx_Col , 0 )) 
+#else
+      if (xGetColMVP( eRefPicList, getCtuRsAddr(), uiPartIdxCenter,  cColMv, refIdx_Col ))
 #endif
-        ))
       {
         pInfo->m_acMvCand[pInfo->iN++] = cColMv;
       }

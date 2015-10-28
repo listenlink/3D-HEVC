@@ -107,8 +107,10 @@ Void TComPicYuv::createWithoutCUInfo ( const Int picWidth,                 ///< 
   }
   // initialize pointers for unused components to NULL
   for(UInt comp=getNumberValidComponents();comp<MAX_NUM_COMPONENT; comp++)
-    {
-    }
+  {
+    m_apiPicBuf[comp] = NULL;
+    m_piPicOrg[comp]  = NULL;
+  }
 
   for(Int chan=0; chan<MAX_NUM_CHANNEL_TYPE; chan++)
     {

@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file     #SEI.cpp
+/** \file     SEI.cpp
     \brief    helper functions for SEI handling
 */
 
