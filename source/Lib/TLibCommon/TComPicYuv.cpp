@@ -90,7 +90,12 @@ Void TComPicYuv::createWithoutCUInfo ( const Int picWidth,                 ///< 
   m_picHeight         = picHeight;
 
 #if NH_3D_IV_MERGE
-// Check if m_iBaseUnitWidth and m_iBaseUnitHeight need to be derived here
+  m_iCuWidth        = maxCUWidth;
+  m_iCuHeight       = maxCUHeight;
+
+  m_iNumCuInWidth   = picWidth / m_iCuWidth;
+  m_iNumCuInWidth  += ( picHeight % m_iCuWidth ) ? 1 : 0;
+  // Check if m_iBaseUnitWidth and m_iBaseUnitHeight need to be derived here
 #endif
 
   m_chromaFormatIDC   = chromaFormatIDC;

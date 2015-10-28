@@ -129,7 +129,17 @@ public:
      compIdx(MAX_NUM_COMPONENT),
      m_maximumDistortionForEarlyExit(std::numeric_limits<Distortion>::max()),
      iSubShift(0)
-  { }
+  {
+#if NH_3D_VSO
+    // SAIT_VSO_EST_A0033
+    pVirRec = NULL;
+    pVirOrg = NULL;
+    iStrideVir = 0;
+#endif
+#if NH_3D_SDC_INTER
+    bUseSDCMRSAD = false;
+#endif
+  }
 };
 
 /// RD cost computation class

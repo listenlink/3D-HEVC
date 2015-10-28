@@ -147,6 +147,10 @@ Bool TAppDecCfg::parseCfg( Int argc, TChar* argv[] )
     return false;
   }
 
+#if NH_3D
+  m_pchScaleOffsetFile = cfg_ScaleOffsetFile.empty() ? NULL : strdup(cfg_ScaleOffsetFile.c_str());
+#endif
+
   if (m_bitstreamFileName.empty())
   {
     fprintf(stderr, "No input file specified, aborting\n");
