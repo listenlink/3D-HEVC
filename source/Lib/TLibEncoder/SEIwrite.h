@@ -80,6 +80,7 @@ protected:
   Void xWriteSEIColourRemappingInfo(const SEIColourRemappingInfo& sei);
   Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
 
+#if NH_MV
 #if NH_MV_SEI
 #if NH_MV_LAYERS_NOT_PRESENT_SEI
   Void xWriteSEILayersNotPresent              ( const SEILayersNotPresent& sei);
@@ -107,10 +108,12 @@ protected:
 #if NH_3D
   Void xWriteSEIAlternativeDepthInfo          ( const SEIAlternativeDepthInfo& sei);
 #endif
+#endif
+#endif
+
   Void xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSPS *sps);
   Void xWriteByteAlign();
 };
-#endif
 
 //! \}
 

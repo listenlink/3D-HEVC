@@ -112,6 +112,7 @@ TEncSearch::TEncSearch()
 , m_pcEntropyCoder (NULL)
 , m_iSearchRange (0)
 , m_bipredSearchRange (0)
+, m_motionEstimationSearchMethod (MESEARCH_FULL)
 , m_pppcRDSbacCoder (NULL)
 , m_pcRDGoOnSbacCoder (NULL)
 , m_pTempPel (NULL)
@@ -6707,7 +6708,6 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                 *puiZeroDist += nonCoeffDist; // initialized with zero residual distortion
               }
 
-
               DEBUG_STRING_NEW(sSingleStringTest)
 #if NH_MV
                 D_DEC_INDENT( g_traceModeCheck ); 
@@ -6717,7 +6717,6 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 #if NH_MV
                 D_PRINT_INC_INDENT(g_traceModeCheck, "NonZero");
 #endif
-
                 if (isFirstMode)
                 {
                   m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );

@@ -901,7 +901,7 @@ Void SEIWriter::xWriteByteAlign()
   }
 }
 
-
+#if NH_MV
 #if NH_MV_LAYERS_NOT_PRESENT_SEI
 Void SEIWriter::xWriteSEILayersNotPresent(const SEILayersNotPresent& sei)
 {
@@ -1456,6 +1456,6 @@ Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& se
   }
 };
 #endif
-
+#endif
 
 //! \}
