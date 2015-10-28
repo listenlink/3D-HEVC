@@ -310,6 +310,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIMasteringDisplayColourVolume;
       xParseSEIMasteringDisplayColourVolume((SEIMasteringDisplayColourVolume&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
+#if NH_MV
 #if !NH_MV_SEI
     case SEI::SUB_BITSTREAM_PROPERTY:
       sei = new SEISubBitstreamProperty;
@@ -394,6 +395,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIAlternativeDepthInfo;
       xParseSEIAlternativeDepthInfo((SEIAlternativeDepthInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
+#endif
 #endif
 #endif
     default:

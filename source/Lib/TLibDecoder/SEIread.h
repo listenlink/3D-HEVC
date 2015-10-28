@@ -101,7 +101,6 @@ protected:
   Void  xParseSEISubBitstreamProperty         (SEISubBitstreamProperty &sei        ,  UInt payloadSize,                     std::ostream *pDecodedMessageOutputStream);
   Void  xResizeSubBitstreamPropertySeiArrays  (SEISubBitstreamProperty &sei);
 #endif
-#endif
 #if NH_MV_LAYERS_NOT_PRESENT_SEI
   Void xParseSEILayersNotPresent              (SEILayersNotPresent &sei, UInt payloadSize, const TComVPS *vps ,std::ostream *pDecodedMessageOutputStream);
 #endif
@@ -132,7 +131,7 @@ protected:
 #if NH_3D
   Void xParseSEIAlternativeDepthInfo          (SEIAlternativeDepthInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
 #endif
-
+#endif
   Void sei_read_code(std::ostream *pOS, UInt uiLength, UInt& ruiCode, const TChar *pSymbolName);
   Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const TChar *pSymbolName);
   Void sei_read_svlc(std::ostream *pOS,                Int&  ruiCode, const TChar *pSymbolName);

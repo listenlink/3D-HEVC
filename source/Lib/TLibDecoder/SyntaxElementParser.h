@@ -48,8 +48,9 @@
 #define READ_UVLC(        code, name)     xReadUvlcTr (         code, name )
 #define READ_SVLC(        code, name)     xReadSvlcTr (         code, name )
 #define READ_FLAG(        code, name)     xReadFlagTr (         code, name )
+#if NH_MV
 #define READ_STRING(bufSize, code, length, name)   xReadStringTr ( bufSize, code, length, name )
-
+#endif
 #else
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
@@ -58,15 +59,18 @@
 #define READ_UVLC(        code, name)     xReadUvlc (         code, name )
 #define READ_SVLC(        code, name)     xReadSvlc (         code, name )
 #define READ_FLAG(        code, name)     xReadFlag (         code, name )
+#if NH_MV
 #define READ_STRING(bufSize, code, length, name)   xReadString ( bufSize, code, length, name )
-
+#endif
 #else
 
 #define READ_CODE(length, code, name)     xReadCode ( length, code )
 #define READ_UVLC(        code, name)     xReadUvlc (         code )
 #define READ_SVLC(        code, name)     xReadSvlc (         code )
 #define READ_FLAG(        code, name)     xReadFlag (         code )
+#if NH_MV
 #define READ_STRING(bufSize, code, length, name)   xReadString ( bufSize, code, length )
+#endif
 
 #endif
 
