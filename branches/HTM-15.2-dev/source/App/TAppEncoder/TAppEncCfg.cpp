@@ -722,13 +722,6 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
 {
   Bool do_help = false;
 
-#if !NH_MV
-  string cfg_InputFile;
-#endif
-  string cfg_BitstreamFile;
-#if !NH_MV
-  string cfg_ReconFile;
-#endif
 #if NH_MV
   vector<Int>   cfg_dimensionLength; 
   string        cfg_profiles;
@@ -741,8 +734,6 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   cfg_dimensionLength.push_back( 64 ); 
 #endif 
 #endif
-  string cfg_dQPFile;
-  string cfg_ScalingListFile;
 
   Int tmpChromaFormat;
   Int tmpInputChromaFormat;

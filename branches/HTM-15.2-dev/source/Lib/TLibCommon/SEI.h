@@ -677,7 +677,6 @@ public:
   const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
 
 };
-
 #if NH_MV_SEI
 #if NH_MV_LAYERS_NOT_PRESENT_SEI
 class SEILayersNotPresent : public SEI
@@ -1376,6 +1375,6 @@ public:
 
 #endif
 #endif
-
 #endif
+
 //! \}

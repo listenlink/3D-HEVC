@@ -238,7 +238,6 @@ protected:
 #endif
 
   /// compute scaling factor from POC difference
-
 #if !NH_3D_ARP
   static Int    xGetDistScaleFactor           ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 #endif
@@ -276,11 +275,11 @@ public:
 #endif
 
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx );
-  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList 
 #if NH_3D_NBDV
-  , Bool bNBDV = false
+    Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, Bool bNBDV = false );
+#else
+  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList );
 #endif
-);
   Void          copyPartFrom          ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
 
   Void          copyToPic             ( UChar uiDepth );

@@ -36,7 +36,6 @@
 #include <list>
 #include <map>
 #include  "../TLibCommon/CommonDef.h" 
-
 #if NH_MV
 #include <vector>
 #include <errno.h>
