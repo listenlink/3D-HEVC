@@ -1193,7 +1193,7 @@ Void TDecSbac::parseCrossComponentPrediction( TComTU &rTu, ComponentID compID )
 
   if (!pcCU->isIntra(uiAbsPartIdx) || (pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX))
   {
-    Char alpha  = 0;
+    SChar alpha = 0;
     UInt symbol = 0;
 
     DTRACE_CABAC_VL( g_nSymbolCounter++ )

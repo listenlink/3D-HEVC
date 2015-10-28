@@ -86,17 +86,16 @@ Void TEncPreanalyzer::xPreanalyze( TEncPic* pcEPic )
         const Pel* pBlkY = &pLineY[x];
         UInt64 uiSum[4] = {0, 0, 0, 0};
         UInt64 uiSumSq[4] = {0, 0, 0, 0};
-        UInt uiNumPixInAQPart = 0;
         UInt by = 0;
         for ( ; by < uiCurrAQPartHeight>>1; by++ )
         {
           UInt bx = 0;
-          for ( ; bx < uiCurrAQPartWidth>>1; bx++, uiNumPixInAQPart++ )
+          for ( ; bx < uiCurrAQPartWidth>>1; bx++ )
           {
             uiSum  [0] += pBlkY[bx];
             uiSumSq[0] += pBlkY[bx] * pBlkY[bx];
           }
-          for ( ; bx < uiCurrAQPartWidth; bx++, uiNumPixInAQPart++ )
+          for ( ; bx < uiCurrAQPartWidth; bx++ )
           {
             uiSum  [1] += pBlkY[bx];
             uiSumSq[1] += pBlkY[bx] * pBlkY[bx];
@@ -106,12 +105,12 @@ Void TEncPreanalyzer::xPreanalyze( TEncPic* pcEPic )
         for ( ; by < uiCurrAQPartHeight; by++ )
         {
           UInt bx = 0;
-          for ( ; bx < uiCurrAQPartWidth>>1; bx++, uiNumPixInAQPart++ )
+          for ( ; bx < uiCurrAQPartWidth>>1; bx++ )
           {
             uiSum  [2] += pBlkY[bx];
             uiSumSq[2] += pBlkY[bx] * pBlkY[bx];
           }
-          for ( ; bx < uiCurrAQPartWidth; bx++, uiNumPixInAQPart++ )
+          for ( ; bx < uiCurrAQPartWidth; bx++ )
           {
             uiSum  [3] += pBlkY[bx];
             uiSumSq[3] += pBlkY[bx] * pBlkY[bx];
@@ -119,12 +118,25 @@ Void TEncPreanalyzer::xPreanalyze( TEncPic* pcEPic )
           pBlkY += iStride;
         }
 
+        assert ((uiCurrAQPartWidth&1)==0);
+        assert ((uiCurrAQPartHeight&1)==0);
+        const UInt pixelWidthOfQuadrants  = uiCurrAQPartWidth >>1;
+        const UInt pixelHeightOfQuadrants = uiCurrAQPartHeight>>1;
+        const UInt numPixInAQPart         = pixelWidthOfQuadrants * pixelHeightOfQuadrants;
+
         Double dMinVar = DBL_MAX;
+        if (numPixInAQPart!=0)
+        {
         for ( Int i=0; i<4; i++)
         {
-          const Double dAverage = Double(uiSum[i]) / uiNumPixInAQPart;
-          const Double dVariance = Double(uiSumSq[i]) / uiNumPixInAQPart - dAverage * dAverage;
+            const Double dAverage = Double(uiSum[i]) / numPixInAQPart;
+            const Double dVariance = Double(uiSumSq[i]) / numPixInAQPart - dAverage * dAverage;
           dMinVar = min(dMinVar, dVariance);
+        }
+        }
+        else
+        {
+          dMinVar = 0.0;
         }
         const Double dActivity = 1.0 + dMinVar;
         pcAQU->setActivity( dActivity );

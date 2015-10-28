@@ -95,8 +95,8 @@ protected:
 
 
   Int m_lineBufWidth;
-  Char* m_signLineBuf1;
-  Char* m_signLineBuf2;
+  SChar* m_signLineBuf1;
+  SChar* m_signLineBuf2;
   ChromaFormat m_chromaFormatIDC;
 private:
   Bool m_picSAOEnabled[MAX_NUM_COMPONENT];

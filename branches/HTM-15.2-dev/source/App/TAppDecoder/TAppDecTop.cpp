@@ -61,6 +61,7 @@ TAppDecTop::TAppDecTop()
 #else
 : m_numDecoders( 0 )
 #endif
+ ,m_pcSeiColourRemappingInfoPrevious(NULL)
 {
 #if NH_MV
   for (Int i = 0; i < MAX_NUM_LAYER_IDS; i++)
@@ -117,12 +118,7 @@ Void TAppDecTop::destroy()
   // destroy internal classes
   xDestroyDecLib();
 #endif
-
-  if (m_pchBitstreamFile)
-  {
-    free (m_pchBitstreamFile);
-    m_pchBitstreamFile = NULL;
-  }
+  m_bitstreamFileName.clear();
 #if NH_MV
   for (Int decIdx = 0; decIdx < m_numDecoders; decIdx++)
   {
@@ -133,11 +129,7 @@ Void TAppDecTop::destroy()
     }
   }
 #endif
-  if (m_pchReconFile)
-  {
-    free (m_pchReconFile);
-    m_pchReconFile = NULL;
-  }
+  m_reconFileName.clear();
 #if NH_3D
   if (m_pchScaleOffsetFile)
   {
@@ -225,10 +217,10 @@ Void TAppDecTop::decode()
   Int                 poc;
   TComList<TComPic*>* pcListPic = NULL;
 
-  ifstream bitstreamFile(m_pchBitstreamFile, ifstream::in | ifstream::binary);
+  ifstream bitstreamFile(m_bitstreamFileName.c_str(), ifstream::in | ifstream::binary);
   if (!bitstreamFile)
   {
-    fprintf(stderr, "\nfailed to open bitstream file `%s' for reading\n", m_pchBitstreamFile);
+    fprintf(stderr, "\nfailed to open bitstream file `%s' for reading\n", m_bitstreamFileName.c_str());
     exit(EXIT_FAILURE);
   }
 
@@ -249,6 +241,17 @@ Void TAppDecTop::decode()
   xInitDecLib  ();
 
   m_iPOCLastDisplay += m_iSkipFrame;      // set the last displayed POC correctly for skip forward.
+
+  // clear contents of colour-remap-information-SEI output file
+  if (!m_colourRemapSEIFileName.empty())
+  {
+    std::ofstream ofile(m_colourRemapSEIFileName.c_str());
+    if (!ofile.good() || !ofile.is_open())
+    {
+      fprintf(stderr, "\nUnable to open file '%s' for writing colour-remap-information-SEI video\n", m_colourRemapSEIFileName.c_str());
+      exit(EXIT_FAILURE);
+    }
+  }
 
   // main decoder loop
   Bool openedReconFile = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
@@ -335,7 +338,7 @@ Void TAppDecTop::decode()
 
     if( pcListPic )
     {
-      if ( m_pchReconFile && !openedReconFile )
+      if ( (!m_reconFileName.empty()) && (!openedReconFile) )
       {
         const BitDepths &bitDepths=pcListPic->front()->getPicSym()->getSPS().getBitDepths(); // use bit depths of first reconstructed picture.
         for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
@@ -345,7 +348,8 @@ Void TAppDecTop::decode()
             m_outputBitDepth[channelType] = bitDepths.recon[channelType];
           }
         }
-        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, bitDepths.recon ); // write mode
+
+        m_cTVideoIOYuvReconFile.open( m_reconFileName, true, m_outputBitDepth, m_outputBitDepth, bitDepths.recon ); // write mode
         openedReconFile = true;
       }
       // write reconstruction to file
@@ -435,7 +439,7 @@ Void TAppDecTop::xDestroyDecLib()
     m_tDecTop[decIdx] = NULL ;
   }
 #else
-  if ( m_pchReconFile )
+  if ( !m_reconFileName.empty() )
   {
     m_cTVideoIOYuvReconFile. close();
   }
@@ -443,6 +447,11 @@ Void TAppDecTop::xDestroyDecLib()
   // destroy decoder class
   m_cTDecTop.destroy();
 #endif
+  if (m_pcSeiColourRemappingInfoPrevious != NULL)
+  {
+    delete m_pcSeiColourRemappingInfoPrevious;
+    m_pcSeiColourRemappingInfoPrevious = NULL;
+  }
 #if NH_3D
   m_cCamParsCollector.uninit();
   if( m_pScaleOffsetFile )
@@ -473,6 +482,11 @@ Void TAppDecTop::xInitDecLib()
     m_cTDecTop.setDecodedSEIMessageOutputStream(&os);
   }
 #endif
+  if (m_pcSeiColourRemappingInfoPrevious != NULL)
+  {
+    delete m_pcSeiColourRemappingInfoPrevious;
+    m_pcSeiColourRemappingInfoPrevious = NULL;
+  }
 }
 
 
@@ -548,7 +562,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       {
         // write to file
         numPicsNotYetDisplayed = numPicsNotYetDisplayed-2;
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf = pcPicTop->getConformanceWindow();
           const Window  defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
@@ -616,7 +630,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         {
           dpbFullness--;
         }
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf    = pcPic->getConformanceWindow();
           const Window defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
@@ -628,6 +642,11 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
                                          conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(),
                                          NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range  );
+        }
+
+        if (!m_colourRemapSEIFileName.empty())
+        {
+          xOutputColourRemapPic(pcPic);
         }
 
         // update POC of display order
@@ -677,7 +696,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       {
         // write to file
 
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf = pcPicTop->getConformanceWindow();
           const Window  defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
@@ -735,7 +754,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       if ( pcPic->getOutputMark() )
       {
         // write to file
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf    = pcPic->getConformanceWindow();
           const Window  defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
@@ -746,6 +765,11 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
                                          conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(),
                                          NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range );
+        }
+
+        if (!m_colourRemapSEIFileName.empty())
+        {
+          xOutputColourRemapPic(pcPic);
         }
 
         // update POC of display order
@@ -2670,13 +2694,13 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     // append pic list of new decoder to PicLists
 
     // create recon file related stuff
-    Char* pchTempFilename = NULL;
-    if ( m_pchReconFile )
+    TChar* pchTempFilename = NULL;
+    if ( !m_reconFileName.empty() )
     {
-      Char buffer[4];
+      TChar buffer[4];
       sprintf(buffer,"_%i", layerId );
-      assert ( m_pchReconFile );
-      xAppendToFileNameEnd( m_pchReconFile , buffer, pchTempFilename );
+      assert ( !m_reconFileName.empty() );
+      xAppendToFileNameEnd( m_reconFileName.c_str() , buffer, pchTempFilename );
       assert( m_pchReconFiles.size() == m_numDecoders );
     }
 
@@ -2869,11 +2893,11 @@ Bool TAppDecTop::xAllRefLayersInitilized( Int curLayerId )
 
 Void TAppDecTop::xInitFileIO()
 {
-  m_bitstreamFile.open(m_pchBitstreamFile, ifstream::in | ifstream::binary);
+  m_bitstreamFile.open(m_bitstreamFileName.c_str(), ifstream::in | ifstream::binary);
 
   if ( !m_bitstreamFile)
   {
-    fprintf(stderr, "\nUnable to open bitstream file `%s' for reading\n", m_pchBitstreamFile);
+    fprintf(stderr, "\nUnable to open bitstream file `%s' for reading\n", m_bitstreamFileName.c_str());
     exit(EXIT_FAILURE);
   }
 
@@ -2904,7 +2928,7 @@ Void TAppDecTop::xOpenReconFile( TComPic* curPic )
 {
   Int decIdx = xGetDecoderIdx( curPic->getLayerId() );
 
-  if ( m_pchReconFile && !m_reconOpen[decIdx] )
+  if ( !m_reconFileName.empty() && !m_reconOpen[decIdx] )
   {
     const BitDepths &bitDepths= curPic->getPicSym()->getSPS().getBitDepths(); // use bit depths of first reconstructed picture.
     for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
@@ -3006,4 +3030,325 @@ UInt TAppDecTop::getNumberOfChecksumErrorsDetected() const
 }
 
 #endif
+
+Void TAppDecTop::xOutputColourRemapPic(TComPic* pcPic)
+{
+  const TComSPS &sps=pcPic->getPicSym()->getSPS();
+  SEIMessages colourRemappingInfo = getSeisByType(pcPic->getSEIs(), SEI::COLOUR_REMAPPING_INFO );
+  SEIColourRemappingInfo *seiColourRemappingInfo = ( colourRemappingInfo.size() > 0 ) ? (SEIColourRemappingInfo*) *(colourRemappingInfo.begin()) : NULL;
+
+  if (colourRemappingInfo.size() > 1)
+  {
+    printf ("Warning: Got multiple Colour Remapping Information SEI messages. Using first.");
+  }
+  if (seiColourRemappingInfo)
+  {
+    applyColourRemapping(*pcPic->getPicYuvRec(), *seiColourRemappingInfo, sps);
+
+    // save the last CRI SEI received
+    if (m_pcSeiColourRemappingInfoPrevious == NULL)
+    {
+      m_pcSeiColourRemappingInfoPrevious = new SEIColourRemappingInfo();
+    }
+    m_pcSeiColourRemappingInfoPrevious->copyFrom(*seiColourRemappingInfo);
+  }
+  else  // using the last CRI SEI received
+  {
+    // TODO: prevent persistence of CRI SEI across C(L)VS.
+    if (m_pcSeiColourRemappingInfoPrevious != NULL)
+    {
+      if (m_pcSeiColourRemappingInfoPrevious->m_colourRemapPersistenceFlag == false)
+      {
+        printf("Warning No SEI-CRI message is present for the current picture, persistence of the CRI is not managed\n");
+      }
+      applyColourRemapping(*pcPic->getPicYuvRec(), *m_pcSeiColourRemappingInfoPrevious, sps);
+    }
+  }
+}
+
+// compute lut from SEI
+// use at lutPoints points aligned on a power of 2 value
+// SEI Lut must be in ascending values of coded Values
+static std::vector<Int>
+initColourRemappingInfoLut(const Int                                          bitDepth_in,     // bit-depth of the input values of the LUT
+                           const Int                                          nbDecimalValues, // Position of the fixed point
+                           const std::vector<SEIColourRemappingInfo::CRIlut> &lut,
+                           const Int                                          maxValue, // maximum output value
+                           const Int                                          lutOffset)
+{
+  const Int lutPoints = (1 << bitDepth_in) + 1 ;
+  std::vector<Int> retLut(lutPoints);
+
+  // missing values: need to define default values before first definition (check codedValue[0] == 0)
+  Int iTargetPrev = (lut.size() && lut[0].codedValue == 0) ? lut[0].targetValue: 0;
+  Int startPivot = (lut.size())? ((lut[0].codedValue == 0)? 1: 0): 1;
+  Int iCodedPrev  = 0;
+  // set max value with the coded bit-depth
+  // + ((1 << nbDecimalValues) - 1) is for the added bits
+  const Int maxValueFixedPoint = (maxValue << nbDecimalValues) + ((1 << nbDecimalValues) - 1);
+
+  Int iValue = 0;
+
+  for ( Int iPivot=startPivot ; iPivot < (Int)lut.size(); iPivot++ )
+  {
+    Int iCodedNext  = lut[iPivot].codedValue;
+    Int iTargetNext = lut[iPivot].targetValue;
+
+    // ensure correct bit depth and avoid overflow in lut address
+    Int iCodedNext_bitDepth = std::min(iCodedNext, (1 << bitDepth_in));
+
+    const Int divValue =  (iCodedNext - iCodedPrev > 0)? (iCodedNext - iCodedPrev): 1;
+    const Int lutValInit = (lutOffset + iTargetPrev) << nbDecimalValues;
+    const Int roundValue = divValue / 2;
+    for ( ; iValue<iCodedNext_bitDepth; iValue++ )
+    {
+      Int value = iValue;
+      Int interpol = ((((value-iCodedPrev) * (iTargetNext - iTargetPrev)) << nbDecimalValues) + roundValue) / divValue;               
+      retLut[iValue]  = std::min(lutValInit + interpol , maxValueFixedPoint);
+    }
+    iCodedPrev  = iCodedNext;
+    iTargetPrev = iTargetNext;
+  }
+  // fill missing values if necessary
+  if(iCodedPrev < (1 << bitDepth_in)+1)
+  {
+    Int iCodedNext  = (1 << bitDepth_in);
+    Int iTargetNext = (1 << bitDepth_in) - 1;
+
+    const Int divValue =  (iCodedNext - iCodedPrev > 0)? (iCodedNext - iCodedPrev): 1;
+    const Int lutValInit = (lutOffset + iTargetPrev) << nbDecimalValues;
+    const Int roundValue = divValue / 2;
+
+    for ( ; iValue<=iCodedNext; iValue++ )
+    {
+      Int value = iValue;
+      Int interpol = ((((value-iCodedPrev) * (iTargetNext - iTargetPrev)) << nbDecimalValues) + roundValue) / divValue; 
+      retLut[iValue]  = std::min(lutValInit + interpol , maxValueFixedPoint);
+    }
+  }
+  return retLut;
+}
+
+static Void
+initColourRemappingInfoLuts(std::vector<Int>      (&preLut)[3],
+                            std::vector<Int>      (&postLut)[3],
+                            SEIColourRemappingInfo &pCriSEI,
+                            const Int               maxBitDepth)
+{
+  Int internalBitDepth = pCriSEI.m_colourRemapBitDepth;
+  for ( Int c=0 ; c<3 ; c++ )
+  {
+    std::sort(pCriSEI.m_preLut[c].begin(), pCriSEI.m_preLut[c].end()); // ensure preLut is ordered in ascending values of codedValues   
+    preLut[c] = initColourRemappingInfoLut(pCriSEI.m_colourRemapInputBitDepth, maxBitDepth - pCriSEI.m_colourRemapInputBitDepth, pCriSEI.m_preLut[c], ((1 << internalBitDepth) - 1), 0); //Fill preLut
+
+    std::sort(pCriSEI.m_postLut[c].begin(), pCriSEI.m_postLut[c].end()); // ensure postLut is ordered in ascending values of codedValues       
+    postLut[c] = initColourRemappingInfoLut(pCriSEI.m_colourRemapBitDepth, maxBitDepth - pCriSEI.m_colourRemapBitDepth, pCriSEI.m_postLut[c], (1 << internalBitDepth) - 1, 0); //Fill postLut
+  }
+}
+
+// apply lut.
+// Input lut values are aligned on power of 2 boundaries
+static Int
+applyColourRemappingInfoLut1D(Int inVal, const std::vector<Int> &lut, const Int inValPrecisionBits)
+{
+  const Int roundValue = (inValPrecisionBits)? 1 << (inValPrecisionBits - 1): 0;
+  inVal = std::min(std::max(0, inVal), (Int)(((lut.size()-1) << inValPrecisionBits)));
+  Int index  = (Int) std::min((inVal >> inValPrecisionBits), (Int)(lut.size()-2));
+  Int outVal = (( inVal - (index<<inValPrecisionBits) ) * (lut[index+1] - lut[index]) + roundValue) >> inValPrecisionBits;
+  outVal +=  lut[index] ;
+
+  return outVal;
+}  
+
+static Int
+applyColourRemappingInfoMatrix(const Int (&colourRemapCoeffs)[3], const Int postOffsetShift, const Int p0, const Int p1, const Int p2, const Int offset)
+{
+  Int YUVMat = (colourRemapCoeffs[0]* p0 + colourRemapCoeffs[1]* p1 + colourRemapCoeffs[2]* p2  + offset) >> postOffsetShift;
+  return YUVMat;
+}
+
+static Void
+setColourRemappingInfoMatrixOffset(Int (&matrixOffset)[3], Int offset0, Int offset1, Int offset2)
+{
+  matrixOffset[0] = offset0;
+  matrixOffset[1] = offset1;
+  matrixOffset[2] = offset2;
+}
+
+static Void
+setColourRemappingInfoMatrixOffsets(      Int  (&matrixInputOffset)[3],
+                                          Int  (&matrixOutputOffset)[3],
+                                    const Int  bitDepth,
+                                    const Bool crInputFullRangeFlag,
+                                    const Int  crInputMatrixCoefficients,
+                                    const Bool crFullRangeFlag,
+                                    const Int  crMatrixCoefficients)
+{
+  // set static matrix offsets
+  Int crInputOffsetLuma = (crInputFullRangeFlag)? 0:-(16 << (bitDepth-8));
+  Int crOffsetLuma = (crFullRangeFlag)? 0:(16 << (bitDepth-8));
+  Int crInputOffsetChroma = 0;
+  Int crOffsetChroma = 0;
+
+  switch(crInputMatrixCoefficients)
+  {
+    case MATRIX_COEFFICIENTS_RGB:
+      crInputOffsetChroma = 0;
+      if(!crInputFullRangeFlag)
+      {
+        fprintf(stderr, "WARNING: crInputMatrixCoefficients set to MATRIX_COEFFICIENTS_RGB and crInputFullRangeFlag not set\n");
+        crInputOffsetLuma = 0;
+      }
+      break;
+    case MATRIX_COEFFICIENTS_UNSPECIFIED:
+    case MATRIX_COEFFICIENTS_BT709:
+    case MATRIX_COEFFICIENTS_BT2020_NON_CONSTANT_LUMINANCE:
+      crInputOffsetChroma = -(1 << (bitDepth-1));
+      break;
+    default:
+      fprintf(stderr, "WARNING: crInputMatrixCoefficients set to undefined value: %d\n", crInputMatrixCoefficients);
+  }
+
+  switch(crMatrixCoefficients)
+  {
+    case MATRIX_COEFFICIENTS_RGB:
+      crOffsetChroma = 0;
+      if(!crFullRangeFlag)
+      {
+        fprintf(stderr, "WARNING: crMatrixCoefficients set to MATRIX_COEFFICIENTS_RGB and crInputFullRangeFlag not set\n");
+        crOffsetLuma = 0;
+      }
+      break;
+    case MATRIX_COEFFICIENTS_UNSPECIFIED:
+    case MATRIX_COEFFICIENTS_BT709:
+    case MATRIX_COEFFICIENTS_BT2020_NON_CONSTANT_LUMINANCE:
+      crOffsetChroma = (1 << (bitDepth-1));
+      break;
+    default:
+      fprintf(stderr, "WARNING: crMatrixCoefficients set to undefined value: %d\n", crMatrixCoefficients);
+  }
+
+  setColourRemappingInfoMatrixOffset(matrixInputOffset, crInputOffsetLuma, crInputOffsetChroma, crInputOffsetChroma);
+  setColourRemappingInfoMatrixOffset(matrixOutputOffset, crOffsetLuma, crOffsetChroma, crOffsetChroma);
+}
+
+Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingInfo& criSEI, const TComSPS &activeSPS)
+{  
+  const Int maxBitDepth = 16;
+
+  // create colour remapped picture
+  if( !criSEI.m_colourRemapCancelFlag && pic.getChromaFormat()!=CHROMA_400) // 4:0:0 not supported.
+  {
+    const Int          iHeight         = pic.getHeight(COMPONENT_Y);
+    const Int          iWidth          = pic.getWidth(COMPONENT_Y);
+    const ChromaFormat chromaFormatIDC = pic.getChromaFormat();
+
+    TComPicYuv picYuvColourRemapped;
+    picYuvColourRemapped.createWithoutCUInfo( iWidth, iHeight, chromaFormatIDC );
+
+    const Int  iStrideIn   = pic.getStride(COMPONENT_Y);
+    const Int  iCStrideIn  = pic.getStride(COMPONENT_Cb);
+    const Int  iStrideOut  = picYuvColourRemapped.getStride(COMPONENT_Y);
+    const Int  iCStrideOut = picYuvColourRemapped.getStride(COMPONENT_Cb);
+    const Bool b444        = ( pic.getChromaFormat() == CHROMA_444 );
+    const Bool b422        = ( pic.getChromaFormat() == CHROMA_422 );
+    const Bool b420        = ( pic.getChromaFormat() == CHROMA_420 );
+
+    std::vector<Int> preLut[3];
+    std::vector<Int> postLut[3];
+    Int matrixInputOffset[3];
+    Int matrixOutputOffset[3];
+    const Pel *YUVIn[MAX_NUM_COMPONENT];
+    Pel *YUVOut[MAX_NUM_COMPONENT];
+    YUVIn[COMPONENT_Y]  = pic.getAddr(COMPONENT_Y);
+    YUVIn[COMPONENT_Cb] = pic.getAddr(COMPONENT_Cb);
+    YUVIn[COMPONENT_Cr] = pic.getAddr(COMPONENT_Cr);
+    YUVOut[COMPONENT_Y]  = picYuvColourRemapped.getAddr(COMPONENT_Y);
+    YUVOut[COMPONENT_Cb] = picYuvColourRemapped.getAddr(COMPONENT_Cb);
+    YUVOut[COMPONENT_Cr] = picYuvColourRemapped.getAddr(COMPONENT_Cr);
+
+    const Int bitDepth = criSEI.m_colourRemapBitDepth;
+    BitDepths        bitDepthsCriFile;
+    bitDepthsCriFile.recon[CHANNEL_TYPE_LUMA]   = bitDepth;
+    bitDepthsCriFile.recon[CHANNEL_TYPE_CHROMA] = bitDepth; // Different bitdepth is not implemented
+
+    const Int postOffsetShift = criSEI.m_log2MatrixDenom;
+    const Int matrixRound = 1 << (postOffsetShift - 1);
+    const Int postLutInputPrecision = (maxBitDepth - criSEI.m_colourRemapBitDepth);
+
+    if ( ! criSEI.m_colourRemapVideoSignalInfoPresentFlag ) // setting default
+    {
+      setColourRemappingInfoMatrixOffsets(matrixInputOffset, matrixOutputOffset, maxBitDepth,
+          activeSPS.getVuiParameters()->getVideoFullRangeFlag(), activeSPS.getVuiParameters()->getMatrixCoefficients(),
+          activeSPS.getVuiParameters()->getVideoFullRangeFlag(), activeSPS.getVuiParameters()->getMatrixCoefficients());
+    }
+    else
+    {
+      setColourRemappingInfoMatrixOffsets(matrixInputOffset, matrixOutputOffset, maxBitDepth,
+          activeSPS.getVuiParameters()->getVideoFullRangeFlag(), activeSPS.getVuiParameters()->getMatrixCoefficients(),
+          criSEI.m_colourRemapFullRangeFlag, criSEI.m_colourRemapMatrixCoefficients);
+    }
+
+    // add matrix rounding to output matrix offsets
+    matrixOutputOffset[0] = (matrixOutputOffset[0] << postOffsetShift) + matrixRound;
+    matrixOutputOffset[1] = (matrixOutputOffset[1] << postOffsetShift) + matrixRound;
+    matrixOutputOffset[2] = (matrixOutputOffset[2] << postOffsetShift) + matrixRound;
+
+    // Merge   matrixInputOffset and matrixOutputOffset to matrixOutputOffset
+    matrixOutputOffset[0] += applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[0], 0, matrixInputOffset[0], matrixInputOffset[1], matrixInputOffset[2], 0);
+    matrixOutputOffset[1] += applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[1], 0, matrixInputOffset[0], matrixInputOffset[1], matrixInputOffset[2], 0);
+    matrixOutputOffset[2] += applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[2], 0, matrixInputOffset[0], matrixInputOffset[1], matrixInputOffset[2], 0);
+
+    // rescaling output: include CRI/output frame difference
+    const Int scaleShiftOut_neg = abs(bitDepth - maxBitDepth);
+    const Int scaleOut_round = 1 << (scaleShiftOut_neg-1);
+
+    initColourRemappingInfoLuts(preLut, postLut, criSEI, maxBitDepth);
+
+    assert(pic.getChromaFormat() != CHROMA_400);
+    const Int hs = pic.getComponentScaleX(ComponentID(COMPONENT_Cb));
+    const Int maxOutputValue = (1 << bitDepth) - 1;
+
+    for( Int y = 0; y < iHeight; y++ )
+    {
+      for( Int x = 0; x < iWidth; x++ )
+      {
+        const Int xc = (x>>hs);
+        Bool computeChroma = b444 || ((b422 || !(y&1)) && !(x&1));
+
+        Int YUVPre_0 = applyColourRemappingInfoLut1D(YUVIn[COMPONENT_Y][x], preLut[0], 0);
+        Int YUVPre_1 = applyColourRemappingInfoLut1D(YUVIn[COMPONENT_Cb][xc], preLut[1], 0);
+        Int YUVPre_2 = applyColourRemappingInfoLut1D(YUVIn[COMPONENT_Cr][xc], preLut[2], 0);
+
+        Int YUVMat_0 = applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[0], postOffsetShift, YUVPre_0, YUVPre_1, YUVPre_2, matrixOutputOffset[0]);
+        Int YUVLutB_0 = applyColourRemappingInfoLut1D(YUVMat_0, postLut[0], postLutInputPrecision);
+        YUVOut[COMPONENT_Y][x] = std::min(maxOutputValue, (YUVLutB_0 + scaleOut_round) >> scaleShiftOut_neg);
+
+        if( computeChroma )
+        {
+          Int YUVMat_1 = applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[1], postOffsetShift, YUVPre_0, YUVPre_1, YUVPre_2, matrixOutputOffset[1]);
+          Int YUVLutB_1 = applyColourRemappingInfoLut1D(YUVMat_1, postLut[1], postLutInputPrecision);
+          YUVOut[COMPONENT_Cb][xc] = std::min(maxOutputValue, (YUVLutB_1 + scaleOut_round) >> scaleShiftOut_neg);
+
+          Int YUVMat_2 = applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[2], postOffsetShift, YUVPre_0, YUVPre_1, YUVPre_2, matrixOutputOffset[2]);
+          Int YUVLutB_2 = applyColourRemappingInfoLut1D(YUVMat_2, postLut[2], postLutInputPrecision);
+          YUVOut[COMPONENT_Cr][xc] = std::min(maxOutputValue, (YUVLutB_2 + scaleOut_round) >> scaleShiftOut_neg);
+        }
+      }
+
+      YUVIn[COMPONENT_Y]  += iStrideIn;
+      YUVOut[COMPONENT_Y] += iStrideOut;
+      if( !(b420 && !(y&1)) )
+      {
+         YUVIn[COMPONENT_Cb]  += iCStrideIn;
+         YUVIn[COMPONENT_Cr]  += iCStrideIn;
+         YUVOut[COMPONENT_Cb] += iCStrideOut;
+         YUVOut[COMPONENT_Cr] += iCStrideOut;
+      }
+    }
+    //Write remapped picture in display order
+    picYuvColourRemapped.dump( m_colourRemapSEIFileName, bitDepthsCriFile, true );
+    picYuvColourRemapped.destroy();
+  }
+}
 //! \}

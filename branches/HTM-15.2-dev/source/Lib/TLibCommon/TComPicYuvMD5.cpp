@@ -208,7 +208,7 @@ UInt calcMD5(const TComPicYuv& pic, TComPictureHash &digest, const BitDepths &bi
 
 std::string hashToString(const TComPictureHash &digest, Int numChar)
 {
-  static const Char* hex = "0123456789abcdef";
+  static const TChar* hex = "0123456789abcdef";
   std::string result;
 
   for(Int pos=0; pos<Int(digest.hash.size()); pos++)

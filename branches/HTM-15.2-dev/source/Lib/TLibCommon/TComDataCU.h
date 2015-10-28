@@ -111,11 +111,11 @@ private:
   Bool*          m_bDISFlag;         
   UChar*         m_ucDISType;
 #endif
-  Char*          m_pePartSize;         ///< array of partition sizes
-  Char*          m_pePredMode;         ///< array of prediction modes
-  Char*          m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
+  SChar*          m_pePartSize;         ///< array of partition sizes
+  SChar*        m_pePredMode;                           ///< array of prediction modes
+  SChar*        m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
   Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
-  Char*          m_phQP;               ///< array of QP values
+  SChar*        m_phQP;                                 ///< array of QP values
   UChar*         m_ChromaQpAdj;        ///< array of chroma QP adjustments (indexed). when value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
   UInt           m_codedChromaQpAdj;
   UChar*         m_puhTrIdx;           ///< array of transform indices
@@ -124,7 +124,7 @@ private:
   TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_01];    ///< array of motion vectors.
   TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
-  TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
+  TCoeff*       m_pcArlCoeff[MAX_NUM_COMPONENT];        ///< ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
   Bool           m_ArlCoeffIsAliasedAllocation;  ///< ARL coefficient buffer is an alias of the global buffer and must not be free()'d
 #endif
 
@@ -153,16 +153,16 @@ private:
 #if AMP_MRG
   Bool          m_bIsMergeAMP;
 #endif
-  UChar*        m_puhIntraDir[MAX_NUM_CHANNEL_TYPE]; // 0-> Luma, 1-> Chroma
+  UChar*        m_puhIntraDir[MAX_NUM_CHANNEL_TYPE];
   UChar*        m_puhInterDir;        ///< array of inter directions
-  Char*         m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
-  Char*         m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
+  SChar*        m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
+  SChar*        m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
 #if NH_3D_NBDV
   DisInfo*      m_pDvInfo;
 #endif
 #if NH_3D_VSP
-  Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not  ///< 0: non-VSP; 1: VSP
+  SChar*        m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not  ///< 0: non-VSP; 1: VSP
 #endif
 #if NH_3D_SPIVMP
   Bool*         m_pbSPIVMPFlag;       ///< array of sub-PU IVMP flags to indicate whehter a block uses sub-PU IVMP ///< 0: non-SPIVMP; 1: SPIVMP
@@ -207,7 +207,7 @@ private:
 #endif
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;        ///< sum of partition bins
-  Char          m_codedQP;
+  SChar         m_codedQP;
 #if NH_3D_MLC
   DisInfo         m_cDefaultDisInfo;    ///< Default disparity information for initializing
   TComMotionCand  m_mergCands[MRG_IVSHIFT+1];   ///< Motion candidates for merge mode
@@ -218,9 +218,10 @@ private:
 
 protected:
 
-  /// add possible motion vector predictor candidates
-  Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
-  Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
+  /// adds a single possible motion vector predictor candidate
+  Bool          xAddMVPCandUnscaled           ( AMVPInfo &info, const RefPicList eRefPicList, const Int iRefIdx, const UInt uiPartUnitIdx, const MVP_DIR eDir ) const;
+  Bool          xAddMVPCandWithScaling        ( AMVPInfo &info, const RefPicList eRefPicList, const Int iRefIdx, const UInt uiPartUnitIdx, const MVP_DIR eDir ) const;
+
 #if NH_3D_VSP
   Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount);
 #endif
@@ -228,36 +229,37 @@ protected:
   Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int*   ivCandDir, TComMv* ivCandMv, Int* ivCandRefIdx ); 
 #endif
 
-  Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
-  Bool          xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx
-#if NH_3D_TMVP
-  ,  Bool bMRG = true
-#endif
- );
+  Void          deriveRightBottomIdx          ( UInt uiPartIdx, UInt& ruiPartIdxRB ) const;
 
+#if NH_3D_TMVP
+  Bool          xGetColMVP                    ( const RefPicList eRefPicList, const Int ctuRsAddr, const Int partUnitIdx, TComMv& rcMv, Int& refIdx, Bool bMRG = true  ) const;
+#else
+  Bool          xGetColMVP                    ( const RefPicList eRefPicList, const Int ctuRsAddr, const Int partUnitIdx, TComMv& rcMv, const Int refIdx ) const;
+#endif
 
   /// compute scaling factor from POC difference
-#if !NH_3D_ARP
-  Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
-#endif
 
-  Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
+#if !NH_3D_ARP
+  static Int    xGetDistScaleFactor           ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
+#endif
+  Void          xDeriveCenterIdx              ( UInt uiPartIdx, UInt& ruiPartIdxCenter ) const;
 
 #if NH_3D_VSP
   Void xSetMvFieldForVSP  ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, Int *shiftLUT, RefPicList refPicList, Int refIdx, Bool isDepth, Int &vspSize );
 #endif
 
 public:
+
+#if NH_3D_ARP
+  static Int    xGetDistScaleFactor           ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
+#endif
+
   TComDataCU();
   virtual ~TComDataCU();
 
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
   // -------------------------------------------------------------------------------------------------------------------
-#if NH_3D_ARP
-  /// compute scaling factor from POC difference
-  Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
-#endif 
   Void          create                ( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
 #if ADAPTIVE_QP_SELECTION
     , TCoeff *pParentARLBuffer = 0
@@ -314,8 +316,8 @@ public:
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
 
-  Char*         getPartitionSize      ()                        { return m_pePartSize;        }
-  PartSize      getPartitionSize      ( UInt uiIdx )            { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }
+  SChar*        getPartitionSize              ( )                                                          { return m_pePartSize;                       }
+  PartSize      getPartitionSize              ( UInt uiIdx ) const                                         { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }
   Void          setPartitionSize      ( UInt uiIdx, PartSize uh){ m_pePartSize[uiIdx] = uh;   }
   Void          setPartSizeSubParts   ( PartSize eMode, UInt uiAbsPartIdx, UInt uiDepth );
   Void          setCUTransquantBypassSubParts( Bool flag, UInt uiAbsPartIdx, UInt uiDepth );
@@ -325,7 +327,7 @@ public:
 #endif
   
   Bool*         getSkipFlag            ()                        { return m_skipFlag;          }
-  Bool          getSkipFlag            (UInt idx)                { return m_skipFlag[idx];     }
+  Bool          getSkipFlag                   ( UInt idx ) const                                           { return m_skipFlag[idx];                    }
   Void          setSkipFlag           ( UInt idx, Bool skip)     { m_skipFlag[idx] = skip;   }
   Void          setSkipFlagSubParts   ( Bool skip, UInt absPartIdx, UInt depth );
 #if NH_3D_DIS
@@ -339,75 +341,76 @@ public:
   Void         getDISType            ( UInt idx, UChar ucDISType)     { m_ucDISType[idx] = ucDISType;   }
   Void         setDISTypeSubParts    ( UChar ucDISType, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-  Char*         getPredictionMode     ()                        { return m_pePredMode;        }
-  PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
+  SChar*        getPredictionMode             ( )                                                          { return m_pePredMode;                       }
+  PredMode      getPredictionMode             ( UInt uiIdx ) const                                         { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
 
 #if NH_3D_DBBP
-  Bool*         getDBBPFlag           ()                        { return m_pbDBBPFlag;               }
-  Bool          getDBBPFlag           ( UInt uiIdx )            { return m_pbDBBPFlag[uiIdx];        }
+  Bool*         getDBBPFlag           ()                        const { return m_pbDBBPFlag;               }
+  Bool          getDBBPFlag           ( UInt uiIdx )            const { return m_pbDBBPFlag[uiIdx];        }
   Void          setDBBPFlag           ( UInt uiIdx, Bool b )    { m_pbDBBPFlag[uiIdx] = b;           }
   Void          setDBBPFlagSubParts   ( Bool bDBBPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   DbbpTmpData*  getDBBPTmpData        () { return &m_sDBBPTmpData; }
 #endif
 
-  Char*         getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
-  Char          getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID ) { return m_crossComponentPredictionAlpha[compID][uiIdx];  }
+  SChar*        getCrossComponentPredictionAlpha( ComponentID compID )                                     { return m_crossComponentPredictionAlpha[compID];        }
+  SChar         getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID )                         { return m_crossComponentPredictionAlpha[compID][uiIdx]; }
 
   Bool*         getCUTransquantBypass ()                        { return m_CUTransquantBypass;        }
-  Bool          getCUTransquantBypass( UInt uiIdx )             { return m_CUTransquantBypass[uiIdx]; }
+  Bool          getCUTransquantBypass         ( UInt uiIdx ) const                                         { return m_CUTransquantBypass[uiIdx];        }
 
   UChar*        getWidth              ()                        { return m_puhWidth;          }
-  UChar         getWidth              ( UInt uiIdx )            { return m_puhWidth[uiIdx];   }
+  UChar         getWidth                      ( UInt uiIdx ) const                                         { return m_puhWidth[uiIdx];                  }
   Void          setWidth              ( UInt uiIdx, UChar  uh ) { m_puhWidth[uiIdx] = uh;     }
 
   UChar*        getHeight             ()                        { return m_puhHeight;         }
-  UChar         getHeight             ( UInt uiIdx )            { return m_puhHeight[uiIdx];  }
+  UChar         getHeight                     ( UInt uiIdx ) const                                         { return m_puhHeight[uiIdx];                 }
   Void          setHeight             ( UInt uiIdx, UChar  uh ) { m_puhHeight[uiIdx] = uh;    }
 
   Void          setSizeSubParts       ( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx, UInt uiDepth );
 
-  Char*         getQP                 ()                        { return m_phQP;              }
-  Char          getQP                 ( UInt uiIdx ) const      { return m_phQP[uiIdx];       }
-  Void          setQP                 ( UInt uiIdx, Char value ){ m_phQP[uiIdx] =  value;     }
+  SChar*        getQP                         ( )                                                          { return m_phQP;                             }
+  SChar         getQP                         ( UInt uiIdx ) const                                         { return m_phQP[uiIdx];                      }
+  Void          setQP                         ( UInt uiIdx, SChar value )                                  { m_phQP[uiIdx] =  value;                    }
   Void          setQPSubParts         ( Int qp,   UInt uiAbsPartIdx, UInt uiDepth );
-  Int           getLastValidPartIdx   ( Int iAbsPartIdx );
-  Char          getLastCodedQP        ( UInt uiAbsPartIdx );
+  Int           getLastValidPartIdx           ( Int iAbsPartIdx ) const;
+  SChar         getLastCodedQP                ( UInt uiAbsPartIdx ) const;
   Void          setQPSubCUs           ( Int qp, UInt absPartIdx, UInt depth, Bool &foundNonZeroCbf );
-  Void          setCodedQP            ( Char qp )               { m_codedQP = qp;             }
-  Char          getCodedQP            ()                        { return m_codedQP;           }
+  Void          setCodedQP                    ( SChar qp )                                                 { m_codedQP = qp;                            }
+  SChar         getCodedQP                    ( ) const                                                    { return m_codedQP;                          }
 
   UChar*        getChromaQpAdj        ()                        { return m_ChromaQpAdj;       } ///< array of chroma QP adjustments (indexed). when value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
   UChar         getChromaQpAdj        (Int idx)           const { return m_ChromaQpAdj[idx];  } ///< When value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
   Void          setChromaQpAdj        (Int idx, UChar val)      { m_ChromaQpAdj[idx] = val;   } ///< When val = 0,   cu_chroma_qp_offset_flag=0; when val>0,   indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=val-1
   Void          setChromaQpAdjSubParts( UChar val, Int absPartIdx, Int depth );
-  Void          setCodedChromaQpAdj   ( Char qp )               { m_codedChromaQpAdj = qp;    }
-  Char          getCodedChromaQpAdj   ()                        { return m_codedChromaQpAdj;  }
+  Void          setCodedChromaQpAdj           ( SChar qp )                                                 { m_codedChromaQpAdj = qp;                   }
+  SChar         getCodedChromaQpAdj           ( ) const                                                    { return m_codedChromaQpAdj;                 }
 
-  Bool          isLosslessCoded       ( UInt absPartIdx );
+  Bool          isLosslessCoded               ( UInt absPartIdx ) const;
 
   UChar*        getTransformIdx       ()                        { return m_puhTrIdx;          }
-  UChar         getTransformIdx       ( UInt uiIdx )            { return m_puhTrIdx[uiIdx];   }
+  UChar         getTransformIdx               ( UInt uiIdx ) const                                         { return m_puhTrIdx[uiIdx];                  }
   Void          setTrIdxSubParts      ( UInt uiTrIdx, UInt uiAbsPartIdx, UInt uiDepth );
 
   UChar*        getTransformSkip      ( ComponentID compID )    { return m_puhTransformSkip[compID];}
-  UChar         getTransformSkip      ( UInt uiIdx, ComponentID compID)    { return m_puhTransformSkip[compID][uiIdx];}
+  UChar         getTransformSkip              ( UInt uiIdx, ComponentID compID ) const                     { return m_puhTransformSkip[compID][uiIdx];  }
   Void          setTransformSkipSubParts  ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth);
   Void          setTransformSkipSubParts  ( const UInt useTransformSkip[MAX_NUM_COMPONENT], UInt uiAbsPartIdx, UInt uiDepth );
 
   UChar*        getExplicitRdpcmMode      ( ComponentID component ) { return m_explicitRdpcmMode[component]; }
-  UChar         getExplicitRdpcmMode      ( ComponentID component, UInt partIdx ) {return m_explicitRdpcmMode[component][partIdx]; }
+  UChar         getExplicitRdpcmMode          ( ComponentID component, UInt partIdx ) const                { return m_explicitRdpcmMode[component][partIdx]; }
   Void          setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 
-  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getSpsRangeExtension().getRdpcmEnabledFlag(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
+  Bool          isRDPCMEnabled                ( UInt uiAbsPartIdx ) const                                  { return getSlice()->getSPS()->getSpsRangeExtension().getRdpcmEnabledFlag(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
 
-  Void          setCrossComponentPredictionAlphaPartRange    ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
+  Void          setCrossComponentPredictionAlphaPartRange ( SChar alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 
-  UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );
+  UInt          getQuadtreeTULog2MinSizeInCU  ( UInt uiIdx ) const;
 
   TComCUMvField* getCUMvField         ( RefPicList e )          { return  &m_acCUMvField[e];  }
+  const TComCUMvField* getCUMvField           ( RefPicList e ) const                                       { return &m_acCUMvField[e];                  }
 
   TCoeff*       getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 
@@ -416,12 +419,12 @@ public:
 #endif
   Pel*          getPCMSample          ( ComponentID component ) { return m_pcIPCMSample[component]; }
 
-  UChar         getCbf    ( UInt uiIdx, ComponentID eType )                  { return m_puhCbf[eType][uiIdx];  }
+  UChar         getCbf                        ( UInt uiIdx, ComponentID eType ) const                      { return m_puhCbf[eType][uiIdx];             }
   UChar*        getCbf    ( ComponentID eType )                              { return m_puhCbf[eType];         }
-  UChar         getCbf    ( UInt uiIdx, ComponentID eType, UInt uiTrDepth )  { return ( ( getCbf( uiIdx, eType ) >> uiTrDepth ) & 0x1 ); }
+  UChar         getCbf                        ( UInt uiIdx, ComponentID eType, UInt uiTrDepth ) const      { return ( ( getCbf( uiIdx, eType ) >> uiTrDepth ) & 0x1 ); }
   Void          setCbf    ( UInt uiIdx, ComponentID eType, UChar uh )        { m_puhCbf[eType][uiIdx] = uh;    }
   Void          clearCbf  ( UInt uiIdx, ComponentID eType, UInt uiNumParts );
-  UChar         getQtRootCbf          ( UInt uiIdx );
+  UChar         getQtRootCbf                  ( UInt uiIdx ) const;
 
   Void          setCbfSubParts        ( const UInt uiCbf[MAX_NUM_COMPONENT],  UInt uiAbsPartIdx, UInt uiDepth           );
   Void          setCbfSubParts        ( UInt uiCbf, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth                    );
@@ -435,12 +438,12 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   Bool*         getMergeFlag          ()                        { return m_pbMergeFlag;               }
-  Bool          getMergeFlag          ( UInt uiIdx )            { return m_pbMergeFlag[uiIdx];        }
+  Bool          getMergeFlag                  ( UInt uiIdx ) const                                         { return m_pbMergeFlag[uiIdx];               }
   Void          setMergeFlag          ( UInt uiIdx, Bool b )    { m_pbMergeFlag[uiIdx] = b;           }
   Void          setMergeFlagSubParts  ( Bool bMergeFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 
   UChar*        getMergeIndex         ()                        { return m_puhMergeIndex;                         }
-  UChar         getMergeIndex         ( UInt uiIdx )            { return m_puhMergeIndex[uiIdx];                  }
+  UChar         getMergeIndex                 ( UInt uiIdx ) const                                         { return m_puhMergeIndex[uiIdx];             }
   Void          setMergeIndex         ( UInt uiIdx, UInt uiMergeIndex ) { m_puhMergeIndex[uiIdx] = uiMergeIndex;  }
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
@@ -452,7 +455,7 @@ public:
 
 #if AMP_MRG
   Void          setMergeAMP( Bool b )      { m_bIsMergeAMP = b; }
-  Bool          getMergeAMP( )             { return m_bIsMergeAMP; }
+  Bool          getMergeAMP                   ( ) const                                                    { return m_bIsMergeAMP;                      }
 #endif
 
   UChar*        getIntraDir         ( const ChannelType channelType )                   const { return m_puhIntraDir[channelType];         }
@@ -464,11 +467,11 @@ public:
                                       const UInt uiDepth );
 
   UChar*        getInterDir           ()                        { return m_puhInterDir;               }
-  UChar         getInterDir           ( UInt uiIdx )            { return m_puhInterDir[uiIdx];        }
+  UChar         getInterDir                   ( UInt uiIdx ) const                                         { return m_puhInterDir[uiIdx];               }
   Void          setInterDir           ( UInt uiIdx, UChar  uh ) { m_puhInterDir[uiIdx] = uh;          }
   Void          setInterDirSubParts   ( UInt uiDir,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Bool*         getIPCMFlag           ()                        { return m_pbIPCMFlag;               }
-  Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
+  Bool          getIPCMFlag                   ( UInt uiIdx ) const                                         { return m_pbIPCMFlag[uiIdx];                }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
 #if NH_3D_NBDV
@@ -481,7 +484,7 @@ public:
 #endif
 #if NH_3D_NBDV
   Void          xDeriveRightBottomNbIdx(Int &uiLCUIdxRBNb, Int &uiPartIdxRBNb );
-  Bool          xCheckSpatialNBDV (TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, IDVInfo* paMvpDvInfo,
+  Bool          xCheckSpatialNBDV (const TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, IDVInfo* paMvpDvInfo,
                                    UInt uiMvpDvPos
 #if NH_3D_NBDV_REF
   , Bool bDepthRefine = false
@@ -524,8 +527,8 @@ public:
     );   
 #endif
 #if NH_3D_ARP
-  UChar*        getARPW            ()                        { return m_puhARPW;               }
-  UChar         getARPW            ( UInt uiIdx )            { return m_puhARPW[uiIdx];        }
+  UChar*        getARPW            ()              const          { return m_puhARPW;               }
+  UChar         getARPW            ( UInt uiIdx )  const          { return m_puhARPW[uiIdx];        }
   Void          setARPW            ( UInt uiIdx, UChar w )   { m_puhARPW[uiIdx] = w;           }
   Void          setARPWSubParts    ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
@@ -535,18 +538,18 @@ public:
   Void          setICFlag          ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
   Void          setICFlagSubParts  ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Bool          isICFlagRequired   ( UInt uiAbsPartIdx );
-  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
+  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false) const;
 #elif NH_3D_VSP
-  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
+  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false) const;
 #else
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------
 
-  Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight ); // This is for use by a leaf/sub CU object only, with no additional AbsPartIdx
+  Void          getPartIndexAndSize           ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight ) const; // This is for use by a leaf/sub CU object only, with no additional AbsPartIdx
 #endif
-  UChar         getNumPartitions      ( const UInt uiAbsPartIdx = 0 );
-  Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
+  UChar         getNumPartitions              ( const UInt uiAbsPartIdx = 0 ) const;
+  Bool          isFirstAbsZorderIdxInDepth    ( UInt uiAbsPartIdx, UInt uiDepth ) const;
 
 #if NH_3D_DMM
   Pel*  getDmmDeltaDC                 ( DmmID dmmType, UInt segId )                      { return m_dmmDeltaDC[dmmType][segId];        } 
@@ -574,30 +577,31 @@ public:
   // member functions for motion vector
   // -------------------------------------------------------------------------------------------------------------------
 
-  Void          getMvField            ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField );
+  static Void   getMvField                    ( const TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField );
 
-  Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
-  Bool          isDiffMER             ( Int xN, Int yN, Int xP, Int yP);
-  Void          getPartPosition       ( UInt partIdx, Int& xP, Int& yP, Int& nPSW, Int& nPSH);
+  Void          fillMvpCand                   ( const UInt uiPartIdx, const UInt uiPartAddr, const RefPicList eRefPicList, const Int iRefIdx, AMVPInfo* pInfo ) const;
+  Bool          isDiffMER                     ( Int xN, Int yN, Int xP, Int yP ) const;
+  Void          getPartPosition               ( UInt partIdx, Int& xP, Int& yP, Int& nPSW, Int& nPSH ) const;
 
   Void          setMVPIdx             ( RefPicList eRefPicList, UInt uiIdx, Int iMVPIdx)  { m_apiMVPIdx[eRefPicList][uiIdx] = iMVPIdx;  }
-  Int           getMVPIdx             ( RefPicList eRefPicList, UInt uiIdx)               { return m_apiMVPIdx[eRefPicList][uiIdx];     }
-  Char*         getMVPIdx             ( RefPicList eRefPicList )                          { return m_apiMVPIdx[eRefPicList];            }
+  Int           getMVPIdx                     ( RefPicList eRefPicList, UInt uiIdx) const                  { return m_apiMVPIdx[eRefPicList][uiIdx];    }
+  SChar*        getMVPIdx                     ( RefPicList eRefPicList )                                   { return m_apiMVPIdx[eRefPicList];           }
 
   Void          setMVPNum             ( RefPicList eRefPicList, UInt uiIdx, Int iMVPNum ) { m_apiMVPNum[eRefPicList][uiIdx] = iMVPNum;  }
-  Int           getMVPNum             ( RefPicList eRefPicList, UInt uiIdx )              { return m_apiMVPNum[eRefPicList][uiIdx];     }
-  Char*         getMVPNum             ( RefPicList eRefPicList )                          { return m_apiMVPNum[eRefPicList];            }
+  Int           getMVPNum                     ( RefPicList eRefPicList, UInt uiIdx ) const                 { return m_apiMVPNum[eRefPicList][uiIdx];    }
+  SChar*        getMVPNum                     ( RefPicList eRefPicList )                                   { return m_apiMVPNum[eRefPicList];           }
 
   Void          setMVPIdxSubParts     ( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Void          setMVPNumSubParts     ( Int iMVPNum, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 
-  Void          clipMv                ( TComMv&     rcMv     );
+  Void          clipMv                        ( TComMv&     rcMv     ) const;
+
 #if NH_MV
   Void          checkMvVertRest (TComMv&  rcMv,  RefPicList eRefPicList, int iRefIdx );
 #endif
-  Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
-  Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }
-  Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
+  Void          getMvPredLeft                 ( TComMv&     rcMvPred ) const                               { rcMvPred = m_cMvFieldA.getMv();            }
+  Void          getMvPredAbove                ( TComMv&     rcMvPred ) const                               { rcMvPred = m_cMvFieldB.getMv();            }
+  Void          getMvPredAboveRight           ( TComMv&     rcMvPred ) const                               { rcMvPred = m_cMvFieldC.getMv();            }
 #if NH_3D
   Void          compressMV            ( Int scale );
   Void          printMV               ( );
@@ -617,36 +621,40 @@ public:
   Bool          CUIsFromSameTile            ( const TComDataCU *pCU /* Can be NULL */) const;
   Bool          CUIsFromSameSliceAndTile    ( const TComDataCU *pCU /* Can be NULL */) const;
   Bool          CUIsFromSameSliceTileAndWavefrontRow( const TComDataCU *pCU /* Can be NULL */) const;
-  Bool          isLastSubCUOfCtu(const UInt absPartIdx);
+  Bool          isLastSubCUOfCtu              ( const UInt absPartIdx ) const;
 
 
-  TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx,
+  const TComDataCU*   getPULeft               ( UInt& uiLPartUnitIdx,
                                               UInt uiCurrPartUnitIdx,
                                               Bool bEnforceSliceRestriction=true,
-                                              Bool bEnforceTileRestriction=true );
-  TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx,
+                                                Bool  bEnforceTileRestriction=true ) const;
+
+  const TComDataCU*   getPUAbove              ( UInt& uiAPartUnitIdx,
                                               UInt uiCurrPartUnitIdx,
                                               Bool bEnforceSliceRestriction=true,
                                               Bool planarAtCTUBoundary = false,
-                                              Bool bEnforceTileRestriction=true );
-  TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
+                                                Bool  bEnforceTileRestriction=true ) const;
 
-  TComDataCU*   getQpMinCuLeft              ( UInt&  uiLPartUnitIdx , UInt uiCurrAbsIdxInCtu );
-  TComDataCU*   getQpMinCuAbove             ( UInt&  uiAPartUnitIdx , UInt uiCurrAbsIdxInCtu );
-  Char          getRefQP                    ( UInt   uiCurrAbsIdxInCtu                       );
+  const TComDataCU*   getPUAboveLeft          ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true ) const;
+
+  const TComDataCU*   getQpMinCuLeft          ( UInt&  uiLPartUnitIdx,  UInt uiCurrAbsIdxInCtu ) const;
+  const TComDataCU*   getQpMinCuAbove         ( UInt&  uiAPartUnitIdx,  UInt uiCurrAbsIdxInCtu ) const;
 
   /// returns CU and part index of the PU above the top row of the current uiCurrPartUnitIdx of the CU, at a horizontal offset (to the right) of uiPartUnitOffset (in parts)
-  TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true );
+  const TComDataCU*   getPUAboveRight         ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true ) const;
   /// returns CU and part index of the PU left of the lefthand column of the current uiCurrPartUnitIdx of the CU, at a vertical offset (below) of uiPartUnitOffset (in parts)
-  TComDataCU*   getPUBelowLeft              ( UInt&  uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true );
+  const TComDataCU*   getPUBelowLeft          ( UInt&  uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true ) const;
 
-  Void          deriveLeftRightTopIdx       ( UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
-  Void          deriveLeftBottomIdx         ( UInt uiPartIdx, UInt& ruiPartIdxLB );
+  SChar         getRefQP                      ( UInt uiCurrAbsIdxInCtu ) const;
 
-  Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
+  Void          deriveLeftRightTopIdx         ( UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT ) const;
+  Void          deriveLeftBottomIdx           ( UInt uiPartIdx, UInt& ruiPartIdxLB ) const;
+
 #if NH_3D
   Bool          hasEqualMotion              ( Int dirA, const TComMvField* mvFieldA,  Int dirB, const TComMvField* mvFieldB  );
 #endif
+  Bool          hasEqualMotion                ( UInt uiAbsPartIdx, const TComDataCU* pcCandCU, UInt uiCandAbsPartIdx ) const;
+
 #if NH_3D_MLC
   Bool          getAvailableFlagA1() { return m_bAvailableFlagA1;   }
   Bool          getAvailableFlagB1() { return m_bAvailableFlagB1;   }
@@ -669,52 +677,55 @@ public:
 #endif
   , Int& numValidMergeCand, Int mrgCandIdx = -1 );
 #endif
+#if NH_3D
   Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
+#else
+  Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 ) const;
+#endif
 
 #if NH_3D_VSP
 #if NH_3D_SPIVMP
-  Bool*         getSPIVMPFlag        ()                        { return m_pbSPIVMPFlag;          }
-  Bool          getSPIVMPFlag        ( UInt uiIdx )            { return m_pbSPIVMPFlag[uiIdx];   }
+  Bool*         getSPIVMPFlag        ()                        const { return m_pbSPIVMPFlag;          }
+  Bool          getSPIVMPFlag        ( UInt uiIdx )            const { return m_pbSPIVMPFlag[uiIdx];   }
   Void          setSPIVMPFlag        ( UInt uiIdx, Bool n )     { m_pbSPIVMPFlag[uiIdx] = n;      }
   Void          setSPIVMPFlagSubParts( Bool bSPIVMPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 #endif
 
-  Char*         getVSPFlag        ()                        { return m_piVSPFlag;          }
-  Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
+  SChar*        getVSPFlag        ()                        const { return m_piVSPFlag;          }
+  SChar         getVSPFlag        ( UInt uiIdx )            const { return m_piVSPFlag[uiIdx];   }
   Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }
-  Void          setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Void          setVSPFlagSubParts( SChar iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Void          setMvFieldPUForVSP    ( TComDataCU* cu, UInt partAddr, Int width, Int height, RefPicList refPicList, Int refIdx, Int &vspSize );
 #endif
-  Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
-  Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );
-
+  Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT ) const;
+  Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB ) const;
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for modes
   // -------------------------------------------------------------------------------------------------------------------
 
   Bool          isIntra            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA;                                              }
   Bool          isInter            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER;                                              }
-  Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< returns true, if the partiton is skipped
-  Bool          isBipredRestriction( UInt puIdx );
+  Bool          isSkipped                     ( UInt uiPartIdx ) const; ///< returns true, if the partiton is skipped
+  Bool          isBipredRestriction           ( UInt puIdx     ) const;
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)
   // -------------------------------------------------------------------------------------------------------------------
 
-  UInt          getIntraSizeIdx                 ( UInt uiAbsPartIdx                                       );
+  UInt          getIntraSizeIdx               ( UInt uiAbsPartIdx ) const;
 
-  Void          getAllowedChromaDir             ( UInt uiAbsPartIdx, UInt* uiModeList );
-  Void          getIntraDirPredictor            ( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_MOST_PROBABLE_MODES], const ComponentID compID, Int* piMode = NULL );
+  Void          getAllowedChromaDir           ( UInt uiAbsPartIdx, UInt* uiModeList ) const;
+  Void          getIntraDirPredictor          ( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_MOST_PROBABLE_MODES], const ComponentID compID, Int* piMode = NULL ) const;
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for SBAC context
   // -------------------------------------------------------------------------------------------------------------------
 
-  UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
-  UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType );
+  UInt          getCtxSplitFlag               ( UInt   uiAbsPartIdx, UInt uiDepth     ) const;
+  UInt          getCtxQtCbf                   ( TComTU &rTu, const ChannelType chType ) const;
 
-  UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
-  UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
+  UInt          getCtxSkipFlag                ( UInt   uiAbsPartIdx ) const;
+  UInt          getCtxInterDir                ( UInt   uiAbsPartIdx ) const;
 #if NH_3D_ARP
   UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
 #endif  

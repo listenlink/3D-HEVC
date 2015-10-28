@@ -43,7 +43,7 @@
 
 #if ENC_DEC_TRACE
 
-Void  SyntaxElementWriter::xWriteCodeTr (UInt value, UInt  length, const Char *pSymbolName)
+Void  SyntaxElementWriter::xWriteCodeTr (UInt value, UInt  length, const TChar *pSymbolName)
 {
   xWriteCode (value,length);
   if( g_HLSTraceEnable )
@@ -69,7 +69,7 @@ Void  SyntaxElementWriter::xWriteCodeTr (UInt value, UInt  length, const Char *p
   }
 }
 
-Void  SyntaxElementWriter::xWriteUvlcTr (UInt value, const Char *pSymbolName)
+Void  SyntaxElementWriter::xWriteUvlcTr (UInt value, const TChar *pSymbolName)
 {
   xWriteUvlc (value);
   if( g_HLSTraceEnable )
@@ -88,7 +88,7 @@ Void  SyntaxElementWriter::xWriteUvlcTr (UInt value, const Char *pSymbolName)
   }
 }
 
-Void  SyntaxElementWriter::xWriteSvlcTr (Int value, const Char *pSymbolName)
+Void  SyntaxElementWriter::xWriteSvlcTr (Int value, const TChar *pSymbolName)
 {
   xWriteSvlc(value);
   if( g_HLSTraceEnable )
@@ -107,7 +107,7 @@ Void  SyntaxElementWriter::xWriteSvlcTr (Int value, const Char *pSymbolName)
   }
 }
 
-Void  SyntaxElementWriter::xWriteFlagTr(UInt value, const Char *pSymbolName)
+Void  SyntaxElementWriter::xWriteFlagTr(UInt value, const TChar *pSymbolName)
 {
   xWriteFlag(value);
   if( g_HLSTraceEnable )
@@ -126,6 +126,7 @@ Void  SyntaxElementWriter::xWriteFlagTr(UInt value, const Char *pSymbolName)
   }
 }
 
+#if H_MV_ENC_DEC_TRAC
 Void  SyntaxElementWriter::xWriteStringTr( UChar* value, UInt length, const Char *pSymbolName)
 {
   xWriteString(value, length);
@@ -135,7 +136,7 @@ Void  SyntaxElementWriter::xWriteStringTr( UChar* value, UInt length, const Char
     fprintf( g_hTrace, "%-50s st(v=%d)  : %s\n", pSymbolName, length, value ); 
   }
 }
-
+#endif
 #endif
 
 
@@ -175,6 +176,7 @@ Void SyntaxElementWriter::xWriteFlag( UInt uiCode )
   m_pcBitIf->write( uiCode, 1 );
 }
 
+#if H_MV_ENC_DEC_TRAC
 Void  SyntaxElementWriter::xWriteString( UChar* sCode, UInt uiLength)
 {
   assert(m_pcBitIf->getNumberOfWrittenBits() % 8 == 0 );
@@ -184,7 +186,7 @@ Void  SyntaxElementWriter::xWriteString( UChar* sCode, UInt uiLength)
   }
   m_pcBitIf->write( 0, 8 ); //zero-termination byte
 }
-
+#endif
 Void SyntaxElementWriter::xWriteRbspTrailingBits()
 {
   WRITE_FLAG( 1, "rbsp_stop_one_bit");

@@ -117,7 +117,7 @@ void SEIPictureTiming::copyTo (SEIPictureTiming& target)
 }
 
 // Static member
-const Char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
+const TChar *SEI::getSEIMessageString(SEI::PayloadType payloadType)
 {
   switch (payloadType)
   {
@@ -150,9 +150,10 @@ const Char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
     case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
     case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
-    case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";
+    case SEI::CHROMA_RESAMPLING_FILTER_HINT:        return "Chroma sampling filter hint";
+    case SEI::COLOUR_REMAPPING_INFO:                return "Colour remapping info";
+
 #if NH_MV
-    case SEI::COLOUR_REMAPPING_INFO:                     return "Colour remapping information";
     case SEI::DEINTERLACED_FIELD_IDENTIFICATION:         return "Deinterlaced field identification";
     case SEI::LAYERS_NOT_PRESENT:                        return "Layers not present";
     case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS:         return "Inter-layer constrained tile sets";
@@ -265,7 +266,7 @@ SEI* SEI::getCopy() const
   return NULL;
 }
 
-Void SEI::setupFromCfgFile( const Char* cfgFile )
+Void SEI::setupFromCfgFile( const TChar* cfgFile )
 {
   assert( false );
 }
@@ -303,7 +304,7 @@ Void SEI::xPrintCfgErrorIntro()
   std::cout << "Error in configuration of " << getSEIMessageString( payloadType() ) << " SEI: ";
 }
 
-Void SEI::xCheckCfgRange( Bool& wrongConfig, Int val, Int minVal, Int maxVal, const Char* seName )
+Void SEI::xCheckCfgRange( Bool& wrongConfig, Int val, Int minVal, Int maxVal, const TChar* seName )
 {
   if ( val < minVal || val > maxVal  )
   {
@@ -328,7 +329,7 @@ Void SEI::xAddGeneralOpts(po::Options &opts, IntAry1d defAppLayerIds, IntAry1d d
     ("ModifyByEncoder"        , m_modifyByEncoder        , defModifyByEncoder    , "0: Use payload as specified in cfg file   1: Modify SEI by encoder");
 }
 
-Void SEI::xCheckCfg( Bool& wrongConfig, Bool cond, const Char* errStr )
+Void SEI::xCheckCfg( Bool& wrongConfig, Bool cond, const TChar* errStr )
 {
   if ( !cond  )
   {
@@ -340,7 +341,7 @@ Void SEI::xCheckCfg( Bool& wrongConfig, Bool cond, const Char* errStr )
 
 
 #if NH_MV_LAYERS_NOT_PRESENT_SEI
-Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
+Void SEILayersNotPresent::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -400,7 +401,7 @@ Void SEILayersNotPresent::setupFromCfgFile(const Char* cfgFile)
 #endif
 
 
-Void SEIInterLayerConstrainedTileSets::setupFromCfgFile(const Char* cfgFile)
+Void SEIInterLayerConstrainedTileSets::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -482,7 +483,7 @@ Void SEIBspNesting::setupFromSlice  ( const TComSlice* slice )
   }
 };
 
-Void SEIBspNesting::setupFromCfgFile(const Char* cfgFile)
+Void SEIBspNesting::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -555,7 +556,7 @@ Void SEIBspInitialArrivalTime::setupFromSlice  ( const TComSlice* slice )
   }
 };
 
-Void SEIBspInitialArrivalTime::setupFromCfgFile(const Char* cfgFile)
+Void SEIBspInitialArrivalTime::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -604,7 +605,7 @@ Bool SEIBspInitialArrivalTime::checkCfg( const TComSlice* slice )
 };
 #endif
 
-Void SEISubBitstreamProperty::setupFromCfgFile(const Char* cfgFile)
+Void SEISubBitstreamProperty::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -680,7 +681,7 @@ Void SEISubBitstreamProperty::resizeArrays( )
   m_maxSbPropertyBitRate.resize( m_numAdditionalSubStreamsMinus1 + 1);
 }
 
-Void SEIAlphaChannelInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIAlphaChannelInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -743,7 +744,7 @@ SEIOverlayInfo::SEIOverlayInfo ( )
   , m_numStringBytesMax(256) //incl. null termination byte
 { };
 
-Void SEIOverlayInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIOverlayInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -827,7 +828,7 @@ Bool SEIOverlayInfo::checkCfg( const TComSlice* slice )
 };
 
 
-Void SEITemporalMvPredictionConstraints::setupFromCfgFile(const Char* cfgFile)
+Void SEITemporalMvPredictionConstraints::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -869,7 +870,7 @@ Bool SEITemporalMvPredictionConstraints::checkCfg( const TComSlice* slice )
 };
 
 #if NH_MV_SEI_TBD
-Void SEIFrameFieldInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIFrameFieldInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -921,7 +922,7 @@ Bool SEIFrameFieldInfo::checkCfg( const TComSlice* slice )
 };
 #endif
 
-Void SEIThreeDimensionalReferenceDisplaysInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIThreeDimensionalReferenceDisplaysInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -1024,7 +1025,7 @@ Void SEIDepthRepresentationInfo::setupFromSlice  ( const TComSlice* slice )
     m_currLayerID=slice->getLayerIdInVps();
 };
 
-Void SEIDepthRepresentationInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIDepthRepresentationInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -1196,7 +1197,7 @@ Bool SEIDepthRepresentationInfo::checkCfg( const TComSlice* slice )
 }
 #endif
 
-Void SEIMultiviewSceneInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIMultiviewSceneInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -1242,7 +1243,7 @@ Bool SEIMultiviewSceneInfo::checkCfg( const TComSlice* slice )
 
 };
 
-Void SEIMultiviewAcquisitionInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIMultiviewAcquisitionInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -1404,7 +1405,7 @@ Void SEIMultiviewViewPosition::setupFromSlice  ( const TComSlice* slice )
   }
 }
 
-Void SEIMultiviewViewPosition::setupFromCfgFile(const Char* cfgFile)
+Void SEIMultiviewViewPosition::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;
@@ -1455,7 +1456,7 @@ Bool SEIMultiviewViewPosition::checkCfg( const TComSlice* slice )
 
 
 #if NH_3D
-Void SEIAlternativeDepthInfo::setupFromCfgFile(const Char* cfgFile)
+Void SEIAlternativeDepthInfo::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
   IntAry1d defAppLayerIds, defAppPocs, defAppTids, defAppVclNaluTypes;

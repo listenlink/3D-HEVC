@@ -202,7 +202,7 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 #if NH_MV
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, Int layerId, bool isField )
 #else
-Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOPid, TComSlice*& rpcSlice, Bool isField )
+Void TEncSlice::initEncSlice( TComPic* pcPic, const Int pocLast, const Int pocCurr, const Int iGOPid, TComSlice*& rpcSlice, const Bool isField )
 #endif
 {
   Double dQP;
@@ -396,7 +396,16 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
     if ( eSliceType==I_SLICE )
 #endif
     {
-      dQPFactor=0.57*dLambda_scale;
+      if (m_pcCfg->getIntraQpFactor()>=0.0 && m_pcCfg->getGOPEntry(iGOPid).m_sliceType != I_SLICE)
+      {
+        dQPFactor=m_pcCfg->getIntraQpFactor();
+      }
+      else
+      {
+        Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? NumberBFrames/2 : NumberBFrames) );
+        
+        dQPFactor=0.57*dLambda_scale;
+      }
     }
     dLambda = dQPFactor*pow( 2.0, qp_temp/3.0 );
 
@@ -427,15 +436,25 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
   dQP     = m_pdRdPicQp    [0];
   iQP     = m_piRdPicQp    [0];
 
-  if( rpcSlice->getSliceType( ) != I_SLICE )
-  {
+
 #if NH_MV
-    dLambda *= m_pcCfg->getLambdaModifier( m_pcCfg->getGOPEntry((eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid).m_temporalId );
+  const Int temporalId=m_pcCfg->getGOPEntry((eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid).m_temporalId;
 #else
-    dLambda *= m_pcCfg->getLambdaModifier( m_pcCfg->getGOPEntry(iGOPid).m_temporalId );
+  const Int temporalId=m_pcCfg->getGOPEntry(iGOPid).m_temporalId;
 #endif
+  const std::vector<Double> &intraLambdaModifiers=m_pcCfg->getIntraLambdaModifier();
+
+  Double lambdaModifier;
+  if( rpcSlice->getSliceType( ) != I_SLICE || intraLambdaModifiers.empty())
+  {
+    lambdaModifier = m_pcCfg->getLambdaModifier( temporalId );
+  }
+  else
+  {
+    lambdaModifier = intraLambdaModifiers[ (temporalId < intraLambdaModifiers.size()) ? temporalId : (intraLambdaModifiers.size()-1) ];
   }
 
+  dLambda *= lambdaModifier;
   setUpLambda(rpcSlice, dLambda, iQP);
 
 #if NH_3D_VSO
@@ -546,11 +565,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
 
   rpcSlice->setDepth            ( depth );
 
-#if NH_MV
-  pcPic->setTLayer( m_pcCfg->getGOPEntry( (eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid ).m_temporalId );
-#else
-  pcPic->setTLayer( m_pcCfg->getGOPEntry(iGOPid).m_temporalId );
-#endif
+  pcPic->setTLayer( temporalId );
   if(eSliceType==I_SLICE)
   {
     pcPic->setTLayer(0);
@@ -588,6 +603,7 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
 // Public member functions
 // ====================================================================================================================
 
+//! set adaptive search range based on poc difference
 Void TEncSlice::setSearchRange( TComSlice* pcSlice )
 {
   Int iCurrPOC = pcSlice->getPOC();
@@ -597,15 +613,14 @@ Void TEncSlice::setSearchRange( TComSlice* pcSlice )
   Int iMaxSR = m_pcCfg->getSearchRange();
   Int iNumPredDir = pcSlice->isInterP() ? 1 : 2;
 
-  for (Int iDir = 0; iDir <= iNumPredDir; iDir++)
+  for (Int iDir = 0; iDir < iNumPredDir; iDir++)
   {
-    //RefPicList e = (RefPicList)iDir;
     RefPicList  e = ( iDir ? REF_PIC_LIST_1 : REF_PIC_LIST_0 );
     for (Int iRefIdx = 0; iRefIdx < pcSlice->getNumRefIdx(e); iRefIdx++)
     {
       iRefPOC = pcSlice->getRefPic(e, iRefIdx)->getPOC();
-      Int iNewSR = Clip3(8, iMaxSR, (iMaxSR*ADAPT_SR_SCALE*abs(iCurrPOC - iRefPOC)+iOffset)/iGOPSize);
-      m_pcPredSearch->setAdaptiveSearchRange(iDir, iRefIdx, iNewSR);
+      Int newSearchRange = Clip3(m_pcCfg->getMinSearchWindow(), iMaxSR, (iMaxSR*ADAPT_SR_SCALE*abs(iCurrPOC - iRefPOC)+iOffset)/iGOPSize);
+      m_pcPredSearch->setAdaptiveSearchRange(iDir, iRefIdx, newSearchRange);
     }
   }
 }
@@ -695,7 +710,11 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
 #endif
 
     // compute RD cost and choose the best
-    Double dPicRdCost = m_pcRdCost->calcRdCost64( m_uiPicTotalBits, uiPicDist, true, DF_SSE_FRAME); // NOTE: Is the 'true' parameter really necessary?
+#if NH_3D
+    Double dPicRdCost = m_pcRdCost->calcRdCost( (Double)m_uiPicTotalBits, uiPicDist, DF_SSE_FRAME);
+#else
+    Double dPicRdCost = m_pcRdCost->calcRdCost( (Double)m_uiPicTotalBits, (Double)uiPicDist, DF_SSE_FRAME);
+#endif
 #if H_3D
     // Above calculation need to be fixed for VSO, including frameLambda value. 
 #endif
@@ -804,7 +823,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
       printf("Weighted Prediction is not supported with slice mode determined by max number of bins.\n"); exit(0);
     }
 
-    xEstimateWPParamSlice( pcSlice );
+    xEstimateWPParamSlice( pcSlice, m_pcCfg->getWeightedPredictionMethod() );
     pcSlice->initWpScaling(pcSlice->getSPS());
 
     // check WP on/off
@@ -848,7 +867,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     if( pcSlice->getDependentSliceSegmentFlag() && ctuRsAddr != firstCtuRsAddrOfTile )
     {
       // This will only occur if dependent slice-segments (m_entropyCodingSyncContextState=true) are being used.
-      if( pCurrentTile->getTileWidthInCtus() >= 2 || !m_pcCfg->getWaveFrontsynchro() )
+      if( pCurrentTile->getTileWidthInCtus() >= 2 || !m_pcCfg->getEntropyCodingSyncEnabledFlag() )
       {
         m_pppcRDSbacCoder[0][CI_CURR_BEST]->loadContexts( &m_lastSliceSegmentEndContextState );
       }
@@ -891,7 +910,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     {
       m_pppcRDSbacCoder[0][CI_CURR_BEST]->resetEntropy(pcSlice);
     }
-    else if ( ctuXPosInCtus == tileXPosInCtus && m_pcCfg->getWaveFrontsynchro())
+    else if ( ctuXPosInCtus == tileXPosInCtus && m_pcCfg->getEntropyCodingSyncEnabledFlag())
     {
       // reset and then update contexts to the state at the end of the top-right CTU (if within current slice and tile).
       m_pppcRDSbacCoder[0][CI_CURR_BEST]->resetEntropy(pcSlice);
@@ -1030,7 +1049,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     pcSlice->setSliceSegmentBits(pcSlice->getSliceSegmentBits()+numberOfWrittenBits);
 
     // Store probabilities of second CTU in line into buffer - used only if wavefront-parallel-processing is enabled.
-    if ( ctuXPosInCtus == tileXPosInCtus+1 && m_pcCfg->getWaveFrontsynchro())
+    if ( ctuXPosInCtus == tileXPosInCtus+1 && m_pcCfg->getEntropyCodingSyncEnabledFlag())
     {
       m_entropyCodingSyncContextState.loadContexts(m_pppcRDSbacCoder[0][CI_CURR_BEST]);
     }

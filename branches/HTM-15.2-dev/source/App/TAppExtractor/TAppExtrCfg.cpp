@@ -57,7 +57,7 @@ namespace po = df::program_options_lite;
 /** \param argc number of arguments
     \param argv array of arguments
  */
-Bool TAppExtrCfg::parseCfg( Int argc, Char* argv[] )
+Bool TAppExtrCfg::parseCfg( Int argc, TChar* argv[] )
 {
   bool do_help = false;
   string cfg_InputBitstreamFile;

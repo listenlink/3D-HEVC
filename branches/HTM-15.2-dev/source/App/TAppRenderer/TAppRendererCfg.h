@@ -58,9 +58,9 @@ class TAppRendererCfg
 protected:
 
   //// file I/O ////
-  Char*              m_pchVideoInputFileBaseName;      ///< input video  file base name, placeholder for numbering $$
-  Char*              m_pchDepthInputFileBaseName;      ///< input depth  file base name, placeholder for numbering $$
-  Char*              m_pchSynthOutputFileBaseName;     ///< output synth file base name, placeholder for numbering $$
+  TChar*             m_pchVideoInputFileBaseName;      ///< input video  file base name, placeholder for numbering $$
+  TChar*             m_pchDepthInputFileBaseName;      ///< input depth  file base name, placeholder for numbering $$
+  TChar*             m_pchSynthOutputFileBaseName;     ///< output synth file base name, placeholder for numbering $$
   Bool               m_bContOutputFileNumbering;       ///< use continous numbering instead of view numbering
   Bool               m_bSweep;                         ///< 1: Store view range in file
 
@@ -72,9 +72,9 @@ protected:
 
 
   // derived
-  std::vector<Char*> m_pchVideoInputFileList;          ///< source file names
-  std::vector<Char*> m_pchDepthInputFileList;          ///< source depth file names
-  std::vector<Char*> m_pchSynthOutputFileList;         ///< output reconstruction file names
+  std::vector<TChar*> m_pchVideoInputFileList;         ///< source file names
+  std::vector<TChar*> m_pchDepthInputFileList;         ///< source depth file names
+  std::vector<TChar*> m_pchSynthOutputFileList;        ///< output reconstruction file names
 
   //// source specification ////
   Int                m_iSourceWidth;                   ///< source width in pixel
@@ -83,10 +83,10 @@ protected:
   Int                m_iFramesToBeRendered;            ///< number of rendered frames
 
   ////camera specification ////
-  Char*               m_pchCameraParameterFile;         ///< camera parameter file
-  Char*               m_pchSynthViewCameraNumbers;      ///< numbers of views to synthesize
-  Char*               m_pchViewConfig;                  ///< String to setup renderer
-  Char*               m_pchBaseViewCameraNumbers;       ///< numbers of base views
+  TChar*             m_pchCameraParameterFile;         ///< camera parameter file
+  TChar*             m_pchSynthViewCameraNumbers;      ///< numbers of views to synthesize
+  TChar*             m_pchViewConfig;                  ///< String to setup renderer
+  TChar*             m_pchBaseViewCameraNumbers;       ///< numbers of base views
 
   // derived
   TAppComCamPara      m_cCameraData;                    ///< class to store camera parameters
@@ -122,7 +122,7 @@ protected:
 
   Void xCreateFileNames();
   Void xGetMaxPrecision( IntAry1d adIn, Int& iPrecBefore, Int& iPrecAfter );
-  Void xAddNumberToFileName( Char* pchSourceFileName, Char*& rpchTargetFileName, Int iNumberToAdd, UInt uiPrecBefore, UInt uiPrecAfter );
+  Void xAddNumberToFileName( TChar* pchSourceFileName, TChar*& rpchTargetFileName, Int iNumberToAdd, UInt uiPrecBefore, UInt uiPrecAfter );
 public:
   TAppRendererCfg();
   virtual ~TAppRendererCfg();
@@ -130,8 +130,8 @@ public:
 public:
   Void  create    ();                                         ///< create option handling class
   Void  destroy   ();                                         ///< destroy option handling class
-  Bool  parseCfg  ( Int argc, Char* argv[] );                 ///< parse configuration file to fill member variables
-  Bool  xConfirmParameter(Bool bflag, const Char* message);
+  Bool  parseCfg  ( Int argc, TChar* argv[] );                 ///< parse configuration file to fill member variables
+  Bool  xConfirmParameter(Bool bflag, const TChar* message);
 
 
 };// END CLASS DEFINITION TAppRendererCfg

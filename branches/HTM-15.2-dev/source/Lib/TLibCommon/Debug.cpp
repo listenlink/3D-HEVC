@@ -48,9 +48,9 @@ static const UInt settingValueWidth = 3;
 
 #if DEBUG_STRING
 // these strings are used to reorder the debug output so that the encoder and decoder match.
-const Char *debug_reorder_data_inter_token[MAX_NUM_COMPONENT+1]
+const TChar *debug_reorder_data_inter_token[MAX_NUM_COMPONENT+1]
  = {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"} ;
-const Char *partSizeToString[NUMBER_OF_PART_SIZES]={"2Nx2N(0)", "2NxN(1)", "Nx2N(2)", "NxN(3)", "2Nx(N/2+3N/2)(4)", "2Nx(3N/2+N/2)(5)", "(N/2+3N/2)x2N(6)", "(3N/2+N/2)x2N(7)"};
+const TChar *partSizeToString[NUMBER_OF_PART_SIZES]={"2Nx2N(0)", "2NxN(1)", "Nx2N(2)", "NxN(3)", "2Nx(N/2+3N/2)(4)", "2Nx(3N/2+N/2)(5)", "(N/2+3N/2)x2N(6)", "(3N/2+N/2)x2N(7)"};
 #endif
 
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -177,6 +177,9 @@ Void printMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(O0043_BEST_EFFORT_DECODING,                                        settingNameWidth, settingValueWidth);
+
+  PRINT_CONSTANT(ME_ENABLE_ROUNDING_OF_MVS,                                         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(U0040_MODIFIED_WEIGHTEDPREDICTION_WITH_BIPRED_AND_CLIPPING,        settingNameWidth, settingValueWidth);
 
   //------------------------------------------------
 
@@ -417,7 +420,7 @@ std::string indentNewLines(const std::string &input, const UInt indentBy)
 // --------------------------------------------------------------------------------------------------------------------- //
 
 
-Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross, const UInt numSubBlocksUp, const UInt defWidth )
+Void printBlockToStream( std::ostream &ss, const TChar *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross, const UInt numSubBlocksUp, const UInt defWidth )
 {
   const UInt numValidComp=src.getNumberValidComponents();
 

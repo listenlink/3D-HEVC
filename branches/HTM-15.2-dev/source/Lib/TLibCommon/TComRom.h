@@ -148,7 +148,7 @@ extern std::map< Level::Name, TComGeneralTierAndLevelLimits > g_generalTierAndLe
 // ====================================================================================================================
 // Misc.
 // ====================================================================================================================
-extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
+extern       SChar   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 #if NH_MV
 // Change later
 #ifndef ENC_DEC_TRACE
@@ -205,9 +205,9 @@ extern Bool   g_traceMotionInfoBeforUniPred;
 #define D_DEC_INDENT( b )            decIndent        ( b );
 #define D_PRINT_INC_INDENT( b, str ) prinStrIncIndent( b, str );
 #define D_PRINT_INDENT( b, str )     printStrIndent   ( b, str);
- Void           tracePSHeader   ( const Char* psName, Int layerId ); 
- Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
- Void           writeToTraceFile( const Char* symbolName, Bool doIt );
+ Void           tracePSHeader   ( const TChar* psName, Int layerId ); 
+ Void           writeToTraceFile( const TChar* symbolName, Int val, Bool doIt );
+ Void           writeToTraceFile( const TChar* symbolName, Bool doIt );
  UInt64         incSymbolCounter();          
  Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );           
  Void           printStr         ( std::string str );
@@ -242,9 +242,10 @@ extern Bool   g_traceMotionInfoBeforUniPred;
 #define D_PRINT_INDENT( b, str );
 #endif
 #endif
-const Char* nalUnitTypeToString(NalUnitType type);
-extern const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
-extern const Char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
+const TChar* nalUnitTypeToString(NalUnitType type);
+
+extern const TChar *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
+extern const TChar *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 extern const Int g_quantTSDefault4x4[4*4];
 extern const Int g_quantIntraDefault8x8[8*8];
 extern const Int g_quantInterDefault8x8[8*8];

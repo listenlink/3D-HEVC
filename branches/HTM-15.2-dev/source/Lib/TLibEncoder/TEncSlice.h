@@ -119,8 +119,8 @@ public:
   Void    initEncSlice        ( TComPic* pcPic, Int pocLast, Int pocCurr, 
                                 Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, Int layerId, bool isField  ); 
 #else
-  Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, 
-                                Int iGOPid,   TComSlice*& rpcSlice, Bool isField );
+  Void    initEncSlice        ( TComPic*  pcPic, const Int pocLast, const Int pocCurr,
+                                const Int iGOPid,   TComSlice*& rpcSlice, const Bool isField );
 #endif
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
   // compress and encode slice

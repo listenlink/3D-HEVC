@@ -291,7 +291,7 @@ public:
 
   Void       checkDcOfMatrix();
   Void       processRefMatrix(UInt sizeId, UInt listId , UInt refListId );
-  Bool       xParseScalingList(Char* pchFile);
+  Bool       xParseScalingList(const std::string &fileName);
 #if NH_MV
   Void       inferFrom                      ( const TComScalingList& srcScLi );
 #endif
@@ -1425,7 +1425,7 @@ public:
   const IntAry1d& getInvCodedOffset    ( Int viewIndex )               const    { return m_aaaiCodedOffset[viewIndex][1];   }
 #endif
 
-  template <typename T, typename S, typename U> Void xPrintArray( const Char* name, Int numElemDim1, U idx, S numElemDim2, T vec, Bool printNumber, Bool printIdx = true ) const
+  template <typename T, typename S, typename U> Void xPrintArray( const TChar* name, Int numElemDim1, U idx, S numElemDim2, T vec, Bool printNumber, Bool printIdx = true ) const
   {
     std::cout << std::endl; 
     for (Int j = 0; j < numElemDim1; j++ )
@@ -1954,9 +1954,8 @@ private:
   UInt             m_uiMaxDecPicBuffering[MAX_TLAYER];
 #if NH_MV
   UInt             m_uiSpsMaxLatencyIncreasePlus1[MAX_TLAYER];  
-  // Calling a member m_uiMaxLatencyIncrease although it is m_uiMaxLatencyIncreasePlus1 is really bad style.  
 #else
-  UInt             m_uiMaxLatencyIncrease[MAX_TLAYER];  // Really max latency increase plus 1 (value 0 expresses no limit)
+  UInt             m_uiMaxLatencyIncreasePlus1[MAX_TLAYER];
 #endif
 
   Bool             m_useStrongIntraSmoothing;
@@ -2134,7 +2133,6 @@ public:
   Void                   setScalingListFlag( Bool b )                                                    { m_scalingListEnabledFlag  = b;                                       }
   Bool                   getScalingListPresentFlag() const                                               { return m_scalingListPresentFlag;                                     }
   Void                   setScalingListPresentFlag( Bool b )                                             { m_scalingListPresentFlag  = b;                                       }
-  Void                   setScalingList( TComScalingList *scalingList);
   TComScalingList&       getScalingList()                                                                { return m_scalingList;                                                }
   const TComScalingList& getScalingList() const                                                          { return m_scalingList;                                                }
   UInt                   getMaxDecPicBuffering(UInt tlayer) const                                        { return m_uiMaxDecPicBuffering[tlayer];                               }
@@ -2145,8 +2143,8 @@ public:
   Void                   setSpsMaxLatencyIncreasePlus1( UInt ui , UInt tlayer)                           { m_uiSpsMaxLatencyIncreasePlus1[tlayer] = ui;                         }
   Int                    getSpsMaxLatencyPictures( Int i )  const                                       { return ( getSpsMaxNumReorderPics(i) + getSpsMaxLatencyIncreasePlus1(i)-1); }
 #else
-  UInt                   getMaxLatencyIncrease(UInt tlayer) const                                        { return m_uiMaxLatencyIncrease[tlayer];                               }
-  Void                   setMaxLatencyIncrease( UInt ui , UInt tlayer)                                   { m_uiMaxLatencyIncrease[tlayer] = ui;                                 }
+  UInt                   getMaxLatencyIncreasePlus1(UInt tlayer) const                                   { return m_uiMaxLatencyIncreasePlus1[tlayer];                          }
+  Void                   setMaxLatencyIncreasePlus1( UInt ui , UInt tlayer)                              { m_uiMaxLatencyIncreasePlus1[tlayer] = ui;                            }
 #endif
 
 #if NH_MV
@@ -2165,32 +2163,6 @@ public:
 
   const TComSPSRExt&     getSpsRangeExtension() const                                                    { return m_spsRangeExtension;                                          }
   TComSPSRExt&           getSpsRangeExtension()                                                          { return m_spsRangeExtension;                                          }
-
-  // Sequence parameter set range extension syntax
-  // WAS: getUseResidualRotation and setUseResidualRotation
-  // Now getSpsRangeExtension().getTransformSkipRotationEnabledFlag and getSpsRangeExtension().setTransformSkipRotationEnabledFlag
-
-  // WAS: getUseSingleSignificanceMapContext and setUseSingleSignificanceMapContext
-  // Now: getSpsRangeExtension().getTransformSkipContextEnabledFlag and getSpsRangeExtension().setTransformSkipContextEnabledFlag
-
-  // WAS: getUseResidualDPCM and setUseResidualDPCM
-  // Now: getSpsRangeExtension().getRdpcmEnabledFlag and getSpsRangeExtension().setRdpcmEnabledFlag and
-
-  // WAS: getUseExtendedPrecision and setUseExtendedPrecision
-  // Now: getSpsRangeExtension().getExtendedPrecisionProcessingFlag and getSpsRangeExtension().setExtendedPrecisionProcessingFlag
-
-  // WAS: getDisableIntraReferenceSmoothing and setDisableIntraReferenceSmoothing
-  // Now: getSpsRangeExtension().getIntraSmoothingDisabledFlag and getSpsRangeExtension().setIntraSmoothingDisabledFlag
-
-  // WAS: getUseHighPrecisionPredictionWeighting and setUseHighPrecisionPredictionWeighting
-  // Now: getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag and getSpsRangeExtension().setHighPrecisionOffsetsEnabledFlag
-
-  // WAS: getUseGolombRiceParameterAdaptation and setUseGolombRiceParameterAdaptation
-  // Now: getSpsRangeExtension().getPersistentRiceAdaptationEnabledFlag and getSpsRangeExtension().setPersistentRiceAdaptationEnabledFlag
-
-  // WAS: getAlignCABACBeforeBypass and setAlignCABACBeforeBypass
-  // Now: getSpsRangeExtension().getCabacBypassAlignmentEnabledFlag and getSpsRangeExtension().setCabacBypassAlignmentEnabledFlag
-
 
 #if NH_MV
 
@@ -2298,10 +2270,10 @@ public:
 
   Void    setListEntryL0( Int i, Int  val )                      { m_RefPicSetIdxL0[i] = val;                                          } 
   Void    setListEntryL1( Int i, Int  val )                      { m_RefPicSetIdxL1[i] = val;                                          } 
-
-
 #endif
+
 };
+
 
 /// PPS RExt class
 class TComPPSRExt // Names aligned to text specification
@@ -2555,27 +2527,6 @@ public:
 
   const TComPPSRExt&     getPpsRangeExtension() const                                     { return m_ppsRangeExtension;                   }
   TComPPSRExt&           getPpsRangeExtension()                                           { return m_ppsRangeExtension;                   }
-
-  // WAS: getTransformSkipLog2MaxSize and setTransformSkipLog2MaxSize
-  // Now: getPpsRangeExtension().getLog2MaxTransformSkipBlockSize and getPpsRangeExtension().setLog2MaxTransformSkipBlockSize
-
-  // WAS: getUseCrossComponentPrediction and setUseCrossComponentPrediction
-  // Now: getPpsRangeExtension().getCrossComponentPredictionEnabledFlag and getPpsRangeExtension().setCrossComponentPredictionEnabledFlag
-
-  // WAS: clearChromaQpAdjTable
-  // Now: getPpsRangeExtension().clearChromaQpOffsetList
-
-  // WAS: getMaxCuChromaQpAdjDepth and setMaxCuChromaQpAdjDepth
-  // Now: getPpsRangeExtension().getDiffCuChromaQpOffsetDepth and getPpsRangeExtension().setDiffCuChromaQpOffsetDepth
-
-  // WAS: getChromaQpAdjTableSize
-  // Now: getPpsRangeExtension().getChromaQpOffsetListLen
-
-  // WAS: getChromaQpAdjTableAt and setChromaQpAdjTableAt
-  // Now: getPpsRangeExtension().getChromaQpOffsetListEntry and getPpsRangeExtension().setChromaQpOffsetListEntry
-
-  // WAS: getSaoOffsetBitShift and setSaoOffsetBitShift
-  // Now: getPpsRangeExtension().getLog2SaoOffsetScale and getPpsRangeExtension().setLog2SaoOffsetScale
 
 #if NH_MV
   Void    setLayerId( Int  val )                                                     { m_layerId = val;                                           }
@@ -2875,6 +2826,7 @@ public:
   SliceType                   getSliceType() const                                   { return m_eSliceType;                                          }
   Int                         getPOC() const                                         { return m_iPOC;                                                }
   Int                         getSliceQp() const                                     { return m_iSliceQp;                                            }
+  Bool                        getUseWeightedPrediction() const                       { return( (m_eSliceType==P_SLICE && testWeightPred()) || (m_eSliceType==B_SLICE && testWeightBiPred()) ); }
   Bool                        getDependentSliceSegmentFlag() const                   { return m_dependentSliceSegmentFlag;                           }
   Void                        setDependentSliceSegmentFlag(Bool val)                 { m_dependentSliceSegmentFlag = val;                            }
 #if ADAPTIVE_QP_SELECTION
@@ -2891,7 +2843,8 @@ public:
   Int                         getNumRefIdx( RefPicList e ) const                     { return m_aiNumRefIdx[e];                                      }
   TComPic*                    getPic()                                               { return m_pcPic;                                               }
   TComPic*                    getRefPic( RefPicList e, Int iRefIdx)                  { return m_apcRefPicList[e][iRefIdx];                           }
-  Int                         getRefPOC( RefPicList e, Int iRefIdx)                  { return m_aiRefPOCList[e][iRefIdx];                            }
+  const TComPic*              getRefPic( RefPicList e, Int iRefIdx) const            { return m_apcRefPicList[e][iRefIdx];                           }
+  Int                         getRefPOC( RefPicList e, Int iRefIdx) const            { return m_aiRefPOCList[e][iRefIdx];                            }
 #if NH_3D
   Bool                        getInCmpPredAvailFlag( )                 const         { return m_inCmpPredAvailFlag;                                  }
   Bool                        getCpAvailableFlag( )                    const         { return m_cpAvailableFlag;                                     }
@@ -3179,7 +3132,7 @@ public:
 #endif
 
   Void                        setEnableTMVPFlag( Bool   b )                          { m_enableTMVPFlag = b;                                         }
-  Bool                        getEnableTMVPFlag()                                    { return m_enableTMVPFlag;                                      }
+  Bool                        getEnableTMVPFlag() const                              { return m_enableTMVPFlag;                                      }
 
   Void                        setEncCABACTableIdx( SliceType idx )                   { m_encCABACTableIdx = idx;                                     }
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }

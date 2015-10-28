@@ -127,6 +127,9 @@ private:
   Int                             m_iPOCLastDisplay;              ///< last POC in display order
 #endif
   std::ofstream                   m_seiMessageFileStream;         ///< Used for outputing SEI messages.  
+
+  SEIColourRemappingInfo*         m_pcSeiColourRemappingInfoPrevious;
+
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
@@ -205,6 +208,10 @@ protected:
   Void  xFlushOutput                       ( );
   Void  xCropAndOutput                     ( TComPic* curPic );  
 #endif
+
+private:
+  Void applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingInfo& pCriSEI, const TComSPS &activeSPS);
+  Void xOutputColourRemapPic(TComPic* pcPic);
 };
 
 //! \}

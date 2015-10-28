@@ -92,9 +92,9 @@ Void TComInputBitstream::resetToStart()
   m_numBitsRead=0;
 }
 
-Char* TComOutputBitstream::getByteStream() const
+UChar* TComOutputBitstream::getByteStream() const
 {
-  return (Char*) &m_fifo.front();
+  return (UChar*) &m_fifo.front();
 }
 
 UInt TComOutputBitstream::getByteStreamLength()

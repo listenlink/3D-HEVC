@@ -59,7 +59,7 @@ static std::vector<UInt> writeAnnexB(std::ostream& out, const AccessUnit& au)
     const NALUnitEBSP& nalu = **it;
     UInt size = 0; /* size of annexB unit in bytes */
 
-    static const Char start_code_prefix[] = {0,0,0,1};
+    static const UChar start_code_prefix[] = {0,0,0,1};
     if (it == au.begin() || nalu.m_nalUnitType == NAL_UNIT_VPS || nalu.m_nalUnitType == NAL_UNIT_SPS || nalu.m_nalUnitType == NAL_UNIT_PPS)
     {
       /* From AVC, When any of the following conditions are fulfilled, the
@@ -70,12 +70,12 @@ static std::vector<UInt> writeAnnexB(std::ostream& out, const AccessUnit& au)
        *    unit of an access unit in decoding order, as specified by subclause
        *    7.4.1.2.3.
        */
-      out.write(start_code_prefix, 4);
+      out.write(reinterpret_cast<const TChar*>(start_code_prefix), 4);
       size += 4;
     }
     else
     {
-      out.write(start_code_prefix+1, 3);
+      out.write(reinterpret_cast<const TChar*>(start_code_prefix+1), 3);
       size += 3;
     }
     out << nalu.m_nalUnitData.str();

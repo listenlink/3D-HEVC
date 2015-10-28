@@ -61,17 +61,17 @@ class TAppEncCfg
 protected:
   // file I/O
 #if NH_MV
-  std::vector<char*>     m_pchInputFileList;                  ///< source file names
+  std::vector<TChar*>     m_pchInputFileList;                  ///< source file names
 #else
-  Char*     m_pchInputFile;                                   ///< source file name
+  std::string m_inputFileName;                                ///< source file name
 #endif
-  Char*     m_pchBitstreamFile;                               ///< output bitstream file
+  std::string m_bitstreamFileName;                            ///< output bitstream file
 #if NH_MV
   std::vector<char*>     m_pchReconFileList;                  ///< output reconstruction file names
   Int                    m_numberOfLayers;                    ///< number of Layers to Encode
   Int                    m_iNumberOfViews;                    ///< number of Layers that are views
 #else
-  Char*     m_pchReconFile;                                   ///< output reconstruction file
+  std::string m_reconFileName;                                ///< output reconstruction file
 #endif
   #if NH_MV
 // VPS specification
@@ -111,34 +111,34 @@ protected:
   Bool m_allLayersIdrAlignedFlag;
   Bool m_bitRatePresentVpsFlag;
   Bool m_picRatePresentVpsFlag;
-  BoolAry2d              m_bitRatePresentFlag;
-  BoolAry2d              m_picRatePresentFlag;
-  IntAry2d               m_avgBitRate;
-  IntAry2d               m_maxBitRate;
-  IntAry2d               m_constantPicRateIdc;
-  IntAry2d               m_avgPicRate;
-  Bool                              m_tilesNotInUseFlag; 
-  BoolAry1d               m_tilesInUseFlag;
-  BoolAry1d               m_loopFilterNotAcrossTilesFlag; 
-  Bool                              m_wppNotInUseFlag;
-  BoolAry1d               m_wppInUseFlag;
+  BoolAry2d m_bitRatePresentFlag;
+  BoolAry2d m_picRatePresentFlag;
+  IntAry2d  m_avgBitRate;
+  IntAry2d  m_maxBitRate;
+  IntAry2d  m_constantPicRateIdc;
+  IntAry2d  m_avgPicRate;
+  Bool      m_tilesNotInUseFlag; 
+  BoolAry1d m_tilesInUseFlag;
+  BoolAry1d m_loopFilterNotAcrossTilesFlag; 
+  Bool      m_wppNotInUseFlag;
+  BoolAry1d m_wppInUseFlag;
 
-  BoolAry2d              m_tileBoundariesAlignedFlag;  
-  Bool m_ilpRestrictedRefLayersFlag;
-  IntAry2d               m_minSpatialSegmentOffsetPlus1;
-  BoolAry2d              m_ctuBasedOffsetEnabledFlag;
-  IntAry2d               m_minHorizontalCtuOffsetPlus1;
-  Bool m_singleLayerForNonIrapFlag;
-  Bool m_higherLayerIrapSkipFlag;
-
-
+  BoolAry2d m_tileBoundariesAlignedFlag;  
+  Bool      m_ilpRestrictedRefLayersFlag;
+  IntAry2d  m_minSpatialSegmentOffsetPlus1;
+  BoolAry2d m_ctuBasedOffsetEnabledFlag;
+  IntAry2d  m_minHorizontalCtuOffsetPlus1;
+  Bool      m_singleLayerForNonIrapFlag;
+  Bool      m_higherLayerIrapSkipFlag;
 #if NH_3D
   Bool      m_abUseIC;
   Bool      m_bUseLowLatencyICEnc;
 #endif
-
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
+  std::vector<Double> m_adIntraLambdaModifier;                ///< Lambda modifier for Intra pictures, one for each temporal layer. If size>temporalLayer, then use [temporalLayer], else if size>0, use [size()-1], else use m_adLambdaModifier.
+  Double    m_dIntraQpFactor;                                 ///< Intra Q Factor. If negative, use a default equation: 0.57*(1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? (GopSize-1)/2 : GopSize-1) ))
+
   // source specification
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
   UInt      m_FrameSkip;                                   ///< number of skipped frames from the beginning
@@ -159,6 +159,7 @@ protected:
   Int       m_confWinBottom;
   Int       m_framesToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
+  Bool      m_AccessUnitDelimiter;                            ///< add Access Unit Delimiter NAL units
   InputColourSpaceConversion m_inputColourSpaceConvert;       ///< colour space conversion to apply to input video
   Bool      m_snrInternalColourSpace;                       ///< if true, then no colour space conversion is applied for snr calculation, otherwise inverse of input is applied.
   Bool      m_outputInternalColourSpace;                    ///< if true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.
@@ -236,7 +237,7 @@ protected:
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
   Int       m_iQP;                                            ///< QP value of key-picture (integer)
 #endif
-  Char*     m_pchdQPFile;                                     ///< QP offset for each slice (initialized from external file)
+  std::string m_dQPFileName;                                  ///< QP offset for each slice (initialized from external file)
 #if NH_MV
   std::vector<Int*> m_aidQP;                                    ///< array of slice QP values for each layer
 #else
@@ -337,25 +338,25 @@ protected:
 #endif
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
   Bool      m_bDisableIntraPUsInInterSlices;                  ///< Flag for disabling intra predicted PUs in inter slices.
-  Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
+  MESearchMethod m_motionEstimationSearchMethod;
+  Bool      m_bRestrictMESampling;                            ///< Restrict sampling for the Selective ME
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
+  Int       m_minSearchWindow;                                ///< ME minimum search window size for the Adaptive Window ME
   Bool      m_bClipForBiPredMeEnabled;                        ///< Enables clipping for Bi-Pred ME.
   Bool      m_bFastMEAssumingSmootherMVEnabled;               ///< Enables fast ME assuming a smoother MV.
 #if NH_MV
   Bool      m_bUseDisparitySearchRangeRestriction;            ///< restrict vertical search range for inter-view prediction
   Int       m_iVerticalDisparitySearchRange;                  ///< ME vertical search range for inter-view prediction
 #endif
-  Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
+  FastInterSearchMode m_fastInterSearchMode;                  ///< Parameter that controls fast encoder settings
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
   Bool      m_bUseCbfFastMode;                              ///< flag for using Cbf Fast PU Mode Decision
   Bool      m_useEarlySkipDetection;                         ///< flag for using Early SKIP Detection
-  Int       m_sliceMode;                                     ///< 0: no slice limits, 1 : max number of CTBs per slice, 2: max number of bytes per slice,
-                                                             ///< 3: max number of tiles per slice
+  SliceConstraint m_sliceMode;
   Int       m_sliceArgument;                                 ///< argument according to selected slice mode
-  Int       m_sliceSegmentMode;                              ///< 0: no slice segment limits, 1 : max number of CTBs per slice segment, 2: max number of bytes per slice segment,
-                                                             ///< 3: max number of tiles per slice segment
+  SliceConstraint m_sliceSegmentMode;
   Int       m_sliceSegmentArgument;                          ///< argument according to selected slice segment mode
 
   Bool      m_bLFCrossSliceBoundaryFlag;  ///< 1: filter across slice boundaries 0: do not filter across slice boundaries
@@ -365,22 +366,21 @@ protected:
   Int       m_numTileRowsMinus1;
   std::vector<Int> m_tileColumnWidth;
   std::vector<Int> m_tileRowHeight;
-  Int       m_iWaveFrontSynchro; //< 0: no WPP. >= 1: WPP is enabled, the "Top right" from which inheritance occurs is this LCU offset in the line above the current.
-  Int       m_iWaveFrontFlush; //< enable(1)/disable(0) the CABAC flush at the end of each line of LCUs.
+  Bool      m_entropyCodingSyncEnabledFlag;
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
   Bool      m_bFastUDIUseMPMEnabled;
   Bool      m_bFastMEForGenBLowDelayEnabled;
   Bool      m_bUseBLambdaForNonKeyLowDelayPictures;
 
-  Int       m_decodedPictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
-  Int       m_recoveryPointSEIEnabled;
-  Int       m_bufferingPeriodSEIEnabled;
-  Int       m_pictureTimingSEIEnabled;
+  HashType  m_decodedPictureHashSEIType;                      ///< Checksum mode for decoded picture hash SEI message
+  Bool      m_recoveryPointSEIEnabled;
+  Bool      m_bufferingPeriodSEIEnabled;
+  Bool      m_pictureTimingSEIEnabled;
   Bool      m_toneMappingInfoSEIEnabled;
-  Bool      m_chromaSamplingFilterSEIenabled;
-  Int       m_chromaSamplingHorFilterIdc;
-  Int       m_chromaSamplingVerFilterIdc;
+  Bool      m_chromaResamplingFilterSEIenabled;
+  Int       m_chromaResamplingHorFilterIdc;
+  Int       m_chromaResamplingVerFilterIdc;
   Int       m_toneMapId;
   Bool      m_toneMapCancelFlag;
   Bool      m_toneMapPersistenceFlag;
@@ -407,22 +407,22 @@ protected:
   Int*      m_startOfCodedInterval;
   Int*      m_codedPivotValue;
   Int*      m_targetPivotValue;
-  Int       m_framePackingSEIEnabled;
+  Bool      m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
-  Int       m_segmentedRectFramePackingSEIEnabled;
+  Bool      m_segmentedRectFramePackingSEIEnabled;
   Bool      m_segmentedRectFramePackingSEICancel;
   Int       m_segmentedRectFramePackingSEIType;
   Bool      m_segmentedRectFramePackingSEIPersistence;
   Int       m_displayOrientationSEIAngle;
-  Int       m_temporalLevel0IndexSEIEnabled;
-  Int       m_gradualDecodingRefreshInfoEnabled;
+  Bool      m_temporalLevel0IndexSEIEnabled;
+  Bool      m_gradualDecodingRefreshInfoEnabled;
   Int       m_noDisplaySEITLayer;
-  Int       m_decodingUnitInfoSEIEnabled;
-  Int       m_SOPDescriptionSEIEnabled;
-  Int       m_scalableNestingSEIEnabled;
+  Bool      m_decodingUnitInfoSEIEnabled;
+  Bool      m_SOPDescriptionSEIEnabled;
+  Bool      m_scalableNestingSEIEnabled;
   Bool      m_tmctsSEIEnabled;
   Bool      m_timeCodeSEIEnabled;
   Int       m_timeCodeSEINumTs;
@@ -441,6 +441,7 @@ protected:
   // weighted prediction
   Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices
   Bool      m_useWeightedBiPred;                  ///< Use of bi-directional weighted prediction in B slices
+  WeightedPredictionMethod m_weightedPredictionMethod;
 
   UInt      m_log2ParallelMergeLevel;                         ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                                ///< Max number of merge candidates
@@ -454,7 +455,13 @@ protected:
   Bool      m_RCUseLCUSeparateModel;              ///< use separate R-lambda model at LCU level                        NOTE: code-tidy - rename to m_RCUseCtuSeparateModel
   Int       m_RCInitialQP;                        ///< inital QP for rate control
   Bool      m_RCForceIntraQP;                     ///< force all intra picture to use initial QP or not
-  
+
+#if U0132_TARGET_BITS_SATURATION
+  Bool      m_RCCpbSaturationEnabled;             ///< enable target bits saturation to avoid CPB overflow and underflow
+  UInt      m_RCCpbSize;                          ///< CPB size
+  Double    m_RCInitialCpbFullness;               ///< initial CPB fullness 
+#endif
+
 #if KWU_RC_VIEWRC_E0227
   vector<Int>     m_viewTargetBits;
   Bool      m_viewWiseRateCtrl;                              ///< Flag for using view-wise rate control
@@ -463,8 +470,8 @@ protected:
   UInt       m_depthMADPred;
 #endif
 
-ScalingListMode m_useScalingListId;                         ///< using quantization matrix
-  Char*     m_scalingListFile;                                ///< quantization matrix file name
+  ScalingListMode m_useScalingListId;                         ///< using quantization matrix
+  std::string m_scalingListFileName;                          ///< quantization matrix file name
 
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
@@ -508,6 +515,8 @@ ScalingListMode m_useScalingListId;                         ///< using quantizat
   Int       m_maxBitsPerMinCuDenom;                           ///< Indicates an upper bound for the number of bits of coding_unit() data
   Int       m_log2MaxMvLengthHorizontal;                      ///< Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
+  std::string m_colourRemapSEIFileRoot;
+
   std::string m_summaryOutFilename;                           ///< filename to use for producing summary output file.
   std::string m_summaryPicFilenameBase;                       ///< Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended.
   UInt        m_summaryVerboseness;                           ///< Specifies the level of the verboseness of the text output.
@@ -527,12 +536,12 @@ ScalingListMode m_useScalingListId;                         ///< using quantizat
   // Output Format
   Bool      m_depth420OutputFlag;                             ///< Output depth layers in 4:2:0 format
   // Camera parameters
-  Char*     m_pchCameraParameterFile;                         ///< camera parameter file
-  Char*     m_pchBaseViewCameraNumbers;
+  TChar*    m_pchCameraParameterFile;                         ///< camera parameter file
+  TChar*    m_pchBaseViewCameraNumbers;
   TAppComCamPara m_cCameraData;
   Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
 #if NH_3D_VSO
-  Char*     m_pchVSOConfig;
+  TChar*    m_pchVSOConfig;
   Bool      m_bUseVSO;                                        ///< flag for using View Synthesis Optimization
   Bool      m_bVSOLSTable;                                    ///< Depth QP dependent Lagrange parameter optimization (m23714)
   Bool      m_bVSOEarlySkip;                                  ///< Early skip of VSO computation (JCT3V-A0093 modification 4)
@@ -673,7 +682,7 @@ public:
 public:
   Void  create    ();                                         ///< create option handling class
   Void  destroy   ();                                         ///< destroy option handling class
-  Bool  parseCfg  ( Int argc, Char* argv[] );                 ///< parse configuration file to fill member variables
+  Bool  parseCfg  ( Int argc, TChar* argv[] );                ///< parse configuration file to fill member variables
 
 };// END CLASS DEFINITION TAppEncCfg
 

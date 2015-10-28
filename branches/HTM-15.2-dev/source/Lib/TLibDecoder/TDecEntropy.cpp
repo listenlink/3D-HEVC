@@ -504,7 +504,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 
-      UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+      const UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 )
       {
         if ( !hasMergedCandList )
@@ -546,7 +546,6 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       }
       else
       {
-        uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
 
 #if NH_3D_MLC
 #if NH_3D_VSP
