@@ -114,7 +114,7 @@ TAppComCamPara::xInit2dArray( UInt uiNum1Ids, UInt uiNum2Ids, Int**& raaiArray, 
 
 
 Void
-TAppComCamPara::convertNumberString( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec )
+TAppComCamPara::convertNumberString( TChar* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec )
 {
   Bool bStringIsRange = false;
   Int  iIdx           = 0;
@@ -130,9 +130,9 @@ TAppComCamPara::convertNumberString( Char* pchViewNumberString, std::vector<Int>
     iIdx++;
   }
 
-  Char* pcNextStart = pchViewNumberString;
-  Char* pcEnd       = pcNextStart + iIdx;
-  Char* pcOldStart  = 0;
+  TChar* pcNextStart = pchViewNumberString;
+  TChar* pcEnd       = pcNextStart + iIdx;
+  TChar* pcOldStart  = 0;
 
   while( pcNextStart < pcEnd )
   {
@@ -191,7 +191,7 @@ TAppComCamPara::convertNumberString( Char* pchViewNumberString, std::vector<Int>
 
 
 Void
-TAppComCamPara::xReadCameraParameterFile( Char* pchCfgFileName )
+TAppComCamPara::xReadCameraParameterFile( TChar* pchCfgFileName )
 {
   std::ifstream cCfgStream( pchCfgFileName, std::ifstream::in );
   if( !cCfgStream )
@@ -219,13 +219,13 @@ TAppComCamPara::xReadCameraParameterFile( Char* pchCfgFileName )
       continue;
     }
 
-    Char* pcNextStart = (Char*) cLine.data();
-    Char* pcEnd = pcNextStart + cLine.length();
+    TChar* pcNextStart = (TChar*) cLine.data();
+    TChar* pcEnd = pcNextStart + cLine.length();
 
     std::vector<Double> caNewLine;
     caNewLine.clear();
 
-    Char* pcOldStart = 0;
+    TChar* pcOldStart = 0;
     while( pcNextStart < pcEnd )
     {
       errno = 0;
@@ -1093,7 +1093,7 @@ TAppComCamPara::xSetupBaseViewsFromCoded()
   }
 }
 
-Void TAppComCamPara::xSetupBaseViews( Char* pchBaseViewNumbers, UInt uiNumBaseViews )
+Void TAppComCamPara::xSetupBaseViews( TChar* pchBaseViewNumbers, UInt uiNumBaseViews )
   {
     // init list
     std::vector<Int> aiViewsInCfg;
@@ -1141,9 +1141,9 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
                       UInt   uiCodedCamParsPrecision,
                       UInt   uiStartFrameId,
                       UInt   uiNumFrames,
-                      Char*  pchCfgFileName,
-                      Char*  pchBaseViewNumbers,
-                      Char*  pchSynthViewNumbers,
+                      TChar* pchCfgFileName,
+                      TChar* pchBaseViewNumbers,
+                      TChar* pchSynthViewNumbers,
                       std::vector<Int>* paiSynthViewNumbers,
                       Int    iLog2Precision )
 {

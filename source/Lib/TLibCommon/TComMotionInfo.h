@@ -56,7 +56,7 @@ class TComDataCU;
 /// parameters for AMVP
 typedef struct _AMVPInfo
 {
-  TComMv m_acMvCand[ AMVP_MAX_NUM_CANDS_MEM ];  ///< array of motion vector predictor candidates
+  TComMv m_acMvCand[ AMVP_MAX_NUM_CANDS ];  ///< array of motion vector predictor candidates
   Int    iN;                                ///< number of motion vector predictor candidates
 } AMVPInfo;
 
@@ -121,7 +121,7 @@ class TComCUMvField
 private:
   TComMv*   m_pcMv;
   TComMv*   m_pcMvd;
-  Char*     m_piRefIdx;
+  SChar*    m_piRefIdx;
   UInt      m_uiNumPartition;
   AMVPInfo  m_cAMVPInfo;
     
@@ -187,9 +187,9 @@ public:
     m_piRefIdx = src->m_piRefIdx + offset;
   }
   
-  Void compress(Char* pePredMode, Int scale); 
+  Void compress(SChar* pePredMode, Int scale);
 #if NH_MV
-  Void print   (Char* pePredMode);
+  Void print   (SChar* pePredMode);
 #endif
 };
 

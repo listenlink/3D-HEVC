@@ -377,6 +377,9 @@ Void TAppEncTop::xInitLibCfg()
   {
     m_cTEncTop.setLambdaModifier                                  ( uiLoop, m_adLambdaModifier[ uiLoop ] );
   }
+  m_cTEncTop.setIntraLambdaModifier                               ( m_adIntraLambdaModifier );
+  m_cTEncTop.setIntraQpFactor                                     ( m_dIntraQpFactor );
+
 #if NH_MV
   m_cTEncTop.setQP                                                ( m_iQP[layerIdInVps] );
 #else
@@ -384,7 +387,7 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 
   m_cTEncTop.setPad                                               ( m_aiPad );
-
+  m_cTEncTop.setAccessUnitDelimiter                               ( m_AccessUnitDelimiter );
 #if NH_MV
   m_cTEncTop.setMaxTempLayer                                      ( m_maxTempLayerMvc[layerIdInVps] );
 #else
@@ -407,11 +410,13 @@ Void TAppEncTop::xInitLibCfg()
 
   //====== Motion search ========
   m_cTEncTop.setDisableIntraPUsInInterSlices                      ( m_bDisableIntraPUsInInterSlices );
-  m_cTEncTop.setFastSearch                                        ( m_iFastSearch  );
+  m_cTEncTop.setMotionEstimationSearchMethod                      ( m_motionEstimationSearchMethod  );
   m_cTEncTop.setSearchRange                                       ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange                                 ( m_bipredSearchRange );
   m_cTEncTop.setClipForBiPredMeEnabled                            ( m_bClipForBiPredMeEnabled );
   m_cTEncTop.setFastMEAssumingSmootherMVEnabled                   ( m_bFastMEAssumingSmootherMVEnabled );
+  m_cTEncTop.setMinSearchWindow                                   ( m_minSearchWindow );
+  m_cTEncTop.setRestrictMESampling                                ( m_bRestrictMESampling );
 
 #if NH_MV
   m_cTEncTop.setUseDisparitySearchRangeRestriction                ( m_bUseDisparitySearchRangeRestriction );
@@ -438,6 +443,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setQPAdaptationRange                                 ( m_iQPAdaptationRange );
   m_cTEncTop.setExtendedPrecisionProcessingFlag                   ( m_extendedPrecisionProcessingFlag );
   m_cTEncTop.setHighPrecisionOffsetsEnabledFlag                   ( m_highPrecisionOffsetsEnabledFlag );
+
+  m_cTEncTop.setWeightedPredictionMethod( m_weightedPredictionMethod );
+
   //====== Tool list ========
   m_cTEncTop.setDeltaQpRD                                         ( m_uiDeltaQpRD  );
   m_cTEncTop.setFastDeltaQp                                       ( m_bFastDeltaQP  );
@@ -462,7 +470,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setQuadtreeTULog2MinSize                             ( m_uiQuadtreeTULog2MinSize );
   m_cTEncTop.setQuadtreeTUMaxDepthInter                           ( m_uiQuadtreeTUMaxDepthInter );
   m_cTEncTop.setQuadtreeTUMaxDepthIntra                           ( m_uiQuadtreeTUMaxDepthIntra );
-  m_cTEncTop.setUseFastEnc                                        ( m_bUseFastEnc  );
+  m_cTEncTop.setFastInterSearchMode                               ( m_fastInterSearchMode );
   m_cTEncTop.setUseEarlyCU                                        ( m_bUseEarlyCU  );
   m_cTEncTop.setUseFastDecisionForMerge                           ( m_useFastDecisionForMerge  );
   m_cTEncTop.setUseCbfFastMode                                    ( m_bUseCbfFastMode  );
@@ -512,11 +520,11 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setLog2ParallelMergeLevelMinus2                      ( m_log2ParallelMergeLevel - 2 );
 
   //====== Slice ========
-  m_cTEncTop.setSliceMode                                         ( (SliceConstraint) m_sliceMode );
+  m_cTEncTop.setSliceMode                                         ( m_sliceMode );
   m_cTEncTop.setSliceArgument                                     ( m_sliceArgument            );
 
   //====== Dependent Slice ========
-  m_cTEncTop.setSliceSegmentMode                                  (  (SliceConstraint) m_sliceSegmentMode );
+  m_cTEncTop.setSliceSegmentMode                                  ( m_sliceSegmentMode );
   m_cTEncTop.setSliceSegmentArgument                              ( m_sliceSegmentArgument     );
 
   if(m_sliceMode == NO_SLICES )
@@ -539,7 +547,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPCMFilterDisableFlag                              ( m_bPCMFilterDisableFlag);
 
   m_cTEncTop.setIntraSmoothingDisabledFlag                        (!m_enableIntraReferenceSmoothing );
-  m_cTEncTop.setDecodedPictureHashSEIEnabled                      ( m_decodedPictureHashSEIEnabled );
+  m_cTEncTop.setDecodedPictureHashSEIType                         ( m_decodedPictureHashSEIType );
   m_cTEncTop.setRecoveryPointSEIEnabled                           ( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled                         ( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled                           ( m_pictureTimingSEIEnabled );
@@ -570,9 +578,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMISEINominalBlackLevelLumaCodeValue              ( m_nominalBlackLevelLumaCodeValue );
   m_cTEncTop.setTMISEINominalWhiteLevelLumaCodeValue              ( m_nominalWhiteLevelLumaCodeValue );
   m_cTEncTop.setTMISEIExtendedWhiteLevelLumaCodeValue             ( m_extendedWhiteLevelLumaCodeValue );
-  m_cTEncTop.setChromaSamplingFilterHintEnabled                   ( m_chromaSamplingFilterSEIenabled );
-  m_cTEncTop.setChromaSamplingHorFilterIdc                        ( m_chromaSamplingHorFilterIdc );
-  m_cTEncTop.setChromaSamplingVerFilterIdc                        ( m_chromaSamplingVerFilterIdc );
+  m_cTEncTop.setChromaResamplingFilterHintEnabled                 ( m_chromaResamplingFilterSEIenabled );
+  m_cTEncTop.setChromaResamplingHorFilterIdc                      ( m_chromaResamplingHorFilterIdc );
+  m_cTEncTop.setChromaResamplingVerFilterIdc                      ( m_chromaResamplingVerFilterIdc );
   m_cTEncTop.setFramePackingArrangementSEIEnabled                 ( m_framePackingSEIEnabled );
   m_cTEncTop.setFramePackingArrangementSEIType                    ( m_framePackingSEIType );
   m_cTEncTop.setFramePackingArrangementSEIId                      ( m_framePackingSEIId );
@@ -622,6 +630,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setKneeSEINumKneePointsMinus1                        ( m_kneeSEINumKneePointsMinus1 );
   m_cTEncTop.setKneeSEIInputKneePoint                             ( m_kneeSEIInputKneePoint );
   m_cTEncTop.setKneeSEIOutputKneePoint                            ( m_kneeSEIOutputKneePoint );
+  m_cTEncTop.setColourRemapInfoSEIFileRoot                        ( m_colourRemapSEIFileRoot );
   m_cTEncTop.setMasteringDisplaySEI                               ( m_masteringDisplay );
 
 #if NH_MV_SEI
@@ -643,10 +652,10 @@ Void TAppEncTop::xInitLibCfg()
     m_bLFCrossTileBoundaryFlag = true;
   }
   m_cTEncTop.setLFCrossTileBoundaryFlag                           ( m_bLFCrossTileBoundaryFlag );
-  m_cTEncTop.setWaveFrontSynchro                                  ( m_iWaveFrontSynchro );
+  m_cTEncTop.setEntropyCodingSyncEnabledFlag                      ( m_entropyCodingSyncEnabledFlag );
   m_cTEncTop.setTMVPModeId                                        ( m_TMVPModeId );
   m_cTEncTop.setUseScalingListId                                  ( m_useScalingListId  );
-  m_cTEncTop.setScalingListFile                                   ( m_scalingListFile   );
+  m_cTEncTop.setScalingListFileName                               ( m_scalingListFileName );
   m_cTEncTop.setSignHideFlag                                      ( m_signHideFlag);
 #if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
   if(!m_cTEncTop.getIsDepth())    //only for texture
@@ -668,6 +677,12 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseLCUSeparateModel                               ( m_RCUseLCUSeparateModel );
   m_cTEncTop.setInitialQP                                         ( m_RCInitialQP );
   m_cTEncTop.setForceIntraQP                                      ( m_RCForceIntraQP );
+#if U0132_TARGET_BITS_SATURATION
+  m_cTEncTop.setCpbSaturationEnabled                              ( m_RCCpbSaturationEnabled );
+  m_cTEncTop.setCpbSize                                           ( m_RCCpbSize );
+  m_cTEncTop.setInitialCpbFullness                                ( m_RCInitialCpbFullness );
+#endif
+
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
@@ -842,12 +857,12 @@ Void TAppEncTop::xCreateLib()
   }
 #else
   // Video I/O
-  m_cTVideoIOYuvInputFile.open( m_pchInputFile,     false, m_inputBitDepth, m_MSBExtendedBitDepth, m_internalBitDepth );  // read  mode
+  m_cTVideoIOYuvInputFile.open( m_inputFileName,     false, m_inputBitDepth, m_MSBExtendedBitDepth, m_internalBitDepth );  // read  mode
   m_cTVideoIOYuvInputFile.skipFrames(m_FrameSkip, m_iSourceWidth - m_aiPad[0], m_iSourceHeight - m_aiPad[1], m_InputChromaFormatIDC);
 
-  if (m_pchReconFile)
+  if (!m_reconFileName.empty())
   {
-    m_cTVideoIOYuvReconFile.open(m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, m_internalBitDepth);  // write mode
+    m_cTVideoIOYuvReconFile.open(m_reconFileName, true, m_outputBitDepth, m_outputBitDepth, m_internalBitDepth);  // write mode
   }
 
   // Neo Decoder
@@ -916,10 +931,10 @@ Void TAppEncTop::xInitLib(Bool isFieldCoding)
  */
 Void TAppEncTop::encode()
 {
-  fstream bitstreamFile(m_pchBitstreamFile, fstream::binary | fstream::out);
+  fstream bitstreamFile(m_bitstreamFileName.c_str(), fstream::binary | fstream::out);
   if (!bitstreamFile)
   {
-    fprintf(stderr, "\nfailed to open bitstream file `%s' for writing\n", m_pchBitstreamFile);
+    fprintf(stderr, "\nfailed to open bitstream file `%s' for writing\n", m_bitstreamFileName.c_str());
     exit(EXIT_FAILURE);
   }
 
@@ -1294,7 +1309,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     }
   }
 #else
-      if (m_pchReconFile)
+      if (!m_reconFileName.empty())
       {
         m_cTVideoIOYuvReconFile.write( pcPicYuvRecTop, pcPicYuvRecBottom, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom, NUM_CHROMA_FORMAT, m_isTopFieldFirst );
       }
@@ -1351,7 +1366,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     }
   }
 #else
-      if (m_pchReconFile)
+      if (!m_reconFileName.empty())
       {
         m_cTVideoIOYuvReconFile.write( pcPicYuvRec, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom,
             NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range  );

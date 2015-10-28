@@ -52,14 +52,12 @@ public:
   Void writeSEImessages(TComBitIf& bs, const SEIMessages &seiList, const TComSPS *sps, Bool isNested);
 
 protected:
-  Void xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSPS *sps);
   Void xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei);
   Void xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei);
   Void xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, const TComSPS *sps);
   Void xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei);
   Void xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, const TComSPS *sps);
   Void xWriteSEIPictureTiming(const SEIPictureTiming& sei, const TComSPS *sps);
-  TComSPS *m_pSPS;
   Void xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei);
   Void xWriteSEIFramePacking(const SEIFramePacking& sei);
   Void xWriteSEISegmentedRectFramePacking(const SEISegmentedRectFramePacking& sei);
@@ -77,9 +75,9 @@ protected:
 #endif
   Void xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstrainedTileSets& sei);
   Void xWriteSEITimeCode(const SEITimeCode& sei);
-  Void xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint& sei/*, TComSPS *sps*/);
-  Void writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint& sei);
+  Void xWriteSEIChromaResamplingFilterHint(const SEIChromaResamplingFilterHint& sei);
   Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
+  Void xWriteSEIColourRemappingInfo(const SEIColourRemappingInfo& sei);
   Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
 
 #if NH_MV_SEI
@@ -109,6 +107,7 @@ protected:
 #if NH_3D
   Void xWriteSEIAlternativeDepthInfo          ( const SEIAlternativeDepthInfo& sei);
 #endif
+  Void xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSPS *sps);
   Void xWriteByteAlign();
 };
 #endif

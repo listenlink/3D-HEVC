@@ -453,7 +453,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
 #else
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const char *syntaxStrings[]={ "pps_range_extension_flag",
+    static const TChar *syntaxStrings[]={ "pps_range_extension_flag",
                                          "pps_multilayer_extension_flag",
                                          "pps_extension_6bits[0]",
                                          "pps_extension_6bits[1]",
@@ -1016,7 +1016,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if NH_MV
     pcSPS->setSpsMaxLatencyIncreasePlus1( uiCode, i );
 #else
-    pcSPS->setMaxLatencyIncrease( uiCode, i );
+    pcSPS->setMaxLatencyIncreasePlus1( uiCode, i );
 #endif
 
     if (!subLayerOrderingInfoPresentFlag)
@@ -1028,7 +1028,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if NH_MV
         pcSPS->setSpsMaxLatencyIncreasePlus1(pcSPS->getSpsMaxLatencyIncreasePlus1(0), i);
 #else
-        pcSPS->setMaxLatencyIncrease(pcSPS->getMaxLatencyIncrease(0), i);
+        pcSPS->setMaxLatencyIncreasePlus1(pcSPS->getMaxLatencyIncreasePlus1(0), i);
 #endif
       }
       break;
@@ -1205,7 +1205,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   {
 
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const char *syntaxStrings[]={ "sps_range_extension_flag",
+    static const TChar *syntaxStrings[]={ "sps_range_extension_flag",
                                          "sps_multilayer_extension_flag",
                                          "sps_extension_6bits[0]",
                                          "sps_extension_6bits[1]",

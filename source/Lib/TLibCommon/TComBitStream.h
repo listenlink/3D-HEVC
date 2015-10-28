@@ -114,7 +114,7 @@ public:
    * NB, data is arranged such that subsequent bytes in the
    * bytestream are stored in ascending addresses.
    */
-  Char* getByteStream() const;
+  UChar* getByteStream() const;
 
   /**
    * Return the number of valid bytes available from  getByteStream()

@@ -78,8 +78,9 @@ public:
   Void initSEISegmentedRectFramePacking(SEISegmentedRectFramePacking *sei);
   Void initSEITempMotionConstrainedTileSets (SEITempMotionConstrainedTileSets *sei, const TComPPS *pps);
   Void initSEIKneeFunctionInfo(SEIKneeFunctionInfo *sei);
-  Void initSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint *sei, Int iHorFilterIndex, Int iVerFilterIndex);
+  Void initSEIChromaResamplingFilterHint(SEIChromaResamplingFilterHint *sei, Int iHorFilterIndex, Int iVerFilterIndex);
   Void initSEITimeCode(SEITimeCode *sei);
+  Bool initSEIColourRemappingInfo(SEIColourRemappingInfo *sei, Int currPOC); // returns true on success, false on failure.
 
   // trailing SEIs
   Void initDecodedPictureHashSEI(SEIDecodedPictureHash *sei, TComPic *pcPic, std::string &rHashString, const BitDepths &bitDepths);

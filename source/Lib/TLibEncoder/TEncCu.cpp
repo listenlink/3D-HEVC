@@ -2215,7 +2215,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
         {
           *earlyDetectionSkipMode = true;
         }
-        else if(m_pcEncCfg->getFastSearch() != SELECTIVE)
+        else if(m_pcEncCfg->getMotionEstimationSearchMethod() != MESEARCH_SELECTIVE)
         {
           Int absoulte_MV=0;
           for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )

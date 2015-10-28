@@ -68,8 +68,27 @@ Void  xTraceSliceHeader ( )
 {
   fprintf( g_hTrace, "=========== Slice ===========\n");
 }
+
+Void  xTraceAccessUnitDelimiter ()
+{
+  fprintf( g_hTrace, "=========== Access Unit Delimiter ===========\n");
+}
+
 #endif
 #endif
+
+Void AUDWriter::codeAUD(TComBitIf& bs, const Int pictureType)
+{
+#if ENC_DEC_TRACE
+  xTraceAccessUnitDelimiter();
+#endif
+
+  assert (pictureType < 3);
+  setBitstream(&bs);
+  WRITE_CODE(pictureType, 3, "pic_type");
+  xWriteRbspTrailingBits();
+}
+
 // ====================================================================================================================
 // Constructor / destructor / create / destroy
 // ====================================================================================================================
@@ -265,7 +284,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   if (pps_extension_present_flag)
   {
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const char *syntaxStrings[]={ "pps_range_extension_flag",
+    static const TChar *syntaxStrings[]={ "pps_range_extension_flag",
                                          "pps_multilayer_extension_flag",
                                          "pps_extension_6bits[0]",
                                          "pps_extension_6bits[1]",
@@ -747,7 +766,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
 #if NH_MV
     WRITE_UVLC( pcSPS->getSpsMaxLatencyIncreasePlus1(i),   "sps_max_latency_increase_plus1[i]" );
 #else
-    WRITE_UVLC( pcSPS->getMaxLatencyIncrease(i),           "sps_max_latency_increase_plus1[i]" );
+    WRITE_UVLC( pcSPS->getMaxLatencyIncreasePlus1(i),      "sps_max_latency_increase_plus1[i]" );
 #endif
     if (!subLayerOrderingInfoPresentFlag)
     {
@@ -857,7 +876,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   if (sps_extension_present_flag)
   {
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const char *syntaxStrings[]={ "sps_range_extension_flag",
+    static const TChar *syntaxStrings[]={ "sps_range_extension_flag",
       "sps_multilayer_extension_flag",
       "sps_extension_6bits[0]",
       "sps_extension_6bits[1]",
