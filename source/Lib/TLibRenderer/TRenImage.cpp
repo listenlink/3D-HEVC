@@ -36,7 +36,7 @@
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
 #include "assert.h"
-#if NH_3D
+#if NH_3D_VSO
 
 
 template<typename T>

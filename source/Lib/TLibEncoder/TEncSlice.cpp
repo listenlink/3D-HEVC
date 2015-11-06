@@ -460,7 +460,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, const Int pocLast, const Int pocCu
   setUpLambda(rpcSlice, dLambda, iQP);
 
 #if NH_3D_VSO
-  m_pcRdCost->setUseLambdaScaleVSO  ( (m_pcCfg->getUseVSO() ||  m_pcCfg->getForceLambdaScaleVSO()) && m_pcCfg->getIsDepth() );
+  m_pcRdCost->setUseLambdaScaleVSO  ( (m_pcCfg->getUseVSO() ||  m_pcCfg->getForceLambdaScaleVSO()) && ( m_pcCfg->getIsDepth()  | m_pcCfg->getIsAuxDepth() ) );
   m_pcRdCost->setLambdaVSO          ( dLambda * m_pcCfg->getLambdaScaleVSO() );
 
   // Should be moved to TEncTop
@@ -469,7 +469,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, const Int pocLast, const Int pocCu
   m_pcRdCost->setDisparityCoeff( m_pcCfg->getDispCoeff() );
 
   // LGE_WVSO_A0119
-  if( m_pcCfg->getUseWVSO() && m_pcCfg->getIsDepth() )
+  if( m_pcCfg->getUseWVSO() && ( m_pcCfg->getIsDepth() || m_pcCfg->getIsAuxDepth() ) )
   {
     m_pcRdCost->setDWeight  ( m_pcCfg->getDWeight()   );
     m_pcRdCost->setVSOWeight( m_pcCfg->getVSOWeight() );
@@ -712,7 +712,7 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
 #endif
 
     // compute RD cost and choose the best
-#if NH_3D
+#if NH_3D_VSO
     Double dPicRdCost = m_pcRdCost->calcRdCost( (Double)m_uiPicTotalBits, uiPicDist, DF_SSE_FRAME);
 #else
     Double dPicRdCost = m_pcRdCost->calcRdCost( (Double)m_uiPicTotalBits, (Double)uiPicDist, DF_SSE_FRAME);
@@ -898,7 +898,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
       {
         iLastPosY = iCurPosY;         
         TEncTop* pcEncTop = (TEncTop*) m_pcCfg; // Fix this later.
-        pcEncTop->setupRenModel( pcSlice->getPOC() , pcSlice->getViewIndex(), pcSlice->getIsDepth() ? 1 : 0, iCurPosY, pcSlice->getSPS()->getMaxCUHeight() );
+        pcEncTop->setupRenModel( pcSlice->getPOC() , pcSlice->getViewIndex(), pcSlice->getIsDepth() || pcSlice->getVPS()->getAuxId( pcSlice->getLayerId()  ) ? 1 : 0, iCurPosY, pcSlice->getSPS()->getMaxCUHeight() );
       }
     }
 #endif

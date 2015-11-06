@@ -40,7 +40,7 @@
 
 #include "TAppRendererTop.h"
 
-#if NH_3D
+#if NH_3D_VSO
 
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy

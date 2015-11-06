@@ -445,7 +445,7 @@ static const std::string NALU_TYPE_STR[] = {
   };
 #endif
 
-#if NH_3D
+#if NH_3D_VSO
 //PICYUV
 #define PICYUV_PAD         16
 

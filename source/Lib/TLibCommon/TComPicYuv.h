@@ -182,10 +182,12 @@ public:
 #if NH_MV
   Bool          getBorderExtension( )     { return m_bIsBorderExtended; }
 #endif
-#if NH_3D
+#if NH_3D_VSO
   // Set Function 
   Void  setLumaTo    ( Pel pVal );  
   Void  setChromaTo  ( Pel pVal );  
+#endif
+#if NH_3D
 #if NH_3D_IV_MERGE
   // sample to block and block to sample conversion
   Void  getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY );

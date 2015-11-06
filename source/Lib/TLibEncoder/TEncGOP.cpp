@@ -1433,8 +1433,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() );
 #endif
-#if NH_3D
+#if NH_3D_QTL
     pcSlice->setIvPicLists( m_ivPicLists );
+#endif
+#if NH_3D
+
 
     Int gopNum = (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid;
     GOPEntry gopEntry      = m_pcCfg->getGOPEntry( gopNum );
@@ -1653,11 +1656,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     flagRec =  ((m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), true) == NULL) ? false: true);
     pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), flagRec ) );
     pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true, pcSlice->getPOC(), false ) );
-#else
-    pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false , pcSlice->getPOC(), true ) );
-    pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true  , pcSlice->getPOC(), false ) );
+#else    
+    Int curAuxId     = pcSlice->getVPS()->getAuxId( getLayerId() ); 
+    Int curDepthFlag = pcSlice->getIsDepth(); 
+    assert( curAuxId == 2 || curDepthFlag  ); 
+    pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false       , 0       , pcSlice->getPOC(), true ) );
+    pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), curDepthFlag, curAuxId, pcSlice->getPOC(), false ) );
 #endif
-
     // LGE_WVSO_A0119
     Bool bUseWVSO  = m_pcEncTop->getUseWVSO();
     pcRdCost->setUseWVSO( bUseWVSO );

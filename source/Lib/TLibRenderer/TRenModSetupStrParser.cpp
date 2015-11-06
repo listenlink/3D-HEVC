@@ -36,7 +36,7 @@
 #include "TRenFilter.h"
 #include "TRenModSetupStrParser.h"
 
-#if NH_3D
+#if NH_3D_VSO
 Int
 TRenModSetupStrParser::getNumOfModels()
 {

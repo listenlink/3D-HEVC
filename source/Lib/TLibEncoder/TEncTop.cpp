@@ -1564,10 +1564,25 @@ Void TEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHo
 
     Int iBaseViewIdx = m_cameraParameters->getBaseSortedId2Id()[ iBaseViewSIdx ];
 
-    TComPicYuv* pcPicYuvVideoRec  = m_ivPicLists->getPicYuv( iBaseViewIdx, false, iPoc, true  );
-    TComPicYuv* pcPicYuvDepthRec  = m_ivPicLists->getPicYuv( iBaseViewIdx, true , iPoc, true  );
-    TComPicYuv* pcPicYuvVideoOrg  = m_ivPicLists->getPicYuv( iBaseViewIdx, false, iPoc, false );
-    TComPicYuv* pcPicYuvDepthOrg  = m_ivPicLists->getPicYuv( iBaseViewIdx, true , iPoc, false );    
+    Int  auxId     =   getVPS()->getAuxId  ( getLayerId() );     
+    Bool depthFlag = ( getVPS()->getDepthId( getLayerId() ) == 1 ); 
+
+    if( auxId == 0 && !depthFlag  )
+    {
+      // Defaults for texture layers
+#if NH_3D
+      depthFlag = true; 
+      auxId     = 0; 
+#else
+      depthFlag = false; 
+      auxId     = 2; 
+#endif
+    }
+
+    TComPicYuv* pcPicYuvVideoRec  = m_ivPicLists->getPicYuv( iBaseViewIdx, false    , 0    , iPoc, true  );
+    TComPicYuv* pcPicYuvDepthRec  = m_ivPicLists->getPicYuv( iBaseViewIdx, depthFlag, auxId, iPoc, true  );
+    TComPicYuv* pcPicYuvVideoOrg  = m_ivPicLists->getPicYuv( iBaseViewIdx, false,     0    , iPoc, false );
+    TComPicYuv* pcPicYuvDepthOrg  = m_ivPicLists->getPicYuv( iBaseViewIdx, depthFlag, auxId, iPoc, false );    
 
     TComPicYuv* pcPicYuvVideoRef  = ( iVideoDistMode == 2 ) ? pcPicYuvVideoOrg  : NULL;
     TComPicYuv* pcPicYuvDepthRef  = ( iDepthDistMode == 2 ) ? pcPicYuvDepthOrg  : NULL;
@@ -1632,7 +1647,7 @@ Void TEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHo
 
     if ( iOrgRefBaseViewSIdx != -1 )
     {
-      pcPicYuvOrgRef = m_ivPicLists->getPicYuv(  m_cameraParameters->getBaseSortedId2Id()[ iOrgRefBaseViewSIdx ] , false, iPoc, false );
+      pcPicYuvOrgRef = m_ivPicLists->getPicYuv(  m_cameraParameters->getBaseSortedId2Id()[ iOrgRefBaseViewSIdx ] , false, 0, iPoc, false );
       AOF ( pcPicYuvOrgRef );
     }
 

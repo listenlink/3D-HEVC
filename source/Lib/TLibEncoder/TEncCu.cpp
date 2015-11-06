@@ -419,9 +419,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   // These are only used if getFastDeltaQp() is true
   const UInt fastDeltaQPCuMaxSize    = Clip3(sps.getMaxCUHeight()>>sps.getLog2DiffMaxMinCodingBlockSize(), sps.getMaxCUHeight(), 32u);
 
-
+#if NH_3D_QTL
 #if NH_3D_QTLPC
   Bool  bLimQtPredFalg    = pcPic->getSlice(0)->getQtPredFlag(); 
+#else
+  Bool  bLimQtPredFalg    = false;
+#endif
   TComPic *pcTexture      = rpcBestCU->getSlice()->getTexturePic();
 
   Bool  depthMapDetect    = (pcTexture != NULL);
@@ -436,7 +439,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu() );
 
-#if NH_3D_QTLPC  
+#if NH_3D_QTL  
   Bool    bTrySplit     = true;
   Bool    bTrySplitDQP  = true;
 #endif
@@ -533,7 +536,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         iQP = lowestQP;
       }
 
-#if NH_3D_QTLPC
+#if NH_3D_QTL
       bTrySplit    = true;
 #endif
 
@@ -551,7 +554,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       }
 
       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if NH_3D_QTLPC
+#if NH_3D_QTL
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
 #if H_3D_FCO
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ) && pcTexture->getReconMark())
@@ -733,7 +736,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         }
 #endif
       }
-#if NH_3D_QTLPC      
+#if NH_3D_QTL
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
       {
         bTrySplitDQP = bTrySplit;
@@ -788,7 +791,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           if(!( (rpcBestCU->getWidth(0)==8) && (rpcBestCU->getHeight(0)==8) ))
           {
             if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() && doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTrySplit
 #endif
 )
@@ -808,7 +811,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           }
 
           if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             && bTryNx2N
 #endif
 )
@@ -829,7 +832,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             }
           }
           if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             && bTry2NxN
 #endif
 )
@@ -870,7 +873,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             if ( bTestAMP_Hor )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -890,7 +893,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -916,7 +919,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             else if ( bTestMergeAMP_Hor )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -938,7 +941,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -965,7 +968,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             if ( bTestAMP_Ver )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -986,7 +989,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -1006,7 +1009,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             else if ( bTestMergeAMP_Ver )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -1026,7 +1029,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -1047,7 +1050,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 
 #else
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             if (bTry2NxN)
             {
 #endif
@@ -1062,7 +1065,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if NH_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             }
             if (bTryNx2N)
             {
@@ -1077,7 +1080,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if NH_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             }
 #endif
 
@@ -1133,7 +1136,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() )
           {
-#if NH_3D_QTLPC //Try IntraNxN
+#if NH_3D_QTL //Try IntraNxN
               if(bTrySplit)
               {
 #endif
@@ -1149,7 +1152,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
               intraCost = std::min(intraCost, tmpIntraCost);
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
-#if NH_3D_QTLPC
+#if NH_3D_QTL
               }
 #endif
           }
@@ -1251,7 +1254,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #else
   const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
 #endif
-#if NH_3D_QTLPC
+#if NH_3D_QTL
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary) && bTrySplitDQP )
 #else
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))

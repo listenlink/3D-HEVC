@@ -45,7 +45,7 @@
 
 #include "TComSlice.h"
 #include "TComRdCostWeightPrediction.h"
-#if NH_3D
+#if NH_3D_VSO
 #include "../TLibRenderer/TRenModel.h"
 #include "TComYuv.h"
 #include "TComTU.h"
@@ -56,7 +56,7 @@
 
 class DistParam;
 class TComPattern;
-#if NH_3D
+#if NH_3D_VSO
 class TComRdCost; 
 #endif
 
@@ -67,10 +67,9 @@ class TComRdCost;
 // for function pointer
 typedef Distortion (*FpDistFunc) (DistParam*); // TODO: can this pointer be replaced with a reference? - there are no NULL checks on pointer.
 
-#if NH_3D
+
 #if NH_3D_VSO
 typedef Dist (TComRdCost::*FpDistFuncVSO) ( Int, Int, Pel*, Int, Pel*, Int, UInt, UInt, Bool );
-#endif
 #endif
 // ====================================================================================================================
 // Class definition

@@ -104,6 +104,7 @@
                                              // MTK_I0072_IVARP_SCALING_FIX
                                              // SEC_ARP_VIEW_REF_CHECK_J0037    Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
                                              // SEC_ARP_REM_ENC_RESTRICT_K0035    Removal of encoder restriction of ARP, JCT3V-K0035
+#define NH_3D_QTL                          1
 #define NH_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units
                                               // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
@@ -495,6 +496,8 @@ typedef       UInt            Distortion;        ///< distortion measurement
 #if NH_MV
 typedef std::vector< std::string > StringAry1d;
 typedef std::vector< StringAry1d > StringAry2d;
+typedef std::vector< std::string > StringAry1d; 
+typedef std::vector< StringAry1d > StringAry2d; 
 typedef std::vector< Int >        IntAry1d;
 typedef std::vector< IntAry1d >   IntAry2d;
 typedef std::vector< IntAry2d >   IntAry3d;
@@ -1002,7 +1005,7 @@ enum DecProcPart
   FINALIZE_PIC
 };
 #endif
-#if NH_3D
+#if NH_3D_VSO
 // Renderer
 enum BlenMod
 {

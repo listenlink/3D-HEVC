@@ -1383,10 +1383,11 @@ public:
 
   /// VPS EXTENSION 2 SYNTAX ELEMENTS
   Int     getDepthId                   ( Int layerIdInNuh)             const    { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPTH_ID ); }
-#if NH_3D                                                             
+#if NH_3D_VSO                                                             
   Bool    getVpsDepthFlag              ( Int layerIdInNuh)             const    { return (getDepthId( layerIdInNuh ) > 0);  }
-  Int     getLayerIdInNuh              ( Int viewIndex, Bool depthFlag ) const;   
-          
+  Int     getLayerIdInNuh              ( Int viewIndex, Bool depthFlag, Int auxId ) const;   
+#endif
+#if NH_3D
   Void    createCamPars                ( Int iNumViews );  
   Void    initCamParaVPS               ( Int vOIdxInVps, Int numCp, Bool cpInSliceSegmentHeaderFlag, Int* cpRefVoi, Int** aaiScale, Int** aaiOffset );                                                
                                        
@@ -2699,7 +2700,7 @@ private:
   Int        m_layerId; 
   Int        m_viewId;
   Int        m_viewIndex; 
-#if NH_3D
+#if NH_3D_VSO
   Bool       m_isDepth;
 #endif
 
@@ -2751,7 +2752,11 @@ private:
   Bool       m_inCmpPredFlag; 
   Bool       m_cpAvailableFlag; 
   Int        m_numViews; 
+#endif
+#if NH_3D_QTL
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
+#endif
+#if NH_3D
   Int**      m_depthToDisparityB; 
   Int**      m_depthToDisparityF; 
   Bool       m_bApplyDIS;
@@ -2849,7 +2854,10 @@ public:
   Int                         getInCmpRefViewIdcs( Int i )             const         { return m_inCmpRefViewIdcs  [i];                               }
   Int                         getNumCurCmpLIds( )                      const         { return (Int) m_inCmpRefViewIdcs.size();                       }
   TComPic*                    getIvPic( Bool depthFlag, Int viewIndex) const         { return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ];    }
+#endif
+#if NH_3D_QTL
   TComPic*                    getTexturePic       ()                                 { return  m_ivPicsCurrPoc[0][ m_viewIndex ];                    }
+
 #endif                            
 #if NH_3D_IC                                                                                                                                          
   Void                        setApplyIC( Bool b )                                   { m_bApplyIC = b;                                               }
@@ -3154,11 +3162,16 @@ public:
 #if NH_3D_ARP                                                                                                                                         
   Int                         getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];                                  }
   Void                        setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;                                   }
-  Bool                        getArpRefPicAvailable  ( RefPicList e, Int viewIdx)    { return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }
+
+  Bool                        getArpRefPicAvailable  ( RefPicList e, Int viewIdx)    { return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, false, 0 )]; }
   IntAry1d                    getPocsInCurrRPSs()                                    { return m_pocsInCurrRPSs;                                      } 
-#endif                                                                                                                                               
+#endif                        
+#endif
+#if NH_3D_VSO
   Void                        setIsDepth            ( Bool isDepth )                 { m_isDepth = isDepth;                                          }
   Bool                        getIsDepth            () const                         { return m_isDepth;                                             }
+#endif
+#if NH_3D
   Void                        setCamparaSlice       ( Int** aaiScale = 0, Int** aaiOffset = 0 );      
 
   IntAry1d                    getCodedScale         () const                         { return m_aaiCodedScale [0];                                   }
@@ -3178,7 +3191,11 @@ public:
   Void                        setCpInvOff( Int j, Int  val )                         { m_aaiCodedOffset[1][j] = val;                                 }
   Int                         getCpInvOff( Int j )                                   { return m_aaiCodedOffset[1][j];                                }
                                                                                                                                                         
+#endif
+#if NH_3D_QTL
   Void                        setIvPicLists( TComPicLists* m_ivPicLists );                                                                              
+#endif
+#if NH_3D
   Void                        setDepthToDisparityLUTs();                                                                                                
                                                                                                                                                         
   Int*                        getDepthToDisparityB( Int refViewIdx )                 { return m_depthToDisparityB[ getVPS()->getVoiInVps( refViewIdx) ];}

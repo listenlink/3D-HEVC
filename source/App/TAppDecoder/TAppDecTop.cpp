@@ -151,10 +151,10 @@ Void TAppDecTop::destroy()
  - destroy internal class
  .
  */
-
 #if NH_MV
-Void TAppDecTop::decode()
+Void TAppDecTop::decode( Int num )
 {
+  m_targetOptLayerSetIdx = m_targetOptLayerSetInd[ num ]; 
   // create & initialize internal classes
   xInitFileIO  ();
   xCreateDecLib();
@@ -212,7 +212,7 @@ Void TAppDecTop::decode()
 #endif
 
 #if !NH_MV
-Void TAppDecTop::decode()
+Void TAppDecTop::decode( )
 {
   Int                 poc;
   TComList<TComPic*>* pcListPic = NULL;
@@ -1091,7 +1091,7 @@ Void TAppDecTop::xDecodeFirstSliceOfPicture( InputNALUnit nalu, Bool sliceIsFirs
     m_initilizedFromVPS = true;
     m_newVpsActivatedbyCurAu  = true; //TBD
     m_newVpsActivatedbyCurPic = true;
-#if NH_3D
+#if NH_3D_VSO
     m_dpb.setVPS( m_vps ); 
 #endif
   }
@@ -1255,7 +1255,7 @@ Void TAppDecTop::xF811GeneralDecProc( InputNALUnit nalu )
     m_decProcCvsg = ANNEX_F;
   }
 
-  if ( m_printVpsInfo  && ( m_decProcCvsg == ANNEX_F ) )
+  if ( m_printVpsInfo  && ( m_decProcCvsg == ANNEX_F ) && ( m_targetOptLayerSetIdx == m_targetOptLayerSetInd[ 0 ] ) )
   {
     m_vps->printScalabilityId();
     m_vps->printLayerDependencies();
@@ -2002,7 +2002,7 @@ Void TAppDecTop::xF813ComDecProcForACodedPic( DecProcPart curPart, Bool picPosIn
     {
       // - After all slices of the current picture have been decoded, the decoding process for ending the decoding of a
       //   coded picture with nuh_layer_id greater than 0 specified in clause F.8.1.6 is invoked.
-      xF816decProcEndDecOfCodPicLIdGrtZero( );
+      xF816decProcEndDecOfCodPicLIdGrtZero( );      
     }
 
     TComSlice* slice = m_curPic->getSlice(0);

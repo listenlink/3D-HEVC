@@ -43,7 +43,7 @@
 #include "TAppRendererCfg.h"
 #include "../../Lib/TAppCommon/program_options_lite.h"
 
-#if NH_3D
+#if NH_3D_VSO
 
 using namespace std;
 namespace po = df::program_options_lite;

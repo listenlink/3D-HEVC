@@ -176,23 +176,21 @@ TAppEncCfg::~TAppEncCfg()
       m_GOPListMvc[i] = NULL;
     }
   }
-#endif
 
-#if NH_3D
+  if ( m_pchBaseViewCameraNumbers != NULL )
+  {
+    free ( m_pchBaseViewCameraNumbers ); 
+  }
+#endif
 #if NH_3D_VSO
   if (  m_pchVSOConfig != NULL)
   {
     free (  m_pchVSOConfig );
   }
-#endif
+  
   if ( m_pchCameraParameterFile != NULL )
   {
     free ( m_pchCameraParameterFile ); 
-  }
-
-  if ( m_pchBaseViewCameraNumbers != NULL )
-  {
-    free ( m_pchBaseViewCameraNumbers ); 
   }
 #endif
 }
@@ -817,7 +815,7 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   ("ViewOrderIndex",                 m_viewOrderIndex              , IntAry1d(1,0),                                 "View Order Index per layer")
   ("ViewId",                         m_viewId                      , IntAry1d(1,0),                                 "View Id per View Order Index")
   ("AuxId",                          m_auxId                       , IntAry1d(1,0),                                 "AuxId per layer")
-#if NH_3D
+#if NH_3D_VSO
   ("DepthFlag",                      m_depthFlag                   , IntAry1d(1,0),                                 "Depth Flag")
 #endif
   ("TargetEncLayerIdList",           m_targetEncLayerIdList        , IntAry1d(0,0),                                 "LayerIds in Nuh to be encoded")  
@@ -1106,30 +1104,30 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
 #if NH_MV
 // A lot of this stuff could should actually be derived by the encoder.
   // VPS VUI
-  ("VpsVuiPresentFlag"           , m_vpsVuiPresentFlag           , false                                           , "VpsVuiPresentFlag           ")
-  ("CrossLayerPicTypeAlignedFlag", m_crossLayerPicTypeAlignedFlag, false                                           , "CrossLayerPicTypeAlignedFlag")  // Could actually be derived by the encoder
-  ("CrossLayerIrapAlignedFlag"   , m_crossLayerIrapAlignedFlag   , false                                           , "CrossLayerIrapAlignedFlag   ")  // Could actually be derived by the encoder
-  ("AllLayersIdrAlignedFlag"     , m_allLayersIdrAlignedFlag     , false                                           , "CrossLayerIrapAlignedFlag   ")  // Could actually be derived by the encoder
-  ("BitRatePresentVpsFlag"       , m_bitRatePresentVpsFlag       , false                                           , "BitRatePresentVpsFlag       ")
-  ("PicRatePresentVpsFlag"       , m_picRatePresentVpsFlag       , false                                           , "PicRatePresentVpsFlag       ")
-  ("BitRatePresentFlag"          , m_bitRatePresentFlag          , BoolAry1d(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "BitRatePresentFlag per sub layer for the N-th layer set")
-  ("PicRatePresentFlag"          , m_picRatePresentFlag          , BoolAry1d(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "PicRatePresentFlag per sub layer for the N-th layer set")
-  ("AvgBitRate"                  , m_avgBitRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "AvgBitRate         per sub layer for the N-th layer set")
-  ("MaxBitRate"                  , m_maxBitRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "MaxBitRate         per sub layer for the N-th layer set")
-  ("ConstantPicRateIdc"          , m_constantPicRateIdc           , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "ConstantPicRateIdc per sub layer for the N-th layer set")
-  ("AvgPicRate"                  , m_avgPicRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "AvgPicRate         per sub layer for the N-th layer set")
-  ("TilesNotInUseFlag"            , m_tilesNotInUseFlag            , true                                          , "TilesNotInUseFlag            ")
+  ("VpsVuiPresentFlag"            , m_vpsVuiPresentFlag            , false                                , "VpsVuiPresentFlag           ")
+  ("CrossLayerPicTypeAlignedFlag" , m_crossLayerPicTypeAlignedFlag , false                                , "CrossLayerPicTypeAlignedFlag")  // Could actually be derived by the encoder
+  ("CrossLayerIrapAlignedFlag"    , m_crossLayerIrapAlignedFlag    , false                                , "CrossLayerIrapAlignedFlag   ")  // Could actually be derived by the encoder
+  ("AllLayersIdrAlignedFlag"      , m_allLayersIdrAlignedFlag      , false                                , "CrossLayerIrapAlignedFlag   ")  // Could actually be derived by the encoder
+  ("BitRatePresentVpsFlag"        , m_bitRatePresentVpsFlag        , false                                , "BitRatePresentVpsFlag       ")
+  ("PicRatePresentVpsFlag"        , m_picRatePresentVpsFlag        , false                                , "PicRatePresentVpsFlag       ")
+  ("BitRatePresentFlag"           , m_bitRatePresentFlag           , BoolAry1d(1,0), MAX_VPS_OP_SETS_PLUS1, "BitRatePresentFlag per sub layer for the N-th layer set")
+  ("PicRatePresentFlag"           , m_picRatePresentFlag           , BoolAry1d(1,0), MAX_VPS_OP_SETS_PLUS1, "PicRatePresentFlag per sub layer for the N-th layer set")
+  ("AvgBitRate"                   , m_avgBitRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "AvgBitRate         per sub layer for the N-th layer set")
+  ("MaxBitRate"                   , m_maxBitRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "MaxBitRate         per sub layer for the N-th layer set")
+  ("ConstantPicRateIdc"           , m_constantPicRateIdc           , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "ConstantPicRateIdc per sub layer for the N-th layer set")
+  ("AvgPicRate"                   , m_avgPicRate                   , IntAry1d (1,0), MAX_VPS_OP_SETS_PLUS1, "AvgPicRate         per sub layer for the N-th layer set")
+  ("TilesNotInUseFlag"            , m_tilesNotInUseFlag            , true                                 , "TilesNotInUseFlag            ")
   ("TilesInUseFlag"               , m_tilesInUseFlag               , BoolAry1d(1,false)                   , "TilesInUseFlag               ")
-  ("LoopFilterNotAcrossTilesFlag" , m_loopFilterNotAcrossTilesFlag , BoolAry1d(1,false)                  , "LoopFilterNotAcrossTilesFlag ")
-  ("WppNotInUseFlag"              , m_wppNotInUseFlag              , true                                          , "WppNotInUseFlag              ")
-  ("WppInUseFlag"                 , m_wppInUseFlag                 , BoolAry1d(1,0)                      , "WppInUseFlag                 ")
-  ("TileBoundariesAlignedFlag"   , m_tileBoundariesAlignedFlag   , BoolAry1d(1,0)  ,MAX_NUM_LAYERS       , "TileBoundariesAlignedFlag    per direct reference for the N-th layer")
-  ("IlpRestrictedRefLayersFlag"  , m_ilpRestrictedRefLayersFlag  , false                                           , "IlpRestrictedRefLayersFlag")
-  ("MinSpatialSegmentOffsetPlus1", m_minSpatialSegmentOffsetPlus1 , IntAry1d (1,0), MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
-  ("CtuBasedOffsetEnabledFlag"   , m_ctuBasedOffsetEnabledFlag   , BoolAry1d(1,0)  ,MAX_NUM_LAYERS       , "CtuBasedOffsetEnabledFlag    per direct reference for the N-th layer")
-  ("MinHorizontalCtuOffsetPlus1" , m_minHorizontalCtuOffsetPlus1  , IntAry1d (1,0), MAX_NUM_LAYERS       , "MinHorizontalCtuOffsetPlus1  per direct reference for the N-th layer")
-  ("SingleLayerForNonIrapFlag", m_singleLayerForNonIrapFlag, false                                          , "SingleLayerForNonIrapFlag")
-  ("HigherLayerIrapSkipFlag"  , m_higherLayerIrapSkipFlag  , false                                          , "HigherLayerIrapSkipFlag  ")
+  ("LoopFilterNotAcrossTilesFlag" , m_loopFilterNotAcrossTilesFlag , BoolAry1d(1,false)                   , "LoopFilterNotAcrossTilesFlag ")
+  ("WppNotInUseFlag"              , m_wppNotInUseFlag              , true                                 , "WppNotInUseFlag              ")
+  ("WppInUseFlag"                 , m_wppInUseFlag                 , BoolAry1d(1,0)                       , "WppInUseFlag                 ")
+  ("TileBoundariesAlignedFlag"    , m_tileBoundariesAlignedFlag    , BoolAry1d(1,0)  ,MAX_NUM_LAYERS      , "TileBoundariesAlignedFlag    per direct reference for the N-th layer")
+  ("IlpRestrictedRefLayersFlag"   , m_ilpRestrictedRefLayersFlag   , false                                , "IlpRestrictedRefLayersFlag")
+  ("MinSpatialSegmentOffsetPlus1" , m_minSpatialSegmentOffsetPlus1 , IntAry1d (1,0), MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
+  ("CtuBasedOffsetEnabledFlag"    , m_ctuBasedOffsetEnabledFlag    , BoolAry1d(1,0)  ,MAX_NUM_LAYERS      , "CtuBasedOffsetEnabledFlag    per direct reference for the N-th layer")
+  ("MinHorizontalCtuOffsetPlus1"  , m_minHorizontalCtuOffsetPlus1  , IntAry1d (1,0), MAX_NUM_LAYERS       , "MinHorizontalCtuOffsetPlus1  per direct reference for the N-th layer")
+  ("SingleLayerForNonIrapFlag"    , m_singleLayerForNonIrapFlag    , false                                , "SingleLayerForNonIrapFlag")
+  ("HigherLayerIrapSkipFlag"      , m_higherLayerIrapSkipFlag      , false                                , "HigherLayerIrapSkipFlag  ")
 #endif
 
   ("TransquantBypassEnableFlag",                      m_TransquantBypassEnableFlag,                     false, "transquant_bypass_enable_flag indicator in PPS")
@@ -1289,15 +1287,17 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   ("SeiCfgFileName_%d",                               m_seiCfgFileNames,             (TChar *) 0 ,MAX_NUM_SEIS , "SEI cfg file name %d")
 #endif
   ("OutputVpsInfo",                                   m_outputVpsInfo,                false                     ,"Output information about the layer dependencies and layer sets")
+
+/* Camera parameters */    
+  ("BaseViewCameraNumbers",                           m_pchBaseViewCameraNumbers,   (TChar *) 0                 , "Numbers of base views")
 #endif
 #if NH_3D
-/* Camera parameters */  
   ("Depth420OutputFlag",                              m_depth420OutputFlag,           true                     , "Output depth layers in 4:2:0 ") 
+#endif
+#if NH_3D_VSO  
   ("CameraParameterFile,cpf",                         m_pchCameraParameterFile,    (TChar *) 0                 , "Camera Parameter File Name")
-  ("BaseViewCameraNumbers",                           m_pchBaseViewCameraNumbers,  (TChar *) 0                 , "Numbers of base views")
   ("CodedCamParsPrecision",                           m_iCodedCamParPrecision,      STD_CAM_PARAMETERS_PRECISION, "precision for coding of camera parameters (in units of 2^(-x) luma samples)" )
 
-#if NH_3D_VSO
   /* View Synthesis Optimization */
   ("VSOConfig",                                       m_pchVSOConfig            , (TChar *) 0                   ,"VSO configuration")
   ("VSO",                                             m_bUseVSO                 , false                         ,"Use VSO" )    
@@ -1316,7 +1316,11 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   ("DWeight",                                         m_iDWeight                , 1                             ,"Depth Distortion weight" )
 #endif //HHI_VSO
 /* 3D- HEVC Tools */                                                            
+#if NH_3D_QTL
   ("QTL"                   ,                          m_bUseQTL                 , true                          , "Use depth quad tree limitation (encoder only)" )
+#endif
+#if NH_3D
+
   ("IvMvPredFlag"          ,                          m_ivMvPredFlag            , BoolAry1d(2,true)             , "Inter-view motion prediction"              )
   ("IvMvScalingFlag"       ,                          m_ivMvScalingFlag         , BoolAry1d(2,true)             , "Inter-view motion vector scaling"          )
   ("Log2SubPbSizeMinus3"   ,                          m_log2SubPbSizeMinus3     , 0                             , "Log2 minus 3 of sub Pb size"               )
@@ -1812,7 +1816,7 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   m_iNumberOfViews = (Int) uniqueViewOrderIndices.size(); 
   xResizeVector( m_auxId );
 
-#if NH_3D
+#if NH_3D_VSO
   xResizeVector( m_depthFlag ); 
 #endif
   xResizeVector( m_fQP ); 
@@ -2021,7 +2025,7 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
     }
   }
 
-#if NH_3D
+
 #if NH_3D_VSO
   // Table base optimization 
   // Q&D
@@ -2038,7 +2042,7 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
     Int firstDepthLayer = -1; 
     for (Int layer = 0; layer < m_numberOfLayers; layer++ )
     {
-      if ( m_depthFlag[ layer ])
+      if ( m_depthFlag[ layer ]  || m_auxId[ layer ] == 2 )
       {
         firstDepthLayer = layer;
         break; 
@@ -2075,6 +2079,7 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
       NULL,
       LOG2_DISP_PREC_LUT );
   }
+#if NH_3D
   else
   {
     m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
@@ -2088,19 +2093,8 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
       NULL,
       LOG2_DISP_PREC_LUT );
   }
-#else
-  m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
-    m_internalBitDepth[ CHANNEL_TYPE_LUMA],
-    (UInt) m_iCodedCamParPrecision,
-    m_FrameSkip,
-    (UInt) m_framesToBeEncoded,
-    m_pchCameraParameterFile,
-    m_pchBaseViewCameraNumbers,
-    NULL,
-    NULL,
-    LOG2_DISP_PREC_LUT );
-#endif
   m_cCameraData.check( false, true );
+#endif
 #endif
 
   // check validity of input parameters
@@ -2285,7 +2279,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 8 && m_scalabilityMask != 10, "Scalability Mask must be equal to 2, 8 or 10");
 #endif
 
-#if NH_3D
+#if NH_3D_VSO
   if ( m_scalabilityMask & ( 1 << DEPTH_ID ) )
   {
     m_dimIds.push_back( m_depthFlag ); 
@@ -2644,18 +2638,16 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_defDispWinBottomOffset % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Bottom default display window offset must be an integer multiple of the specified chroma subsampling");
   }
 
-#if NH_3D
+#if NH_3D_VSO
   xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
   xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
   xConfirmPara( m_iNumberOfViews != m_cCameraData.getBaseViewNumbers().size() ,   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
   xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
-#if NH_3D_VSO
     if( m_bUseVSO )
     {
       xConfirmPara(   m_pchVSOConfig            == 0                             ,   "VSO Setup string must be given");
       xConfirmPara( m_uiVSOMode > 4 ,                                                "VSO Mode must be less than 5");
     }
-#endif
 #endif
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
@@ -3429,7 +3421,7 @@ Void TAppEncCfg::xPrintParameter()
   xPrintParaVector( "ViewOrderIdx"  , m_viewOrderIndex ); 
   xPrintParaVector( "AuxId", m_auxId );
 #endif
-#if NH_3D
+#if NH_3D_VSO
   xPrintParaVector( "DepthLayerFlag", m_depthFlag ); 
   printf("Coded Camera Param. Precision     : %d\n", m_iCodedCamParPrecision);  
 #endif
@@ -3631,10 +3623,9 @@ Void TAppEncCfg::xPrintParameter()
   }
 
   printf("Max Num Merge Candidates          : %d\n", m_maxNumMergeCand);
-#if NH_3D
+#if NH_3D_VSO
   printf("BaseViewCameraNumbers             : %s\n", m_pchBaseViewCameraNumbers ); 
   printf("Coded Camera Param. Precision     : %d\n", m_iCodedCamParPrecision);
-#if NH_3D_VSO
   printf("Force use of Lambda Scale         : %d\n", m_bForceLambdaScaleVSO );
 
   if ( m_bUseVSO )
@@ -3652,7 +3643,6 @@ Void TAppEncCfg::xPrintParameter()
     }    
   }
 #endif //HHI_VSO
-#endif //NH_3D
   printf("\n");
 #if NH_MV
   printf("TOOL CFG General: ");
@@ -3719,8 +3709,10 @@ Void TAppEncCfg::xPrintParameter()
   printf(" VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
 #endif
-#if NH_3D
+#if NH_3D_QTL
   printf( "QTL:%d "                  , m_bUseQTL);
+#endif
+#if NH_3D
   printf( "IlluCompEnable:%d "       , m_abUseIC);
   printf( "IlluCompLowLatencyEnc:%d ",  m_bUseLowLatencyICEnc);
   printf( "DLT:%d ", m_useDLT );

@@ -79,7 +79,7 @@ protected:
   IntAry1d               m_viewId;                            ///< view id
   IntAry1d               m_viewOrderIndex;                    ///< view order index  
   IntAry1d               m_auxId;                             ///< auxiliary id
-#if NH_3D
+#if NH_3D_VSO
   IntAry1d               m_depthFlag;                         ///< depth flag
 #endif
   IntAry1d               m_targetEncLayerIdList;              ///< layer Ids in Nuh to be encoded
@@ -532,16 +532,18 @@ protected:
   IntAry1d          m_sbPropMaxBitRate;
 #endif
   Bool              m_outputVpsInfo;
+  TChar*            m_pchBaseViewCameraNumbers;
 #endif
+
 #if NH_3D
   // Output Format
   Bool      m_depth420OutputFlag;                             ///< Output depth layers in 4:2:0 format
-  // Camera parameters
+#endif
+    // Camera parameters
+#if NH_3D_VSO
   TChar*    m_pchCameraParameterFile;                         ///< camera parameter file
-  TChar*    m_pchBaseViewCameraNumbers;
   TAppComCamPara m_cCameraData;
   Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
-#if NH_3D_VSO
   TChar*    m_pchVSOConfig;
   Bool      m_bUseVSO;                                        ///< flag for using View Synthesis Optimization
   Bool      m_bVSOLSTable;                                    ///< Depth QP dependent Lagrange parameter optimization (m23714)
@@ -565,9 +567,13 @@ protected:
   // Ren Model String
   TRenModSetupStrParser       m_cRenModStrParser;
 #endif
-
+#if NH_3D
   Bool       m_useDLT;                                        ///< flag for using DLT
+#endif
+#if NH_3D_QTL
   Bool       m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
+#endif
+#if NH_3D
   BoolAry1d  m_ivMvPredFlag;
   BoolAry1d  m_ivMvScalingFlag;
   Int        m_log2SubPbSizeMinus3;
