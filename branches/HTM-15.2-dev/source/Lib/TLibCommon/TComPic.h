@@ -153,7 +153,7 @@ private:
   Bool                  m_activatesNewVps;
   TComDecodedRps        m_decodedRps;
 #endif
-#if NH_3D
+#if NH_3D_VSO
   Int                   m_viewIndex;
   Bool                  m_isDepth;
   Int**                 m_aaiCodedScale;
@@ -310,7 +310,7 @@ public:
 
    Void          print( Int outputLevel );
 
-#if NH_3D
+#if NH_3D_VSO
    Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
    Int           getViewIndex          () const           { return m_viewIndex;     }
 
@@ -403,7 +403,7 @@ private:
   TComList<TComAu*    >       m_aus;  
   TComList<TComSubDpb*>       m_subDpbs; 
   Bool                        m_printPicOutput; 
-#if NH_3D                     
+#if NH_3D_VSO
   const TComVPS*              m_vps; 
 #endif
 public: 
@@ -447,10 +447,10 @@ public:
   Void                   setPrintPicOutput ( Bool printPicOutput ) { m_printPicOutput = printPicOutput; };
   Void                   print(); 
 
-#if NH_3D                                   
+#if NH_3D_VSO
   Void                   setVPS                        ( const TComVPS* vps ) { m_vps = vps;  }; 
-  TComPic*               getPic                        ( Int viewIndex, Bool depthFlag, Int poc );
-  TComPicYuv*            getPicYuv                     ( Int viewIndex, Bool depthFlag, Int poc, Bool recon );
+  TComPic*               getPic                        ( Int viewIndex, Bool depthFlag, Int auxId, Int poc );
+  TComPicYuv*            getPicYuv                     ( Int viewIndex, Bool depthFlag, Int auxId, Int poc, Bool recon );
 #endif  
 
 }; 

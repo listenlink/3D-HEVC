@@ -40,7 +40,7 @@
 #include <limits>
 #include "TComRom.h"
 #include "TComRdCost.h"
-#if NH_3D
+#if NH_3D_VSO
 #include "TComDataCU.h"
 #include "TComRectangle.h"
 #endif
@@ -502,8 +502,9 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Int bitDep
   cDtParam.bApplyWeight = false;  
 
   cDtParam.bitDepth   = bitDepth;
-
+#if NH_3D
   cDtParam.bUseIC       = false;
+#endif
 #if NH_3D_SDC_INTER
   cDtParam.bUseSDCMRSAD = false;
 #endif

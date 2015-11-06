@@ -45,7 +45,7 @@
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComSlice.h"
 #include <assert.h>
-#if NH_3D
+#if NH_3D_VSO
 #include "TAppCommon/TAppComCamPara.h"
 #include "TLibRenderer/TRenModSetupStrParser.h"
 #endif
@@ -468,13 +468,13 @@ protected:
   Int       m_viewIndex; 
 #endif 
 
-#if NH_3D
+#if NH_3D_VSO
   Bool      m_isDepth;
+  Bool      m_isAuxDepth; 
 
   //====== Camera Parameters ======
   TAppComCamPara* m_cameraParameters; 
   
-#if NH_3D_VSO
   //====== View Synthesis Optimization ======
   TRenModSetupStrParser* m_renderModelParameters; 
   Bool      m_bUseVSO;
@@ -491,15 +491,19 @@ protected:
   Bool      m_bUseEstimatedVSD; 
   Double    m_dDispCoeff;
 #endif
+#if NH_3D
 
   Bool      m_bUseIC;
   Bool      m_bUseICLowLatencyEnc;  
   Bool      m_useDMM;
   Bool      m_useSDC;
   Bool      m_useDLT;
+#endif
+#if NH_3D_QTL
   Bool      m_bUseQTL;
+#endif
+#if NH_3D
   Int       m_profileIdc;
-
 #endif
 public:
   TEncCfg()
@@ -510,11 +514,12 @@ public:
   , m_layerIdInVps(-1)
   , m_viewId(-1)
   , m_viewIndex(-1)
-#if NH_3D
-  , m_isDepth(false)
 #if NH_3D_VSO
+  , m_isDepth(false)
+  , m_isAuxDepth(false)
   , m_bUseVSO(false)
 #endif
+#if NH_3D
   , m_profileIdc( -1 )
 #endif
 #endif
@@ -560,9 +565,13 @@ public:
   Int       getViewId                        ()                   { return m_viewId;    }
   Void      setViewIndex                     ( Int viewIndex  )   { m_viewIndex  = viewIndex;  }
   Int       getViewIndex                     ()                   { return m_viewIndex;    }
-#if NH_3D
+#if NH_3D_VSO
   Void      setIsDepth                       ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth                       ()                 { return m_isDepth; }
+  Void      setIsAuxDepth                    ( Bool isAuxDepth ) { m_isAuxDepth = isAuxDepth; }
+  Bool      getIsAuxDepth                       ()               { return m_isAuxDepth; }
+
+
 #endif
 #endif
   //====== Coding Structure ========
@@ -1187,14 +1196,12 @@ public:
   Void      setSummaryVerboseness(UInt v)                            { m_summaryVerboseness = v; }
   UInt      getSummaryVerboseness( ) const                           { return m_summaryVerboseness; }
 
-#if NH_3D
+#if NH_3D_VSO
   // Only flags that are not in the SPS3dExtension should go here. 
   /// 3D Tools 
 
  //==== CAMERA PARAMETERS  ==========
   Void      setCameraParameters             ( TAppComCamPara* c) { m_cameraParameters   = c; }
-
-#if NH_3D_VSO
  //==== VSO  ==========
   Void      setRenderModelParameters ( TRenModSetupStrParser* c ) { m_renderModelParameters = c; }
   Bool      getUseVSO                       ()              { return m_bUseVSO;     }
@@ -1224,7 +1231,7 @@ public:
   Double    getDispCoeff                    ()              { return m_dDispCoeff;    }
   Void      setDispCoeff                    ( Double  d )   { m_dDispCoeff  = d; }
 #endif // NH_3D_VSO
-
+#if NH_3D
   Bool      getUseDMM                       ()        { return m_useDMM; }
   Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
   Bool      getUseSDC                       ()        { return m_useSDC; }
@@ -1232,9 +1239,13 @@ public:
 
   Bool      getUseDLT                       ()        { return m_useDLT; }
   Void      setUseDLT                       ( Bool b) { m_useDLT = b;    }
+#endif
 
+#if NH_3D_QTL
   Void      setUseQTL                       ( Bool b ) { m_bUseQTL = b;    }
   Bool      getUseQTL                       ()         { return m_bUseQTL; }
+#endif
+#if NH_3D
 
   Void      setProfileIdc( Int a )    { assert( a == 1 || a == 6 || a == 8 ); m_profileIdc = a;  }
   Bool      decProcAnnexI()           { assert( m_profileIdc != -1 ); return ( m_profileIdc == Profile::MAIN3D ); }    

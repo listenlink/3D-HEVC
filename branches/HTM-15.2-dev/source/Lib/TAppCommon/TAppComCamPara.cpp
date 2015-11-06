@@ -48,7 +48,7 @@
 #include <algorithm>
 #include <functional>
 #include <string>
-#if NH_3D
+#if NH_3D_VSO
 
 
 Void
@@ -193,6 +193,8 @@ TAppComCamPara::convertNumberString( TChar* pchViewNumberString, std::vector<Int
 Void
 TAppComCamPara::xReadCameraParameterFile( TChar* pchCfgFileName )
 {
+  assert( pchCfgFileName != NULL );
+
   std::ifstream cCfgStream( pchCfgFileName, std::ifstream::in );
   if( !cCfgStream )
   {

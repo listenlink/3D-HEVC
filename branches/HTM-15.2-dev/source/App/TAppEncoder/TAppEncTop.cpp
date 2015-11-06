@@ -146,6 +146,8 @@ Void TAppEncTop::xInitLibCfg()
   xSetVPSVUI               ( vps ); 
 #if NH_3D
   xSetCamPara              ( vps ); 
+#endif
+#if NH_3D_VSO
   m_ivPicLists.setVPS      ( &vps );
 #endif
 #if NH_3D_DLT
@@ -275,29 +277,31 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setLayerId                      ( layerId );    
     m_cTEncTop.setViewId                       ( vps.getViewId      (  layerId ) );
     m_cTEncTop.setViewIndex                    ( vps.getViewIndex   (  layerId ) );
-#if NH_3D
-    Bool isDepth = ( vps.getDepthId     ( layerId ) != 0 ) ;
-    m_cTEncTop.setIsDepth                      ( isDepth );
+#if NH_3D_VSO
+    Bool isDepth    = ( vps.getDepthId     ( layerId ) != 0  ) ;
+    Bool isAuxDepth = ( vps.getAuxId       ( layerId ) ==  2 ) ; // TBD: define 2 as AUX_DEPTH
+    m_cTEncTop.setIsDepth                  ( isDepth    );
+    m_cTEncTop.setIsAuxDepth               ( isAuxDepth ); 
     //====== Camera Parameters =========
     m_cTEncTop.setCameraParameters             ( &m_cCameraData );     
-#if NH_3D_VSO
     //====== VSO =========
     m_cTEncTop.setRenderModelParameters        ( &m_cRenModStrParser ); 
-    m_cTEncTop.setForceLambdaScaleVSO          ( isDepth ? m_bForceLambdaScaleVSO : false );
-    m_cTEncTop.setLambdaScaleVSO               ( isDepth ? m_dLambdaScaleVSO      : 1     );
-    m_cTEncTop.setVSOMode                      ( isDepth ? m_uiVSOMode            : 0     );
+    m_cTEncTop.setForceLambdaScaleVSO          ( isDepth || isAuxDepth ? m_bForceLambdaScaleVSO : false );
+    m_cTEncTop.setLambdaScaleVSO               ( isDepth || isAuxDepth ? m_dLambdaScaleVSO      : 1     );
+    m_cTEncTop.setVSOMode                      ( isDepth || isAuxDepth ? m_uiVSOMode            : 0     );
 
-    m_cTEncTop.setAllowNegDist                 ( isDepth ? m_bAllowNegDist        : false );
+    m_cTEncTop.setAllowNegDist                 ( isDepth || isAuxDepth ? m_bAllowNegDist        : false );
 
     // SAIT_VSO_EST_A0033
-    m_cTEncTop.setUseEstimatedVSD              ( isDepth ? m_bUseEstimatedVSD     : false );
+    m_cTEncTop.setUseEstimatedVSD              ( isDepth || isAuxDepth ? m_bUseEstimatedVSD     : false );
 
     // LGE_WVSO_A0119
-    m_cTEncTop.setUseWVSO                      ( isDepth ? m_bUseWVSO             : false );   
-    m_cTEncTop.setVSOWeight                    ( isDepth ? m_iVSOWeight           : 0     );
-    m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
-    m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
+    m_cTEncTop.setUseWVSO                      ( isDepth || isAuxDepth ? m_bUseWVSO             : false );   
+    m_cTEncTop.setVSOWeight                    ( isDepth || isAuxDepth ? m_iVSOWeight           : 0     );
+    m_cTEncTop.setVSDWeight                    ( isDepth || isAuxDepth ? m_iVSDWeight           : 0     );
+    m_cTEncTop.setDWeight                      ( isDepth || isAuxDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
+#if NH_3D
 #if NH_3D_IC
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
     m_cTEncTop.setUseICLowLatencyEnc           ( m_bUseLowLatencyICEnc );
@@ -307,7 +311,11 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseDMM                       ( isDepth ? m_intraWedgeFlag   : false );
     m_cTEncTop.setUseSDC                       ( isDepth ? m_intraSdcFlag     : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT   : false );
-    m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL  : false );
+#endif
+#if NH_3D_QTL
+    m_cTEncTop.setUseQTL                       ( isDepth || isAuxDepth ? m_bUseQTL  : false );
+#endif
+#if NH_3D
     m_cTEncTop.setSps3dExtension               ( m_sps3dExtension );
 #endif // NH_3D
 
@@ -810,7 +818,7 @@ Void TAppEncTop::xInitLibCfg()
       {
         TEncTop* pcEncTop =  m_acTEncTopList[ layer ]; 
         Int iViewNum      = pcEncTop->getViewIndex(); 
-        Int iContent      = pcEncTop->getIsDepth() ? 1 : 0; 
+        Int iContent      = pcEncTop->getIsDepth() || pcEncTop->getIsAuxDepth() ? 1 : 0; 
         Int iNumOfModels  = m_cRenModStrParser.getNumOfModelsForView(iViewNum, iContent);
 
         Bool bUseVSO      = (iNumOfModels != 0);
@@ -1042,7 +1050,7 @@ Void TAppEncTop::encode()
     }
     for ( Int gopId=0; gopId < gopSize; gopId++ )
     {
-#if NH_3D
+#if NH_3D_VSO
       UInt iNextPoc = m_acTEncTopList[0] -> getFrameId( gopId );
       if ( iNextPoc < m_framesToBeEncoded )
       {
@@ -1684,7 +1692,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
         {        
           if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
           {          
-            Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
+            Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false, 0 ); 
             if ( nuhLayerIdTex == refLayerIdInNuh )
             {
               for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
@@ -1710,7 +1718,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
               {
                 for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++ )
                 {
-                  Int nuhLayerIdDep = vps.getLayerIdInNuh( vps.getViewIndex( vps.getIdRefListLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[j] ) ), true ); 
+                  Int nuhLayerIdDep = vps.getLayerIdInNuh( vps.getViewIndex( vps.getIdRefListLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[j] ) ), true, 0 ); 
                   if ( nuhLayerIdDep == refLayerIdInNuh )
                   {
                     Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );

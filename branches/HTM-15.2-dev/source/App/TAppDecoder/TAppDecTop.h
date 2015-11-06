@@ -136,11 +136,13 @@ public:
 
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
-  Void  decode            (); ///< main decoding function
+  
 #if NH_MV
+  Void  decode            ( Int i ); ///< main decoding function
   UInt  getNumberOfChecksumErrorsDetected( ) const;
   UInt  getNumberOfChecksumErrorsDetected( Int decIdx ) const { return m_tDecTop[decIdx]->getNumberOfChecksumErrorsDetected(); }
 #else
+  Void  decode            ( ); ///< main decoding function
   UInt  getNumberOfChecksumErrorsDetected() const { return m_cTDecTop.getNumberOfChecksumErrorsDetected(); }
 #endif
 

@@ -43,7 +43,7 @@
 // Include files
 #include "TLibCommon/CommonDef.h"
 #include "assert.h"
-#if NH_3D
+#if NH_3D_VSO
 
 // ====================================================================================================================
 // Constants

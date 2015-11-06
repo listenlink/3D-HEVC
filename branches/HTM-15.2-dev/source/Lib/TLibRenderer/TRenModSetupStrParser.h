@@ -38,7 +38,7 @@
 #include "../TLibCommon/TComPicYuv.h"
 #include "../TLibCommon/TypeDef.h"
 #include "../TAppCommon/TAppComCamPara.h"
-#if NH_3D
+#if NH_3D_VSO
 
 
 

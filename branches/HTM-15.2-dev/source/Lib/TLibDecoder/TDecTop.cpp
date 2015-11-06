@@ -1770,6 +1770,14 @@ Void TDecTop::genUnavailableRefPics( )
         // G.1.2 --> G.1.3
         xG813DecProcForInterLayerRefPicSet();
       }
+      else
+      {
+#if NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS
+        TComDecodedRps* decRps = m_pcPic->getDecodedRps(); 
+        decRps->m_numActiveRefLayerPics0 = 0;
+        decRps->m_numActiveRefLayerPics1 = 0;      
+#endif
+      }
     }
   }
   else

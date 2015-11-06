@@ -117,7 +117,7 @@ TComSlice::TComSlice()
 , m_layerId                       (0)
 , m_viewId                        (0)
 , m_viewIndex                     (0)
-#if NH_3D
+#if NH_3D_VSO
 , m_isDepth                       (false)
 #endif
 #if NH_MV
@@ -2181,15 +2181,19 @@ Int TComVPS::getScalabilityId( Int layerIdInVps, ScalabilityType scalType ) cons
   return getScalabilityMaskFlag( scalType ) ? getDimensionId( layerIdInVps, scalTypeToScalIdx( scalType ) ) : 0;
 }
 
-#if NH_3D
-Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag ) const
+#if NH_3D_VSO
+Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag, Int auxId ) const
 {
   Int foundLayerIdinNuh = -1; 
 
   for (Int layerIdInVps = 0 ; layerIdInVps <= getMaxLayersMinus1(); layerIdInVps++ )
   {
     Int layerIdInNuh = getLayerIdInNuh( layerIdInVps ); 
+#if !NH_3D
+    if( ( getViewIndex( layerIdInNuh ) == viewIndex ) && ( getAuxId( layerIdInNuh ) == ( depthFlag ? 2 : 0 ) )  )
+#else
     if( ( getViewIndex( layerIdInNuh ) == viewIndex ) && ( getDepthId( layerIdInNuh ) == ( depthFlag ? 1 : 0 ) )  )
+#endif
     {
       foundLayerIdinNuh = layerIdInNuh; 
       break; 
@@ -2197,7 +2201,8 @@ Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag ) const
   }
   return foundLayerIdinNuh;
 }
-
+#endif
+#if NH_3D
 Void TComVPS::createCamPars(Int iNumViews)
 {
   m_numCp                     .resize( iNumViews );
@@ -3856,17 +3861,19 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
   }//if(bUseLowLatencyICEnc)
 }
 #endif
-#if NH_3D
+#if NH_3D_QTL
 Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
 {  
   for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
   { 
     for ( Int depthId = 0; depthId < 2; depthId++ )
     {
-      m_ivPicsCurrPoc[ depthId ][ i ] = ( i <= m_viewIndex ) ? m_ivPicLists->getPic( i, ( depthId == 1) , getPOC() ) : NULL;
+      m_ivPicsCurrPoc[ depthId ][ i ] = ( i <= m_viewIndex ) ? m_ivPicLists->getPic( i, ( depthId == 1) , 0, getPOC() ) : NULL;
     }        
   }  
 }
+#endif
+#if NH_3D
 Void TComSlice::setDepthToDisparityLUTs()
 { 
   Bool setupLUT = false; 

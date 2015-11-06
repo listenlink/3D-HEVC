@@ -80,7 +80,9 @@ protected:
 #if NH_MV
   std::vector<TChar*> m_pchReconFiles;                ///< array of output reconstruction file name create from output reconstruction file name
 
-  Int           m_targetOptLayerSetIdx;               ///< target output layer set index
+  std::vector<Int> m_targetOptLayerSetInd;            ///< target output layer set indices (multiple decoding when more than one element, e.g. for additional layer sets)
+  Int           m_targetOptLayerSetIdx;               ///< current target output layer set index
+
   Int           m_targetDecLayerSetIdx;
   Int           m_baseLayerOutputFlag;
   Int           m_baseLayerPicOutputFlag;
@@ -137,6 +139,9 @@ public:
   virtual ~TAppDecCfg() {}
 
   Bool  parseCfg        ( Int argc, TChar* argv[] );   ///< initialize option class from configuration
+#if NH_MV
+  Int   getNumDecodings ( ) { return (Int) m_targetOptLayerSetInd.size();  }; 
+#endif
 };
 
 //! \}
