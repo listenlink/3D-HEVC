@@ -259,7 +259,7 @@ Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
 
   m_numBitsRead += uiNumberOfBits;
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   if ( g_traceBitsRead )
   {
       Bool oldJustDoIt = g_bJustDoIt;

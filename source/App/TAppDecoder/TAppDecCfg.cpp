@@ -108,7 +108,7 @@ Bool TAppDecCfg::parseCfg( Int argc, TChar* argv[] )
 #if O0043_BEST_EFFORT_DECODING
   ("ForceDecodeBitDepth",       m_forceDecodeBitDepth,                 0U,         "Force the decoder to operate at a particular bit-depth (best effort decoding)")
 #endif
-#if NH_MV_SEI
+#if NH_MV
   ("OutputDecodedSEIMessagesFilename,m",  m_outputDecodedSEIMessagesFilename,    string(""), "When non empty, output decoded SEI messages to the indicated file. If file is '-', then output to stdout\n")
 #else
   ("OutputDecodedSEIMessagesFilename",  m_outputDecodedSEIMessagesFilename,    string(""), "When non empty, output decoded SEI messages to the indicated file. If file is '-', then output to stdout\n")

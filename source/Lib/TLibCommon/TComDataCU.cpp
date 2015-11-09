@@ -3096,7 +3096,7 @@ Void TComDataCU::buildMCL(TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNe
   }
 
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   if ( g_traceMergeCandListConst ) 
   {
     for (Int i = 0; i<MRG_IVSHIFT+1; i++)
@@ -3175,7 +3175,7 @@ Void TComDataCU::buildMCL(TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNe
     }
   }
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   if ( g_traceMergeCandListConst )
   {
     std::cout << std::setfill(' ')                          << std::setw( 15 )
@@ -5069,7 +5069,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 
 #if NH_3D_NBDV_REF
         TComPic* picDepth = NULL;   
-#if H_3D_FCO_VSP_DONBDV_E0163
+#if H_3D_FCO
         picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
         if ( picDepth->getPicYuvRec() != NULL  )  
         {
@@ -5135,7 +5135,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           pDInfo->m_acNBDV = cDispVec;
           pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
 #if NH_3D_NBDV_REF
-#if H_3D_FCO_VSP_DONBDV_E0163
+#if H_3D_FCO
           TComPic* picDepth  = NULL;
 
           picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
@@ -5174,7 +5174,7 @@ Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 
 #if NH_3D_NBDV_REF
     TComPic* picDepth = NULL;
-#if H_3D_FCO_VSP_DONBDV_E0163
+#if H_3D_FCO
     picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
     if ( picDepth->getPicYuvRec() != NULL )  
     {
@@ -5268,7 +5268,7 @@ Bool TComDataCU::xCheckSpatialNBDV( const TComDataCU* pcTmpCU, UInt uiIdx, DisIn
 #if NH_3D_NBDV_REF
           TComPic* picDepth = NULL;
           assert(getSlice()->getRefPic(eRefPicList, refId)->getPOC() == getSlice()->getPOC());            
-#if H_3D_FCO_VSP_DONBDV_E0163
+#if H_3D_FCO
           picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
           if ( picDepth->getPicYuvRec() != NULL )  
           {
@@ -5402,13 +5402,9 @@ Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refi
       continue;
     }
 
-#if NH_3D_FIX_NBDV_COL
     // The picture pColCU->getSlice()->getRefPic(eColRefPicList, iColRefIdx) might not be in DPB anymore
     // So don't access it directly.
     iColRefViewIdx = pColCU->getSlice()->getVPS()->getViewOrderIdx( pColCU->getSlice()->getRefLayerId( eColRefPicList, iColRefIdx ) );       
-#else
-    iColRefViewIdx = pColCU->getSlice()->getRefPic(eColRefPicList, iColRefIdx)->getViewIndex();
-#endif
 
 
     if ( iColViewIdx    == iColRefViewIdx ) // temporal vector
@@ -6001,7 +5997,7 @@ Void TComDataCU::setMvFieldPUForVSP( TComDataCU* pcCU, UInt partAddr, Int width,
   // Get depth reference
   Int depthRefViewIdx = pcCU->getDvInfo(partAddr).m_aVIdxCan;
   
-#if H_3D_FCO_VSP_DONBDV_E0163
+#if H_3D_FCO
   TComPic* pRefPicBaseDepth = 0;
   Bool     bIsCurrDepthCoded = false;
   pRefPicBaseDepth  = pcCU->getSlice()->getIvPic( true, pcCU->getSlice()->getViewIndex() );
@@ -6036,7 +6032,7 @@ Void TComDataCU::setMvFieldPUForVSP( TComDataCU* pcCU, UInt partAddr, Int width,
   TComMv cDv  = pcCU->getDvInfo(partAddr).m_acNBDV;
   pcCU->clipMv(cDv);
 
-#if H_3D_FCO_VSP_DONBDV_E0163
+#if H_3D_FCO
   if ( bIsCurrDepthCoded )
   {
       cDv.setZero();

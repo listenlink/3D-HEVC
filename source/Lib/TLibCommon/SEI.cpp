@@ -37,7 +37,7 @@
 
 #include "CommonDef.h"
 #include "SEI.h"
-#if NH_MV_SEI
+#if NH_MV
 #include "TComSlice.h"
 #endif
 
@@ -177,7 +177,7 @@ const TChar *SEI::getSEIMessageString(SEI::PayloadType payloadType)
   }
 }
 
-#if NH_MV_SEI
+#if NH_MV
 SEI::SEI()
 {
   m_scalNestSeiContThisSei = NULL;
@@ -223,10 +223,7 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return new SEITempMotionConstrainedTileSets;
     case SEI::CHROMA_SAMPLING_FILTER_HINT:          return new SEIChromaSamplingFilterHint
 #endif
-#if NH_MV_SEI
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
   case SEI::LAYERS_NOT_PRESENT                    :               return new SEILayersNotPresent;
-#endif
   case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS     :               return new SEIInterLayerConstrainedTileSets;
 #if NH_MV_SEI_TBD
   case SEI::BSP_NESTING                           :               return new SEIBspNesting;
@@ -240,15 +237,12 @@ SEI* SEI::getNewSEIMessage(SEI::PayloadType payloadType)
   case SEI::FRAME_FIELD_INFO                      :               return new SEIFrameFieldInfo;
 #endif
   case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:            return new SEIThreeDimensionalReferenceDisplaysInfo;
-#if SEI_DRI_F0169
   case SEI::DEPTH_REPRESENTATION_INFO             :               return new SEIDepthRepresentationInfo;
-#endif
   case SEI::MULTIVIEW_SCENE_INFO                  :               return new SEIMultiviewSceneInfo;
   case SEI::MULTIVIEW_ACQUISITION_INFO            :               return new SEIMultiviewAcquisitionInfo;
   case SEI::MULTIVIEW_VIEW_POSITION               :               return new SEIMultiviewViewPosition;
 #if NH_3D
   case SEI::ALTERNATIVE_DEPTH_INFO                :               return new SEIAlternativeDepthInfo;
-#endif
 #endif
   default:                                        assert( false ); return NULL;
   }
@@ -339,8 +333,6 @@ Void SEI::xCheckCfg( Bool& wrongConfig, Bool cond, const TChar* errStr )
   }
 }
 
-
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
 Void SEILayersNotPresent::setupFromCfgFile(const TChar* cfgFile)
 {
   // Set default values
@@ -398,7 +390,7 @@ Void SEILayersNotPresent::setupFromCfgFile(const TChar* cfgFile)
 
       return wrongConfig;
   };
-#endif
+
 
 
 Void SEIInterLayerConstrainedTileSets::setupFromCfgFile(const TChar* cfgFile)
@@ -1018,7 +1010,6 @@ Bool SEIThreeDimensionalReferenceDisplaysInfo::checkCfg( const TComSlice* slice 
 
 };
 
-#if SEI_DRI_F0169
 Void SEIDepthRepresentationInfo::setupFromSlice  ( const TComSlice* slice )
 {
 
@@ -1195,7 +1186,7 @@ Bool SEIDepthRepresentationInfo::checkCfg( const TComSlice* slice )
 
     return wrongConfig;
 }
-#endif
+
 
 Void SEIMultiviewSceneInfo::setupFromCfgFile(const TChar* cfgFile)
 {

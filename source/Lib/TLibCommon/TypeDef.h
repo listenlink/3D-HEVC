@@ -63,27 +63,21 @@
 ///////////////////////////////////   FIXES AND INTEGRATIONS     ////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-#define H_MV_HLS_PTL_LIMITS                       0
-#define NH_MV_SEI_TBD                             0
-#define NH_MV_SEI                                 1
-#define NH_MV_FIX_TICKET_106                      1 // Identical motion check.
+
+// Things that needs to be fixed in the Specification: 
 #define NH_MV_FIX_NO_REF_PICS_CHECK               1 // !!SPEC!!
 #define NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS  1 // Derivation of NumActiveRefLayerPIcs. !!SPEC!!
 #define NH_MV_FIX_NUM_POC_TOTAL_CUR               1 // Derivation of NumPocTotalCur for IDR pictures. !!SPEC!!
-#define NH_MV_LAYERS_NOT_PRESENT_SEI              1 // Layers not present SEI message JCTMV-M0043
-#if NH_MV_SEI
-#define SEI_DRI_F0169 1
-#endif
-#endif
-#if NH_3D
-#define H_3D_FIX_ARP_CHECK_NOT_IN_DPB     1
-#define NH_3D_FIX_NBDV_COL                1
+
+// To be done 
+#define NH_MV_HLS_PTL_LIMITS                       0
+#define NH_MV_SEI_TBD                             0
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define NH_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
 #if NH_3D
 #define NH_3D_INTEGER_MV_DEPTH            1
 #define NH_3D_ENC_DEPTH                   1   // Encoder optimizations for depth, incl.
@@ -276,24 +270,39 @@
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
                                               // MTK_FAST_TEXTURE_ENCODING_E0173
 //HLS
-                                             // HHI_DEPENDENCY_SIGNALLING_I1_J0107
-                                             // HHI_TOOL_PARAMETERS_I2_J0107
-                                             // HHI_VPS_3D_EXTENSION_I3_J0107
-                                             // HHI_INTER_COMP_PRED_K0052
-                                             // HHI_RES_PRED_K0052
-                                             // HHI_CAM_PARA_K0052
-                                             // H_3D_DIRECT_DEP_TYPE
+                                              // HHI_DEPENDENCY_SIGNALLING_I1_J0107
+                                              // HHI_TOOL_PARAMETERS_I2_J0107
+                                              // HHI_VPS_3D_EXTENSION_I3_J0107
+                                              // HHI_INTER_COMP_PRED_K0052
+                                              // HHI_RES_PRED_K0052
+                                              // HHI_CAM_PARA_K0052
+                                              // H_3D_DIRECT_DEP_TYPE
+
+#endif // NH_3D
+
+#if NH_MV
+////////////////////////
+/// Consider Removal 
+////////////////////////
+
 // Rate Control
 #define KWU_FIX_URQ                       0
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
-#endif // NH_3D
+
+#define NH_MV_HLS_PTL_LIMITS               0
+
+#if NH_3D
+// Unclear Fix
+#define H_3D_PPS_FIX_DEPTH                     0
+#endif
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_3D
-#define H_3D_OUTPUT_ACTIVE_TOOLS               0
-#define H_3D_REN_MAX_DEV_OUT                   0
+#define NH_3D_OUTPUT_ACTIVE_TOOLS               0
+#define NH_3D_REN_MAX_DEV_OUT                   0
 #endif
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if NH_3D_VSO
@@ -309,10 +318,6 @@
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
 #endif
-///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
-#if NH_3D_ARP
-#define H_3D_ARP_WFNR                     3
-#endif
 /////////////////////////////////////////////////////////////////////////////////////
 /// GT: Move values which are not flags to CommonDef.h and convert to static int !!
 ///////////////////////////////////////////////////////////////////////////////////
@@ -326,22 +331,8 @@
 ///// ***** DEPTH BASED BLOCK PARTITIONING *********
 #if NH_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
-#define DBBP_PACK_MODE               SIZE_2NxN
 #endif
-///// ***** FCO *********
-#if H_3D_FCO
-#define H_3D_FCO_VSP_DONBDV_E0163               1   // Adaptive depth reference for flexible coding order
-#else
-#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
-#endif
-#if H_3D
-#define PPS_FIX_DEPTH                           1
-#endif
-/////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-// TBD: Check if integration is necessary.
-#define H_MV_HLS_PTL_LIMITS                  0
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -496,13 +487,13 @@ typedef       UInt            Distortion;        ///< distortion measurement
 #if NH_MV
 typedef std::vector< std::string > StringAry1d;
 typedef std::vector< StringAry1d > StringAry2d;
-typedef std::vector< std::string > StringAry1d; 
-typedef std::vector< StringAry1d > StringAry2d; 
+
 typedef std::vector< Int >        IntAry1d;
 typedef std::vector< IntAry1d >   IntAry2d;
 typedef std::vector< IntAry2d >   IntAry3d;
 typedef std::vector< IntAry3d >   IntAry4d;
 typedef std::vector< IntAry4d >   IntAry5d;
+
 typedef std::vector< Bool >        BoolAry1d;
 typedef std::vector< BoolAry1d >   BoolAry2d;
 typedef std::vector< BoolAry2d >   BoolAry3d;

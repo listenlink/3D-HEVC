@@ -111,7 +111,7 @@ __inline Void mapDmmToIntraDir(  Int& intraMode ) { if( isDmmMode( intraMode ) )
 // Mode-Dependent DST Matrices
 // ====================================================================================================================
 extern const TMatrixCoeff g_as_DST_MAT_4 [TRANSFORM_NUMBER_OF_DIRECTIONS][4][4];
-#if H_MV_HLS_PTL_LIMITS
+#if NH_MV_HLS_PTL_LIMITS
 class TComGeneralTierAndLevelLimits
 {
 public:
@@ -171,7 +171,7 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_X(x)     if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, "%x", x );
 #define DTRACE_CABAC_R( x,y ) if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, x,    y );
 #define DTRACE_CABAC_N        if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, "\n"    );
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
  extern Bool   g_traceCU; 
  extern Bool   g_tracePU ; 
  extern Bool   g_traceTU; 

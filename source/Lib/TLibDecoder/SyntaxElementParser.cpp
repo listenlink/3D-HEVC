@@ -55,7 +55,7 @@ Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, con
 #else
   xReadCode (length, rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 
@@ -86,7 +86,7 @@ Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const TChar *pSy
 #else
   xReadUvlc (rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 
@@ -110,7 +110,7 @@ Void  SyntaxElementParser::xReadSvlcTr           (Int& rValue, const TChar *pSym
 #else
   xReadSvlc (rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 
@@ -134,7 +134,7 @@ Void  SyntaxElementParser::xReadFlagTr           (UInt& rValue, const TChar *pSy
 #else
   xReadFlag (rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 

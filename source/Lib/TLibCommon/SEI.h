@@ -43,7 +43,7 @@
 #include "libmd5/MD5.h"
 
 
-#if NH_MV_SEI
+#if NH_MV
 #include "TAppCommon/program_options_lite.h"
 using namespace std;
 namespace po = df::program_options_lite;
@@ -52,7 +52,7 @@ namespace po = df::program_options_lite;
 //! \ingroup TLibCommon
 //! \{
 class TComSPS;
-#if NH_MV_SEI
+#if NH_MV
 class TComSlice;
 class SEIScalableNesting;
 #endif
@@ -96,7 +96,6 @@ public:
     CHROMA_RESAMPLING_FILTER_HINT        = 140,
     KNEE_FUNCTION_INFO                   = 141,
     COLOUR_REMAPPING_INFO                = 142,
-#if NH_MV_SEI
     DEINTERLACED_FIELD_IDENTIFICATION         = 143,
     LAYERS_NOT_PRESENT                        = 160,
     INTER_LAYER_CONSTRAINED_TILE_SETS         = 161,
@@ -115,7 +114,6 @@ public:
 #if NH_3D
     ,ALTERNATIVE_DEPTH_INFO                    = 181
 #endif
-#endif
 
   };
 
@@ -132,7 +130,7 @@ public:
 
   virtual PayloadType payloadType() const = 0;
 
-#if NH_MV_SEI
+#if NH_MV
   virtual SEI*       getCopy( ) const;
   static SEI*        getNewSEIMessage         ( SEI::PayloadType payloadType );
   Bool               insertSei                ( Int curLayerId, Int curPoc, Int curTid, Int curNaluType ) const;
@@ -550,27 +548,6 @@ public:
     TComSEIMasteringDisplay values;
 };
 
-#if NH_MV
-#if !NH_MV_SEI
-class SEISubBitstreamProperty : public SEI
-{
-public:
-  PayloadType payloadType() const { return SUB_BITSTREAM_PROPERTY; }
-
-  SEISubBitstreamProperty():   m_activeVpsId(-1), m_numAdditionalSubStreams(0) {}
-  virtual ~SEISubBitstreamProperty() {}
-
-  Int  m_activeVpsId;
-  Int  m_numAdditionalSubStreams;
-  std::vector<Int>  m_subBitstreamMode;
-  std::vector<Int>  m_outputLayerSetIdxToVps;
-  std::vector<Int>  m_highestSublayerId;
-  std::vector<Int>  m_avgBitRate;
-  std::vector<Int>  m_maxBitRate;
-};
-#endif
-#endif
-
 typedef std::list<SEI*> SEIMessages;
 
 /// output a selection of SEI messages by payload type. Ownership stays in original message list.
@@ -677,8 +654,7 @@ public:
   const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
 
 };
-#if NH_MV_SEI
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
 class SEILayersNotPresent : public SEI
 {
 public:
@@ -699,7 +675,6 @@ public:
     m_layerNotPresentFlag.resize( sizeDimI );
   }
 };
-#endif
 
 class SEIInterLayerConstrainedTileSets : public SEI
 {
@@ -942,7 +917,6 @@ private:
   UInt xGetSyntaxElementLen( Int expo, Int prec, Int val ) const;
 };
 
-#if SEI_DRI_F0169
 class SEIDepthRepresentationInfo : public SEI
 {
     public:
@@ -1011,7 +985,7 @@ class SEIDepthRepresentationInfo : public SEI
         IntAry2d       m_depthNonlinearRepresentationNumMinus1;
         IntAry2d       m_depth_nonlinear_representation_model;
 };
-#endif
+
 
 class SEIMultiviewSceneInfo : public SEI
 {

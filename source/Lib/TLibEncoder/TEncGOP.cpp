@@ -339,7 +339,7 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(currentMessages, !testWrite);
 
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
   // Layers not present SEI message
   currentMessages = extractSeisByType(localMessages, SEI::LAYERS_NOT_PRESENT);
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
@@ -501,18 +501,6 @@ Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TCo
     m_seiEncoder.initSEIChromaResamplingFilterHint(seiChromaResamplingFilterHint, m_pcCfg->getChromaResamplingHorFilterIdc(), m_pcCfg->getChromaResamplingVerFilterIdc());
     seiMessages.push_back(seiChromaResamplingFilterHint);
   }
-
-
-#if NH_MV
-#if !NH_MV_SEI
-  if( m_pcCfg->getSubBitstreamPropSEIEnabled() && ( getLayerId() == 0 ) )
-  {
-    SEISubBitstreamProperty *sei = new SEISubBitstreamProperty;
-    m_seiEncoder.initSEISubBitstreamProperty( sei, sps );
-    seiMessages.push_back(sei);
-  }
-#endif
-#endif
 }
 
 Void TEncGOP::xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, TComSlice *slice)
@@ -1924,11 +1912,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       // write various parameter sets
       actualTotalBits += xWriteParameterSets(accessUnit, pcSlice);
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
       if(!pcSlice->getIsDepth() || !pcSlice->getViewIndex() )
       {
 #endif
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
       }
 #endif
 
@@ -1949,7 +1937,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // create prefix SEI associated with a picture
     xCreatePerPictureSEIMessages(iGOPid, leadingSeiMessages, nestedSeiMessages, pcSlice);
 
-#if NH_MV_SEI
+#if NH_MV
     m_seiEncoder.createAnnexFGISeiMessages( leadingSeiMessages, pcSlice );
 #endif
 

@@ -652,19 +652,6 @@ Void SEIEncoder::initSEITimeCode(SEITimeCode *seiTimeCode)
 }
 
 #if NH_MV
-#if !NH_MV_SEI
-Void SEIEncoder::initSEISubBitstreamProperty(SEISubBitstreamProperty *seiSubBitstreamProperty, const TComSPS *sps)
-{
-  seiSubBitstreamProperty->m_activeVpsId = sps->getVPSId();
-  /* These values can be determined by the encoder; for now we will use the input parameter */  
-  seiSubBitstreamProperty->m_numAdditionalSubStreams = m_pcCfg->getNumAdditionalSubStreams();
-  seiSubBitstreamProperty->m_subBitstreamMode        = m_pcCfg->getSubBitstreamMode();
-  seiSubBitstreamProperty->m_outputLayerSetIdxToVps  = m_pcCfg->getOutputLayerSetIdxToVps();
-  seiSubBitstreamProperty->m_highestSublayerId       = m_pcCfg->getHighestSublayerId();
-  seiSubBitstreamProperty->m_avgBitRate              = m_pcCfg->getAvgBitRate();
-  seiSubBitstreamProperty->m_maxBitRate              = m_pcCfg->getMaxBitRate();  
-}
-#else
 Void SEIEncoder::createAnnexFGISeiMessages( SEIMessages& seiMessage, const TComSlice* slice )
 {
   const SEIMessages* seiMessageCfg = m_pcCfg->getSeiMessages(); 
@@ -695,7 +682,6 @@ Void SEIEncoder::createAnnexFGISeiMessages( SEIMessages& seiMessage, const TComS
     }
   }
 }
-#endif
 #endif
 
 //! \}

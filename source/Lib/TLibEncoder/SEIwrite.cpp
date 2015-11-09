@@ -124,18 +124,9 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
     xWriteSEIMasteringDisplayColourVolume(*static_cast<const SEIMasteringDisplayColourVolume*>(&sei));
     break;
 #if NH_MV
-#if !NH_MV_SEI
-   case SEI::SUB_BITSTREAM_PROPERTY:
-   xWriteSEISubBitstreamProperty(*static_cast<const SEISubBitstreamProperty*>(&sei));
-   break;
-#endif
-#endif
-#if NH_MV_SEI
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
    case SEI::LAYERS_NOT_PRESENT:
        xWriteSEILayersNotPresent(*static_cast<const SEILayersNotPresent*>(&sei));
      break;
-#endif
    case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS:
      xWriteSEIInterLayerConstrainedTileSets(*static_cast<const SEIInterLayerConstrainedTileSets*>(&sei));
      break;
@@ -167,11 +158,9 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
    case SEI::THREE_DIMENSIONAL_REFERENCE_DISPLAYS_INFO:
      xWriteSEIThreeDimensionalReferenceDisplaysInfo(*static_cast<const SEIThreeDimensionalReferenceDisplaysInfo*>(&sei));
      break;
-#if SEI_DRI_F0169
    case SEI::DEPTH_REPRESENTATION_INFO:
        xWriteSEIDepthRepresentationInfo(*static_cast<const SEIDepthRepresentationInfo*>(&sei));
        break;
-#endif
    case SEI::MULTIVIEW_SCENE_INFO:
      xWriteSEIMultiviewSceneInfo(*static_cast<const SEIMultiviewSceneInfo*>(&sei));
      break;
@@ -772,26 +761,6 @@ Void SEIWriter::xWriteSEIChromaResamplingFilterHint(const SEIChromaResamplingFil
     }
   }
 }
-#if NH_MV
-#if !NH_MV_SEI
-Void SEIWriter::xWriteSEISubBitstreamProperty(const SEISubBitstreamProperty &sei)
-{
-  WRITE_CODE( sei.m_activeVpsId, 4, "active_vps_id" );
-  assert( sei.m_numAdditionalSubStreams >= 1 );
-  WRITE_UVLC( sei.m_numAdditionalSubStreams - 1, "num_additional_sub_streams_minus1" );
-
-  for( Int i = 0; i < sei.m_numAdditionalSubStreams; i++ )
-  {
-    WRITE_CODE( sei.m_subBitstreamMode[i],       2, "sub_bitstream_mode[i]"           );
-    WRITE_UVLC( sei.m_outputLayerSetIdxToVps[i],    "output_layer_set_idx_to_vps[i]"  );
-    WRITE_CODE( sei.m_highestSublayerId[i],      3, "highest_sub_layer_id[i]"         );
-    WRITE_CODE( sei.m_avgBitRate[i],            16, "avg_bit_rate[i]"                 );
-    WRITE_CODE( sei.m_maxBitRate[i],            16, "max_bit_rate[i]"                 );
-  }
-  xWriteByteAlign();
-}
-#endif
-#endif
 
 Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 {
@@ -902,7 +871,6 @@ Void SEIWriter::xWriteByteAlign()
 }
 
 #if NH_MV
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
 Void SEIWriter::xWriteSEILayersNotPresent(const SEILayersNotPresent& sei)
 {
   WRITE_CODE( sei.m_lnpSeiActiveVpsId, 4, "lnp_sei_active_vps_id" );
@@ -911,9 +879,7 @@ Void SEIWriter::xWriteSEILayersNotPresent(const SEILayersNotPresent& sei)
     WRITE_FLAG( ( sei.m_layerNotPresentFlag[i] ? 1 : 0 ), "layer_not_present_flag" );
   }
 };
-#endif
 
-#if NH_MV
 Void SEIWriter::xWriteSEIInterLayerConstrainedTileSets( const SEIInterLayerConstrainedTileSets& sei)
 {
   WRITE_FLAG( ( sei.m_ilAllTilesExactSampleValueMatchFlag ? 1 : 0 ), "il_all_tiles_exact_sample_value_match_flag" );
@@ -947,7 +913,6 @@ Void SEIWriter::xWriteSEIInterLayerConstrainedTileSets( const SEIInterLayerConst
     WRITE_CODE( sei.m_allTilesIlcIdc, 2, "all_tiles_ilc_idc" );
   }
 };
-#endif
 
 #if NH_MV_SEI_TBD
 Void SEIWriter::xWriteSEIBspNesting( const SEIBspNesting& sei)
@@ -1134,7 +1099,6 @@ Void SEIWriter::xWriteSEIThreeDimensionalReferenceDisplaysInfo( const SEIThreeDi
   WRITE_FLAG( ( sei.m_threeDimensionalReferenceDisplaysExtensionFlag ? 1 : 0 ), "three_dimensional_reference_displays_extension_flag" );
 };
 
-#if SEI_DRI_F0169
 Void SEIWriter::xWriteSEIDepthRepresentationInfo( const SEIDepthRepresentationInfo& sei)
 {
 
@@ -1261,7 +1225,7 @@ Void SEIWriter::xWriteSEIDepthRepInfoElement( double f)
     WRITE_CODE( x_mantissa, x_mantissa_len ,     "da_mantissa" );
 
 };
-#endif
+
 Void SEIWriter::xWriteSEIMultiviewSceneInfo( const SEIMultiviewSceneInfo& sei)
 {
   WRITE_SVLC( sei.m_minDisparity     , "min_disparity"       );
@@ -1321,8 +1285,6 @@ Void SEIWriter::xWriteSEIMultiviewAcquisitionInfo( const SEIMultiviewAcquisition
   }
 };
 
-
-#if NH_MV_SEI
 Void SEIWriter::xWriteSEIMultiviewViewPosition( const SEIMultiviewViewPosition& sei)
 {
   WRITE_UVLC( sei.m_numViewsMinus1, "num_views_minus1" );
@@ -1331,7 +1293,6 @@ Void SEIWriter::xWriteSEIMultiviewViewPosition( const SEIMultiviewViewPosition& 
     WRITE_UVLC( sei.m_viewPosition[i], "view_position" );
   }
 };
-#endif
 
 #if NH_3D
 Void SEIWriter::xWriteSEIAlternativeDepthInfo( const SEIAlternativeDepthInfo& sei)

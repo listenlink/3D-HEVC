@@ -98,7 +98,7 @@ Void SEIReader::sei_read_flag(std::ostream *pOS, UInt& ruiCode, const TChar *pSy
   }
 }
 
-#if NH_MV_SEI
+#if NH_MV
 Void SEIReader::sei_read_string(std::ostream *pOS, UInt uiBufSize, UChar* pucCode, UInt& ruiLength, const TChar *pSymbolName)
 {
   READ_STRING(uiBufSize, pucCode, ruiLength, pSymbolName);
@@ -116,7 +116,7 @@ static inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMes
   {
     std::string seiMessageHdr(SEI::getSEIMessageString(sei.payloadType())); seiMessageHdr+=" SEI message";
     (*pDecodedMessageOutputStream) << std::setfill('-') << std::setw(seiMessageHdr.size()) << "-" << std::setfill(' ') << "\n" << seiMessageHdr << " (" << payloadSize << " bytes)"<< "\n";
-#if NH_MV_SEI
+#if NH_MV
     (*pDecodedMessageOutputStream) << std::setfill(' ') << "LayerId: " << m_layerId << std::setw(2) << " Picture: " << m_decOrder << std::setw( 5 ) << std::endl;
 #endif
   }
@@ -131,7 +131,7 @@ static inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMes
 /**
  * unmarshal a single SEI message from bitstream bs
  */
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
 Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, const TComVPS *vps, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
 #else
 Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
@@ -142,7 +142,7 @@ Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const
   assert(!m_pcBitstream->getNumBitsUntilByteAligned());
   do
   {
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
     xReadSEImessage(seis, nalUnitType, vps, sps, pDecodedMessageOutputStream);
 #else
     xReadSEImessage(seis, nalUnitType, sps, pDecodedMessageOutputStream);
@@ -156,7 +156,7 @@ Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const
   xReadRbspTrailingBits();
 }
 
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
 Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType, const TComVPS *vps, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
 #else
 Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
@@ -279,7 +279,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       break;
     case SEI::SCALABLE_NESTING:
       sei = new SEIScalableNesting;
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, vps, sps, pDecodedMessageOutputStream);
 #else
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps, pDecodedMessageOutputStream);
@@ -311,13 +311,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEIMasteringDisplayColourVolume((SEIMasteringDisplayColourVolume&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
 #if NH_MV
-#if !NH_MV_SEI
-    case SEI::SUB_BITSTREAM_PROPERTY:
-      sei = new SEISubBitstreamProperty;
-      xParseSEISubBitstreamProperty((SEISubBitstreamProperty&) *sei, payloadSize, pDecodedMessageOutputStream );
-      break;
-#else
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
     case SEI::LAYERS_NOT_PRESENT:
       if (!vps)
       {
@@ -329,7 +322,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
         xParseSEILayersNotPresent((SEILayersNotPresent&) *sei, payloadSize, vps, pDecodedMessageOutputStream);
       }
       break;
-#endif
     case SEI::INTER_LAYER_CONSTRAINED_TILE_SETS:
       sei = new SEIInterLayerConstrainedTileSets;
       xParseSEIInterLayerConstrainedTileSets((SEIInterLayerConstrainedTileSets&) *sei, payloadSize, pDecodedMessageOutputStream );
@@ -370,12 +362,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIThreeDimensionalReferenceDisplaysInfo;
       xParseSEIThreeDimensionalReferenceDisplaysInfo((SEIThreeDimensionalReferenceDisplaysInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#if SEI_DRI_F0169
     case SEI::DEPTH_REPRESENTATION_INFO:
         sei = new SEIDepthRepresentationInfo;
         xParseSEIDepthRepresentationInfo((SEIDepthRepresentationInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
         break;
-#endif
     case SEI::MULTIVIEW_SCENE_INFO:
       sei = new SEIMultiviewSceneInfo;
       xParseSEIMultiviewSceneInfo((SEIMultiviewSceneInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
@@ -395,7 +385,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIAlternativeDepthInfo;
       xParseSEIAlternativeDepthInfo((SEIAlternativeDepthInfo&) *sei, payloadSize, pDecodedMessageOutputStream );
       break;
-#endif
 #endif
 #endif
     default:
@@ -920,7 +909,7 @@ Void SEIReader::xParseSEISOPDescription(SEISOPDescription &sei, UInt payloadSize
   }
 }
 
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
 Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, const TComVPS *vps, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
 #else
 Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
@@ -966,7 +955,7 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
   // read nested SEI messages
   do
   {
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
     xReadSEImessage(sei.m_nestedSEIs, nalUnitType, vps, sps, pDecodedMessageOutputStream);
 #else
     xReadSEImessage(sei.m_nestedSEIs, nalUnitType, sps, pDecodedMessageOutputStream);
@@ -978,37 +967,6 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
     (*pDecodedMessageOutputStream) << "End of scalable nesting SEI message\n";
   }
 }
-
-#if NH_MV
-#if !NH_MV_SEI
-Void SEIReader::xParseSEISubBitstreamProperty(SEISubBitstreamProperty &sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream )
-{
-  UInt code;
-  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
-  sei_read_code( pDecodedMessageOutputStream, 4, code, "active_vps_id" );                      sei.m_activeVpsId = code;
-  sei_read_uvlc( pDecodedMessageOutputStream, code, "num_additional_sub_streams_minus1" );     sei.m_numAdditionalSubStreams = code + 1;
-
-  xResizeSubBitstreamPropertySeiArrays(sei);
-  for( Int i = 0; i < sei.m_numAdditionalSubStreams; i++ )
-  {
-    sei_read_code( pDecodedMessageOutputStream,   2, code, "sub_bitstream_mode[i]"           ); sei.m_subBitstreamMode[i] = code;
-    sei_read_uvlc( pDecodedMessageOutputStream,  code, "output_layer_set_idx_to_vps[i]"      ); sei.m_outputLayerSetIdxToVps[i] = code;
-    sei_read_code( pDecodedMessageOutputStream,   3, code, "highest_sub_layer_id[i]"         ); sei.m_highestSublayerId[i] = code;
-    sei_read_code( pDecodedMessageOutputStream,  16, code, "avg_bit_rate[i]"                 ); sei.m_avgBitRate[i] = code;
-    sei_read_code( pDecodedMessageOutputStream,  16, code, "max_bit_rate[i]"                 ); sei.m_maxBitRate[i] = code;
-  }
-}
-
-Void SEIReader::xResizeSubBitstreamPropertySeiArrays(SEISubBitstreamProperty &sei)
-{
-  sei.m_subBitstreamMode.resize( sei.m_numAdditionalSubStreams );
-  sei.m_outputLayerSetIdxToVps.resize( sei.m_numAdditionalSubStreams );
-  sei.m_highestSublayerId.resize( sei.m_numAdditionalSubStreams );
-  sei.m_avgBitRate.resize( sei.m_numAdditionalSubStreams );
-  sei.m_maxBitRate.resize( sei.m_numAdditionalSubStreams );
-}
-#endif
-#endif
 
 
 Void SEIReader::xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedTileSets& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
@@ -1314,7 +1272,6 @@ Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourV
   sei_read_code( pDecodedMessageOutputStream, 32, code, "min_display_mastering_luminance" ); sei.values.minLuminance = code;
 }
 #if NH_MV
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
 Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent &sei, UInt payloadSize, const TComVPS *vps, std::ostream *pDecodedMessageOutputStream)
 {
   UInt code;
@@ -1331,7 +1288,6 @@ Void SEIReader::xParseSEILayersNotPresent(SEILayersNotPresent &sei, UInt payload
     sei.m_layerNotPresentFlag[i] = (code == 1);
   }
 };
-#endif
 
 Void SEIReader::xParseSEIInterLayerConstrainedTileSets(SEIInterLayerConstrainedTileSets& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
@@ -1598,7 +1554,6 @@ Void SEIReader::xParseSEIThreeDimensionalReferenceDisplaysInfo(SEIThreeDimension
   sei_read_flag( pDecodedMessageOutputStream, code, "three_dimensional_reference_displays_extension_flag" ); sei.m_threeDimensionalReferenceDisplaysExtensionFlag = (code == 1);
 };
 
-#if SEI_DRI_F0169
 Void SEIReader::xParseSEIDepthRepInfoElement(double& f,std::ostream *pDecodedMessageOutputStream)
 {
     UInt val;
@@ -1701,7 +1656,7 @@ Void SEIReader::xParseSEIDepthRepresentationInfo(SEIDepthRepresentationInfo& sei
         sei.m_depth_nonlinear_representation_model.push_back(DepthNonlinearRepresentationModel);
     }
 }
-#endif
+
 Void SEIReader::xParseSEIMultiviewSceneInfo(SEIMultiviewSceneInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt  code;

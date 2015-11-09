@@ -487,7 +487,7 @@ Void TAppRendererTop::go()
     AOT(true);
   }
 
-#if H_3D_REN_MAX_DEV_OUT
+#if NH_3D_REN_MAX_DEV_OUT
   Double dMaxDispDiff = m_cCameraData.getMaxShiftDeviation(); 
 
   if ( !(dMaxDispDiff < 0) )
