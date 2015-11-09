@@ -6098,7 +6098,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_cYuvRecTemp.create( pcYuvPred->getWidth( COMPONENT_Y ), pcYuvPred->getHeight( COMPONENT_Y ), CHROMA_400  );
   }
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   Bool oldTraceRDCost = g_traceRDCost;     
   g_traceRDCost = false; 
 
@@ -6111,7 +6111,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 #endif
   xEstimateInterResidualQT( pcYuvResi,  pcYuvOrg, pcYuvPred, nonZeroCost, nonZeroBits, nonZeroDistortion, &zeroDistortion, tuLevel0 DEBUG_STRING_PASS_INTO(sDebug) );    
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   g_traceRDCost = oldTraceRDCost;
   g_traceEncFracBits = oldTraceFracBits; 
   g_traceModeCheck = oldTraceModeCheck; 

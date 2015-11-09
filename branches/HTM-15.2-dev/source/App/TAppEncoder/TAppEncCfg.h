@@ -257,7 +257,7 @@ protected:
   Bool      m_bUseAdaptQpSelect;
 #endif
   TComSEIMasteringDisplay m_masteringDisplay;
-#if NH_MV_SEI
+#if NH_MV
   std::vector<char*>     m_seiCfgFileNames;               ///< SEI message files.
   SEIMessages            m_seiMessages;                       ///< Buffer for SEI messages. 
 #endif
@@ -522,15 +522,6 @@ protected:
   std::string m_summaryPicFilenameBase;                       ///< Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended.
   UInt        m_summaryVerboseness;                           ///< Specifies the level of the verboseness of the text output.
 #if NH_MV
-#if !NH_MV_SEI
-  Bool              m_subBistreamPropSEIEnabled;
-  Int               m_sbPropNumAdditionalSubStreams;
-  IntAry1d          m_sbPropSubBitstreamMode;
-  IntAry1d          m_sbPropOutputLayerSetIdxToVps;
-  IntAry1d          m_sbPropHighestSublayerId;
-  IntAry1d          m_sbPropAvgBitRate;
-  IntAry1d          m_sbPropMaxBitRate;
-#endif
   Bool              m_outputVpsInfo;
   TChar*            m_pchBaseViewCameraNumbers;
 #endif
@@ -675,11 +666,8 @@ protected:
   
   Void xPrintVectorElem( Double elem ) { printf(" %5.2f", elem            );};  
   Void xPrintVectorElem( Bool   elem ) { printf(" %d"   , ( elem ? 1 : 0 ));};
-#if NH_MV_SEI
   Void xParseSeiCfg();
-#endif
-#endif
-#if NH_MV
+
   Int   getGOPSize() { return m_iGOPSize; }
 #endif
 public:

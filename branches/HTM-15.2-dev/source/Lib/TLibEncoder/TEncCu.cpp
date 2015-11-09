@@ -461,7 +461,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   const UInt uiBPelY   = uiTPelY + rpcBestCU->getHeight(0) - 1;
   const UInt uiWidth   = rpcBestCU->getWidth(0);
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
     stopAtPos  ( rpcBestCU->getSlice()->getPOC(), 
                  rpcBestCU->getSlice()->getLayerId(), 
@@ -1518,7 +1518,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   const UInt uiBPelY   = uiTPelY + (maxCUHeight>>uiDepth) - 1;
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_quadtree ===========\n")
   DTRACE_CU("x0", uiLPelX)
   DTRACE_CU("x1", uiTPelY)
@@ -1560,7 +1560,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     return;
   }
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_unit ===========\n")
 #endif
 
@@ -1587,7 +1587,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
     DTRACE_PU_S("=========== prediction_unit ===========\n")
     DTRACE_PU("x0", uiLPelX)
     DTRACE_PU("x1", uiTPelY)
@@ -2307,7 +2307,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
     for( Int nARPW = 0; nARPW <= nARPWMax; nARPW++ )
     {
-#if DEBUG_STRING && H_MV_ENC_DEC_TRAC
+#if DEBUG_STRING && NH_MV_ENC_DEC_TRAC
       sTest.clear(); 
 #endif
 
@@ -2743,12 +2743,12 @@ Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Pa
   UInt uiPreCalcDistC;
   m_pcPredSearch  ->estIntraPredDIS      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, false );
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   Int oldTraceCopyBack = g_traceCopyBack; 
   g_traceCopyBack = false;  
 #endif
   m_ppcRecoYuvTemp[uiDepth]->copyToPicComponent(COMPONENT_Y, rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC  
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC  
   g_traceCopyBack = oldTraceCopyBack; 
 #endif
 
@@ -3079,13 +3079,13 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
   UInt uiPartIdx = uiPartIdxY * ( uiSrcBlkWidth / uiBlkWidth ) + uiPartIdxX;
   m_ppcRecoYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvRec (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   Bool oldtraceCopyBack = g_traceCopyBack;
   g_traceCopyBack = false; 
 #endif
   m_ppcPredYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvPred (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   g_traceCopyBack = oldtraceCopyBack; 
 #endif
 }

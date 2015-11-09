@@ -448,13 +448,9 @@ Void TComPic::checkTemporalIVRef()
         {
           m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = false;
           Int iColViewIdx    = pcCandColSlice->getViewIndex();
-#if H_3D_FIX_ARP_CHECK_NOT_IN_DPB
           // The picture pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx) might not be in DPB anymore
           // So don't access it directly.
           Int iColRefViewIdx = pcCandColSlice->getVPS()->getViewOrderIdx( pcCandColSlice->getRefLayerId( (RefPicList)iColRefDir, iColRefIdx ) );       
-#else
-          Int iColRefViewIdx = pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx)->getViewIndex();
-#endif
           if(iColViewIdx == iColRefViewIdx)
           {
             continue;

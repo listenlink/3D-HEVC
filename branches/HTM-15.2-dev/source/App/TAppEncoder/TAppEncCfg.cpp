@@ -204,7 +204,7 @@ Void TAppEncCfg::destroy()
 }
 
 
-#if NH_MV_SEI
+#if NH_MV
 Void TAppEncCfg::xParseSeiCfg()
 {
   for (Int i = 0; i < MAX_NUM_SEIS; i++)
@@ -1275,17 +1275,7 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
 #if NH_MV
-#if !NH_MV_SEI
-  ("SubBitstreamPropSEIEnabled",                      m_subBistreamPropSEIEnabled,    false                     ,"Enable signaling of sub-bitstream property SEI message")
-  ("SEISubBitstreamNumAdditionalSubStreams",          m_sbPropNumAdditionalSubStreams,0                         ,"Number of substreams for which additional information is signalled")
-  ("SEISubBitstreamSubBitstreamMode",                 m_sbPropSubBitstreamMode,       IntAry1d (1,0)            ,"Specifies mode of generation of the i-th sub-bitstream (0 or 1)")
-  ("SEISubBitstreamOutputLayerSetIdxToVps",           m_sbPropOutputLayerSetIdxToVps, IntAry1d (1,0)            ,"Specifies output layer set index of the i-th sub-bitstream ")
-  ("SEISubBitstreamHighestSublayerId",                m_sbPropHighestSublayerId,      IntAry1d (1,0)            ,"Specifies highest TemporalId of the i-th sub-bitstream")
-  ("SEISubBitstreamAvgBitRate",                       m_sbPropAvgBitRate,             IntAry1d (1,0)            ,"Specifies average bit rate of the i-th sub-bitstream")
-  ("SEISubBitstreamMaxBitRate",                       m_sbPropMaxBitRate,             IntAry1d (1,0)            ,"Specifies maximum bit rate of the i-th sub-bitstream")
-#else
   ("SeiCfgFileName_%d",                               m_seiCfgFileNames,             (TChar *) 0 ,MAX_NUM_SEIS , "SEI cfg file name %d")
-#endif
   ("OutputVpsInfo",                                   m_outputVpsInfo,                false                     ,"Output information about the layer dependencies and layer sets")
 
 /* Camera parameters */    
@@ -1941,7 +1931,7 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
     }
   }
 
-#if NH_MV_SEI
+#if NH_MV
   xParseSeiCfg(); 
 #endif
   if( m_masteringDisplay.colourVolumeSEIEnabled )
@@ -3328,25 +3318,6 @@ Void TAppEncCfg::xCheckParameter()
 #if NH_MV
   }
   }
-#if !NH_MV_SEI
-  // Check input parameters for Sub-bitstream property SEI message
-  if( m_subBistreamPropSEIEnabled )
-  {
-    xConfirmPara( 
-      (this->m_sbPropNumAdditionalSubStreams != m_sbPropAvgBitRate.size() )
-      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropHighestSublayerId.size() )
-      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropMaxBitRate.size() )
-      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropOutputLayerSetIdxToVps.size() )
-      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropSubBitstreamMode.size()), "Some parameters of some sub-bitstream not defined");
-
-    for( Int i = 0; i < m_sbPropNumAdditionalSubStreams; i++ )
-    {
-      xConfirmPara( m_sbPropSubBitstreamMode[i] < 0 || m_sbPropSubBitstreamMode[i] > 1, "Mode value should be 0 or 1" );
-      xConfirmPara( m_sbPropHighestSublayerId[i] < 0 || m_sbPropHighestSublayerId[i] > MAX_TLAYER-1, "Maximum sub-layer ID out of range" );
-      xConfirmPara( m_sbPropOutputLayerSetIdxToVps[i] < 0 || m_sbPropOutputLayerSetIdxToVps[i] >= MAX_VPS_OUTPUTLAYER_SETS, "OutputLayerSetIdxToVps should be within allowed range" );
-    }
-  }
-#endif
 #endif
 
   if (m_segmentedRectFramePackingSEIEnabled)

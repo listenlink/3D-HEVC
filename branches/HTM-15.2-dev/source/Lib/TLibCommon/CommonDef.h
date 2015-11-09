@@ -170,9 +170,7 @@ static const Int MAXIMUM_INTRA_FILTERED_HEIGHT =                   16;
 static const Int MAX_CPB_CNT =                                     32; ///< Upper bound of (cpb_cnt_minus1 + 1)
 #if NH_MV
 static const Int MAX_NUM_LAYER_IDS =                               63;
-#if NH_MV_SEI
 static const Int MAX_NUM_SEIS      =                               1000;
-#endif
 #else
 static const Int MAX_NUM_LAYER_IDS =                               64;
 #endif
@@ -280,12 +278,10 @@ static const Int  MAX_NUM_VIDEO_SIGNAL_INFO =                     16 ;
 static const Int  MAX_NUM_SCALED_REF_LAYERS =     MAX_NUM_LAYERS - 1 ; 
 static const Int  MAX_NUM_PICS_RPS          =                     16 ; 
 static const Int  MAX_NUM_REF_LAYERS        =                     63 ;  
-#if NH_MV_SEI
+
 static IntAry1d getRangeVec( Int rngStart, Int rngEnd ) { IntAry1d rng; for (Int i = rngStart; i<=rngEnd; i++) rng.push_back(i);  return rng; };
 static const IntAry1d IDR_NAL_UNIT_TYPES   = getRangeVec( NAL_UNIT_CODED_SLICE_IDR_W_RADL, NAL_UNIT_CODED_SLICE_IDR_N_LP ); 
 static const IntAry1d IRAP_NAL_UNIT_TYPES  = getRangeVec( NAL_UNIT_CODED_SLICE_BLA_W_LP  , NAL_UNIT_CODED_SLICE_CRA      ); 
-
-#endif
 #endif
 
 // ====================================================================================================================

@@ -50,7 +50,7 @@
 //! \{
 
 #if ENC_DEC_TRACE
-#if !H_MV_ENC_DEC_TRAC
+#if !NH_MV_ENC_DEC_TRAC
 Void  xTraceVPSHeader ()
 {
   fprintf( g_hTrace, "=========== Video Parameter Set     ===========\n" );
@@ -233,7 +233,7 @@ Void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* 
 Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 {
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "PPS", pcPPS->getLayerId() ); 
 #else
   xTracePPSHeader ();
@@ -870,7 +870,7 @@ Void TDecCavlc::parseHrdParameters(TComHRD *hrd, Bool commonInfPresentFlag, UInt
 Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 {
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "SPS", pcSPS->getLayerId() ); 
 #else
   xTraceSPSHeader ();
@@ -1357,7 +1357,7 @@ Void TDecCavlc::parsePpsMultilayerExtension(TComPPS* pcPPS)
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 {
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "VPS", getDecTop()->getLayerId() ); 
 #else
   xTraceVPSHeader ();

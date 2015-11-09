@@ -359,7 +359,7 @@ protected:
   Int*      m_kneeSEIOutputKneePoint;
   std::string m_colourRemapSEIFileRoot;          ///< SEI Colour Remapping File (initialized from external file)
   TComSEIMasteringDisplay m_masteringDisplay;
-#if NH_MV_SEI
+#if NH_MV
   SEIMessages* m_seiMessages; 
 #endif
   //====== Weighted Prediction ========
@@ -449,17 +449,6 @@ protected:
   std::string m_summaryPicFilenameBase;                       ///< Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended.
   UInt        m_summaryVerboseness;                           ///< Specifies the level of the verboseness of the text output.
 
-#if NH_MV
-#if !NH_MV_SEI
-  Bool              m_subBistreamPropSEIEnabled;
-  Int               m_numAdditionalSubStreams;
-  std::vector<Int>  m_subBitstreamMode;
-  std::vector<Int>  m_outputLayerSetIdxToVps;
-  std::vector<Int>  m_highestSublayerId;
-  std::vector<Int>  m_avgBitRate;
-  std::vector<Int>  m_maxBitRate;
-#endif
-#endif
 
 #if NH_MV
   Int       m_layerId;
@@ -980,38 +969,9 @@ public:
   Void  setMasteringDisplaySEI(const TComSEIMasteringDisplay &src)   { m_masteringDisplay = src; }
   const TComSEIMasteringDisplay &getMasteringDisplaySEI() const      { return m_masteringDisplay; }
 #if NH_MV
-#if NH_MV_SEI
   Void setSeiMessages(SEIMessages *p)                                { m_seiMessages = p;    }
   const SEIMessages*  getSeiMessages()                               { return m_seiMessages; }
-#else
-  Bool   getSubBitstreamPropSEIEnabled()                             { return m_subBistreamPropSEIEnabled;}
-  Void   setSubBitstreamPropSEIEnabled(Bool x)                       { m_subBistreamPropSEIEnabled = x;}
-                                                                     
-  Int    getNumAdditionalSubStreams()                                { return m_numAdditionalSubStreams;}
-  Void   setNumAdditionalSubStreams(Int x)                           { m_numAdditionalSubStreams = x;}
-
-  std::vector<Int> const &getSubBitstreamMode()                      { return m_subBitstreamMode;}
-  Int   getSubBitstreamMode(Int idx)                                 { return m_subBitstreamMode[idx];}
-  Void  setSubBitstreamMode(std::vector<Int> &x)                     { m_subBitstreamMode = x;}
-
-  std::vector<Int> const &getOutputLayerSetIdxToVps()                { return m_outputLayerSetIdxToVps;}
-  Int   getOutputLayerSetIdxToVps(Int idx)                           { return m_outputLayerSetIdxToVps[idx];}
-  Void  setOutputLayerSetIdxToVps(std::vector<Int> &x)               { m_outputLayerSetIdxToVps = x;}
-                                                                     
-  std::vector<Int> const &getHighestSublayerId()                     { return m_highestSublayerId;}
-  Int   getHighestSublayerId(Int idx)                                { return m_highestSublayerId[idx];}
-  Void  setHighestSublayerId(std::vector<Int> &x)                    { m_highestSublayerId = x;}
-                                                                     
-  std::vector<Int> const &getAvgBitRate()                            { return m_avgBitRate;}
-  Int   getAvgBitRate(Int idx)                                       { return m_avgBitRate[idx];}
-  Void  setAvgBitRate(std::vector<Int> &x)                           { m_avgBitRate = x;}
-                                                                     
-  std::vector<Int> const &getMaxBitRate()                            { return m_maxBitRate;}
-  Int   getMaxBitRate(Int idx)                                       { return m_maxBitRate[idx];}
-  Void  setMaxBitRate(std::vector<Int> &x)                           { m_maxBitRate = x;}
 #endif
-#endif
-
   Void         setUseWP               ( Bool b )                     { m_useWeightedPred   = b;    }
   Void         setWPBiPred            ( Bool b )                     { m_useWeightedBiPred = b;    }
   Bool         getUseWP               ()                             { return m_useWeightedPred;   }

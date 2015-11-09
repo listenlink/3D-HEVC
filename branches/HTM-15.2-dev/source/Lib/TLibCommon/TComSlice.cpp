@@ -3671,7 +3671,7 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
       }
     }
     tempRefPicInListsFlag = (getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0) && getDefaultRefViewIdxAvailableFlag();
-    m_nARPStepNum = tempRefPicInListsFlag ?  H_3D_ARP_WFNR : 0;
+    m_nARPStepNum = tempRefPicInListsFlag ? 3 : 0;
   }
 
   if (tempRefPicInListsFlag)
@@ -3934,7 +3934,7 @@ Void TComSlice::setDepthToDisparityLUTs()
   for (Int i = 0; i < voiInVps; i++)
   {
     Int iInVoi = vps->getVoiInVps( i ); 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
     if ( g_traceCameraParameters )
     {
       std::cout << "Cp: " << codScale   [ iInVoi ] << " " <<    codOffset[ iInVoi ] << " "
@@ -4334,7 +4334,7 @@ Void TComSlice::init3dToolParameters()
   m_mpiSubPbSize           =  1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
 
 
-#if H_3D_OUTPUT_ACTIVE_TOOLS
+#if NH_3D_OUTPUT_ACTIVE_TOOLS
   std::cout << "Layer:                  :" << getLayerId()             << std::endl;
   std::cout << "DepthFlag:              :" << getIsDepth()             << std::endl;
   std::cout << "ViewOrderIdx:           :" << getViewIndex()           << std::endl;

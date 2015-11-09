@@ -212,7 +212,7 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
   UInt uiRPelX   = uiLPelX + (maxCuWidth>>uiDepth)  - 1;
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (maxCuHeight>>uiDepth) - 1;
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_quadtree ===========\n")
   DTRACE_CU("x0", uiLPelX)
   DTRACE_CU("x1", uiTPelY)
@@ -269,9 +269,9 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
     return;
   }
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_unit ===========\n")
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
     stopAtPos  ( pcCU->getSlice()->getPOC(), 
     pcCU->getSlice()->getLayerId(), 
@@ -358,7 +358,7 @@ if(!pcCU->getSlice()->isIntra())
 #if NH_3D_IV_MERGE
       }
 #endif
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC   
       if ( g_decTraceDispDer )
       {
         DTRACE_CU( "RefViewIdx",  DvInfo.m_aVIdxCan );       
@@ -395,7 +395,7 @@ if(!pcCU->getSlice()->isIntra())
 
   if( pcCU->isSkipped(uiAbsPartIdx) )
   {
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
     DTRACE_PU_S("=========== prediction_unit ===========\n")
     DTRACE_PU("x0", uiLPelX)
     DTRACE_PU("x1", uiTPelY)
@@ -492,7 +492,7 @@ if(!pcCU->getSlice()->isIntra())
           }
         }
 #endif
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC   
         if ( g_decTraceMvFromMerge )
         {        
           if ( uiRefListIdx == 0 )
@@ -530,7 +530,7 @@ if(!pcCU->getSlice()->isIntra())
         pcCU->getCUMvField( REF_PIC_LIST_0 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx], iSPWidth, iSPHeight);
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
       }
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
       if ( g_traceSubPBMotion )
       {
         std::cout << std::setfill(' ')                          << std::setw( 15 )

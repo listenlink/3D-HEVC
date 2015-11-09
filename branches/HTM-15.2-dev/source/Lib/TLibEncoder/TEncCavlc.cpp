@@ -48,7 +48,7 @@
 
 #if ENC_DEC_TRACE
 
-#if !H_MV_ENC_DEC_TRAC
+#if !NH_MV_ENC_DEC_TRAC
 Void  xTraceVPSHeader ()
 {
   fprintf( g_hTrace, "=========== Video Parameter Set     ===========\n" );
@@ -172,7 +172,7 @@ Void TEncCavlc::codeShortTermRefPicSet( const TComReferencePictureSet* rps, Bool
 Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 {
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "PPS", pcPPS->getLayerId() ); 
 #else
   xTracePPSHeader ();
@@ -185,7 +185,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   WRITE_CODE( pcPPS->getNumExtraSliceHeaderBits(), 3,        "num_extra_slice_header_bits");
   WRITE_FLAG( pcPPS->getSignHideFlag(), "sign_data_hiding_flag" );
   WRITE_FLAG( pcPPS->getCabacInitPresentFlag() ? 1 : 0,   "cabac_init_present_flag" );
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
   {
     WRITE_UVLC( pcPPS->getNumRefIdxL0DefaultActive(),     "num_ref_idx_l0_default_active_minus1");
@@ -196,7 +196,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 #endif
   WRITE_UVLC( pcPPS->getNumRefIdxL0DefaultActive()-1,     "num_ref_idx_l0_default_active_minus1");
   WRITE_UVLC( pcPPS->getNumRefIdxL1DefaultActive()-1,     "num_ref_idx_l1_default_active_minus1");
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   }
 #endif
   WRITE_SVLC( pcPPS->getPicInitQPMinus26(),                  "init_qp_minus26");
@@ -256,7 +256,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   {
     codeScalingList( pcPPS->getScalingList() );
   }
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
   {
     WRITE_FLAG( 1, "lists_modification_present_flag" );
@@ -680,7 +680,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   const Bool         chromaEnabled         = isChromaEnabled(format);
 
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "SPS", pcSPS->getLayerId() ); 
 #else
   xTraceSPSHeader ();
@@ -1017,7 +1017,7 @@ Void TEncCavlc::codeSPS3dExtension( const TComSPS* pcSPS )
 Void TEncCavlc::codeVPS( const TComVPS* pcVPS )
 {
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "VPS", getEncTop()->getLayerId() ); 
 #else
   xTraceVPSHeader();
@@ -1782,7 +1782,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   {
     WRITE_FLAG( pcSlice->getNoOutputPriorPicsFlag() ? 1 : 0, "no_output_of_prior_pics_flag" );
   }
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   if( pcSlice->getIsDepth() )
   {
     WRITE_UVLC( 1, "slice_pic_parameter_set_id" );
@@ -2053,7 +2053,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
       Bool overrideFlag = (pcSlice->getNumRefIdx( REF_PIC_LIST_0 )!=pcSlice->getPPS()->getNumRefIdxL0DefaultActive()||(pcSlice->isInterB()&&pcSlice->getNumRefIdx( REF_PIC_LIST_1 )!=pcSlice->getPPS()->getNumRefIdxL1DefaultActive()));
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
       overrideFlag |= (pcSlice->getIsDepth() && !pcSlice->getViewIndex());
 #endif
       WRITE_FLAG( overrideFlag ? 1 : 0,                               "num_ref_idx_active_override_flag");
@@ -2075,7 +2075,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       pcSlice->setNumRefIdx(REF_PIC_LIST_0, 0);
       pcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
     }
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
     if( (pcSlice->getPPS()->getListsModificationPresentFlag() || (pcSlice->getIsDepth() && !pcSlice->getViewIndex())) && pcSlice->getNumRpsCurrTempList() > 1)
 #else
     if( pcSlice->getPPS()->getListsModificationPresentFlag() && pcSlice->getNumRpsCurrTempList() > 1)

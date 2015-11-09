@@ -881,7 +881,7 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
         raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = (Int)iShiftChroma;
 
         // maximum deviation
-#if H_3D_REN_MAX_DEV_OUT
+#if NH_3D_REN_MAX_DEV_OUT
         m_dMaxShiftDeviation = std::max( m_dMaxShiftDeviation, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) / Double( 1 << m_iLog2Precision ) );        
 #endif
         dMaxDispDev     = std::max( dMaxDispDev,    fabs( Double( (Int) iTestScale   ) - dShiftLuma * Double( 1 << iLog2DivLuma ) ) / Double( 1 << iLog2DivLuma ) );
@@ -982,7 +982,7 @@ TAppComCamPara::TAppComCamPara()
   m_bSetupFromCoded           = false;
   m_bCamParsCodedPrecSet      = false;
 
-#if H_3D_REN_MAX_DEV_OUT
+#if NH_3D_REN_MAX_DEV_OUT
   m_dMaxShiftDeviation        = -1; 
 #endif
 

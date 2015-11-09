@@ -220,7 +220,7 @@ Void initROM()
     }
   }
 #if NH_MV
-#if H_MV_HLS_PTL_LIMITS 
+#if NH_MV_HLS_PTL_LIMITS 
  g_generalTierAndLevelLimits[ Level::LEVEL1   ] = TComGeneralTierAndLevelLimits(    36864,     350,  MIN_INT,   16,   1,   1 );
  g_generalTierAndLevelLimits[ Level::LEVEL2   ] = TComGeneralTierAndLevelLimits(   122880,    1500,  MIN_INT,   16,   1,   1 );
  g_generalTierAndLevelLimits[ Level::LEVEL2_1 ] = TComGeneralTierAndLevelLimits(   245760,    3000,  MIN_INT,   20,   1,   1 );
@@ -539,7 +539,7 @@ const Bool g_bEncDecTraceDisable = false;
 Bool   g_HLSTraceEnable = false;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 Bool g_traceCU = false; 
 Bool g_tracePU = false; 
 Bool g_traceTU = false; 
@@ -670,7 +670,7 @@ const Int g_quantInterDefault8x8[8*8] =
 };
 const UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
 const UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
 Void tracePSHeader( const TChar* psName, Int layerId )
 {  

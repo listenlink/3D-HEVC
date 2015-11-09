@@ -605,21 +605,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDecodingUnitInfoSEIEnabled                        ( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled                          ( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled                         ( m_scalableNestingSEIEnabled );
-#if NH_MV
-#if !NH_MV_SEI
-  m_cTEncTop.setSubBitstreamPropSEIEnabled                        ( m_subBistreamPropSEIEnabled );
-  if( m_subBistreamPropSEIEnabled )                               
-  {                                                               
-    m_cTEncTop.setNumAdditionalSubStreams                         ( m_sbPropNumAdditionalSubStreams );
-    m_cTEncTop.setSubBitstreamMode                                ( m_sbPropSubBitstreamMode );
-    m_cTEncTop.setOutputLayerSetIdxToVps                          ( m_sbPropOutputLayerSetIdxToVps );
-    m_cTEncTop.setHighestSublayerId                               ( m_sbPropHighestSublayerId );
-    m_cTEncTop.setAvgBitRate                                      ( m_sbPropAvgBitRate );
-    m_cTEncTop.setMaxBitRate                                      ( m_sbPropMaxBitRate );
-  }
-#endif
-#endif
-
   m_cTEncTop.setTMCTSSEIEnabled                                   ( m_tmctsSEIEnabled );
   m_cTEncTop.setTimeCodeSEIEnabled                                ( m_timeCodeSEIEnabled );
   m_cTEncTop.setNumberOfTimeSets                                  ( m_timeCodeSEINumTs );
@@ -641,7 +626,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setColourRemapInfoSEIFileRoot                        ( m_colourRemapSEIFileRoot );
   m_cTEncTop.setMasteringDisplaySEI                               ( m_masteringDisplay );
 
-#if NH_MV_SEI
+#if NH_MV
   m_cTEncTop.setSeiMessages                                       ( &m_seiMessages ); 
 #endif
 
@@ -1172,7 +1157,7 @@ Void TAppEncTop::encode()
 
   printRateSummary();
 
-#if H_3D_REN_MAX_DEV_OUT
+#if NH_3D_REN_MAX_DEV_OUT
   Double dMaxDispDiff = m_cCameraData.getMaxShiftDeviation(); 
 
   if ( !(dMaxDispDiff < 0) )
