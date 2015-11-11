@@ -52,7 +52,7 @@
    make HEVC_EXT=2  -> NH_MV=1 H_3D=1   --> full 3D
 */
 #ifndef HEVC_EXT
-#define HEVC_EXT                    1
+#define HEVC_EXT                    2
 #endif
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
 #error HEVC_EXT must be in the range of 0 to 2, inclusive.
