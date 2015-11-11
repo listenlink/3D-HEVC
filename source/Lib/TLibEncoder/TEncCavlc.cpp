@@ -348,29 +348,29 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
     WRITE_CODE( pcPPS->getPpsExtension5bits( ), 5, "pps_extension_5bits" );
     if ( pcPPS->getPpsRangeExtensionsFlag() )
     { 
-              const TComPPSRExt &ppsRangeExtension = pcPPS->getPpsRangeExtension();
-              if (pcPPS->getUseTransformSkip())
-              {
-                WRITE_UVLC( ppsRangeExtension.getLog2MaxTransformSkipBlockSize()-2,            "log2_max_transform_skip_block_size_minus2");
-              }
+      const TComPPSRExt &ppsRangeExtension = pcPPS->getPpsRangeExtension();
+      if (pcPPS->getUseTransformSkip())
+      {
+        WRITE_UVLC( ppsRangeExtension.getLog2MaxTransformSkipBlockSize()-2,            "log2_max_transform_skip_block_size_minus2");
+      }
 
-              WRITE_FLAG((ppsRangeExtension.getCrossComponentPredictionEnabledFlag() ? 1 : 0), "cross_component_prediction_enabled_flag" );
+      WRITE_FLAG((ppsRangeExtension.getCrossComponentPredictionEnabledFlag() ? 1 : 0), "cross_component_prediction_enabled_flag" );
 
-              WRITE_FLAG(UInt(ppsRangeExtension.getChromaQpOffsetListEnabledFlag()),           "chroma_qp_offset_list_enabled_flag" );
-              if (ppsRangeExtension.getChromaQpOffsetListEnabledFlag())
-              {
-                WRITE_UVLC(ppsRangeExtension.getDiffCuChromaQpOffsetDepth(),                   "diff_cu_chroma_qp_offset_depth");
-                WRITE_UVLC(ppsRangeExtension.getChromaQpOffsetListLen() - 1,                   "chroma_qp_offset_list_len_minus1");
-                /* skip zero index */
-                for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx < ppsRangeExtension.getChromaQpOffsetListLen(); cuChromaQpOffsetIdx++)
-                {
-                  WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CbOffset,     "cb_qp_offset_list[i]");
-                  WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CrOffset,     "cr_qp_offset_list[i]");
-                }
-              }
+      WRITE_FLAG(UInt(ppsRangeExtension.getChromaQpOffsetListEnabledFlag()),           "chroma_qp_offset_list_enabled_flag" );
+      if (ppsRangeExtension.getChromaQpOffsetListEnabledFlag())
+      {
+        WRITE_UVLC(ppsRangeExtension.getDiffCuChromaQpOffsetDepth(),                   "diff_cu_chroma_qp_offset_depth");
+        WRITE_UVLC(ppsRangeExtension.getChromaQpOffsetListLen() - 1,                   "chroma_qp_offset_list_len_minus1");
+        /* skip zero index */
+        for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx < ppsRangeExtension.getChromaQpOffsetListLen(); cuChromaQpOffsetIdx++)
+        {
+          WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CbOffset,     "cb_qp_offset_list[i]");
+          WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CrOffset,     "cr_qp_offset_list[i]");
+        }
+      }
 
-              WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
-              WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
+      WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
+      WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
     }
 
     if ( pcPPS->getPpsMultilayerExtensionFlag() )
@@ -989,25 +989,25 @@ Void TEncCavlc::codeSPS3dExtension( const TComSPS* pcSPS )
   const TComSps3dExtension* sps3dExt = pcSPS->getSps3dExtension();
   for( Int d = 0; d  <=  1; d++ )
   {
-    WRITE_FLAG( sps3dExt->getIvMvPredFlag( d ) ? 1 : 0 , "iv_mv_pred_flag" );
-    WRITE_FLAG( sps3dExt->getIvMvScalingFlag( d ) ? 1 : 0 , "iv_mv_scaling_flag" );
+    WRITE_FLAG( sps3dExt->getIvDiMcEnabledFlag( d ) ? 1 : 0 , "iv_di_mc_enabled_flag" );
+    WRITE_FLAG( sps3dExt->getIvMvScalEnabledFlag( d ) ? 1 : 0 , "iv_mv_scal_enabled_flag" );
     if( d  ==  0 )
     {
-      WRITE_UVLC( sps3dExt->getLog2SubPbSizeMinus3( d ), "log2_sub_pb_size_minus3" );
-      WRITE_FLAG( sps3dExt->getIvResPredFlag( d ) ? 1 : 0 , "iv_res_pred_flag" );
-      WRITE_FLAG( sps3dExt->getDepthRefinementFlag( d ) ? 1 : 0 , "depth_refinement_flag" );
-      WRITE_FLAG( sps3dExt->getViewSynthesisPredFlag( d ) ? 1 : 0 , "view_synthesis_pred_flag" );
-      WRITE_FLAG( sps3dExt->getDepthBasedBlkPartFlag( d ) ? 1 : 0 , "depth_based_blk_part_flag" );
+      WRITE_UVLC( sps3dExt->getLog2IvmcSubPbSizeMinus3( d ), "log2_sub_pb_size_minus3" );
+      WRITE_FLAG( sps3dExt->getIvResPredEnabledFlag( d ) ? 1 : 0 , "iv_res_pred_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getDepthRefEnabledFlag( d ) ? 1 : 0 , "depth_ref_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getVspMcEnabledFlag( d ) ? 1 : 0 , "vsp_mc_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getDbbpEnabledFlag( d ) ? 1 : 0 , "dbbp_enabled_flag" );
     }
     else 
     {
-      WRITE_FLAG( sps3dExt->getMpiFlag( d ) ? 1 : 0 , "mpi_flag" );
-      WRITE_UVLC( sps3dExt->getLog2MpiSubPbSizeMinus3( d ), "log2_mpi_sub_pb_size_minus3" );
-      WRITE_FLAG( sps3dExt->getIntraContourFlag( d ) ? 1 : 0 , "intra_contour_flag" );
-      WRITE_FLAG( sps3dExt->getIntraSdcWedgeFlag( d ) ? 1 : 0 , "intra_sdc_wedge_flag" );
-      WRITE_FLAG( sps3dExt->getQtPredFlag( d ) ? 1 : 0 , "qt_pred_flag" );
-      WRITE_FLAG( sps3dExt->getInterSdcFlag( d ) ? 1 : 0 , "inter_sdc_flag" );
-      WRITE_FLAG( sps3dExt->getDepthIntraSkipFlag( d ) ? 1 : 0 , "intra_skip_flag" );
+      WRITE_FLAG( sps3dExt->getTexMcEnabledFlag( d ) ? 1 : 0 , "tex_mc_enabled_flag" );
+      WRITE_UVLC( sps3dExt->getLog2TexmcSubPbSizeMinus3( d ), "log2_texmc_sub_pb_size_minus3" );
+      WRITE_FLAG( sps3dExt->getIntraContourEnabledFlag( d ) ? 1 : 0 , "intra_contour_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getIntraDcOnlyWedgeEnabledFlag( d ) ? 1 : 0 , "intra_dc_only_wedge_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getCqtCuPartPredEnabledFlag( d ) ? 1 : 0 , "cqt_cu_part_pred_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getInterDcOnlyEnabledFlag( d ) ? 1 : 0 , "inter_dc_only_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getSkipIntraEnabledFlag( d ) ? 1 : 0 , "skip_intra_enabled_flag" );
     }
   }
 }
