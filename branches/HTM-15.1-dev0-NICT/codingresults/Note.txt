@@ -1,0 +1,186 @@
+Welcome to NICT GVD with HTM 15.2 (15.1_dev0_NICT)                  Oct, 2015
+
+-------------------------------------------------------------------------------
+1. Dev/Test Environment
+
+    Windows
+    -------------------------------
+    Windows 8.1 64bit
+    Visual Studio Community 2015 ( =vc14, 64bit Compile )
+    OpenCV 2.4.9 64bit
+    -------------------------------
+    Windows 7 64bit
+    OpenCV 2.4.5 64bit ( or 32bit )
+
+    Linux (Sorry, Not tested)
+    -------------------------------
+    Ubuntu 12.04 LTS 64bit
+    gcc 4.6
+    OpenCV 2.4.3 ( or 2.x not 3.x ) 64bit
+
+
+-------------------------------------------------------------------------------
+2. Add the following libraries/Tools.
+
+    OpenCV 2.4.x or later, not 3.x  ( for GVDEncD / GVDEncR / GVDDec )
+        http://opencv.org/downloads.html
+
+    OpenMP 2 ( for GVDEncR / GVDDec )
+        inc VC14/12/11/10 standard.
+
+    Visual Studio Community 2015 ( Free Edition )
+        https://www.visualstudio.com/products/visual-studio-community-vs
+
+    VC14(VS2015) / VC12(VS2013) Solution File
+        http://1drv.ms/1RFTQht      ( Htm152Vc14 at Microsoft OneDrive )
+
+
+-------------------------------------------------------------------------------
+3. Make HTM with GVD
+
+    NICT GVD designed for 3D-HEVC mode, not MV-HEVC.
+    And both source code has been integrated.
+    No need source code re-edit.
+    Please rebuild the solution (Windows), make makefile (Linux).
+
+    How to make, HTM. ( Windows / Linux )
+        Rebuild build/HM_vcxx.sln (Windows, for Visual Studio).
+        Or Just make on build/linux/makefile (Linux).
+
+    How to make GVD ( Windows )
+        Rebuild GVD/windows/GVD.sln .
+
+    How to make GVD ( Linux )
+        Go to GVD/linux directory, and just make.
+
+
+    NOTE: For Shark and GTFly, variable camera parameter seauence.
+
+        Windows 7/8/8.1 Command line, upper limit is 8191 characters.
+          ( https://support.microsoft.com/en-us/kb/830473 )
+
+        And current implimented for HTM 15.x SEI.cfg "ModifyByEncoder" parameter, case of 0.
+          ("ModifyByEncoder" parameter 0: Use payload as specified in cfg file)
+
+        In this case, test sequence of variable camera parameters,
+        it will request the SEI.cfg of one file per frame.
+
+          ex. ( !! POC order, not frame id order !! )
+            TAppEncoder
+              ....
+              --SeiCfgFileName_0=..\..\..\cfg\sei\alternativeDepthInfoSei_gvd_shark_000.cfg
+              --SeiCfgFileName_1=..\..\..\cfg\sei\alternativeDepthInfoSei_gvd_shark_008.cfg
+              ....
+              --SeiCfgFileName_299=..\..\..\cfg\sei\alternativeDepthInfoSei_gvd_shark_298.cfg
+              ....
+
+        Over ten thousand characters, on this case !!!
+
+        Please re-edit for source/App/TAppEncoder/TAppEncCfg.cpp Line 1343.
+
+          ("SeiCfgFileName_%d",                               m_seiCfgFileNames,  ....
+
+            .. to short ..
+
+          ("Sf_%d",                                           m_seiCfgFileNames,  ....
+
+        And recompile, SEI.cfg files rename to short, directory move to near.
+
+          ex. short name version
+            TAppEncoder
+              ....
+              --Sf_0=..\sei\s000.c
+              --Sf_1=..\sei\s008.c
+              ....
+              --Sf_299=..\sei\s298.c
+              ....
+
+        Under eight thousand characters, on this short name version.
+
+
+-------------------------------------------------------------------------------
+4. HTM 15.2 + GVD operation sequence
+
+    3D-HEVC mode
+    2view( Center view + Stacked Residual ) + 2depth( Full size global depth + Dummy depth )
+
+    Encode phase ( in QPxx directory )
+        1) GVDEncD          Make Full size Global Depth D3.yuv with Dummy Depth file.
+        2) TAppEncoder      Depth to encode and recon.
+        3) GVDEncR          Make Stacked Residual R3.yuv . ( use recon Global Depth )
+        4) TAppEncoder      Main view with stacked residual, global depth to encode.
+
+    Decode phase ( cd QPxx/dec )
+        5) TAppDecoder      Decode main view and stacked residual, and full size global depth.
+        6) GVDDec           Make Multi Views ( with camera parameters )
+
+
+    Note: 3D-HEVC Reference are 3view + 3depth.
+
+
+-------------------------------------------------------------------------------
+5. Deployment plan for HTM + GVD TEST ENVIRONMENT (our test case, for windows.)
+
+    Ref: Fig1_Htm142TestEnvDirTree.JPG
+
+    Directory tree tier 1.
+      Cfg                               : from HTM152bat
+      Dancer ( or any test sequence )
+
+    Directory tree tier 2. ( under any test sequence )
+      HTM152
+      Data ( original test sequence data files )
+
+    Directory tree tier 3. ( under any test sequence's "HTM151" directory )
+      all.bat           : from HTM151bat/SequenceName. Run NICTGVD 4 QP, and Reference 4 QP
+      HTM151NICT.bat    : from HTM151bat/SequenceName. Run NICT GVD with HTM 15.1
+      HTM151REF.bat     : from HTM151bat/SequenceName. Run Reference ATM 15.1
+      EncD3.cfg         : from HTM151bat/SequenceName. Refer from GVDEncD.exe
+      EncR3.cfg         : from HTM151bat/SequenceName. Refer from GVDEncR.exe
+      psnrallNICT.bat   : from HTM151bat/SequenceName. Calling by HTM151NICT.bat
+      RENDpsnrallREF.bat: from HTM151bat/SequenceName. Calling by HTM151REF.bat
+
+    And your load modules with path.
+
+
+-------------------------------------------------------------------------------
+6. Run HTM + GVD / ATM refrence
+
+    Command: ( Windows .bat only )
+        all.bat
+            -> call HTM151NICT.bat with QP25
+            -> call HTM151NICT.bat with QP30
+            -> call HTM151NICT.bat with QP35
+            -> call HTM151NICT.bat with QP40
+            -> call HTM151REF.bat with QP25
+            -> call HTM151REF.bat with QP30
+            -> call HTM151REF.bat with QP35
+            -> call HTM151REF.bat with QP40
+
+        HTM151NICT.bat
+            -> run GVDEncD.exe        : make Global Depth from 3 depth.
+            -> run TAppEncoder.exe    : pre encode Global Depth, for next phase.
+            -> run GVDEncR.exe        : make Stacked Residuals from recon Global Depth with 3 views.
+            -> run TAppEncoder.exe    : Encode Main View, Stacked Residual, and Global Depth.
+            -> run TAppDecoder.exe    : Decode Main View, Stacked Residual, Global Depth, and GVD Config files.
+            -> run GVDDec.exe         : Render 8 views, from decoded files.
+            -> call psnrallNICT.bat
+
+        psnrallNICT.bat
+            -> run psnrstatic.exe     : for 6 views.
+
+        HTM151REF.bat
+            -> run TAppEncoder.exe    : Encode 3 views, 3 depth.
+            -> run TAppDecoder.exe    : Decode 3 views, 3 depth.
+            -> call RENDpsnrallREF.bat
+
+        RENDpsnrallREF.bat
+            -> TAppRenderer.exe       : Render 6 views, from decoded files, and local camera parameters.
+            -> run psnrstatic.exe     : for 6 views.
+
+
+-------------------------------------------------------------------------------
+
+GVD for HTM 15.1_dev0_NICT == 15.2
+
+Oct31,2015 Toyoaki Ohgochi, NICT Senoh team at Tokyo, Japan.
