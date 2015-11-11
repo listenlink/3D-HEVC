@@ -805,13 +805,13 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   ("ReconFile,o",                                     m_reconFileName,                             string(""), "Reconstructed YUV output file name")
 #endif
 #if NH_MV
-  ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
-#if !NH_3D
-  ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask: 2: Multiview, 8: Auxiliary, 10: Multiview + Auxiliary")    
-#else
-  ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
+  ("NumberOfLayers",                 m_numberOfLayers     , 1,                     "Number of layers")
+#if !NH_3D                           
+  ("ScalabilityMask",                m_scalabilityMask    , 2                    , "Scalability Mask: 2: Multiview, 8: Auxiliary, 10: Multiview + Auxiliary")    
+#else                                
+  ("ScalabilityMask",                m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
 #endif  
-  ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
+  ("DimensionIdLen",                 m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
   ("ViewOrderIndex",                 m_viewOrderIndex              , IntAry1d(1,0),                                 "View Order Index per layer")
   ("ViewId",                         m_viewId                      , IntAry1d(1,0),                                 "View Id per View Order Index")
   ("AuxId",                          m_auxId                       , IntAry1d(1,0),                                 "AuxId per layer")
@@ -820,14 +820,14 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
 #endif
   ("TargetEncLayerIdList",           m_targetEncLayerIdList        , IntAry1d(0,0),                                 "LayerIds in Nuh to be encoded")  
   ("LayerIdInNuh",                   m_layerIdInNuh                , IntAry1d(1,0),                                 "LayerId in Nuh")  
-  ("SplittingFlag",         m_splittingFlag       , false                , "Splitting Flag")    
+  ("SplittingFlag",                  m_splittingFlag               , false,                                         "Splitting Flag")    
 
   // Layer Sets + Output Layer Sets + Profile Tier Level
-  ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
-  ("LayerIdsInSet_%d"              , m_layerIdsInSets              , IntAry1d(1,0) , MAX_VPS_OP_SETS_PLUS1      ,   "LayerIds of Layer set")  
-  ("NumAddLayerSets"     , m_numAddLayerSets     , 0                                              , "NumAddLayerSets     ")
+  ("VpsNumLayerSets"               , m_vpsNumLayerSets             , 1                                          ,   "Number of layer sets")    
+  ("LayerIdsInSet_%d"              , m_layerIdxInVpsInSets         , IntAry1d(1,0) , MAX_VPS_OP_SETS_PLUS1      ,   "Layer indices in VPS of layers in layer set")  
+  ("NumAddLayerSets"               , m_numAddLayerSets             , 0 ,                                             "NumAddLayerSets     ")
   ("HighestLayerIdxPlus1_%d"       , m_highestLayerIdxPlus1        , IntAry1d(0,0) , MAX_VPS_NUM_ADD_LAYER_SETS ,   "HighestLayerIdxPlus1")
-  ("DefaultTargetOutputLayerIdc"     , m_defaultOutputLayerIdc     , 0, "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
+  ("DefaultTargetOutputLayerIdc"   , m_defaultOutputLayerIdc       , 0 ,                                             "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
   ("OutputLayerSetIdx"             , m_outputLayerSetIdx           , IntAry1d(0,0)                              ,   "Indices of layer sets used as additional output layer sets")
   ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet , IntAry1d(0,0) , MAX_VPS_ADD_OUTPUT_LAYER_SETS, "Indices in VPS of output layers in additional output layer set")  
   ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet , IntAry1d(0,0) , MAX_VPS_OP_SETS_PLUS1,         "Indices in VPS of output layers in layer set")  
@@ -2365,11 +2365,11 @@ Void TAppEncCfg::xCheckParameter()
   {
     if (lsIdx == 0)
     {
-      xConfirmPara( m_layerIdsInSets[lsIdx].size() != 1 || m_layerIdsInSets[lsIdx][0] != 0 , "0-th layer shall only include layer 0. ");
+      xConfirmPara( m_layerIdxInVpsInSets[lsIdx].size() != 1 || m_layerIdxInVpsInSets[lsIdx][0] != 0 , "0-th layer shall only include layer 0. ");
     }
-    for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
+    for ( Int i = 0; i < m_layerIdxInVpsInSets[lsIdx].size(); i++ )
     {
-      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx][i] >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than 0 and less than MAX_NUM_LAYER_IDS" ); 
+      xConfirmPara( m_layerIdxInVpsInSets[lsIdx][i] < 0 || m_layerIdxInVpsInSets[lsIdx][i] >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than 0 and less than MAX_NUM_LAYER_IDS" ); 
     }
   }
 
@@ -2402,9 +2402,9 @@ Void TAppEncCfg::xCheckParameter()
       for (Int i = 0; i < m_layerIdsInDefOutputLayerSet[ lsIdx ].size(); i++)
       {
         Bool inLayerSetFlag = false; 
-        for (Int j = 0; j < m_layerIdsInSets[ lsIdx].size(); j++ )
+        for (Int j = 0; j < m_layerIdxInVpsInSets[ lsIdx].size(); j++ )
         {
-          if ( m_layerIdsInSets[ lsIdx ][ j ] == m_layerIdsInDefOutputLayerSet[ lsIdx ][ i ] )
+          if ( m_layerIdxInVpsInSets[ lsIdx ][ j ] == m_layerIdsInDefOutputLayerSet[ lsIdx ][ i ] )
           {
             inLayerSetFlag = true; 
             break; 

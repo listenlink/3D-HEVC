@@ -52,7 +52,7 @@
    make HEVC_EXT=2  -> NH_MV=1 H_3D=1   --> full 3D
 */
 #ifndef HEVC_EXT
-#define HEVC_EXT                    2
+#define HEVC_EXT                    1
 #endif
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
 #error HEVC_EXT must be in the range of 0 to 2, inclusive.
@@ -63,12 +63,13 @@
 ///////////////////////////////////   FIXES AND INTEGRATIONS     ////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-
-// Things that needs to be fixed in the Specification: 
+// Recent bug fixes
+#define NH_3D_FIX_TICKET_107                     1 // Clean up. 
+#define NH_3D_FIX_TICKET_91                      1 // NBDV availability in case of tiles.
+// Things that needs to be fixed also in the Specification ...
 #define NH_MV_FIX_NO_REF_PICS_CHECK               1 // !!SPEC!!
 #define NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS  1 // Derivation of NumActiveRefLayerPIcs. !!SPEC!!
 #define NH_MV_FIX_NUM_POC_TOTAL_CUR               1 // Derivation of NumPocTotalCur for IDR pictures. !!SPEC!!
-
 // To be done 
 #define NH_MV_HLS_PTL_LIMITS                       0
 #define NH_MV_SEI_TBD                             0
@@ -277,21 +278,16 @@
                                               // HHI_RES_PRED_K0052
                                               // HHI_CAM_PARA_K0052
                                               // H_3D_DIRECT_DEP_TYPE
-
 #endif // NH_3D
-
 #if NH_MV
 ////////////////////////
 /// Consider Removal 
 ////////////////////////
-
 // Rate Control
 #define KWU_FIX_URQ                       0
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
-
 #define NH_MV_HLS_PTL_LIMITS               0
-
 #if NH_3D
 // Unclear Fix
 #define H_3D_PPS_FIX_DEPTH                     0
@@ -332,7 +328,6 @@
 #if NH_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
 #endif
-
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -487,13 +482,11 @@ typedef       UInt            Distortion;        ///< distortion measurement
 #if NH_MV
 typedef std::vector< std::string > StringAry1d;
 typedef std::vector< StringAry1d > StringAry2d;
-
 typedef std::vector< Int >        IntAry1d;
 typedef std::vector< IntAry1d >   IntAry2d;
 typedef std::vector< IntAry2d >   IntAry3d;
 typedef std::vector< IntAry3d >   IntAry4d;
 typedef std::vector< IntAry4d >   IntAry5d;
-
 typedef std::vector< Bool >        BoolAry1d;
 typedef std::vector< BoolAry1d >   BoolAry2d;
 typedef std::vector< BoolAry2d >   BoolAry3d;

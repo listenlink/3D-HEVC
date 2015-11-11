@@ -187,25 +187,25 @@ Void TAppEncTop::xInitLibCfg()
   // Set 3d tool parameters
   for (Int d = 0; d < 2; d++)
   {  
-    m_sps3dExtension.setIvMvPredFlag          ( d, m_ivMvPredFlag[d]       );
-    m_sps3dExtension.setIvMvScalingFlag       ( d, m_ivMvScalingFlag[d]    );
+    m_sps3dExtension.setIvDiMcEnabledFlag          ( d, m_ivMvPredFlag[d]       );
+    m_sps3dExtension.setIvMvScalEnabledFlag       ( d, m_ivMvScalingFlag[d]    );
     if (d == 0 )
     {    
-      m_sps3dExtension.setLog2SubPbSizeMinus3   ( d, m_log2SubPbSizeMinus3   );
-      m_sps3dExtension.setIvResPredFlag         ( d, m_ivResPredFlag         );
-      m_sps3dExtension.setDepthRefinementFlag   ( d, m_depthRefinementFlag   );
-      m_sps3dExtension.setViewSynthesisPredFlag ( d, m_viewSynthesisPredFlag );
-      m_sps3dExtension.setDepthBasedBlkPartFlag ( d, m_depthBasedBlkPartFlag );
+      m_sps3dExtension.setLog2IvmcSubPbSizeMinus3   ( d, m_log2SubPbSizeMinus3   );
+      m_sps3dExtension.setIvResPredEnabledFlag         ( d, m_ivResPredFlag         );
+      m_sps3dExtension.setDepthRefEnabledFlag   ( d, m_depthRefinementFlag   );
+      m_sps3dExtension.setVspMcEnabledFlag ( d, m_viewSynthesisPredFlag );
+      m_sps3dExtension.setDbbpEnabledFlag ( d, m_depthBasedBlkPartFlag );
     }
     else
     {    
-      m_sps3dExtension.setMpiFlag               ( d, m_mpiFlag               );
-      m_sps3dExtension.setLog2MpiSubPbSizeMinus3( d, m_log2MpiSubPbSizeMinus3);
-      m_sps3dExtension.setIntraContourFlag      ( d, m_intraContourFlag      );
-      m_sps3dExtension.setIntraSdcWedgeFlag     ( d, m_intraSdcFlag || m_intraWedgeFlag     );
-      m_sps3dExtension.setQtPredFlag            ( d, m_qtPredFlag            );
-      m_sps3dExtension.setInterSdcFlag          ( d, m_interSdcFlag          );
-      m_sps3dExtension.setDepthIntraSkipFlag    ( d, m_depthIntraSkipFlag    );  
+      m_sps3dExtension.setTexMcEnabledFlag               ( d, m_mpiFlag               );
+      m_sps3dExtension.setLog2TexmcSubPbSizeMinus3( d, m_log2MpiSubPbSizeMinus3);
+      m_sps3dExtension.setIntraContourEnabledFlag      ( d, m_intraContourFlag      );
+      m_sps3dExtension.setIntraDcOnlyWedgeEnabledFlag     ( d, m_intraSdcFlag || m_intraWedgeFlag     );
+      m_sps3dExtension.setCqtCuPartPredEnabledFlag            ( d, m_qtPredFlag            );
+      m_sps3dExtension.setInterDcOnlyEnabledFlag          ( d, m_interSdcFlag          );
+      m_sps3dExtension.setSkipIntraEnabledFlag    ( d, m_depthIntraSkipFlag    );  
     }
   }
 #endif
@@ -2070,9 +2070,9 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
     {
       vps.setLayerIdIncludedFlag( false, lsIdx, layerId ); 
     }
-    for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++)
+    for ( Int i = 0; i < m_layerIdxInVpsInSets[lsIdx].size(); i++)
     {       
-      vps.setLayerIdIncludedFlag( true, lsIdx, vps.getLayerIdInNuh( m_layerIdsInSets[lsIdx][i] ) ); 
+      vps.setLayerIdIncludedFlag( true, lsIdx, vps.getLayerIdInNuh( m_layerIdxInVpsInSets[lsIdx][i] ) ); 
     } 
   }
   vps.deriveLayerSetLayerIdList(); 

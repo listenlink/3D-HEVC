@@ -1810,80 +1810,80 @@ public:
   {
     for (Int d = 0; d < 2; d++)
     {
-      m_ivMvPredFlag          [d] = false; 
-      m_ivMvScalingFlag       [d] = false; 
-      m_log2SubPbSizeMinus3   [d] = 3; 
-      m_ivResPredFlag         [d] = false; 
-      m_depthRefinementFlag   [d] = false; 
-      m_viewSynthesisPredFlag [d] = false; 
-      m_depthBasedBlkPartFlag [d] = false; 
-      m_mpiFlag               [d] = false; 
-      m_log2MpiSubPbSizeMinus3[d] = 3; 
-      m_intraContourFlag      [d] = false; 
-      m_intraSdcWedgeFlag     [d] = false; 
-      m_qtPredFlag            [d] = false; 
-      m_interSdcFlag          [d] = false; 
-      m_depthIntraSkipFlag    [d] = false;   
+      m_ivDiMcEnabledFlag          [d] = false; 
+      m_ivMvScalEnabledFlag       [d] = false; 
+      m_log2IvmcSubPbSizeMinus3   [d] = 3; 
+      m_ivResPredEnabledFlag         [d] = false; 
+      m_depthRefEnabledFlag   [d] = false; 
+      m_vspMcEnabledFlag [d] = false; 
+      m_dbbpEnabledFlag [d] = false; 
+      m_texMcEnabledFlag               [d] = false; 
+      m_log2TexmcSubPbSizeMinus3[d] = 3; 
+      m_intraContourEnabledFlag      [d] = false; 
+      m_intraDcOnlyWedgeEnabledFlag     [d] = false; 
+      m_cqtCuPartPredEnabledFlag            [d] = false; 
+      m_interDcOnlyEnabledFlag          [d] = false; 
+      m_skipIntraEnabledFlag    [d] = false;   
     }
   }
 
-  Void          setIvMvPredFlag( Int d, Bool flag )         { m_ivMvPredFlag[d] = flag;             }
-  Bool          getIvMvPredFlag( Int d ) const              { return m_ivMvPredFlag[d];             }
+  Void          setIvDiMcEnabledFlag( Int d, Bool flag )        { m_ivDiMcEnabledFlag[d] = flag;             }
+  Bool          getIvDiMcEnabledFlag( Int d ) const             { return m_ivDiMcEnabledFlag[d];             }
 
-  Void          setIvMvScalingFlag( Int d, Bool flag )      { m_ivMvScalingFlag[d] = flag;          }
-  Bool          getIvMvScalingFlag( Int d ) const           { return m_ivMvScalingFlag[d];          }
+  Void          setIvMvScalEnabledFlag( Int d, Bool flag )      { m_ivMvScalEnabledFlag[d] = flag;          }
+  Bool          getIvMvScalEnabledFlag( Int d ) const           { return m_ivMvScalEnabledFlag[d];          }
 
-  Void          setLog2SubPbSizeMinus3( Int d, Int  val )   { m_log2SubPbSizeMinus3[d] = val;       }
-  Int           getLog2SubPbSizeMinus3( Int d ) const       { return m_log2SubPbSizeMinus3[d];      }
+  Void          setLog2IvmcSubPbSizeMinus3( Int d, Int  val )   { m_log2IvmcSubPbSizeMinus3[d] = val;       }
+  Int           getLog2IvmcSubPbSizeMinus3( Int d ) const       { return m_log2IvmcSubPbSizeMinus3[d];      }
 
-  Void          setIvResPredFlag( Int d, Bool flag )        { m_ivResPredFlag[d] = flag;            }
-  Bool          getIvResPredFlag( Int d ) const             { return m_ivResPredFlag[d];            }
+  Void          setIvResPredEnabledFlag( Int d, Bool flag )     { m_ivResPredEnabledFlag[d] = flag;            }
+  Bool          getIvResPredEnabledFlag( Int d ) const          { return m_ivResPredEnabledFlag[d];            }
 
-  Void          setDepthRefinementFlag( Int d, Bool flag )  { m_depthRefinementFlag[d] = flag;      }
-  Bool          getDepthRefinementFlag( Int d ) const       { return m_depthRefinementFlag[d];      }
+  Void          setDepthRefEnabledFlag( Int d, Bool flag )      { m_depthRefEnabledFlag[d] = flag;      }
+  Bool          getDepthRefEnabledFlag( Int d ) const           { return m_depthRefEnabledFlag[d];      }
 
-  Void          setViewSynthesisPredFlag( Int d, Bool flag ) { m_viewSynthesisPredFlag[d] = flag;   }
-  Bool          getViewSynthesisPredFlag( Int d ) const     { return m_viewSynthesisPredFlag[d];    }
+  Void          setVspMcEnabledFlag( Int d, Bool flag )         { m_vspMcEnabledFlag[d] = flag;   }
+  Bool          getVspMcEnabledFlag( Int d ) const              { return m_vspMcEnabledFlag[d];    }
 
-  Void          setDepthBasedBlkPartFlag( Int d, Bool flag ) { m_depthBasedBlkPartFlag[d] = flag;   }
-  Bool          getDepthBasedBlkPartFlag( Int d ) const     { return m_depthBasedBlkPartFlag[d];    }
+  Void          setDbbpEnabledFlag( Int d, Bool flag )          { m_dbbpEnabledFlag[d] = flag;   }
+  Bool          getDbbpEnabledFlag( Int d ) const               { return m_dbbpEnabledFlag[d];    }
 
-  Void          setMpiFlag( Int d, Bool flag )              { m_mpiFlag[d] = flag;                  }
-  Bool          getMpiFlag( Int d ) const                   { return m_mpiFlag[d];                  }
+  Void          setTexMcEnabledFlag( Int d, Bool flag )         { m_texMcEnabledFlag[d] = flag;                  }
+  Bool          getTexMcEnabledFlag( Int d ) const              { return m_texMcEnabledFlag[d];                  }
 
-  Void          setLog2MpiSubPbSizeMinus3( Int d, Int  val ) { m_log2MpiSubPbSizeMinus3[d] = val;   }
-  Int           getLog2MpiSubPbSizeMinus3( Int d ) const    { return m_log2MpiSubPbSizeMinus3[d];   }
+  Void          setLog2TexmcSubPbSizeMinus3( Int d, Int  val )  { m_log2TexmcSubPbSizeMinus3[d] = val;   }
+  Int           getLog2TexmcSubPbSizeMinus3( Int d ) const      { return m_log2TexmcSubPbSizeMinus3[d];   }
 
-  Void          setIntraContourFlag( Int d, Bool flag )     { m_intraContourFlag[d] = flag;         }
-  Bool          getIntraContourFlag( Int d ) const          { return m_intraContourFlag[d];         }
+  Void          setIntraContourEnabledFlag( Int d, Bool flag )  { m_intraContourEnabledFlag[d] = flag;         }
+  Bool          getIntraContourEnabledFlag( Int d ) const       { return m_intraContourEnabledFlag[d];         }
 
-  Void          setIntraSdcWedgeFlag( Int d, Bool flag )    { m_intraSdcWedgeFlag[d] = flag;        }
-  Bool          getIntraSdcWedgeFlag( Int d ) const         { return m_intraSdcWedgeFlag[d];        }
+  Void          setIntraDcOnlyWedgeEnabledFlag( Int d, Bool flag ) { m_intraDcOnlyWedgeEnabledFlag[d] = flag;        }
+  Bool          getIntraDcOnlyWedgeEnabledFlag( Int d ) const      { return m_intraDcOnlyWedgeEnabledFlag[d];        }
 
-  Void          setQtPredFlag( Int d, Bool flag )           { m_qtPredFlag[d] = flag;               }
-  Bool          getQtPredFlag( Int d ) const                { return m_qtPredFlag[d];               }
+  Void          setCqtCuPartPredEnabledFlag( Int d, Bool flag )    { m_cqtCuPartPredEnabledFlag[d] = flag;               }
+  Bool          getCqtCuPartPredEnabledFlag( Int d ) const         { return m_cqtCuPartPredEnabledFlag[d];               }
 
-  Void          setInterSdcFlag( Int d, Bool flag )         { m_interSdcFlag[d] = flag;             }
-  Bool          getInterSdcFlag( Int d ) const              { return m_interSdcFlag[d];             }
+  Void          setInterDcOnlyEnabledFlag( Int d, Bool flag )      { m_interDcOnlyEnabledFlag[d] = flag;             }
+  Bool          getInterDcOnlyEnabledFlag( Int d ) const           { return m_interDcOnlyEnabledFlag[d];             }
 
-  Void          setDepthIntraSkipFlag( Int d, Bool flag )   { m_depthIntraSkipFlag[d] = flag;       }
-  Bool          getDepthIntraSkipFlag( Int d ) const        { return m_depthIntraSkipFlag[d];       }
+  Void          setSkipIntraEnabledFlag( Int d, Bool flag )        { m_skipIntraEnabledFlag[d] = flag;       }
+  Bool          getSkipIntraEnabledFlag( Int d ) const             { return m_skipIntraEnabledFlag[d];       }
 private:
 
-  Bool        m_ivMvPredFlag          [2];
-  Bool        m_ivMvScalingFlag       [2];
-  Int         m_log2SubPbSizeMinus3   [2];
-  Bool        m_ivResPredFlag         [2];
-  Bool        m_depthRefinementFlag   [2];
-  Bool        m_viewSynthesisPredFlag [2];
-  Bool        m_depthBasedBlkPartFlag [2];
-  Bool        m_mpiFlag               [2];
-  Int         m_log2MpiSubPbSizeMinus3[2];
-  Bool        m_intraContourFlag      [2];
-  Bool        m_intraSdcWedgeFlag     [2];
-  Bool        m_qtPredFlag            [2];
-  Bool        m_interSdcFlag          [2];
-  Bool        m_depthIntraSkipFlag    [2];  
+  Bool        m_ivDiMcEnabledFlag          [2];
+  Bool        m_ivMvScalEnabledFlag        [2];
+  Int         m_log2IvmcSubPbSizeMinus3    [2];
+  Bool        m_ivResPredEnabledFlag       [2];
+  Bool        m_depthRefEnabledFlag        [2];
+  Bool        m_vspMcEnabledFlag           [2];
+  Bool        m_dbbpEnabledFlag            [2];
+  Bool        m_texMcEnabledFlag           [2];
+  Int         m_log2TexmcSubPbSizeMinus3   [2];
+  Bool        m_intraContourEnabledFlag    [2];
+  Bool        m_intraDcOnlyWedgeEnabledFlag[2];
+  Bool        m_cqtCuPartPredEnabledFlag   [2];
+  Bool        m_interDcOnlyEnabledFlag     [2];
+  Bool        m_skipIntraEnabledFlag       [2];  
 };
 
 #endif

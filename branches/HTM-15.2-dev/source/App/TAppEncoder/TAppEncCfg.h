@@ -90,7 +90,7 @@ protected:
   
 // layer sets   
   Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
-  IntAry2d m_layerIdsInSets;           ///< LayerIds in vps of layer set 
+  IntAry2d m_layerIdxInVpsInSets;           ///< LayerIds in vps of layer set 
   Int                    m_numAddLayerSets;                    ///< Number of additional layer sets
   IntAry2d m_highestLayerIdxPlus1;      ///< HighestLayerIdxPlus1 for each additional layer set and each independent layer (value with index 0 will be ignored)
   Int                    m_defaultOutputLayerIdc;             ///< Specifies output layers of layer sets, 0: output all layers, 1: output highest layers, 2: specified by LayerIdsInDefOuputLayerSet

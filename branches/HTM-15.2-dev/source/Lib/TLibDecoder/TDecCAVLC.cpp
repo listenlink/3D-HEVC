@@ -1164,16 +1164,16 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
     if ( pcSPS->getSpsRangeExtensionsFlag() )
     {
-              TComSPSRExt &spsRangeExtension = pcSPS->getSpsRangeExtension();
-              READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");     spsRangeExtension.setTransformSkipRotationEnabledFlag(uiCode != 0);
-              READ_FLAG( uiCode, "transform_skip_context_enabled_flag");      spsRangeExtension.setTransformSkipContextEnabledFlag (uiCode != 0);
-              READ_FLAG( uiCode, "implicit_rdpcm_enabled_flag");              spsRangeExtension.setRdpcmEnabledFlag(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
-              READ_FLAG( uiCode, "explicit_rdpcm_enabled_flag");              spsRangeExtension.setRdpcmEnabledFlag(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
-              READ_FLAG( uiCode, "extended_precision_processing_flag");       spsRangeExtension.setExtendedPrecisionProcessingFlag (uiCode != 0);
-              READ_FLAG( uiCode, "intra_smoothing_disabled_flag");            spsRangeExtension.setIntraSmoothingDisabledFlag      (uiCode != 0);
-              READ_FLAG( uiCode, "high_precision_offsets_enabled_flag");      spsRangeExtension.setHighPrecisionOffsetsEnabledFlag (uiCode != 0);
-              READ_FLAG( uiCode, "persistent_rice_adaptation_enabled_flag");  spsRangeExtension.setPersistentRiceAdaptationEnabledFlag (uiCode != 0);
-              READ_FLAG( uiCode, "cabac_bypass_alignment_enabled_flag");      spsRangeExtension.setCabacBypassAlignmentEnabledFlag  (uiCode != 0);
+      TComSPSRExt &spsRangeExtension = pcSPS->getSpsRangeExtension();
+      READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");     spsRangeExtension.setTransformSkipRotationEnabledFlag(uiCode != 0);
+      READ_FLAG( uiCode, "transform_skip_context_enabled_flag");      spsRangeExtension.setTransformSkipContextEnabledFlag (uiCode != 0);
+      READ_FLAG( uiCode, "implicit_rdpcm_enabled_flag");              spsRangeExtension.setRdpcmEnabledFlag(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
+      READ_FLAG( uiCode, "explicit_rdpcm_enabled_flag");              spsRangeExtension.setRdpcmEnabledFlag(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
+      READ_FLAG( uiCode, "extended_precision_processing_flag");       spsRangeExtension.setExtendedPrecisionProcessingFlag (uiCode != 0);
+      READ_FLAG( uiCode, "intra_smoothing_disabled_flag");            spsRangeExtension.setIntraSmoothingDisabledFlag      (uiCode != 0);
+      READ_FLAG( uiCode, "high_precision_offsets_enabled_flag");      spsRangeExtension.setHighPrecisionOffsetsEnabledFlag (uiCode != 0);
+      READ_FLAG( uiCode, "persistent_rice_adaptation_enabled_flag");  spsRangeExtension.setPersistentRiceAdaptationEnabledFlag (uiCode != 0);
+      READ_FLAG( uiCode, "cabac_bypass_alignment_enabled_flag");      spsRangeExtension.setCabacBypassAlignmentEnabledFlag  (uiCode != 0);
     }
 
     if ( pcSPS->getSpsMultilayerExtensionFlag() )
@@ -1276,25 +1276,25 @@ Void TDecCavlc::parseSps3dExtension( TComSPS* pcSPS )
   UInt uiCode; 
   for( Int d = 0; d  <=  1; d++ )
   {
-    READ_FLAG( uiCode, "iv_mv_pred_flag" ); sps3dExt.setIvMvPredFlag( d, uiCode == 1 );
-    READ_FLAG( uiCode, "iv_mv_scaling_flag" ); sps3dExt.setIvMvScalingFlag( d, uiCode == 1 );
+    READ_FLAG( uiCode, "iv_di_mc_enabled_flag" );              sps3dExt.setIvDiMcEnabledFlag( d, uiCode == 1 );
+    READ_FLAG( uiCode, "iv_mv_scal_enabled_flag" );            sps3dExt.setIvMvScalEnabledFlag( d, uiCode == 1 );
     if( d  ==  0 )
     {
-      READ_UVLC( uiCode, "log2_sub_pb_size_minus3" ); sps3dExt.setLog2SubPbSizeMinus3( d, uiCode );
-      READ_FLAG( uiCode, "iv_res_pred_flag" ); sps3dExt.setIvResPredFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "depth_refinement_flag" ); sps3dExt.setDepthRefinementFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "view_synthesis_pred_flag" ); sps3dExt.setViewSynthesisPredFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "depth_based_blk_part_flag" ); sps3dExt.setDepthBasedBlkPartFlag( d, uiCode == 1 );
+      READ_UVLC( uiCode, "log2_sub_pb_size_minus3" );          sps3dExt.setLog2IvmcSubPbSizeMinus3( d, uiCode );
+      READ_FLAG( uiCode, "iv_res_pred_enabled_flag" );         sps3dExt.setIvResPredEnabledFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "depth_ref_enabled_flag" );           sps3dExt.setDepthRefEnabledFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "vsp_mc_enabled_flag" );              sps3dExt.setVspMcEnabledFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "dbbp_enabled_flag" );                sps3dExt.setDbbpEnabledFlag( d, uiCode == 1 );
     }
     else 
     {
-      READ_FLAG( uiCode, "mpi_flag" ); sps3dExt.setMpiFlag( d, uiCode == 1 );
-      READ_UVLC( uiCode, "log2_mpi_sub_pb_size_minus3" ); sps3dExt.setLog2MpiSubPbSizeMinus3( d, uiCode );
-      READ_FLAG( uiCode, "intra_contour_flag" ); sps3dExt.setIntraContourFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "intra_sdc_wedge_flag" ); sps3dExt.setIntraSdcWedgeFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "qt_pred_flag" ); sps3dExt.setQtPredFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "inter_sdc_flag" ); sps3dExt.setInterSdcFlag( d, uiCode == 1 );
-      READ_FLAG( uiCode, "intra_skip_flag" ); sps3dExt.setDepthIntraSkipFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "tex_mc_enabled_flag" );              sps3dExt.setTexMcEnabledFlag( d, uiCode == 1 );
+      READ_UVLC( uiCode, "log2_texmc_sub_pb_size_minus3" );    sps3dExt.setLog2TexmcSubPbSizeMinus3( d, uiCode );
+      READ_FLAG( uiCode, "intra_contour_enabled_flag" );       sps3dExt.setIntraContourEnabledFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "intra_dc_only_wedge_enabled_flag" ); sps3dExt.setIntraDcOnlyWedgeEnabledFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "cqt_cu_part_pred_enabled_flag" );    sps3dExt.setCqtCuPartPredEnabledFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "inter_dc_only_enabled_flag" );       sps3dExt.setInterDcOnlyEnabledFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "skip_intra_enabled_flag" );          sps3dExt.setSkipIntraEnabledFlag( d, uiCode == 1 );
     }
   }
   pcSPS->setSps3dExtension( sps3dExt ); 

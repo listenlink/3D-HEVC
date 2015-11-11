@@ -1922,7 +1922,9 @@ TComVPS::TComVPS()
   
   for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
   {
+#if !NH_3D_FIX_TICKET_107
     m_layerSetIdxForOlsMinus1[i]  = -1; 
+#endif
     for ( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++)
     {
       m_profileTierLevelIdx[i][j] = -1; 
@@ -4317,21 +4319,21 @@ Void TComSlice::init3dToolParameters()
 
   const TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
 
-  m_ivMvPredFlag           = sps3dExt->getIvMvPredFlag         ( depthFlag ) && nRLLG0                       ;                             
-  m_ivMvScalingFlag        = sps3dExt->getIvMvScalingFlag      ( depthFlag )                                 ;                             
-  m_ivResPredFlag          = sps3dExt->getIvResPredFlag        ( depthFlag ) && nRLLG0                       ;                               
-  m_depthRefinementFlag    = sps3dExt->getDepthRefinementFlag  ( depthFlag )           && getInCompPredFlag() && m_cpAvailableFlag;
-  m_viewSynthesisPredFlag  = sps3dExt->getViewSynthesisPredFlag( depthFlag ) && nRLLG0 && getInCompPredFlag() && m_cpAvailableFlag;
-  m_depthBasedBlkPartFlag  = sps3dExt->getDepthBasedBlkPartFlag( depthFlag )           && getInCompPredFlag();                          
-  m_mpiFlag                = sps3dExt->getMpiFlag              ( depthFlag )           && getInCompPredFlag();
-  m_intraContourFlag       = sps3dExt->getIntraContourFlag     ( depthFlag )           && getInCompPredFlag();
-  m_intraSdcWedgeFlag      = sps3dExt->getIntraSdcWedgeFlag    ( depthFlag )                                 ;                          
-  m_qtPredFlag             = sps3dExt->getQtPredFlag           ( depthFlag )           && getInCompPredFlag();
-  m_interSdcFlag           = sps3dExt->getInterSdcFlag         ( depthFlag )                                 ;  
-  m_depthIntraSkipFlag     = sps3dExt->getDepthIntraSkipFlag   ( depthFlag )                                 ;                          
+  m_ivMvPredFlag           = sps3dExt->getIvDiMcEnabledFlag          ( depthFlag ) && nRLLG0                       ;                             
+  m_ivMvScalingFlag        = sps3dExt->getIvMvScalEnabledFlag        ( depthFlag )                                 ;                             
+  m_ivResPredFlag          = sps3dExt->getIvResPredEnabledFlag       ( depthFlag ) && nRLLG0                       ;                               
+  m_depthRefinementFlag    = sps3dExt->getDepthRefEnabledFlag        ( depthFlag )           && getInCompPredFlag() && m_cpAvailableFlag;
+  m_viewSynthesisPredFlag  = sps3dExt->getVspMcEnabledFlag           ( depthFlag ) && nRLLG0 && getInCompPredFlag() && m_cpAvailableFlag;
+  m_depthBasedBlkPartFlag  = sps3dExt->getDbbpEnabledFlag            ( depthFlag )           && getInCompPredFlag();                          
+  m_mpiFlag                = sps3dExt->getTexMcEnabledFlag           ( depthFlag )           && getInCompPredFlag();
+  m_intraContourFlag       = sps3dExt->getIntraContourEnabledFlag    ( depthFlag )           && getInCompPredFlag();
+  m_intraSdcWedgeFlag      = sps3dExt->getIntraDcOnlyWedgeEnabledFlag( depthFlag )                                 ;                          
+  m_qtPredFlag             = sps3dExt->getCqtCuPartPredEnabledFlag   ( depthFlag )           && getInCompPredFlag();
+  m_interSdcFlag           = sps3dExt->getInterDcOnlyEnabledFlag     ( depthFlag )                                 ;  
+  m_depthIntraSkipFlag     = sps3dExt->getSkipIntraEnabledFlag       ( depthFlag )                                 ;                          
 
-  m_subPbSize              =  1 << ( sps3dExt->getLog2SubPbSizeMinus3   ( depthFlag ) + 3 );  
-  m_mpiSubPbSize           =  1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
+  m_subPbSize              =  1 << ( sps3dExt->getLog2IvmcSubPbSizeMinus3 ( depthFlag ) + 3 );  
+  m_mpiSubPbSize           =  1 << ( sps3dExt->getLog2TexmcSubPbSizeMinus3( depthFlag ) + 3 );
 
 
 #if NH_3D_OUTPUT_ACTIVE_TOOLS
@@ -4412,15 +4414,15 @@ Void TComSlice::deriveInCmpPredAndCpAvailFlag( )
     const TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
     if( !getIsDepth() )
     {
-      m_inCmpPredAvailFlag = sps3dExt->getViewSynthesisPredFlag( getIsDepth() ) || 
-        sps3dExt->getDepthBasedBlkPartFlag( getIsDepth() ) || 
-        sps3dExt->getDepthRefinementFlag  ( getIsDepth() );                            
+      m_inCmpPredAvailFlag = sps3dExt->getVspMcEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getDbbpEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getDepthRefEnabledFlag  ( getIsDepth() );                            
     }
     else
     {
-      m_inCmpPredAvailFlag = sps3dExt->getIntraContourFlag( getIsDepth() ) || 
-        sps3dExt->getQtPredFlag( getIsDepth() ) || 
-        sps3dExt->getMpiFlag( getIsDepth() );                                  
+      m_inCmpPredAvailFlag = sps3dExt->getIntraContourEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getCqtCuPartPredEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getTexMcEnabledFlag( getIsDepth() );                                  
     }
   }
 }
