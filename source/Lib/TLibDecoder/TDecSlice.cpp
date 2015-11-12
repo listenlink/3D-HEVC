@@ -129,12 +129,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       }
     }
   }
-#if  NH_3D_DLT
-  if( pcSlice->getPPS()->getDLT() != NULL )
-  {
-      assert( pcSlice->getSPS()->getBitDepth( CHANNEL_TYPE_LUMA ) == pcSlice->getPPS()->getDLT()->getDepthViewBitDepth() );
-  }
-#endif
 
   // for every CTU in the slice segment...
 

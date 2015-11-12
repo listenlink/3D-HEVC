@@ -64,113 +64,6 @@ class InputNALUnit;
 #if NH_MV
 class TAppDecTop;
 #endif
-#if NH_3D
-class CamParsCollector
-{
-public:
-  CamParsCollector  ();
-  ~CamParsCollector ();
-
-  Void  init        ( const TComVPS* vps );
-  Void  setCodeScaleOffsetFile( FILE* pCodedScaleOffsetFile ) { m_pCodedScaleOffsetFile = pCodedScaleOffsetFile; };     
-
-  Void  uninit      ();
-  Void setSlice ( const TComSlice* pcSlice );
-
-  Bool  isInitialized() const     { return m_bInitialized; }
-  Int**** getBaseViewShiftLUTI()  { return m_aiBaseViewShiftLUT;   }
-
-private:
-  Void xResetReceivedIdc( Bool overWriteFlag ); 
-  Void  xOutput     ( Int iPOC );
-
-private:
-  Bool    m_bInitialized;
-  FILE*   m_pCodedScaleOffsetFile;
-
-  Int**   m_aaiCodedOffset;
-  Int**   m_aaiCodedScale;
-  
-  const TComVPS* m_vps; 
-  Int**    m_receivedIdc; 
-  Int      m_lastPoc; 
-  Int      m_firstReceivedPoc; 
-
-  
-  Bool    m_bCamParsVaryOverTime;
-
-  UInt    m_uiBitDepthForLUT;
-  UInt    m_iLog2Precision;
-  // UInt    m_uiInputBitDepth;
-
-  // look-up tables
-  Double****   m_adBaseViewShiftLUT;       ///< Disparity LUT
-  Int****      m_aiBaseViewShiftLUT;       ///< Disparity LUT
-  Void xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT);
-  Void xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT);
-  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 );
-  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2 );
-  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
-
-};
-
-template <class T>
-Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 )
-{
-  if( rpt )
-  {
-    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
-    {
-      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
-      {
-        for( UInt uiM = 0; uiM < uiSize3; uiM++ )
-        {
-          delete[] rpt[ uiK ][ uiL ][ uiM ];
-        }
-        delete[] rpt[ uiK ][ uiL ];
-      }
-      delete[] rpt[ uiK ];
-    }
-    delete[] rpt;
-  }
-  rpt = NULL;
-};
-
-
-template <class T>
-Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2 )
-{
-  if( rpt )
-  {
-    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
-    {
-      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
-      {
-        delete[] rpt[ uiK ][ uiL ];
-      }
-      delete[] rpt[ uiK ];
-    }
-    delete[] rpt;
-  }
-  rpt = NULL;
-};
-
-
-template <class T>
-Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize )
-{
-  if( rpt )
-  {
-    for( UInt uiK = 0; uiK < uiSize; uiK++ )
-    {
-      delete[] rpt[ uiK ];
-    }
-    delete[] rpt;
-  }
-  rpt = NULL;
-};
-
-#endif //NH_3D
 /// decoder class
 class TDecTop
 {
@@ -239,17 +132,10 @@ private:
   // Class interface 
   static ParameterSetManager  m_parameterSetManager;  // storage for parameter sets 
   TComPicLists*           m_dpb; 
-#if NH_3D
-  CamParsCollector*       m_pcCamParsCollector;
-#endif
 
   // Layer identification
   Int                     m_layerId;
   Int                     m_viewId;
-#if NH_3D                 
-  Int                     m_viewIndex; 
-  Bool                    m_isDepth;
-#endif
 
   // Layer set
   Int                     m_targetOlsIdx; 
@@ -348,18 +234,9 @@ public:
   Int        getLayerId            ( )                 { return m_layerId;    }
   Void       setViewId             ( Int viewId )      { m_viewId  = viewId;  }
   Int        getViewId             ( )                 { return m_viewId;     }  
-#if NH_3D    
-  Void       setViewIndex          ( Int viewIndex )   { m_viewIndex  = viewIndex;  }
-  Int        getViewIndex          ( )                 { return m_viewIndex;     }  
-  Void       setIsDepth            ( Bool isDepth )    { m_isDepth = isDepth; }
-  Bool       getIsDepth            ( )                 { return m_isDepth;    }
-#endif
 
   // Classes
   Void       setDpb                ( TComPicLists* picLists) { m_dpb = picLists; }
-#if NH_3D                                       
-  Void       setCamParsCollector   ( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
-#endif
 
   // Slice pilot access
   TComSlice* getSlicePilot                ( )               { return m_apcSlicePilot; }

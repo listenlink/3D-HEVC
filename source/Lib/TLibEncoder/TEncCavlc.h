@@ -105,17 +105,10 @@ public:
 #if NH_MV
   Void  codeSPSExtension        ( const TComSPS* pcSPS ); 
 #endif
-#if NH_3D
-  Void  codeVPS3dExtension      ( const TComVPS* pcVPS ); 
-  Void  codeSPS3dExtension      ( const TComSPS* pcSPS );
-#endif
   Void  codeSPS                 ( const TComSPS* pcSPS );
   Void  codePPS                 ( const TComPPS* pcPPS );
 #if NH_MV
   Void  codePpsMultilayerExtension( const TComPPS* pcPPS );
-#endif
-#if NH_3D
-  Void  codePps3dExtension       ( const TComPPS* pcPPS );
 #endif
   Void  codeSliceHeader         ( TComSlice* pcSlice );
   Void  codePTL                 ( const TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
@@ -129,27 +122,9 @@ public:
   Void codeSAOBlkParam(SAOBlkParam& /*saoBlkParam*/, const BitDepths& /*bitDepths*/, Bool* /*sliceEnabled*/, Bool /*leftMergeAvail*/, Bool /*aboveMergeAvail*/, Bool /*onlyEstMergeInfo*/ = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if NH_3D_DIS
-  Void codeDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void  codeDeltaDC      ( TComDataCU* /*pcCU*/, UInt /*absPartIdx*/ ) { assert(0); };
-#endif
-#if NH_3D_ARP
-  Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if NH_3D_IC
-  Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 
-#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if NH_3D_DBBP
-  Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeAlfCtrlFlag   ( ComponentID /*component*/, UInt /*code*/ ) {printf("Not supported\n"); assert(0);}
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

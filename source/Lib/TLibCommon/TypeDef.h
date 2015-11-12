@@ -48,30 +48,26 @@
    Linux makefiles support the following settings:
    make             -> HEVC_EXT not defined
    make HEVC_EXT=0  -> NH_MV=0 H_3D=0   --> plain HM
-   make HEVC_EXT=1  -> NH_MV=1 H_3D=0   --> MV only
-   make HEVC_EXT=2  -> NH_MV=1 H_3D=1   --> full 3D
+   make HEVC_EXT=1  -> NH_MV=1 H_3D=0   --> MV   
 */
 #ifndef HEVC_EXT
-#define HEVC_EXT                    2
+#define HEVC_EXT                    1
 #endif
-#if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
-#error HEVC_EXT must be in the range of 0 to 2, inclusive.
+#if ( HEVC_EXT < 0 )||( HEVC_EXT > 1 )
+#error HEVC_EXT must be in the range of 0 to 1, inclusive.
 #endif
 #define NH_MV          ( HEVC_EXT != 0)
-#define NH_3D          ( HEVC_EXT == 2)
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   FIXES AND INTEGRATIONS     ////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
 // Recent bug fixes
-#define NH_3D_FIX_TICKET_107                     1 // Clean up. 
-#define NH_3D_FIX_TICKET_91                      1 // NBDV availability in case of tiles.
 // Things that needs to be fixed also in the Specification ...
 #define NH_MV_FIX_NO_REF_PICS_CHECK               1 // !!SPEC!!
 #define NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS  1 // Derivation of NumActiveRefLayerPIcs. !!SPEC!!
 #define NH_MV_FIX_NUM_POC_TOTAL_CUR               1 // Derivation of NumPocTotalCur for IDR pictures. !!SPEC!!
 // To be done 
-#define NH_MV_HLS_PTL_LIMITS                       0
+#define NH_MV_HLS_PTL_LIMITS                      0
 #define NH_MV_SEI_TBD                             0
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -79,258 +75,10 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
 #define NH_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
-#if NH_3D
-#define NH_3D_INTEGER_MV_DEPTH            1
-#define NH_3D_ENC_DEPTH                   1   // Encoder optimizations for depth, incl.
-                                              // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
-                                              // LG_ZEROINTRADEPTHRESI_A0087
-                                              // HHI_DMM4_ENC_I0066
-                                              // H_3D_FAST_DEPTH_INTRA
-#define NH_3D_FAST_TEXTURE_ENCODING       1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
-#define NH_3D_ARP                         1  // Advanced residual prediction (ARP), JCT3V-D0177
-                                             // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
-                                             // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
-                                             // LGE_ARP_CTX_F0161                JCT3V-F0161
-                                             // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
-                                             // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053
-                                             // MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085  Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
-                                             // QC_I0051_ARP_SIMP
-                                             // SHARP_ARP_CHROMA_I0104
-                                             // MTK_I0072_IVARP_SCALING_FIX
-                                             // SEC_ARP_VIEW_REF_CHECK_J0037    Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
-                                             // SEC_ARP_REM_ENC_RESTRICT_K0035    Removal of encoder restriction of ARP, JCT3V-K0035
-#define NH_3D_QTL                          1
-#define NH_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
-                                              // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units
-                                              // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
-#define NH_3D_VSO                          1   // VSO, View synthesis optimization, includes:
-                                              // HHI_VSO
-                                              // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
-                                              // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
-                                              // LGE_WVSO_A0119
-                                              // SCU_HS_VSD_BUGFIX_IMPROV_G0163
-#define NH_3D_NBDV                         1   // Neighboring block disparity derivation
-                                              // QC_JCT3V-A0097
-                                              // LGE_DVMCP_A0126
-                                              // LGE_DVMCP_MEM_REDUCTION_B0135
-                                              // QC_SIMPLE_NBDV_B0047
-                                              // FIX_LGE_DVMCP_B0133
-                                              // QC_NBDV_LDB_FIX_C0055
-                                              // MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097
-                                              // MTK_SIMPLIFY_DVTC_C0135
-                                              // QC_CU_NBDV_D0181
-                                              // SEC_DEFAULT_DV_D0112
-                                              // MTK_DVMCP_FIX_E0172       fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
-                                              // SEC_SIMPLIFIED_NBDV_E0142 Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
-                                              // MTK_NBDV_TN_FIX_E0172     fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
-                                              // MTK_TEXTURE_MRGCAND_BUGFIX_E0182  Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
-                                              // LGE_SIMP_DISP_AVAIL_J0041    // Use 2 status for disparity availability - DISP_AVAILABLE and DISP_NONE
-#define NH_3D_IC                          1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
-                                              // Unifying rounding offset, for IC part, JCT3V-D0135
-                                              // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-                                              // SHARP_ILLUCOMP_REFINE_E0046
-                                              // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
-                                              // LGE_IC_CTX_F0160 //JCT3V-F0160
-                                              // SEC_ONLY_TEXTURE_IC_F0151
-                                              // MTK_IC_FLAG_CABAC_SIMP_G0061
-                                              // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
-                                              // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
-                                              // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
-                                              // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
-                                              // LGE_CHROMA_IC_J0050_J0034
-#if NH_3D_NBDV
-#define NH_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
-                                              // MTK_D0156
-                                              // MERL_D0166: Reference view selection in NBDV & Bi-VSP
-                                              // MERL_C0152: Basic VSP
-                                              // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
-                                              // NTT_DoNBDV_VECTOR_CLIP_E0141 disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
-                                              // SEC_VER_DONBDV_H0103          Vertical DV Restriction for DoNBDV
-#endif
-#define NH_3D_VSP                          1   // View synthesis prediction
-                                              // MERL_C0152: Basic VSP
-                                              // MERL_D0166: Reference view selection in NBDV & Bi-VSP
-                                              // MTK_D0105, LG_D0139: No VSP for depth
-                                              // QC_D0191: Clean up
-                                              // LG_D0092: Multiple VSP candidate allowed
-                                              // MTK_VSP_FIX_ALIGN_WD_E0172
-                                              // NTT_VSP_ADAPTIVE_SPLIT_E0207 adaptive sub-PU partitioning in VSP, JCT3V-E0207
-                                              // NTT_VSP_DC_BUGFIX_E0208 bugfix for sub-PU based DC in VSP, JCT3V-E0208
-                                              // NTT_VSP_COMMON_E0207_E0208 common part of JCT3V-E0207 and JCT3V-E0208
-                                              // MTK_F0109_LG_F0120_VSP_BLOCK MTK_LG_SIMPLIFY_VSP_BLOCK_PARTITION_F0109_F0120
-                                              // SHARP_VSP_BLOCK_IN_AMP_F0102 VSP partitioning for AMP
-                                              // MTK_VSP_SIMPLIFICATION_F0111 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
-                                              // LGE_SHARP_VSP_INHERIT_F0104
-                                              // NTT_STORE_SPDV_VSP_G0148 Storing Sub-PU based DV for VSP
-                                              // Restricted bi-prediction for VSP
-                                              // MTK_MRG_LIST_SIZE_CLEANUP_J0059   1   // Include VSP for deriving merge candidate list size, JCT3V-J0059
-                                              // SEC_A1_BASED_VSP_J0039            1   // Removal of redundant VSP in Merge list
-#define NH_3D_MLC                          1
-#define NH_3D_IV_MERGE                     1  // Inter-view motion merge candidate
-                                              // HHI_INTER_VIEW_MOTION_PRED
-                                              // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
-                                              // QC_MRG_CANS_B0048             , JCT3V-B0048, B0086, B0069
-                                              // OL_DISMV_POS_B0069            , different pos for disparity MV candidate, B0069
-                                              // MTK_INTERVIEW_MERGE_A0049     , second part
-                                              // QC_AMVP_MRG_UNIFY_IVCAN_C0051
-                                              // QC_INRIA_MTK_MRG_E0126
-                                              // ETRIKHU_MERGE_REUSE_F0093 QC_DEPTH_IV_MRG_F0125, JCT3V-F0125: Depth oriented Inter-view MV candidate
-                                              // MTK_NBDV_IVREF_FIX_G0067      , Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
-                                              // SEC_DEPTH_DV_DERIVAITON_G0074, Simplification of DV derivation for depth, JCT3V-G0074
-                                              // QC_DEPTH_MERGE_SIMP_G0127 Remove DV candidate and shifting candidate for depth coding
-                                              // QC_IV_PRED_CONSTRAINT_H0137   Constraint on inter-view (motion) prediction tools
-                                              // ETRIKHU_BUGFIX_H0083          bug-fix for DV candidate pruning
-                                              // ETRIKHU_CLEANUP_H0083         cleaned-up source code for constructing merging candidate list
-                                              // ETRIKHU_CLEANUP_H0083_MISSING missing guard macros added by GT
-                                              // SHARP_SIMPLE_MERGE_H0062      Restrict 3D-HEVC merge cand in small PUs
-                                              // MTK_DIS_SPBIP8X4_H0205        Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
-                                              // SEC_ADAPT_DISABLE_IVMP        Disabling IVMP merge candidates when IC is enabled, JCT3V-H0070
-                                              // SEC_SIMP_SHIFTED_DV_I0086     Simplification of Shifted DV candidate, JCT3V-I0086
-                                              // SEC_SHIFTED_IVMC_POS_K0036    Position Derivation for Shifted-IVMC, JCT3V-K0036
-#define NH_3D_TEXT_MERGE                  1
-                                              // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
-                                              // EC_MPI_ENABLING_MERGE_F0150, MPI flag in VPS and enabling in Merge mode
-#define NH_3D_TMVP                        1   // QC_TMVP_C0047
-                                              // Sony_M23639
-                                              // H_3D_TMVP_SCALING_FIX_K0053       1   // QC/CY for K0053
-#define NH_3D_DMM                         1   // Depth modeling modes
-                                              // HHI_DMM_PRED_TEX
-                                              // HHI_DMM_WEDGE_INTRA
-                                              // FIX_WEDGE_NOFLOAT_D0036
-                                              // LGE_EDGE_INTRA_A0070
-                                              // LGE_DMM3_SIMP_C0044
-                                              // QC_DC_PREDICTOR_D0183
-                                              // LGE_CONCATENATE_D0141
-                                              // PKU_QC_DEPTH_INTRA_UNI_D0195
-                                              // SEC_DMM2_E0146_HHIFIX Removal of DMM2 from DMMs
-                                              // ZJU_DEPTH_INTRA_MODE_E0204 Simplified Binarization for depth_intra_mode
-                                              // SCU_HS_DMM4_REMOVE_DIV_E0242 DMM4 Division Removal
-                                              // LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   Removal of overlap between DMM3 and DMM1
-                                              // SEC_DMM3_RBC_F0147 Removal of DMM3 and RBC from DMMs
-                                              // HHI_DIM_PREDSAMP_FIX_F0171
-                                              // QC_DIM_DELTADC_UNIFY_F0132 Unify delta DC coding in depth intra modes
-                                              // LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135  Use only one context for CABAC of dim_not_present_flag
-                                              // QC_SIMP_DELTADC_CODING_H0131   Simplify detaDC entropy coding
-                                              // MTK_DMM_SIMP_CODE_H0092        Remove CABAC context for DMM1 mode coding
-                                              // MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113 Use only one context for CABAC of delta_dc_flag as in JCTVC-H0084, JCTVC-H0100 and JCTVC-H0113
-                                              // HS_DMM_SIGNALLING_I0120
-                                              // SHARP_DMM1_I0110 LUT size reduction for DMM1 proposed in JCT3V-I0110
-                                              // MTK_DMM_SIM_J0035
-                                              // SHARP_DMM_CLEAN_K0042             1   // Generate DMM pattern with rotation
-#define NH_3D_DLT                         1   // Depth Lookup Table
-                                              // HHI_DELTADC_DLT_D0035
-                                              // LGE_PRED_RES_CODING_DLT_DOMAIN_F0159 JCT3V-F0159
-                                              // SEC_NO_RESI_DLT_H0105
-                                              // MTK_DLT_CODING_FIX_H0091
-                                              // H_3D_DELTA_DLT
-                                              // RWTH_DLT_CLIP_I0057
-                                              // SHARP_DLT_SIMP_J0029 DLT(DepthValue2Idx[]) table derivation cleanup
-#define NH_3D_SDC_INTRA                   1   // Segment-wise DC Coding method for INTRA
-#define NH_3D_SDC_INTER                   1   // Segment-wise DC Coding method for INTER
-                                              // RWTH_SDC_DLT_B0036
-                                              // INTEL_SDC64_D0193
-                                              // RWTH_SDC_CTX_SIMPL_D0032
-                                              // FIX_SDC_ENC_RD_WVSO_D0163
-                                              // MTK_SAMPLE_BASED_SDC_D0110
-                                              // KWU_SDC_SIMPLE_DC_E0117 Simplified DC calculation for SDC
-                                              // LGE_SDC_REMOVE_DC_E0158 Removal of DC mode from SDC
-                                              // Unify intra SDC and inter SDC
-                                              // QC_GENERIC_SDC_G0122 Generalize SDC to all depth intra modes
-                                              // SCU_HS_DEPTH_DC_PRED_G0143
-                                              // HS_TSINGHUA_SDC_SPLIT_G0111
-                                              // QC_PKU_SDC_SPLIT_G0123 Intra SDC Split
-                                              // HS_DMM_SDC_PREDICTOR_UNIFY_H0108  Unification of DMM and SDC predictor derivation
-                                              // MTK_SDC_FLAG_FIX_H0095                          Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
-                                              // FAST_SDC_OFFSET_DECISION_I0084
-                                              // SEPARATE_FLAG_I0085
-                                              // MTK_J0033
-                                              // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
-                                              // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
-#define NH_3D_SPIVMP                       1   // H_3D_SPIVMP JCT3V-F0110: Sub-PU level inter-view motion prediction
-                                              // SEC_SPIVMP_MCP_SIZE_G0077, Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
-                                              // QC_SPIVMP_MPI_G0119 Sub-PU level MPI merge candidate
-                                              // Simplification on Sub-PU level temporal interview motion prediction
-                                              // MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
-#define NH_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
-                                              // MTK_DBBP_AMP_REM_H0072
-                                              // RWTH_DBBP_NO_SPU_H0057
-                                              // SEC_DBBP_FILTERING_H0104
-                                              // MTK_DBBP_SIGNALING_H0094
-                                              // H_3D_FIX_DBBP_IVMP Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself.
-                                              // SEC_DBBP_EXPLICIT_SIG_I0077 Remove the partition derivation and signal dbbp_flag only when the partition mode is 2NxN/Nx2N, JCT3V-I0077
-                                              // Disallow DBBP in 8x8 CU, JCT3V-I0078
-                                              // SHARP_DBBP_SIMPLE_FLTER_I0109 Simple condition and one dimensional filter for DBBP
-                                              // SEC_DBBP_DMM4_THRESHOLD_I0076 Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
-                                              // SEC_DBBP_VIEW_REF_CHECK_J0037 Signaling dbbp_flag when the current slice has view reference picture(s), JCT3V-J0037 item4
-                                              // RWTH_DBBP_NO_SATD_K0028
-                                              // HS_DBBP_CLEAN_K0048
-#define NH_3D_DIS                         1   // Depth intra skip
-                                              // SEC_DEPTH_INTRA_SKIP_MODE_K0033  Depth intra skip mode
-#define H_3D_FCO                          0   // Flexible coding order for 3D
-// OTHERS
-                                              // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
-                                              // MTK_FAST_TEXTURE_ENCODING_E0173
-//HLS
-                                              // HHI_DEPENDENCY_SIGNALLING_I1_J0107
-                                              // HHI_TOOL_PARAMETERS_I2_J0107
-                                              // HHI_VPS_3D_EXTENSION_I3_J0107
-                                              // HHI_INTER_COMP_PRED_K0052
-                                              // HHI_RES_PRED_K0052
-                                              // HHI_CAM_PARA_K0052
-                                              // H_3D_DIRECT_DEP_TYPE
-#endif // NH_3D
-#if NH_MV
 ////////////////////////
 /// Consider Removal 
 ////////////////////////
-// Rate Control
-#define KWU_FIX_URQ                       0
-#define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
-#define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
 #define NH_MV_HLS_PTL_LIMITS               0
-#if NH_3D
-// Unclear Fix
-#define H_3D_PPS_FIX_DEPTH                     0
-#endif
-#endif
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-#if NH_3D
-#define NH_3D_OUTPUT_ACTIVE_TOOLS               0
-#define NH_3D_REN_MAX_DEV_OUT                   0
-#endif
-///// ***** VIEW SYNTHESIS OPTIMIZAION *********
-#if NH_3D_VSO
-#define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
-#define H_3D_VSO_COLOR_PLANES             1   // Compute VSO distortion on color planes
-#define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
-#define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
-#define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
-#endif
-////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
-#if NH_3D_NBDV
-#define DVFROM_LEFT                       0
-#define DVFROM_ABOVE                      1
-#define IDV_CANDS                         2
-#endif
-/////////////////////////////////////////////////////////////////////////////////////
-/// GT: Move values which are not flags to CommonDef.h and convert to static int !!
-///////////////////////////////////////////////////////////////////////////////////
-///// ***** ILLUMATION COMPENSATION *********
-#if NH_3D_IC
-#define IC_REG_COST_SHIFT                 7
-#define IC_CONST_SHIFT                    5
-#define IC_SHIFT_DIFF                     12
-#define IC_LOW_LATENCY_ENCODING_THRESHOLD 0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
-#endif
-///// ***** DEPTH BASED BLOCK PARTITIONING *********
-#if NH_3D_DBBP
-#define DBBP_INVALID_SHORT                (-4)
-#endif
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
 #endif
 // ====================================================================================================================
 // Debugging
@@ -493,23 +241,6 @@ typedef std::vector< BoolAry2d >   BoolAry3d;
 typedef std::vector< BoolAry3d >   BoolAry4d;
 typedef std::vector< BoolAry4d >   BoolAry5d;
 #endif
-#if NH_3D_VSO
-// ====================================================================================================================
-// Define Distortion Types
-// ====================================================================================================================
-typedef       Int64           RMDist;     ///< renderer model distortion
-#if H_3D_VSO_DIST_INT
-typedef       Int64            Dist;       ///< RDO distortion
-typedef       Int64            Dist64;
-#define       RDO_DIST_MIN     MIN_INT
-#define       RDO_DIST_MAX     MAX_INT
-#else
-typedef       UInt             Dist;       ///< RDO distortion
-typedef       UInt64           Dist;
-#define       RDO_DIST_MIN     0
-#define       RDO_DIST_MAX     MAX_UINT
-#endif
-#endif
 // ====================================================================================================================
 // Enumeration
 // ====================================================================================================================
@@ -644,15 +375,6 @@ enum DFunc
   DF_HADS32          = 26,     ///<  32xM HAD with step
   DF_HADS64          = 27,     ///<  64xM HAD with step
   DF_HADS16N         = 28,     ///< 16NxM HAD with step
-#if NH_3D_VSO
-  DF_VSD      = 29,      ///< general size VSD
-  DF_VSD4     = 30,      ///<   4xM VSD
-  DF_VSD8     = 31,      ///<   8xM VSD
-  DF_VSD16    = 32,      ///<  16xM VSD
-  DF_VSD32    = 33,      ///<  32xM VSD
-  DF_VSD64    = 34,      ///<  64xM VSD
-  DF_VSD16N   = 35,      ///< 16NxM VSD
-#endif
   DF_SAD12           = 43,
   DF_SAD24           = 44,
   DF_SAD48           = 45,
@@ -682,23 +404,6 @@ enum MVP_DIR
   MD_BELOW_LEFT,        ///< MVP of below left block
   MD_ABOVE_LEFT         ///< MVP of above left block
 };
-#if NH_3D_MLC
-enum DefaultMergCandOrder
-{
-  MRG_T = 0,            ///< MPI
-  MRG_D,                ///< DDD
-  MRG_IVMC,             ///< Temporal inter-view
-  MRG_A1,               ///< Left
-  MRG_B1,               ///< Above
-  MRG_VSP,              ///< VSP
-  MRG_B0,               ///< Above right
-  MRG_IVDC,             ///< Disparity inter-view
-  MRG_A0,               ///< Left bottom
-  MRG_B2,               ///< Above left
-  MRG_IVSHIFT,          ///< Shifted IVMC or Shifted IVDC. (These are mutually exclusive)
-  MRG_COL               ///< Temporal co-located
-};
-#endif
 enum StoredResidualType
 {
   RESIDUAL_RECONSTRUCTED          = 0,
@@ -834,9 +539,6 @@ namespace Profile
     HIGHTHROUGHPUTREXT = 5
 #if NH_MV
     ,MULTIVIEWMAIN = 6,
-#if NH_3D
-    MAIN3D = 8,
-#endif
 #endif
   };
 }
@@ -987,24 +689,6 @@ enum DecProcPart
 {
   START_PIC,
   FINALIZE_PIC
-};
-#endif
-#if NH_3D_VSO
-// Renderer
-enum BlenMod
-{
-  BLEND_NONE  = -1,
-  BLEND_AVRG  = 0,
-  BLEND_LEFT  = 1,
-  BLEND_RIGHT = 2,
-  BLEND_GEN   =  3
-};
-enum
-{
-  VIEWPOS_INVALID = -1,
-  VIEWPOS_LEFT    = 0,
-  VIEWPOS_RIGHT   = 1,
-  VIEWPOS_MERGED  = 2
 };
 #endif
 // ====================================================================================================================

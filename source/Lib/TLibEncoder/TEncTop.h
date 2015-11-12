@@ -64,9 +64,6 @@
 // Class definition
 // ====================================================================================================================
 
-#if KWU_RC_MADPRED_E0227
-class TAppEncTop;
-#endif
 /// encoder class
 class TEncTop : public TEncCfg
 {
@@ -81,10 +78,6 @@ private:
 
 #if NH_MV
   TComPicLists*           m_ivPicLists;                   ///< access to picture lists of other layers 
-#endif
-#if NH_3D_IC
-  Int *m_aICEnableCandidate;
-  Int *m_aICEnableNum;
 #endif
   // encoder search
   TEncSearch              m_cSearch;                      ///< encoder search class
@@ -123,10 +116,6 @@ private:
 
   TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
 
-#if KWU_RC_MADPRED_E0227
-  TAppEncTop*             m_pcTAppEncTop;
-  TAppComCamPara*         m_cCamParam;
-#endif
 #if NH_MV
   TEncAnalyze             m_cAnalyzeAll;
   TEncAnalyze             m_cAnalyzeI;
@@ -151,17 +140,9 @@ public:
 
   Void      create          ();
   Void      destroy         ();
-#if KWU_RC_MADPRED_E0227
-  Void      init            ( TAppEncTop* pcTAppEncTop, Bool isFieldCoding );
-#else
   Void      init            (Bool isFieldCoding);
-#endif
 #if NH_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
-#endif
-#if NH_3D_IC
-  Int*      getICEnableCandidate() { return m_aICEnableCandidate; }
-  Int*      getICEnableNum() { return m_aICEnableNum; }
 #endif
   Void      deletePicBuffer ();
 #if NH_MV
@@ -193,11 +174,6 @@ public:
   TEncSbac***             getRDSbacCoder        () { return  m_pppcRDSbacCoder;       }
   TEncSbac*               getRDGoOnSbacCoder    () { return  &m_cRDGoOnSbacCoder;     }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
-#if KWU_RC_MADPRED_E0227
-  TAppEncTop*             getEncTop             () { return m_pcTAppEncTop; }
-  TAppComCamPara*         getCamParam()                 { return m_cCamParam;}
-  Void                    setCamParam(TAppComCamPara * pCamparam)                 { m_cCamParam = pCamparam;}
-#endif
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
   Int getReferencePictureSetIdxForSOP(Int POCCurr, Int GOPid );
 #if NH_MV
@@ -209,13 +185,6 @@ public:
   Int                     getFrameId            (Int iGOPid);  
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
-#endif
-#if NH_3D
-  Void                    setSps3dExtension     ( TComSps3dExtension sps3dExtension ) { m_cSPS.setSps3dExtension( sps3dExtension );  };
-#endif
-#if NH_3D_IC
-  Void                    setICEnableCandidate         ( Int* ICEnableCandidate) { m_aICEnableCandidate = ICEnableCandidate; }
-  Void                    setICEnableNum         ( Int* ICEnableNum) { m_aICEnableNum = ICEnableNum; }
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
@@ -249,9 +218,6 @@ public:
 #endif
   Void printSummary(Bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR, m_printSequenceMSE, m_cSPS.getBitDepths()); }
 
-#if NH_3D_VSO
-   Void setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset, Int maxCuHeight ); 
-#endif
 };
 
 //! \}

@@ -79,9 +79,6 @@ public:
 
   Void  load                   ( const TEncSbac* pSrc  );
   Void  loadIntraDirMode       ( const TEncSbac* pScr, const ChannelType chType  );
-#if NH_3D_DMM
-  Void  loadIntraDepthDmm      ( const TEncSbac* pSrc );
-#endif
   Void  store                  ( TEncSbac* pDest ) const;
   Void  loadContexts           ( const TEncSbac* pSrc  );
   Void  resetBits              ()                { m_pcBinIf->resetBits(); m_pcBitIf->resetBits(); }
@@ -114,15 +111,6 @@ private:
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange );
-#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void  xWriteExGolombLevelDdc( UInt uiSymbol );
-  Void  xCodeDeltaDC         ( Pel valDeltaDC, UInt uiNumSeg );
-#endif
-#if NH_3D_DMM
-  Void  xCodeIntraDepthMode  ( TComDataCU* pcCU, UInt absPartIdx );
-  Void  xCodeDmmData         ( TComDataCU* pcCU, UInt absPartIdx );
-  Void  xCodeDmm1WedgeIdx    ( UInt uiTabIdx, Int iNumBit );
-#endif
 
 
   Void  xCopyFrom            ( const TEncSbac* pSrc );
@@ -137,26 +125,8 @@ protected:
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if NH_3D_DIS
-  Void codeDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if NH_3D_ARP
-  Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if NH_3D_IC
-  Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void  codeDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx );
-#endif
-#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if NH_3D_DBBP
-  Void codeDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
@@ -203,18 +173,8 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
-#if NH_3D_DIS
-  ContextModel3DBuffer m_cCUDISFlagSCModel;
-  ContextModel3DBuffer m_cCUDISTypeSCModel;
-#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-#if NH_3D_ARP
-  ContextModel3DBuffer m_cCUPUARPWSCModel;
-#endif
-#if NH_3D_IC
-  ContextModel3DBuffer m_cCUICFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;
@@ -247,22 +207,6 @@ private:
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
 
-#if NH_3D_DMM
-  ContextModel3DBuffer m_cNotDmmFlagSCModel;
-  ContextModel3DBuffer m_cDmmModeSCModel;
-#endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  ContextModel3DBuffer m_cDdcDataSCModel;
-  ContextModel3DBuffer m_cSDCFlagSCModel;
-#endif
-#if NH_3D_SDC_INTRA  
-  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
-  ContextModel3DBuffer m_cSDCResidualSCModel;
-  ContextModel3DBuffer m_cDdcFlagSCModel;
-#endif
-#if NH_3D_DBBP
-  ContextModel3DBuffer m_cDBBPFlagSCModel;
-#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

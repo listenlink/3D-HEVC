@@ -153,22 +153,6 @@ private:
   Bool                  m_activatesNewVps;
   TComDecodedRps        m_decodedRps;
 #endif
-#if NH_3D_VSO
-  Int                   m_viewIndex;
-  Bool                  m_isDepth;
-  Int**                 m_aaiCodedScale;
-  Int**                 m_aaiCodedOffset;
-#if NH_3D_QTLPC
-  Bool                  m_bReduceBitsQTL;
-#endif
-#if NH_3D_NBDV
-  UInt                   m_uiRapRefIdx;
-  RefPicList             m_eRapRefList;
-  Int                    m_iNumDdvCandPics;
-  Bool                   m_abTIVRINCurrRL [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
-  Int                    m_aiTexToDepRef  [2][MAX_NUM_REF];
-#endif
-#endif
 public:
   TComPic();
   virtual ~TComPic();
@@ -222,9 +206,7 @@ public:
   Void          setOutputMark (Bool b) { m_bNeededForOutput = b;     }
   Bool          getOutputMark () const      { return m_bNeededForOutput;  }
 
-#if !NH_3D
   Void          compressMotion();
-#endif
   UInt          getCurrSliceIdx() const           { return m_uiCurrSliceIdx;                }
   Void          setCurrSliceIdx(UInt i)      { m_uiCurrSliceIdx = i;                   }
   UInt          getNumAllocatedSlice() const      {return m_picSym.getNumAllocatedSlice();}
@@ -310,40 +292,6 @@ public:
 
    Void          print( Int outputLevel );
 
-#if NH_3D_VSO
-   Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
-   Int           getViewIndex          () const           { return m_viewIndex;     }
-
-   Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
-   Bool          getIsDepth            ()                 { return m_isDepth; }
-
-   Void          setScaleOffset( Int** pS, Int** pO )     { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
-   Int**         getCodedScale ()                         { return m_aaiCodedScale;  }
-   Int**         getCodedOffset()                         { return m_aaiCodedOffset; }
-
-   Void          compressMotion(Int scale); 
-   Void          printMotion( );
-#if NH_3D_ARP
-   Void          getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
-#endif
-#if NH_3D_QTLPC
-   Bool          getReduceBitsFlag ()                     { return m_bReduceBitsQTL;     }
-   Void          setReduceBitsFlag ( Bool bFlag )         { m_bReduceBitsQTL = bFlag;    }
-#endif
-#if NH_3D_NBDV
-  Int            getNumDdvCandPics()                      { return m_iNumDdvCandPics;    }
-  Int            getDisCandRefPictures(Int iColPOC);        
-  Void           setRapRefIdx(UInt uiRapRefIdx)           { m_uiRapRefIdx = uiRapRefIdx; }
-  Void           setRapRefList(RefPicList eRefPicList)    { m_eRapRefList = eRefPicList; }
-  Void           setNumDdvCandPics (Int i)                { m_iNumDdvCandPics = i;       }
-  UInt           getRapRefIdx()                           { return m_uiRapRefIdx;        }
-  RefPicList     getRapRefList()                          { return m_eRapRefList;        }
-  Void           checkTemporalIVRef();                     
-  Bool           isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
-  Void           checkTextureRef(  );
-  Int            isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
-#endif
-#endif
 #endif
 
   /** transfer ownership of seis to this picture */
@@ -403,9 +351,6 @@ private:
   TComList<TComAu*    >       m_aus;  
   TComList<TComSubDpb*>       m_subDpbs; 
   Bool                        m_printPicOutput; 
-#if NH_3D_VSO
-  const TComVPS*              m_vps; 
-#endif
 public: 
   TComPicLists() { m_printPicOutput = false; };
   ~TComPicLists();
@@ -447,11 +392,6 @@ public:
   Void                   setPrintPicOutput ( Bool printPicOutput ) { m_printPicOutput = printPicOutput; };
   Void                   print(); 
 
-#if NH_3D_VSO
-  Void                   setVPS                        ( const TComVPS* vps ) { m_vps = vps;  }; 
-  TComPic*               getPic                        ( Int viewIndex, Bool depthFlag, Int auxId, Int poc );
-  TComPicYuv*            getPicYuv                     ( Int viewIndex, Bool depthFlag, Int auxId, Int poc, Bool recon );
-#endif  
 
 }; 
 
