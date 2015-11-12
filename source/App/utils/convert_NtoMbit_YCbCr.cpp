@@ -104,12 +104,12 @@ Int main(Int argc, const char** argv)
   input.skipFrames(num_frames_skip, width, height, chromaFormatIDC);
 
   TComPicYuv frame;
-  frame.create( width, height, chromaFormatIDC, width, height, 0, false);
+  frame.createWithoutCUInfo( width, height, chromaFormatIDC);
 
   Int pad[2] = {0, 0};
 
   TComPicYuv cPicYuvTrueOrg;
-  cPicYuvTrueOrg.create( width, height, chromaFormatIDC, width, height, 0, false );
+  cPicYuvTrueOrg.createWithoutCUInfo( width, height, chromaFormatIDC );
 
   UInt num_frames_processed = 0;
   while (!input.isEof())

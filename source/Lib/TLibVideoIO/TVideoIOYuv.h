@@ -63,7 +63,7 @@ public:
   TVideoIOYuv()           {}
   virtual ~TVideoIOYuv()  {}
 
-  Void  open  ( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] ); ///< open or create file
+  Void  open  ( const std::string &fileName, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] ); ///< open or create file
   Void  close ();                                           ///< close file
 
   Void skipFrames(UInt numFrames, UInt width, UInt height, ChromaFormat format);

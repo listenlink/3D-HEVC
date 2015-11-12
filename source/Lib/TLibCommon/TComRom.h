@@ -111,7 +111,7 @@ __inline Void mapDmmToIntraDir(  Int& intraMode ) { if( isDmmMode( intraMode ) )
 // Mode-Dependent DST Matrices
 // ====================================================================================================================
 extern const TMatrixCoeff g_as_DST_MAT_4 [TRANSFORM_NUMBER_OF_DIRECTIONS][4][4];
-#if H_MV_HLS_PTL_LIMITS
+#if NH_MV_HLS_PTL_LIMITS
 class TComGeneralTierAndLevelLimits
 {
 public:
@@ -148,7 +148,7 @@ extern std::map< Level::Name, TComGeneralTierAndLevelLimits > g_generalTierAndLe
 // ====================================================================================================================
 // Misc.
 // ====================================================================================================================
-extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
+extern       SChar   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 #if NH_MV
 // Change later
 #ifndef ENC_DEC_TRACE
@@ -171,7 +171,7 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_X(x)     if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, "%x", x );
 #define DTRACE_CABAC_R( x,y ) if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, x,    y );
 #define DTRACE_CABAC_N        if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, "\n"    );
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
  extern Bool   g_traceCU; 
  extern Bool   g_tracePU ; 
  extern Bool   g_traceTU; 
@@ -205,9 +205,9 @@ extern Bool   g_traceMotionInfoBeforUniPred;
 #define D_DEC_INDENT( b )            decIndent        ( b );
 #define D_PRINT_INC_INDENT( b, str ) prinStrIncIndent( b, str );
 #define D_PRINT_INDENT( b, str )     printStrIndent   ( b, str);
- Void           tracePSHeader   ( const Char* psName, Int layerId ); 
- Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
- Void           writeToTraceFile( const Char* symbolName, Bool doIt );
+ Void           tracePSHeader   ( const TChar* psName, Int layerId ); 
+ Void           writeToTraceFile( const TChar* symbolName, Int val, Bool doIt );
+ Void           writeToTraceFile( const TChar* symbolName, Bool doIt );
  UInt64         incSymbolCounter();          
  Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );           
  Void           printStr         ( std::string str );
@@ -242,9 +242,10 @@ extern Bool   g_traceMotionInfoBeforUniPred;
 #define D_PRINT_INDENT( b, str );
 #endif
 #endif
-const Char* nalUnitTypeToString(NalUnitType type);
-extern const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
-extern const Char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
+const TChar* nalUnitTypeToString(NalUnitType type);
+
+extern const TChar *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
+extern const TChar *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 extern const Int g_quantTSDefault4x4[4*4];
 extern const Int g_quantIntraDefault8x8[8*8];
 extern const Int g_quantInterDefault8x8[8*8];

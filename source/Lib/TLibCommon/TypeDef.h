@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 /** \file     TypeDef.h
-    \brief    Define basic types, new types and enumerations
+    \brief    Define macros, basic types, new types and enumerations
 */
 #ifndef __TYPEDEF__
 #define __TYPEDEF__
@@ -63,26 +63,22 @@
 ///////////////////////////////////   FIXES AND INTEGRATIONS     ////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-#define NH_MV_SEI_TBD                             0
-#define NH_MV_SEI                                 1
-#define NH_MV_FIX_TICKET_106                      1 // Identical motion check.
+// Recent bug fixes
+#define NH_3D_FIX_TICKET_107                     1 // Clean up. 
+#define NH_3D_FIX_TICKET_91                      1 // NBDV availability in case of tiles.
+// Things that needs to be fixed also in the Specification ...
 #define NH_MV_FIX_NO_REF_PICS_CHECK               1 // !!SPEC!!
 #define NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS  1 // Derivation of NumActiveRefLayerPIcs. !!SPEC!!
 #define NH_MV_FIX_NUM_POC_TOTAL_CUR               1 // Derivation of NumPocTotalCur for IDR pictures. !!SPEC!!
-#define NH_MV_LAYERS_NOT_PRESENT_SEI              1 // Layers not present SEI message JCTMV-M0043
-#if NH_MV_SEI
-#define SEI_DRI_F0169 1
-#endif
-#endif
-#if NH_3D
-#define H_3D_FIX_ARP_CHECK_NOT_IN_DPB     1
-#define NH_3D_FIX_NBDV_COL                1
+// To be done 
+#define NH_MV_HLS_PTL_LIMITS                       0
+#define NH_MV_SEI_TBD                             0
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
-#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define NH_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
 #if NH_3D
 #define NH_3D_INTEGER_MV_DEPTH            1
 #define NH_3D_ENC_DEPTH                   1   // Encoder optimizations for depth, incl.
@@ -103,6 +99,7 @@
                                              // MTK_I0072_IVARP_SCALING_FIX
                                              // SEC_ARP_VIEW_REF_CHECK_J0037    Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
                                              // SEC_ARP_REM_ENC_RESTRICT_K0035    Removal of encoder restriction of ARP, JCT3V-K0035
+#define NH_3D_QTL                          1
 #define NH_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units
                                               // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
@@ -274,24 +271,34 @@
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
                                               // MTK_FAST_TEXTURE_ENCODING_E0173
 //HLS
-                                             // HHI_DEPENDENCY_SIGNALLING_I1_J0107
-                                             // HHI_TOOL_PARAMETERS_I2_J0107
-                                             // HHI_VPS_3D_EXTENSION_I3_J0107
-                                             // HHI_INTER_COMP_PRED_K0052
-                                             // HHI_RES_PRED_K0052
-                                             // HHI_CAM_PARA_K0052
-                                             // H_3D_DIRECT_DEP_TYPE
+                                              // HHI_DEPENDENCY_SIGNALLING_I1_J0107
+                                              // HHI_TOOL_PARAMETERS_I2_J0107
+                                              // HHI_VPS_3D_EXTENSION_I3_J0107
+                                              // HHI_INTER_COMP_PRED_K0052
+                                              // HHI_RES_PRED_K0052
+                                              // HHI_CAM_PARA_K0052
+                                              // H_3D_DIRECT_DEP_TYPE
+#endif // NH_3D
+#if NH_MV
+////////////////////////
+/// Consider Removal 
+////////////////////////
 // Rate Control
 #define KWU_FIX_URQ                       0
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
-#endif // NH_3D
+#define NH_MV_HLS_PTL_LIMITS               0
+#if NH_3D
+// Unclear Fix
+#define H_3D_PPS_FIX_DEPTH                     0
+#endif
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_3D
-#define H_3D_OUTPUT_ACTIVE_TOOLS               0
-#define H_3D_REN_MAX_DEV_OUT                   0
+#define NH_3D_OUTPUT_ACTIVE_TOOLS               0
+#define NH_3D_REN_MAX_DEV_OUT                   0
 #endif
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if NH_3D_VSO
@@ -307,10 +314,6 @@
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
 #endif
-///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
-#if NH_3D_ARP
-#define H_3D_ARP_WFNR                     3
-#endif
 /////////////////////////////////////////////////////////////////////////////////////
 /// GT: Move values which are not flags to CommonDef.h and convert to static int !!
 ///////////////////////////////////////////////////////////////////////////////////
@@ -324,22 +327,7 @@
 ///// ***** DEPTH BASED BLOCK PARTITIONING *********
 #if NH_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
-#define DBBP_PACK_MODE               SIZE_2NxN
 #endif
-///// ***** FCO *********
-#if H_3D_FCO
-#define H_3D_FCO_VSP_DONBDV_E0163               1   // Adaptive depth reference for flexible coding order
-#else
-#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
-#endif
-#if H_3D
-#define PPS_FIX_DEPTH                           1
-#endif
-/////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-// TBD: Check if integration is necessary.
-#define H_MV_HLS_PTL_LIMITS                  0
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -372,6 +360,7 @@
 // ====================================================================================================================
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1 ///< TODO: integrate this macro into a broader conformance checking system.
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
+#define U0040_MODIFIED_WEIGHTEDPREDICTION_WITH_BIPRED_AND_CLIPPING 1
 // ====================================================================================================================
 // Tool Switches
 // ====================================================================================================================
@@ -388,11 +377,13 @@
 #endif
 #define MATRIX_MULT                                       0 ///< Brute force matrix multiplication instead of partial butterfly
 #define O0043_BEST_EFFORT_DECODING                        0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
+#define ME_ENABLE_ROUNDING_OF_MVS                         1 ///< 0 (default) = disables rounding of motion vectors when right shifted,  1 = enables rounding
 #define RDOQ_CHROMA_LAMBDA                                1 ///< F386: weighting of chroma for RDOQ
 // This can be enabled by the makefile
 #ifndef RExt__HIGH_BIT_DEPTH_SUPPORT
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 #endif
+#define U0132_TARGET_BITS_SATURATION                      1 ///< Rate control with target bits saturation method
 // ====================================================================================================================
 // Derived macros
 // ====================================================================================================================
@@ -442,12 +433,9 @@
 // ====================================================================================================================
 typedef       void                Void;
 typedef       bool                Bool;
-#ifdef __arm__
-typedef       signed char         Char;
-#else
-typedef       char                Char;
-#endif
-typedef       unsigned char       UChar;
+typedef       char                TChar; // Used for text/characters
+typedef       signed char         SChar; // Signed 8-bit values
+typedef       unsigned char       UChar; // Unsigned 8-bit values
 typedef       short               Short;
 typedef       unsigned short      UShort;
 typedef       int                 Int;
@@ -575,6 +563,20 @@ enum InputColourSpaceConversion // defined in terms of conversion prior to input
   IPCOLOURSPACE_YCbCrtoYYY              = 2, // Mainly used for debug!
   IPCOLOURSPACE_RGBtoGBR                = 3,
   NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS = 4
+};
+enum MATRIX_COEFFICIENTS // Table E.5 (Matrix coefficients)
+{
+  MATRIX_COEFFICIENTS_RGB                           = 0,
+  MATRIX_COEFFICIENTS_BT709                         = 1,
+  MATRIX_COEFFICIENTS_UNSPECIFIED                   = 2,
+  MATRIX_COEFFICIENTS_RESERVED_BY_ITUISOIEC         = 3,
+  MATRIX_COEFFICIENTS_USFCCT47                      = 4,
+  MATRIX_COEFFICIENTS_BT601_625                     = 5,
+  MATRIX_COEFFICIENTS_BT601_525                     = 6,
+  MATRIX_COEFFICIENTS_SMPTE240                      = 7,
+  MATRIX_COEFFICIENTS_YCGCO                         = 8,
+  MATRIX_COEFFICIENTS_BT2020_NON_CONSTANT_LUMINANCE = 9,
+  MATRIX_COEFFICIENTS_BT2020_CONSTANT_LUMINANCE     = 10,
 };
 enum DeblockEdgeDir
 {
@@ -712,9 +714,11 @@ enum TransformDirection
 /// supported ME search methods
 enum MESearchMethod
 {
-  FULL_SEARCH                = 0,     ///< Full search
-  DIAMOND                    = 1,     ///< Fast search
-  SELECTIVE                  = 2      ///< Selective search
+  MESEARCH_FULL              = 0,
+  MESEARCH_DIAMOND           = 1,
+  MESEARCH_SELECTIVE         = 2,
+  MESEARCH_DIAMOND_ENHANCED  = 3,
+  MESEARCH_NUMBER_OF_METHODS = 4
 };
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE
@@ -759,6 +763,16 @@ enum SliceConstraint
   FIXED_NUMBER_OF_CTU    = 1,          ///< Limit maximum number of largest coding tree units in a slice / slice segments
   FIXED_NUMBER_OF_BYTES  = 2,          ///< Limit maximum number of bytes in a slice / slice segment
   FIXED_NUMBER_OF_TILES  = 3,          ///< slices / slice segments span an integer number of tiles
+  NUMBER_OF_SLICE_CONSTRAINT_MODES = 4
+};
+// For use with decoded picture hash SEI messages, generated by encoder.
+enum HashType
+{
+  HASHTYPE_MD5             = 0,
+  HASHTYPE_CRC             = 1,
+  HASHTYPE_CHECKSUM        = 2,
+  HASHTYPE_NONE            = 3,
+  NUMBER_OF_HASHTYPES      = 4
 };
 enum SAOMode //mode
 {
@@ -860,6 +874,21 @@ enum CostMode
   COST_LOSSLESS_CODING             = 2,
   COST_MIXED_LOSSLESS_LOSSY_CODING = 3
 };
+enum WeightedPredictionMethod
+{
+  WP_PER_PICTURE_WITH_SIMPLE_DC_COMBINED_COMPONENT                          =0,
+  WP_PER_PICTURE_WITH_SIMPLE_DC_PER_COMPONENT                               =1,
+  WP_PER_PICTURE_WITH_HISTOGRAM_AND_PER_COMPONENT                           =2,
+  WP_PER_PICTURE_WITH_HISTOGRAM_AND_PER_COMPONENT_AND_CLIPPING              =3,
+  WP_PER_PICTURE_WITH_HISTOGRAM_AND_PER_COMPONENT_AND_CLIPPING_AND_EXTENSION=4
+};
+enum FastInterSearchMode
+{
+  FASTINTERSEARCH_DISABLED = 0,
+  FASTINTERSEARCH_MODE1    = 1, // TODO: assign better names to these.
+  FASTINTERSEARCH_MODE2    = 2,
+  FASTINTERSEARCH_MODE3    = 3
+};
 enum SPSExtensionFlagIndex
 {
   SPS_EXT__REXT           = 0,
@@ -960,7 +989,7 @@ enum DecProcPart
   FINALIZE_PIC
 };
 #endif
-#if NH_3D
+#if NH_3D_VSO
 // Renderer
 enum BlenMod
 {

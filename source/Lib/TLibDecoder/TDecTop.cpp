@@ -686,10 +686,8 @@ Void TDecTop::xActivateParameterSets()
         assert( sps->getMultiLayerExtSpsFlag() == 0 );
       }
     }
-#if NH_MV_SEI
     m_seiReader.setLayerId ( newPic->getLayerId      ( ) );
     m_seiReader.setDecOrder( newPic->getDecodingOrder( ) );
-#endif
 #endif
 
     xParsePrefixSEImessages();
@@ -838,11 +836,7 @@ Void TDecTop::xParsePrefixSEImessages()
   {
     InputNALUnit &nalu=*m_prefixSEINALUs.front();
 #if NH_MV
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
     m_seiReader.parseSEImessage(&(nalu.getBitstream()), m_SEIs, nalu.m_nalUnitType, m_parameterSetManager.getActiveVPS(), m_parameterSetManager.getActiveSPS(getLayerId()), m_pDecodedSEIOutputStream);
-#else
-    m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_SEIs, nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS( getLayerId() ), m_pDecodedSEIOutputStream );
-#endif
 #else
     m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_SEIs, nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS(), m_pDecodedSEIOutputStream );
 #endif
@@ -1314,11 +1308,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       if (m_pcPic)
       {
 #if NH_MV
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
       m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_pcPic->getSEIs(), nalu.m_nalUnitType, m_parameterSetManager.getActiveVPS(), m_parameterSetManager.getActiveSPS(getLayerId()), m_pDecodedSEIOutputStream);
-#else
-      m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_pcPic->getSEIs(), nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS( getLayerId() ), m_pDecodedSEIOutputStream );
-#endif
 #else
         m_seiReader.parseSEImessage( &(nalu.getBitstream()), m_pcPic->getSEIs(), nalu.m_nalUnitType, m_parameterSetManager.getActiveSPS(), m_pDecodedSEIOutputStream );
 #endif
@@ -1769,6 +1759,14 @@ Void TDecTop::genUnavailableRefPics( )
       {
         // G.1.2 --> G.1.3
         xG813DecProcForInterLayerRefPicSet();
+      }
+      else
+      {
+#if NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS
+        TComDecodedRps* decRps = m_pcPic->getDecodedRps(); 
+        decRps->m_numActiveRefLayerPics0 = 0;
+        decRps->m_numActiveRefLayerPics1 = 0;      
+#endif
       }
     }
   }

@@ -38,7 +38,7 @@
 #include "TLibCommon/CommonDef.h"
 #include "TRenImage.h"
 #include "TRenInterpFilter.h"
-#if NH_3D
+#if NH_3D_VSO
 
 typedef Int (TRenInterpFilter<REN_BIT_DEPTH>::*FpChromaIntFilt) ( Pel*, Int );
 

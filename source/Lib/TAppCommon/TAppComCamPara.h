@@ -66,7 +66,7 @@ private:
   Bool                m_bSetupFromCoded;                      ///< setup from coded parameter file
   Bool                m_bCamParsCodedPrecSet;                 ///< Coded Cam Para precision set for current frame;
   
-#if H_3D_REN_MAX_DEV_OUT
+#if NH_3D_REN_MAX_DEV_OUT
   Double              m_dMaxShiftDeviation;                   ///< Maximum deviation of shifts with integer precision compare to double precision
 #endif
   //SAIT_VSO_EST_A0033
@@ -112,7 +112,7 @@ protected:
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
 
   // functions for reading, initialization, sorting, getting data, etc.
-  Void  xReadCameraParameterFile  ( Char* pchCfgFileName );
+  Void  xReadCameraParameterFile  ( TChar* pchCfgFileName );
   Bool  xGetCameraDataRow         ( Int iView, UInt uiFrame, UInt& ruiFoundLine );
 
   Void  xGetSortedViewList        ( const std::vector<Int>& raiViews, std::vector<Int>& raiSortedViews, std::vector<Int>& raiId2SortedId, std::vector<Int>& raiSortedId2Id );
@@ -128,7 +128,7 @@ protected:
   Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
 #endif
   Void  xSetupBaseViewsFromCoded  ();
-  Void  xSetupBaseViews           ( Char* pchBaseViewNumbers, UInt uiNumBaseViews );
+  Void  xSetupBaseViews           ( TChar* pchBaseViewNumbers, UInt uiNumBaseViews );
   Bool  xIsIn                     ( std::vector<Int>& rVec, Int iNumber);
 
   // functions for getting and setting scales and offsets
@@ -155,17 +155,17 @@ public:
                 UInt    uiCodedCamParsPrecision,
                 UInt    uiStartFrameId,
                 UInt    uiNumFrames,
-                Char*   pchCfgFileName,
-                Char*   pchBaseViewNumbers,
-                Char*   pchSynthViewNumbers,
+                TChar*   pchCfgFileName,
+                TChar*   pchBaseViewNumbers,
+                TChar*   pchSynthViewNumbers,
                 std::vector<Int>* paiSynthViewNumbers,
                 Int     iLog2Precision );
 
   Void init   ( UInt    uiInputBitDepth,
                 UInt    uiStartFrameId,
                 UInt    uiNumFrames,
-                Char*   pchCfgFileName,
-                Char*   pchSynthViewNumbers,
+                TChar*   pchCfgFileName,
+                TChar*   pchSynthViewNumbers,
                 std::vector<Int>* paiSynthViewNumbers,
                 Int     iLog2Precision
               );
@@ -182,8 +182,8 @@ public:
   Bool                getLeftRightBaseView      ( Int iSynthViewIdx, Int &riLeftViewIdx, Int &riRightViewIdx, Int &riRelDistToLeft, Bool& rbIsBaseView );
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
-  static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
-#if H_3D_REN_MAX_DEV_OUT
+  static Void         convertNumberString       ( TChar* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
+#if NH_3D_REN_MAX_DEV_OUT
   Double              getMaxShiftDeviation      () { return m_dMaxShiftDeviation; }; 
 #endif
 

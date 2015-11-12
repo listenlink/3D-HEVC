@@ -34,7 +34,7 @@
 
 #include <time.h>
 #include "../../Lib/TLibCommon/CommonDef.h"
-#if NH_3D
+#if NH_3D_VSO
 #include "TAppRendererTop.h"
 // ====================================================================================================================
 // Main function

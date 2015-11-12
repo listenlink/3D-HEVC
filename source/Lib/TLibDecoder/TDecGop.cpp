@@ -176,7 +176,7 @@ Void TDecGop::filterPicture(TComPic* pcPic)
 #else
   pcPic->compressMotion();
 #endif
-  Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+  TChar c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced())
   {
     c += 32;
@@ -254,25 +254,25 @@ static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash*
   /* calculate MD5sum for entire reconstructed picture */
   TComPictureHash recon_digest;
   Int numChar=0;
-  const Char* hashType = "\0";
+  const TChar* hashType = "\0";
 
   if (pictureHashSEI)
   {
     switch (pictureHashSEI->method)
     {
-      case SEIDecodedPictureHash::MD5:
+      case HASHTYPE_MD5:
         {
           hashType = "MD5";
           numChar = calcMD5(pic, recon_digest, bitDepths);
           break;
         }
-      case SEIDecodedPictureHash::CRC:
+      case HASHTYPE_CRC:
         {
           hashType = "CRC";
           numChar = calcCRC(pic, recon_digest, bitDepths);
           break;
         }
-      case SEIDecodedPictureHash::CHECKSUM:
+      case HASHTYPE_CHECKSUM:
         {
           hashType = "Checksum";
           numChar = calcChecksum(pic, recon_digest, bitDepths);
@@ -287,7 +287,7 @@ static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash*
   }
 
   /* compare digest against received version */
-  const Char* ok = "(unk)";
+  const TChar* ok = "(unk)";
   Bool mismatch = false;
 
   if (pictureHashSEI)

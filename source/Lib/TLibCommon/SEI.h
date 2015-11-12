@@ -43,7 +43,7 @@
 #include "libmd5/MD5.h"
 
 
-#if NH_MV_SEI
+#if NH_MV
 #include "TAppCommon/program_options_lite.h"
 using namespace std;
 namespace po = df::program_options_lite;
@@ -52,7 +52,7 @@ namespace po = df::program_options_lite;
 //! \ingroup TLibCommon
 //! \{
 class TComSPS;
-#if NH_MV_SEI
+#if NH_MV
 class TComSlice;
 class SEIScalableNesting;
 #endif
@@ -93,10 +93,9 @@ public:
     MASTERING_DISPLAY_COLOUR_VOLUME      = 137,
     SEGM_RECT_FRAME_PACKING              = 138,
     TEMP_MOTION_CONSTRAINED_TILE_SETS    = 139,
-    CHROMA_SAMPLING_FILTER_HINT          = 140,
-    KNEE_FUNCTION_INFO                   = 141
-#if NH_MV_SEI
-    ,COLOUR_REMAPPING_INFO                    = 142,
+    CHROMA_RESAMPLING_FILTER_HINT        = 140,
+    KNEE_FUNCTION_INFO                   = 141,
+    COLOUR_REMAPPING_INFO                = 142,
     DEINTERLACED_FIELD_IDENTIFICATION         = 143,
     LAYERS_NOT_PRESENT                        = 160,
     INTER_LAYER_CONSTRAINED_TILE_SETS         = 161,
@@ -115,29 +114,35 @@ public:
 #if NH_3D
     ,ALTERNATIVE_DEPTH_INFO                    = 181
 #endif
-#endif
 
   };
 
+#if NH_MV
   SEI();
+#else
+  SEI() {}
+#endif
+
 
   virtual ~SEI() {}
-  virtual SEI*       getCopy( ) const;
-  static const Char *getSEIMessageString(SEI::PayloadType payloadType );
+
+  static const TChar *getSEIMessageString(SEI::PayloadType payloadType);
+
   virtual PayloadType payloadType() const = 0;
 
-#if NH_MV_SEI
+#if NH_MV
+  virtual SEI*       getCopy( ) const;
   static SEI*        getNewSEIMessage         ( SEI::PayloadType payloadType );
   Bool               insertSei                ( Int curLayerId, Int curPoc, Int curTid, Int curNaluType ) const;
 
 
   virtual Void       setupFromSlice           ( const TComSlice* slice );
-  virtual Void       setupFromCfgFile         ( const Char* cfgFile );
+  virtual Void       setupFromCfgFile         ( const TChar*   cfgFile );
   virtual Bool       checkCfg                 ( const TComSlice* slice   );
 
   Void               xPrintCfgErrorIntro();
-  Void               xCheckCfgRange           ( Bool& wrongConfig, Int val, Int minVal, Int maxVal, const Char* seName );
-  Void               xCheckCfg                ( Bool& wrongConfig, Bool cond, const Char* errStr );
+  Void               xCheckCfgRange           ( Bool& wrongConfig, Int val, Int minVal, Int maxVal, const TChar* seName );
+  Void               xCheckCfg                ( Bool& wrongConfig, Bool cond, const TChar* errStr );
   Void               xAddGeneralOpts          ( po::Options &opts, IntAry1d defAppLayerIds, IntAry1d defAppPocs, IntAry1d defAppTids, IntAry1d defAppVclNaluTypes,
                                                 Int defSeiNaluId, Int defPositionInSeiNalu, Bool defModifyByEncoder );
     // Filters where to insert SEI in the bitstream.
@@ -185,13 +190,7 @@ public:
   SEIDecodedPictureHash() {}
   virtual ~SEIDecodedPictureHash() {}
 
-  enum Method
-  {
-    MD5,
-    CRC,
-    CHECKSUM,
-    RESERVED,
-  } method;
+  HashType method;
 
   TComPictureHash m_pictureHash;
 };
@@ -481,43 +480,62 @@ public:
   std::vector<Int> m_kneeOutputKneePoint;
 };
 
-class SEIChromaSamplingFilterHint : public SEI
+class SEIColourRemappingInfo : public SEI
 {
 public:
-  PayloadType payloadType() const {return CHROMA_SAMPLING_FILTER_HINT;}
-  SEIChromaSamplingFilterHint() {}
-  virtual ~SEIChromaSamplingFilterHint() {
-    if(m_verChromaFilterIdc == 1)
+
+  struct CRIlut
+  {
+    Int codedValue;
+    Int targetValue;
+    bool operator < (const CRIlut& a) const
     {
-      for(Int i = 0; i < m_numVerticalFilters; i ++)
-      {
-        free(m_verFilterCoeff[i]);
-      }
-      free(m_verFilterCoeff);
-      free(m_verTapLengthMinus1);
+      return codedValue < a.codedValue;
     }
-    if(m_horChromaFilterIdc == 1)
-    {
-      for(Int i = 0; i < m_numHorizontalFilters; i ++)
+  };
+
+  PayloadType payloadType() const { return COLOUR_REMAPPING_INFO; }
+  SEIColourRemappingInfo() {}
+  ~SEIColourRemappingInfo() {}
+
+  Void copyFrom( const SEIColourRemappingInfo &seiCriInput)
       {
-        free(m_horFilterCoeff[i]);
-      }
-      free(m_horFilterCoeff);
-      free(m_horTapLengthMinus1);
-    }
+    (*this) = seiCriInput;
   }
+
+  UInt                m_colourRemapId;
+  Bool                m_colourRemapCancelFlag;
+  Bool                m_colourRemapPersistenceFlag;
+  Bool                m_colourRemapVideoSignalInfoPresentFlag;
+  Bool                m_colourRemapFullRangeFlag;
+  Int                 m_colourRemapPrimaries;
+  Int                 m_colourRemapTransferFunction;
+  Int                 m_colourRemapMatrixCoefficients;
+  Int                 m_colourRemapInputBitDepth;
+  Int                 m_colourRemapBitDepth;
+  Int                 m_preLutNumValMinus1[3];
+  std::vector<CRIlut> m_preLut[3];
+  Bool                m_colourRemapMatrixPresentFlag;
+  Int                 m_log2MatrixDenom;
+  Int                 m_colourRemapCoeffs[3][3];
+  Int                 m_postLutNumValMinus1[3];
+  std::vector<CRIlut> m_postLut[3];
+};
+
+class SEIChromaResamplingFilterHint : public SEI
+{
+public:
+  PayloadType payloadType() const {return CHROMA_RESAMPLING_FILTER_HINT;}
+  SEIChromaResamplingFilterHint() {}
+  virtual ~SEIChromaResamplingFilterHint() {}
 
   Int   m_verChromaFilterIdc;
   Int   m_horChromaFilterIdc;
-  Bool  m_verFilteringProcessFlag;
+  Bool                           m_verFilteringFieldProcessingFlag;
   Int   m_targetFormatIdc;
   Bool  m_perfectReconstructionFlag;
-  Int   m_numVerticalFilters;
-  Int*  m_verTapLengthMinus1;
-  Int** m_verFilterCoeff;
-  Int   m_numHorizontalFilters;
-  Int*  m_horTapLengthMinus1;
-  Int** m_horFilterCoeff;
+  std::vector<std::vector<Int> > m_verFilterCoeff;
+  std::vector<std::vector<Int> > m_horFilterCoeff;
 };
 
 class SEIMasteringDisplayColourVolume : public SEI
@@ -529,27 +547,6 @@ public:
 
     TComSEIMasteringDisplay values;
 };
-
-#if NH_MV
-#if !NH_MV_SEI
-class SEISubBitstreamProperty : public SEI
-{
-public:
-  PayloadType payloadType() const { return SUB_BITSTREAM_PROPERTY; }
-
-  SEISubBitstreamProperty():   m_activeVpsId(-1), m_numAdditionalSubStreams(0) {}
-  virtual ~SEISubBitstreamProperty() {}
-
-  Int  m_activeVpsId;
-  Int  m_numAdditionalSubStreams;
-  std::vector<Int>  m_subBitstreamMode;
-  std::vector<Int>  m_outputLayerSetIdxToVps;
-  std::vector<Int>  m_highestSublayerId;
-  std::vector<Int>  m_avgBitRate;
-  std::vector<Int>  m_maxBitRate;
-};
-#endif
-#endif
 
 typedef std::list<SEI*> SEIMessages;
 
@@ -657,9 +654,7 @@ public:
   const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
 
 };
-
-#if NH_MV_SEI
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
 class SEILayersNotPresent : public SEI
 {
 public:
@@ -668,7 +663,7 @@ public:
   ~SEILayersNotPresent( ) { };
   SEI* getCopy( ) const { return new SEILayersNotPresent(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Int       m_lnpSeiActiveVpsId;
@@ -680,7 +675,6 @@ public:
     m_layerNotPresentFlag.resize( sizeDimI );
   }
 };
-#endif
 
 class SEIInterLayerConstrainedTileSets : public SEI
 {
@@ -690,7 +684,7 @@ public:
   ~SEIInterLayerConstrainedTileSets( ) { };
   SEI* getCopy( ) const { return new SEIInterLayerConstrainedTileSets(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Bool      m_ilAllTilesExactSampleValueMatchFlag;
@@ -732,7 +726,7 @@ public:
   ~SEIBspNesting( ) { };
   SEI* getCopy( ) const { return new SEIBspNesting(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*      cfgFile );
   Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
 
@@ -751,7 +745,7 @@ public:
   ~SEIBspInitialArrivalTime( ) { };
   SEI* getCopy( ) const { return new SEIBspInitialArrivalTime(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*      cfgFile );
   Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
 
@@ -768,7 +762,7 @@ public:
   ~SEISubBitstreamProperty( ) { };
   SEI* getCopy( ) const { return new SEISubBitstreamProperty(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
   Void resizeArrays    ( );
 
@@ -789,7 +783,7 @@ public:
   ~SEIAlphaChannelInfo( ) { };
   SEI* getCopy( ) const { return new SEIAlphaChannelInfo(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Bool      m_alphaChannelCancelFlag;
@@ -810,7 +804,7 @@ public:
   ~SEIOverlayInfo( ) { };
   SEI* getCopy( ) const { return new SEIOverlayInfo(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   const Int m_numOverlaysMax;
@@ -847,7 +841,7 @@ public:
   ~SEITemporalMvPredictionConstraints( ) { };
   SEI* getCopy( ) const { return new SEITemporalMvPredictionConstraints(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Bool      m_prevPicsNotUsedFlag;
@@ -863,7 +857,7 @@ public:
   ~SEIFrameFieldInfo( ) { };
   SEI* getCopy( ) const { return new SEIFrameFieldInfo(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
 
@@ -881,7 +875,7 @@ public:
   ~SEIThreeDimensionalReferenceDisplaysInfo( ) { };
   SEI* getCopy( ) const { return new SEIThreeDimensionalReferenceDisplaysInfo(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Int getNumRefDisplaysMinus1( ) const
@@ -923,7 +917,6 @@ private:
   UInt xGetSyntaxElementLen( Int expo, Int prec, Int val ) const;
 };
 
-#if SEI_DRI_F0169
 class SEIDepthRepresentationInfo : public SEI
 {
     public:
@@ -935,7 +928,7 @@ class SEIDepthRepresentationInfo : public SEI
         ~SEIDepthRepresentationInfo( ) { };
         SEI* getCopy( ) const { return new SEIDepthRepresentationInfo(*this); };
 
-        Void setupFromCfgFile( const Char*      cfgFile );
+        Void setupFromCfgFile( const TChar*     cfgFile );
         Void setupFromSlice  ( const TComSlice* slice   );
         Bool checkCfg        ( const TComSlice* slice   );
         Void clear()
@@ -992,7 +985,7 @@ class SEIDepthRepresentationInfo : public SEI
         IntAry2d       m_depthNonlinearRepresentationNumMinus1;
         IntAry2d       m_depth_nonlinear_representation_model;
 };
-#endif
+
 
 class SEIMultiviewSceneInfo : public SEI
 {
@@ -1002,7 +995,7 @@ public:
   ~SEIMultiviewSceneInfo( ) { };
   SEI* getCopy( ) const { return new SEIMultiviewSceneInfo(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Int       m_minDisparity;
@@ -1018,7 +1011,7 @@ public:
   ~SEIMultiviewAcquisitionInfo( ) { };
   SEI* getCopy( ) const { return new SEIMultiviewAcquisitionInfo(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   Int getNumViewsMinus1( ) const
@@ -1130,7 +1123,7 @@ public:
   ~SEIMultiviewViewPosition( ) { };
   SEI* getCopy( ) const { return new SEIMultiviewViewPosition(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Void setupFromSlice  ( const TComSlice* slice   );
   Bool checkCfg        ( const TComSlice* slice   );
 
@@ -1147,7 +1140,7 @@ public:
   ~SEIAlternativeDepthInfo( ) { };
   SEI* getCopy( ) const { return new SEIAlternativeDepthInfo(*this); };
 
-  Void setupFromCfgFile( const Char*      cfgFile );
+  Void setupFromCfgFile( const TChar*     cfgFile );
   Bool checkCfg        ( const TComSlice* slice   );
 
   UInt getManGvdFocalLengthXLen       ( Int i, Int j ) const;
@@ -1356,6 +1349,6 @@ public:
 
 #endif
 #endif
-
 #endif
+
 //! \}

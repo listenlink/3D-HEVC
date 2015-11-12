@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <iostream>
 #include <assert.h>
+#include <limits>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
@@ -52,8 +53,6 @@
 #pragma warning(disable : 4503)
 // 
 #endif // _MSC_VER > 1000
-
-
 #include "TypeDef.h"
 #ifdef _MSC_VER
 #if _MSC_VER <= 1500
@@ -74,7 +73,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 #define NV_VERSION        "15.2"                ///< Current software version
 #define HM_VERSION        "16.6"                ///< 
 #else
-#define NV_VERSION        "16.6"                 ///< Current software version
+#define NV_VERSION        "16.7"                 ///< Current software version
 #endif
 // ====================================================================================================================
 // Platform information
@@ -140,7 +139,6 @@ static const Int MAX_QP =                                          51;
 static const Int NOT_VALID =                                       -1;
 
 static const Int AMVP_MAX_NUM_CANDS =                               2; ///< AMVP: advanced motion vector prediction - max number of final candidates
-static const Int AMVP_MAX_NUM_CANDS_MEM =                           3; ///< AMVP: advanced motion vector prediction - max number of candidates
 static const Int AMVP_DECIMATION_FACTOR =                           4;
 static const Int MRG_MAX_NUM_CANDS =                                5; ///< MERGE
 
@@ -172,9 +170,7 @@ static const Int MAXIMUM_INTRA_FILTERED_HEIGHT =                   16;
 static const Int MAX_CPB_CNT =                                     32; ///< Upper bound of (cpb_cnt_minus1 + 1)
 #if NH_MV
 static const Int MAX_NUM_LAYER_IDS =                               63;
-#if NH_MV_SEI
 static const Int MAX_NUM_SEIS      =                               1000;
-#endif
 #else
 static const Int MAX_NUM_LAYER_IDS =                               64;
 #endif
@@ -282,12 +278,10 @@ static const Int  MAX_NUM_VIDEO_SIGNAL_INFO =                     16 ;
 static const Int  MAX_NUM_SCALED_REF_LAYERS =     MAX_NUM_LAYERS - 1 ; 
 static const Int  MAX_NUM_PICS_RPS          =                     16 ; 
 static const Int  MAX_NUM_REF_LAYERS        =                     63 ;  
-#if NH_MV_SEI
+
 static IntAry1d getRangeVec( Int rngStart, Int rngEnd ) { IntAry1d rng; for (Int i = rngStart; i<=rngEnd; i++) rng.push_back(i);  return rng; };
 static const IntAry1d IDR_NAL_UNIT_TYPES   = getRangeVec( NAL_UNIT_CODED_SLICE_IDR_W_RADL, NAL_UNIT_CODED_SLICE_IDR_N_LP ); 
 static const IntAry1d IRAP_NAL_UNIT_TYPES  = getRangeVec( NAL_UNIT_CODED_SLICE_BLA_W_LP  , NAL_UNIT_CODED_SLICE_CRA      ); 
-
-#endif
 #endif
 
 // ====================================================================================================================
@@ -447,7 +441,7 @@ static const std::string NALU_TYPE_STR[] = {
   };
 #endif
 
-#if NH_3D
+#if NH_3D_VSO
 //PICYUV
 #define PICYUV_PAD         16
 

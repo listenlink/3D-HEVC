@@ -245,7 +245,7 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 
   if (g_debugCounter >= debugCabacBinTargetLine)
   {
-    Char breakPointThis;
+    UChar breakPointThis;
     breakPointThis = 7;
   }
   if (g_debugCounter >= (debugCabacBinTargetLine + debugCabacBinWindow))

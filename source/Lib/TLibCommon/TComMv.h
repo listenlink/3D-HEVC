@@ -99,17 +99,14 @@ public:
   Void  set       ( Short iHor, Short iVer)     { m_iHor = iHor;  m_iVer = iVer;            }
   Void  setHor    ( Short i )                   { m_iHor = i;                               }
   Void  setVer    ( Short i )                   { m_iVer = i;                               }
-  Void  setZero   ()                            { m_iHor = m_iVer = 0; 
- #if NH_3D_NBDV
-   m_bIDV = false; m_iIDVHor = m_iIDVVer = 0;
-   m_iIDVVId = 0; 
-#endif
- }
 #if NH_3D_NBDV
+  Void  setZero   ()                            { m_iHor = m_iVer = 0; m_bIDV = false; m_iIDVHor = m_iIDVVer = 0; m_iIDVVId = 0;  }
   Void   setIDVHor  (Short i)                    {m_iIDVHor = i;}
   Void   setIDVVer  (Short i)                    {m_iIDVVer = i;}
   Void   setIDVFlag (Bool b )                    {m_bIDV    = b;}
   Void   setIDVVId  (Short i)                    {m_iIDVVId = i;}
+#else
+  Void  setZero   ()                            { m_iHor = m_iVer = 0;  }
 #endif
   // ------------------------------------------------------------------------------------------------------------------
   // get
@@ -144,12 +141,39 @@ public:
     return  *this;
   }
 
+#if NH_3D
+#if ME_ENABLE_ROUNDING_OF_MVS
+
   const TComMv& operator>>= (const Int i)
   {
     m_iHor >>= i;
     m_iVer >>= i;
     return  *this;
   }
+#endif
+#endif
+
+#if !ME_ENABLE_ROUNDING_OF_MVS
+  const TComMv& operator>>= (const Int i)
+  {
+    m_iHor >>= i;
+    m_iVer >>= i;
+    return  *this;
+  }
+#endif
+
+#if ME_ENABLE_ROUNDING_OF_MVS
+  //! shift right with rounding
+  Void divideByPowerOf2 (const Int i)
+  {
+    Int offset = (i == 0) ? 0 : 1 << (i - 1);
+    m_iHor += offset;
+    m_iVer += offset;
+
+    m_iHor >>= i;
+    m_iVer >>= i;
+  }
+#endif
 
   const TComMv& operator<<= (const Int i)
   {

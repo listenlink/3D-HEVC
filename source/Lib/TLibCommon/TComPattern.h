@@ -68,6 +68,10 @@ public:
   {
     return  m_piROIOrigin;
   }
+  __inline const Pel*  getROIOrigin() const
+  {
+    return  m_piROIOrigin;
+  }
 
   /// set parameters from Pel buffer for accessing neighbouring pixels
   Void setPatternParamPel( Pel* piTexture, Int iRoiWidth, Int iRoiHeight, Int iStride, Int bitDepth );
@@ -92,17 +96,18 @@ public:
 
   // ROI & pattern information, (ROI = &pattern[AboveOffset][LeftOffset])
   Pel*  getROIY()                 { return m_cPatternY.getROIOrigin();    }
-  Int   getROIYWidth()            { return m_cPatternY.m_iROIWidth;       }
-  Int   getROIYHeight()           { return m_cPatternY.m_iROIHeight;      }
-  Int   getPatternLStride()       { return m_cPatternY.m_iPatternStride;  }
-  Int   getBitDepthY()            { return m_cPatternY.m_bitDepth; }
+  const Pel*  getROIY() const     { return m_cPatternY.getROIOrigin();    }
+  Int   getROIYWidth() const      { return m_cPatternY.m_iROIWidth;       }
+  Int   getROIYHeight() const     { return m_cPatternY.m_iROIHeight;      }
+  Int   getPatternLStride() const { return m_cPatternY.m_iPatternStride;  }
+  Int   getBitDepthY() const      { return m_cPatternY.m_bitDepth;        }
 
 #if NH_3D_IC
-  Bool  getICFlag()               { return m_bICFlag; }
+  Bool  getICFlag()               const { return m_bICFlag; }
   Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
 #endif
 #if NH_3D_SDC_INTER
-  Bool  getSDCMRSADFlag()         { return m_bSDCMRSADFlag; }
+  Bool  getSDCMRSADFlag()         const { return m_bSDCMRSADFlag; }
   Void  setSDCMRSADFlag( Bool bSDCMRSADFlag )    { m_bSDCMRSADFlag = bSDCMRSADFlag; }
 #endif
 

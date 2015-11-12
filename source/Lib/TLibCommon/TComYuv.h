@@ -203,8 +203,10 @@ public:
   UInt         getNumberValidComponents   ()                     const { return ::getNumberValidComponents(m_chromaFormatIDC); }
   UInt         getComponentScaleX         (const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
   UInt         getComponentScaleY         (const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }
-#if NH_3D
+#if NH_3D_VSO
   Void         addClipPartLuma( Int bitDepth, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
+#endif
+#if NH_3D
 #if NH_3D_ARP
   Void         addARP                     ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip, const BitDepths &clipBitDepths );
   Void         addARPLuma                 ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip, const BitDepths &clipBitDepths );
