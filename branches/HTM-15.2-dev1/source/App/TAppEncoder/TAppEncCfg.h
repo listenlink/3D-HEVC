@@ -43,11 +43,6 @@
 #include "TLibEncoder/TEncCfg.h"
 #include <sstream>
 #include <vector>
-#if NH_3D
-#include "TAppCommon/TAppComCamPara.h"
-#include "TLibRenderer/TRenModel.h"
-#include "TLibRenderer/TRenModSetupStrParser.h"
-#endif
 //! \ingroup TAppEncoder
 //! \{
 
@@ -79,9 +74,6 @@ protected:
   IntAry1d               m_viewId;                            ///< view id
   IntAry1d               m_viewOrderIndex;                    ///< view order index  
   IntAry1d               m_auxId;                             ///< auxiliary id
-#if NH_3D_VSO
-  IntAry1d               m_depthFlag;                         ///< depth flag
-#endif
   IntAry1d               m_targetEncLayerIdList;              ///< layer Ids in Nuh to be encoded
   IntAry1d               m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
   Bool                   m_splittingFlag;                     ///< Splitting Flag
@@ -130,10 +122,6 @@ protected:
   IntAry2d  m_minHorizontalCtuOffsetPlus1;
   Bool      m_singleLayerForNonIrapFlag;
   Bool      m_higherLayerIrapSkipFlag;
-#if NH_3D
-  Bool      m_abUseIC;
-  Bool      m_bUseLowLatencyICEnc;
-#endif
 #endif
   // Lambda modifiers
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
@@ -463,13 +451,6 @@ protected:
   Double    m_RCInitialCpbFullness;               ///< initial CPB fullness 
 #endif
 
-#if KWU_RC_VIEWRC_E0227
-  vector<Int>     m_viewTargetBits;
-  Bool      m_viewWiseRateCtrl;                              ///< Flag for using view-wise rate control
-#endif
-#if KWU_RC_MADPRED_E0227
-  UInt       m_depthMADPred;
-#endif
 
   ScalingListMode m_useScalingListId;                         ///< using quantization matrix
   std::string m_scalingListFileName;                          ///< quantization matrix file name
@@ -526,61 +507,7 @@ protected:
   TChar*            m_pchBaseViewCameraNumbers;
 #endif
 
-#if NH_3D
-  // Output Format
-  Bool      m_depth420OutputFlag;                             ///< Output depth layers in 4:2:0 format
-#endif
     // Camera parameters
-#if NH_3D_VSO
-  TChar*    m_pchCameraParameterFile;                         ///< camera parameter file
-  TAppComCamPara m_cCameraData;
-  Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
-  TChar*    m_pchVSOConfig;
-  Bool      m_bUseVSO;                                        ///< flag for using View Synthesis Optimization
-  Bool      m_bVSOLSTable;                                    ///< Depth QP dependent Lagrange parameter optimization (m23714)
-  Bool      m_bVSOEarlySkip;                                  ///< Early skip of VSO computation (JCT3V-A0093 modification 4)
-                                                              
-  //// Used for development by GT, might be removed later     
-  Double    m_dLambdaScaleVSO;                                ///< Scaling factor for Lambda in VSO mode
-  Bool      m_bForceLambdaScaleVSO;                           ///< Use Lambda Scale for depth even if VSO is turned off
-  Bool      m_bAllowNegDist;                                  ///< Allow negative distortion in VSO
-  UInt      m_uiVSOMode;                                      ///< Number of VSO Mode, 1 = , 2 = simple, org vs. ren, 3 = simple, ren vs. ren, 4 = full  
-                                                              
-  // SAIT_VSO_EST_A0033                                       
-  Bool      m_bUseEstimatedVSD;                               ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)  
-                                                              
-  // LGE_WVSO_A0119                                           
-  Bool      m_bUseWVSO;                                       ///< flag for using View Synthesis Optimization  
-  Int       m_iVSOWeight;
-  Int       m_iVSDWeight;
-  Int       m_iDWeight;
-
-  // Ren Model String
-  TRenModSetupStrParser       m_cRenModStrParser;
-#endif
-#if NH_3D
-  Bool       m_useDLT;                                        ///< flag for using DLT
-#endif
-#if NH_3D_QTL
-  Bool       m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
-#endif
-#if NH_3D
-  BoolAry1d  m_ivMvPredFlag;
-  BoolAry1d  m_ivMvScalingFlag;
-  Int        m_log2SubPbSizeMinus3;
-  Bool       m_ivResPredFlag;
-  Bool       m_depthRefinementFlag;
-  Bool       m_viewSynthesisPredFlag;
-  Bool       m_depthBasedBlkPartFlag;
-  Bool       m_mpiFlag;
-  Int        m_log2MpiSubPbSizeMinus3;
-  Bool       m_intraContourFlag;
-  Bool       m_intraWedgeFlag;
-  Bool       m_intraSdcFlag;
-  Bool       m_qtPredFlag;
-  Bool       m_interSdcFlag;
-  Bool       m_depthIntraSkipFlag; 
-#endif
   // internal member functions
   Void  xCheckParameter ();                                   ///< check validity of configuration values
   Void  xPrintParameter ();                                   ///< print configuration values

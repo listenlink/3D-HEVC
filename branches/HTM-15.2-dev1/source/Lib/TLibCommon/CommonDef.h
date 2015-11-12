@@ -367,9 +367,6 @@ __inline T gCeilLog2( T val )
 
 #endif
 
-#if NH_3D_MLC  || NH_3D_ARP
-#define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
-#endif
 
 #if NH_MV
 static const std::string NALU_TYPE_STR[] = {  
@@ -441,30 +438,6 @@ static const std::string NALU_TYPE_STR[] = {
   };
 #endif
 
-#if NH_3D_VSO
-//PICYUV
-#define PICYUV_PAD         16
-
-//RENDERER
-
-
-#define REN_BIT_DEPTH     8
-#define REN_LUMA_MARGIN   ( PICYUV_PAD + 1 ) // + g_uiMaxCuWidth instead of 1 ???
-#define REN_VDWEIGHT_PREC  8
-#define REN_IS_FILLED     ( 1 << REN_VDWEIGHT_PREC )
-#define REN_USED_PEL       ( (1 << REN_BIT_DEPTH) - 1 )
-#define REN_UNUSED_PEL     0
-#define REN_IS_HOLE        0
-#if NH_3D_VSO
-#define ENC_INTERNAL_BIT_DEPTH  REN_BIT_DEPTH // consider making this a variable
-#endif
-
-
-// CAMERA PARAMETERS
-#define LOG2_DISP_PREC_LUT           2           ///< log2 of disparity precision used in integer disparity LUTs
-#define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
-
-#endif // end of NH_3D
 //! \}
 
 #endif // end of #ifndef  __COMMONDEF__

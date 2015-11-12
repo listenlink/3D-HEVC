@@ -66,9 +66,6 @@ private:
   Bool                m_bSetupFromCoded;                      ///< setup from coded parameter file
   Bool                m_bCamParsCodedPrecSet;                 ///< Coded Cam Para precision set for current frame;
   
-#if NH_3D_REN_MAX_DEV_OUT
-  Double              m_dMaxShiftDeviation;                   ///< Maximum deviation of shifts with integer precision compare to double precision
-#endif
   //SAIT_VSO_EST_A0033
   Double              m_dDispCoeff;
 
@@ -123,10 +120,8 @@ protected:
 
   Bool  xGetLeftRightView         ( Int iView, std::vector<Int> aiSortedViews, Int& riLeftView, Int& riRightView, Int& riLeftSortedViewIdx, Int& riRightSortedViewIdx );
   Void  xGetPrevAndNextBaseView   ( Int iSourceViewNum, Int iTargetViewNum, Int& riPrevBaseViewNum, Int& riNextBaseViewNum );
-#if !KWU_RC_MADPRED_E0227
   Void  xGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
   Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
-#endif
   Void  xSetupBaseViewsFromCoded  ();
   Void  xSetupBaseViews           ( TChar* pchBaseViewNumbers, UInt uiNumBaseViews );
   Bool  xIsIn                     ( std::vector<Int>& rVec, Int iNumber);
@@ -183,15 +178,7 @@ public:
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( TChar* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
-#if NH_3D_REN_MAX_DEV_OUT
-  Double              getMaxShiftDeviation      () { return m_dMaxShiftDeviation; }; 
-#endif
 
-#if NH_3D_VSO
-  // SAIT_VSO_EST_A033
-  Void                setDispCoeff              ( UInt uiStartFrameId, Int iViewIdx );
-  Double              getDispCoeff              () { return m_dDispCoeff; }
-#endif
 
   // function for getting parameters and parameter arrays
   std::vector<Int>&   getBaseViewNumbers        ()  { return m_aiBaseViews;       }
@@ -216,10 +203,6 @@ public:
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
 
-#if KWU_RC_MADPRED_E0227
-  Void  xGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
-  Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
-#endif
 };
 
 

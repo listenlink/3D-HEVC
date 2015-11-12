@@ -65,9 +65,6 @@ Bool TAppDecCfg::parseCfg( Int argc, TChar* argv[] )
 {
   Bool do_help = false;
   string cfg_TargetDecLayerIdSetFile;
-#if NH_3D
-  string cfg_ScaleOffsetFile;
-#endif
   string outputColourSpaceConvert;
   Int warnUnknowParameter = 0;
 
@@ -79,10 +76,6 @@ Bool TAppDecCfg::parseCfg( Int argc, TChar* argv[] )
   ("BitstreamFile,b",           m_bitstreamFileName,                   string(""), "bitstream input file name")
   ("ReconFile,o",               m_reconFileName,                       string(""), "reconstructed YUV output file name\n"
                                                                                    "YUV writing is skipped if omitted")
-#if NH_3D
-  ("ScaleOffsetFile,p",         cfg_ScaleOffsetFile,                   string(""), "file with coded scales and offsets")
-  ("Depth420OutputFlag",        m_depth420OutputFlag,                  true      , "Output depth layers in 4:2:0 ") 
-#endif
   ("WarnUnknowParameter,w",     warnUnknowParameter,                                  0, "warn for unknown configuration parameters instead of failing")
   ("SkipFrames,s",              m_iSkipFrame,                          0,          "number of frames to skip before random access")
   ("OutputBitDepth,d",          m_outputBitDepth[CHANNEL_TYPE_LUMA],   0,          "bit depth of YUV output luma component (default: use 0 for native depth)")
@@ -147,9 +140,6 @@ Bool TAppDecCfg::parseCfg( Int argc, TChar* argv[] )
     return false;
   }
 
-#if NH_3D
-  m_pchScaleOffsetFile = cfg_ScaleOffsetFile.empty() ? NULL : strdup(cfg_ScaleOffsetFile.c_str());
-#endif
 
   if (m_bitstreamFileName.empty())
   {

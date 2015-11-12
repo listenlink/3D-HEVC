@@ -78,26 +78,8 @@ public:
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if NH_3D_DIS
-  virtual Void codeDIS          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  virtual Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#if NH_3D_ARP  
-  virtual Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#if NH_3D_IC
-  virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  virtual Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#if NH_3D_DBBP
-  virtual Void codeDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -162,9 +144,6 @@ public:
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if NH_3D_DIS
-  Void encodeDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD=false );
-#endif
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeInterDirPU   ( TComDataCU* pcSubCU, UInt uiAbsPartIdx  );
   Void encodeRefFrmIdxPU  ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
@@ -172,21 +151,6 @@ public:
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if NH_3D_ARP
-  Void encodeARPW         ( TComDataCU* pcCU, UInt uiAbspartIdx );
-#endif
-#if NH_3D_IC
-  Void encodeICFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#endif
-#if NH_3D_DMM || NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void encodeDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx );
-#endif
-#if NH_3D_SDC_INTRA || NH_3D_SDC_INTER
-  Void encodeSDCFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#endif
-#if NH_3D_DBBP
-  Void encodeDBBPFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#endif
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );

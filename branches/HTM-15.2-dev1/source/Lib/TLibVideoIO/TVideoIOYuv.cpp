@@ -814,11 +814,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
     printf ("\nWarning: writing %d x %d luma sample output picture!", width444, height444);
   }
 
-#if NH_3D
-  for(UInt comp=0; retval && comp< ::getNumberValidComponents(format); comp++)
-#else
   for(UInt comp=0; retval && comp<dstPicYuv->getNumberValidComponents(); comp++)
-#endif
   {
     const ComponentID compID = ComponentID(comp);
     const ChannelType ch=toChannelType(compID);
