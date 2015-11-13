@@ -110,7 +110,7 @@ namespace df
       return OptionSpecific(*this);
     }
 
-#if NH_MV_SEI
+#if NH_MV
     static void setOptions(Options::NamesPtrList& opt_list, const std::vector<int> idcs, const string& value, ErrorReporter& error_reporter)
 #else
     static void setOptions(Options::NamesPtrList& opt_list, const string& value, ErrorReporter& error_reporter)
@@ -120,16 +120,15 @@ namespace df
        *   allow each to parse value */
       for (Options::NamesPtrList::iterator it = opt_list.begin(); it != opt_list.end(); ++it)
       {
-        #if NH_MV_SEI
+#if NH_MV
           Bool doParsing = (*it)->opt->checkDim( idcs, error_reporter ); 
           if ( doParsing )
           {
             (*it)->opt->parse(value, idcs, error_reporter);
           }
-          
-        #else
+#else
         (*it)->opt->parse(value, error_reporter);
-        #endif
+#endif
       }
     }
 
@@ -289,7 +288,7 @@ namespace df
 
     bool OptionWriter::storePair(bool allow_long, bool allow_short, const string& name, const string& value)
     {
-#if NH_MV_SEI
+#if NH_MV
       std::vector<int> idcs;             
       
       std::size_t pos_underscore            = name.find("_" );         
@@ -323,7 +322,7 @@ namespace df
         {
           found = true;
         }
-#if NH_MV_SEI
+#if NH_MV
         if ( idcs.size() > 0 )
         {
           opt_it_idcs = opts.opt_long_map.find(name_idcs);
@@ -346,7 +345,7 @@ namespace df
         {
           found = true;
         }
-#if NH_MV_SEI
+#if NH_MV
         if ( idcs.size() > 0 )
         {
           opt_it = opts.opt_short_map.find(name);
@@ -361,7 +360,7 @@ namespace df
 #endif
       }
 
-#if NH_MV_SEI
+#if NH_MV
     if ( !found_idcs )
     {
       idcs.clear(); 
@@ -369,20 +368,20 @@ namespace df
 #endif
       if (!found)
       {
-#if NH_MV_SEI
+#if NH_MV
         if (error_reporter.output_on_unknow_parameter )
         {       
 #endif
 
         error_reporter.error(where())
           << "Unknown option `" << name << "' (value:`" << value << "')\n";
-#if NH_MV_SEI
+#if NH_MV
         }
 #endif
         return false;
       }
 
-#if NH_MV_SEI
+#if NH_MV
       setOptions((*opt_it).second, idcs, value, error_reporter);
 #else
       setOptions((*opt_it).second, value, error_reporter);

@@ -61,11 +61,9 @@ namespace po = df::program_options_lite;
 /** \param argc number of arguments
     \param argv array of arguments
  */
-Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
+Bool TAppDecCfg::parseCfg( Int argc, TChar* argv[] )
 {
   Bool do_help = false;
-  string cfg_BitstreamFile;
-  string cfg_ReconFile;
   string cfg_TargetDecLayerIdSetFile;
 #if NH_3D
   string cfg_ScaleOffsetFile;
@@ -78,8 +76,8 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
 
   ("help",                      do_help,                               false,      "this help text")
-  ("BitstreamFile,b",           cfg_BitstreamFile,                     string(""), "bitstream input file name")
-  ("ReconFile,o",               cfg_ReconFile,                         string(""), "reconstructed YUV output file name\n"
+  ("BitstreamFile,b",           m_bitstreamFileName,                   string(""), "bitstream input file name")
+  ("ReconFile,o",               m_reconFileName,                       string(""), "reconstructed YUV output file name\n"
                                                                                    "YUV writing is skipped if omitted")
 #if NH_3D
   ("ScaleOffsetFile,p",         cfg_ScaleOffsetFile,                   string(""), "file with coded scales and offsets")
@@ -91,7 +89,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("OutputBitDepthC,d",         m_outputBitDepth[CHANNEL_TYPE_CHROMA], 0,          "bit depth of YUV output chroma component (default: use 0 for native depth)")
   ("OutputColourSpaceConvert",  outputColourSpaceConvert,              string(""), "Colour space conversion to apply to input 444 video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(false))
 #if NH_MV
-  ("TargetOptLayerSetIdx,x",    m_targetOptLayerSetIdx,                -1,         "Target output layer set index. (default: -1, determine automatically to be equal to highest layer set index") // Should actually equal to 0 as default. However, this would cause only the base layer to be decoded.  
+  ("TargetOptLayerSetIdx,x", m_targetOptLayerSetInd, std::vector<Int>(1,-1), "Target output layer set index. (default: -1, determine automatically to be equal to highest layer set index") // Should actually equal to 0 as default. However, this would cause only the base layer to be decoded.  
 #endif
   ("MaxTemporalLayer,t",        m_iMaxTemporalLayer,                   -1,         "Maximum Temporal Layer to be decoded. -1 to decode all layers")
   ("SEIDecodedPictureHash",     m_decodedPictureHashSEIEnabled,        1,          "Control handling of decoded picture hash SEI messages\n"
@@ -105,10 +103,12 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("PrintPicOutput,c" ,         m_printPicOutput,                     false,         "Print information on picture output")
   ("PrintNalus,n",              m_printReceivedNalus,                 false,        "Print information on received NAL units")
 #endif
+  ("SEIColourRemappingInfoFilename",  m_colourRemapSEIFileName,        string(""), "Colour Remapping YUV output file name. If empty, no remapping is applied (ignore SEI message)\n")
+
 #if O0043_BEST_EFFORT_DECODING
   ("ForceDecodeBitDepth",       m_forceDecodeBitDepth,                 0U,         "Force the decoder to operate at a particular bit-depth (best effort decoding)")
 #endif
-#if NH_MV_SEI
+#if NH_MV
   ("OutputDecodedSEIMessagesFilename,m",  m_outputDecodedSEIMessagesFilename,    string(""), "When non empty, output decoded SEI messages to the indicated file. If file is '-', then output to stdout\n")
 #else
   ("OutputDecodedSEIMessagesFilename",  m_outputDecodedSEIMessagesFilename,    string(""), "When non empty, output decoded SEI messages to the indicated file. If file is '-', then output to stdout\n")
@@ -118,9 +118,9 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
   po::setDefaults(opts);
   po::ErrorReporter err;
-  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv, err);
+  const list<const TChar*>& argv_unhandled = po::scanArgv(opts, argc, (const TChar**) argv, err);
 
-  for (list<const Char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
+  for (list<const TChar*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
   {
     fprintf(stderr, "Unhandled argument ignored: `%s'\n", *it);
   }
@@ -147,15 +147,11 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
     return false;
   }
 
-  /* convert std::string to c string for compatability */
-  m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
-  m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
-
 #if NH_3D
   m_pchScaleOffsetFile = cfg_ScaleOffsetFile.empty() ? NULL : strdup(cfg_ScaleOffsetFile.c_str());
 #endif
 
-  if (!m_pchBitstreamFile)
+  if (m_bitstreamFileName.empty())
   {
     fprintf(stderr, "No input file specified, aborting\n");
     return false;
@@ -216,13 +212,13 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 }
 
 #if NH_MV
-Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName)
+Void TAppDecCfg::xAppendToFileNameEnd( const TChar* pchInputFileName, const TChar* pchStringToAppend, TChar*& rpchOutputFileName)
 {
   size_t iInLength     = strlen(pchInputFileName);
   size_t iAppendLength = strlen(pchStringToAppend); 
 
-  rpchOutputFileName = (Char*) malloc(iInLength+iAppendLength+1);                        
-  Char* pCDot = strrchr(pchInputFileName,'.');         
+  rpchOutputFileName = (TChar*) malloc(iInLength+iAppendLength+1);                        
+  const TChar* pCDot = strrchr(pchInputFileName,'.');         
   pCDot = pCDot ? pCDot : pchInputFileName + iInLength;        
   size_t iCharsToDot = pCDot - pchInputFileName ; 
   size_t iCharsToEnd = iInLength - iCharsToDot;         

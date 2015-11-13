@@ -218,6 +218,17 @@ Int TEncGOP::xWriteParameterSets (AccessUnit &accessUnit, TComSlice *slice)
   return actualTotalBits;
 }
 
+Void TEncGOP::xWriteAccessUnitDelimiter (AccessUnit &accessUnit, TComSlice *slice)
+{
+  AUDWriter audWriter;
+  OutputNALUnit nalu(NAL_UNIT_ACCESS_UNIT_DELIMITER);
+
+  Int picType = slice->isIntra() ? 0 : (slice->isInterP() ? 1 : 2);
+
+  audWriter.codeAUD(nalu.m_Bitstream, picType);
+  accessUnit.push_front(new NALUnitEBSP(nalu));
+}
+
 // write SEI list into one NAL unit and add it to the Access unit at auPos
 Void TEncGOP::xWriteSEI (NalUnitType naluType, SEIMessages& seiMessages, AccessUnit &accessUnit, AccessUnit::iterator &auPos, Int temporalId, const TComSPS *sps)
 {
@@ -328,7 +339,7 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
   xClearSEIs(currentMessages, !testWrite);
 
-#if NH_MV_LAYERS_NOT_PRESENT_SEI
+#if NH_MV
   // Layers not present SEI message
   currentMessages = extractSeisByType(localMessages, SEI::LAYERS_NOT_PRESENT);
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, currentMessages, accessUnit, itNalu, temporalId, sps);
@@ -484,16 +495,12 @@ Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TCo
     seiMessages.push_back(sei);
   }
 
-#if NH_MV
-#if !NH_MV_SEI
-  if( m_pcCfg->getSubBitstreamPropSEIEnabled() && ( getLayerId() == 0 ) )
+  if(m_pcCfg->getChromaResamplingFilterHintEnabled())
   {
-    SEISubBitstreamProperty *sei = new SEISubBitstreamProperty;
-    m_seiEncoder.initSEISubBitstreamProperty( sei, sps );
-    seiMessages.push_back(sei);
+    SEIChromaResamplingFilterHint *seiChromaResamplingFilterHint = new SEIChromaResamplingFilterHint;
+    m_seiEncoder.initSEIChromaResamplingFilterHint(seiChromaResamplingFilterHint, m_pcCfg->getChromaResamplingHorFilterIdc(), m_pcCfg->getChromaResamplingVerFilterIdc());
+    seiMessages.push_back(seiChromaResamplingFilterHint);
   }
-#endif
-#endif
 }
 
 Void TEncGOP::xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, TComSlice *slice)
@@ -544,18 +551,27 @@ Void TEncGOP::xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessag
     seiMessages.push_back(temporalLevel0IndexSEI);
   }
 
-  if(slice->getSPS()->getVuiParametersPresentFlag() && m_pcCfg->getChromaSamplingFilterHintEnabled() && ( slice->getSliceType() == I_SLICE ))
-  {
-    SEIChromaSamplingFilterHint *seiChromaSamplingFilterHint = new SEIChromaSamplingFilterHint;
-    m_seiEncoder.initSEIChromaSamplingFilterHint(seiChromaSamplingFilterHint, m_pcCfg->getChromaSamplingHorFilterIdc(), m_pcCfg->getChromaSamplingVerFilterIdc());
-    seiMessages.push_back(seiChromaSamplingFilterHint);
-  }
-
   if( m_pcEncTop->getNoDisplaySEITLayer() && ( slice->getTLayer() >= m_pcEncTop->getNoDisplaySEITLayer() ) )
   {
     SEINoDisplay *seiNoDisplay = new SEINoDisplay;
     seiNoDisplay->m_noDisplay = true;
     seiMessages.push_back(seiNoDisplay);
+  }
+
+  // insert one Colour Remapping Info SEI for the picture (if the file exists)
+  if (!m_pcCfg->getColourRemapInfoSEIFileRoot().empty())
+  {
+    SEIColourRemappingInfo *seiColourRemappingInfo = new SEIColourRemappingInfo();
+    const Bool success = m_seiEncoder.initSEIColourRemappingInfo(seiColourRemappingInfo, slice->getPOC() );
+
+    if(success)
+    {
+      seiMessages.push_back(seiColourRemappingInfo);
+    }
+    else
+    {
+      delete seiColourRemappingInfo;
+    }
   }
 }
 
@@ -576,10 +592,6 @@ Void TEncGOP::xCreateScalableNestingSEI (SEIMessages& seiMessages, SEIMessages& 
 
 Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, SEIMessages& duInfoSeiMessages, TComSlice *slice, Bool isField, std::deque<DUData> &duData)
 {
-  Int picSptDpbOutputDuDelay = 0;
-#if !NH_MV
-  SEIPictureTiming *pictureTimingSEI = new SEIPictureTiming();
-#endif
 
   const TComVUI *vui = slice->getSPS()->getVuiParameters();
   const TComHRD *hrd = vui->getHrdParameters();
@@ -589,10 +601,8 @@ Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages,
     ( slice->getSPS()->getVuiParametersPresentFlag() ) &&
     (  hrd->getNalHrdParametersPresentFlag() || hrd->getVclHrdParametersPresentFlag() ) )
   {
-#if NH_MV
-    // Preliminary fix to avoid memory leak.
+    Int picSptDpbOutputDuDelay = 0;
     SEIPictureTiming *pictureTimingSEI = new SEIPictureTiming();
-#endif
 
     // DU parameters
     if( hrd->getSubPicCpbParamsPresentFlag() )
@@ -711,6 +721,11 @@ Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages,
         duInfoSeiMessages.push_back(duInfoSEI);
       }
     }
+
+    if( !m_pcCfg->getPictureTimingSEIEnabled() && pictureTimingSEI )
+    {
+      delete pictureTimingSEI;
+    }
   }
 }
 
@@ -744,7 +759,7 @@ Void TEncGOP::xUpdateDuData(AccessUnit &testAU, std::deque<DUData> &duData)
   }
 
   // The last DU may have a trailing SEI
-  if (m_pcCfg->getDecodedPictureHashSEIEnabled())
+  if (m_pcCfg->getDecodedPictureHashSEIType()!=HASHTYPE_NONE)
   {
     duData.back().accumBitsDU += ( 20 << 3 ); // probably around 20 bytes - should be further adjusted, e.g. by type
     duData.back().accumNalsDU += 1;
@@ -866,12 +881,12 @@ cabac_zero_word_padding(TComSlice *const pcSlice, TComPic *const pcPic, const st
       const std::size_t numberOfAdditionalCabacZeroBytes=numberOfAdditionalCabacZeroWords*3;
       if (cabacZeroWordPaddingEnabled)
       {
-        std::vector<Char> zeroBytesPadding(numberOfAdditionalCabacZeroBytes, Char(0));
+        std::vector<UChar> zeroBytesPadding(numberOfAdditionalCabacZeroBytes, UChar(0));
         for(std::size_t i=0; i<numberOfAdditionalCabacZeroWords; i++)
         {
           zeroBytesPadding[i*3+2]=3;  // 00 00 03
         }
-        nalUnitData.write(&(zeroBytesPadding[0]), numberOfAdditionalCabacZeroBytes);
+        nalUnitData.write(reinterpret_cast<const TChar*>(&(zeroBytesPadding[0])), numberOfAdditionalCabacZeroBytes);
         printf("Adding %d bytes of padding\n", UInt(numberOfAdditionalCabacZeroWords*3));
       }
       else
@@ -1057,6 +1072,39 @@ static UInt calculateCollocatedFromL1Flag(TEncCfg *pCfg, const Int GOPid, const 
   else
   {
     return 1;
+  }
+}
+
+
+static Void
+printHash(const HashType hashType, const std::string &digestStr)
+{
+  const TChar *decodedPictureHashModeName;
+  switch (hashType)
+  {
+    case HASHTYPE_MD5:
+      decodedPictureHashModeName = "MD5";
+      break;
+    case HASHTYPE_CRC:
+      decodedPictureHashModeName = "CRC";
+      break;
+    case HASHTYPE_CHECKSUM:
+      decodedPictureHashModeName = "Checksum";
+      break;
+    default:
+      decodedPictureHashModeName = NULL;
+      break;
+  }
+  if (decodedPictureHashModeName != NULL)
+  {
+    if (digestStr.empty())
+    {
+      printf(" [%s:%s]", decodedPictureHashModeName, "?");
+    }
+    else
+    {
+      printf(" [%s:%s]", decodedPictureHashModeName, digestStr.c_str());
+    }
   }
 }
 
@@ -1373,8 +1421,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() );
 #endif
-#if NH_3D
+#if NH_3D_QTL
     pcSlice->setIvPicLists( m_ivPicLists );
+#endif
+#if NH_3D
+
 
     Int gopNum = (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid;
     GOPEntry gopEntry      = m_pcCfg->getGOPEntry( gopNum );
@@ -1593,21 +1644,21 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     flagRec =  ((m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), true) == NULL) ? false: true);
     pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), flagRec ) );
     pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true, pcSlice->getPOC(), false ) );
-#else
-    pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false , pcSlice->getPOC(), true ) );
-    pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true  , pcSlice->getPOC(), false ) );
+#else    
+    Int curAuxId     = pcSlice->getVPS()->getAuxId( getLayerId() ); 
+    Int curDepthFlag = pcSlice->getIsDepth(); 
+    assert( curAuxId == 2 || curDepthFlag  ); 
+    pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false       , 0       , pcSlice->getPOC(), true ) );
+    pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), curDepthFlag, curAuxId, pcSlice->getPOC(), false ) );
 #endif
-
     // LGE_WVSO_A0119
     Bool bUseWVSO  = m_pcEncTop->getUseWVSO();
     pcRdCost->setUseWVSO( bUseWVSO );
 
   }
 #endif
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////// Compress a slice
-    //  Slice compression
-    if (m_pcCfg->getUseASR())
+    // set adaptive search range for non-intra-slices
+    if (m_pcCfg->getUseASR() && pcSlice->getSliceType()!=I_SLICE)
     {
       m_pcSliceEncoder->setSearchRange(pcSlice);
     }
@@ -1653,6 +1704,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         frameLevel = 0;
       }
       m_pcRateCtrl->initRCPic( frameLevel );
+      estimatedBits = m_pcRateCtrl->getRCPic()->getTargetBits();
 
 #if KWU_RC_MADPRED_E0227
       if(m_pcCfg->getLayerId() != 0)
@@ -1661,7 +1713,27 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
 #endif
 
-      estimatedBits = m_pcRateCtrl->getRCPic()->getTargetBits();
+#if U0132_TARGET_BITS_SATURATION
+      if (m_pcRateCtrl->getCpbSaturationEnabled() && frameLevel != 0)
+      {
+        Int estimatedCpbFullness = m_pcRateCtrl->getCpbState() + m_pcRateCtrl->getBufferingRate();
+
+        // prevent overflow
+        if (estimatedCpbFullness - estimatedBits > (Int)(m_pcRateCtrl->getCpbSize()*0.9f))
+        {
+          estimatedBits = estimatedCpbFullness - (Int)(m_pcRateCtrl->getCpbSize()*0.9f);
+        }
+
+        estimatedCpbFullness -= m_pcRateCtrl->getBufferingRate();
+        // prevent underflow
+        if (estimatedCpbFullness - estimatedBits < (Int)(m_pcRateCtrl->getCpbSize()*0.1f))
+        {
+          estimatedBits = max(200, estimatedCpbFullness - (Int)(m_pcRateCtrl->getCpbSize()*0.1f));
+        }
+
+        m_pcRateCtrl->getRCPic()->setTargetBits(estimatedBits);
+      }
+#endif
 
       Int sliceQP = m_pcCfg->getInitialQP();
       if ( ( pcSlice->getPOC() == 0 && m_pcCfg->getInitialQP() > 0 ) || ( frameLevel == 0 && m_pcCfg->getForceIntraQP() ) ) // QP is specified
@@ -1682,6 +1754,27 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {
           Int bits = m_pcRateCtrl->getRCSeq()->getLeftAverageBits();
           bits = m_pcRateCtrl->getRCPic()->getRefineBitsForIntra( bits );
+
+#if U0132_TARGET_BITS_SATURATION
+          if (m_pcRateCtrl->getCpbSaturationEnabled() )
+          {
+            Int estimatedCpbFullness = m_pcRateCtrl->getCpbState() + m_pcRateCtrl->getBufferingRate();
+
+            // prevent overflow
+            if (estimatedCpbFullness - bits > (Int)(m_pcRateCtrl->getCpbSize()*0.9f))
+            {
+              bits = estimatedCpbFullness - (Int)(m_pcRateCtrl->getCpbSize()*0.9f);
+            }
+
+            estimatedCpbFullness -= m_pcRateCtrl->getBufferingRate();
+            // prevent underflow
+            if (estimatedCpbFullness - bits < (Int)(m_pcRateCtrl->getCpbSize()*0.1f))
+            {
+              bits = estimatedCpbFullness - (Int)(m_pcRateCtrl->getCpbSize()*0.1f);
+            }
+          }
+#endif
+
           if ( bits < 200 )
           {
             bits = 200;
@@ -1819,11 +1912,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       // write various parameter sets
       actualTotalBits += xWriteParameterSets(accessUnit, pcSlice);
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
       if(!pcSlice->getIsDepth() || !pcSlice->getViewIndex() )
       {
 #endif
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
       }
 #endif
 
@@ -1834,13 +1927,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       m_bSeqFirst = false;
     }
+    if (m_pcCfg->getAccessUnitDelimiter())
+    {
+      xWriteAccessUnitDelimiter(accessUnit, pcSlice);
+    }
 
     // reset presence of BP SEI indication
     m_bufferingPeriodSEIPresentInAU = false;
     // create prefix SEI associated with a picture
     xCreatePerPictureSEIMessages(iGOPid, leadingSeiMessages, nestedSeiMessages, pcSlice);
 
-#if NH_MV_SEI
+#if NH_MV
     m_seiEncoder.createAnnexFGISeiMessages( leadingSeiMessages, pcSlice );
 #endif
 
@@ -2001,7 +2098,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Double dEncTime = (Double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
 
     std::string digestStr;
-    if (m_pcCfg->getDecodedPictureHashSEIEnabled())
+    if (m_pcCfg->getDecodedPictureHashSEIType()!=HASHTYPE_NONE)
     {
       SEIDecodedPictureHash *decodedPictureHashSei = new SEIDecodedPictureHash();
       m_seiEncoder.initDecodedPictureHashSEI(decodedPictureHashSei, pcPic, digestStr, pcSlice->getSPS()->getBitDepths());
@@ -2013,21 +2110,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     xCalculateAddPSNRs( isField, isTff, iGOPid, pcPic, accessUnit, rcListPic, dEncTime, snr_conversion, printFrameMSE );
 
-    if (!digestStr.empty())
-    {
-      if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 1)
-      {
-        printf(" [MD5:%s]", digestStr.c_str());
-      }
-      else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 2)
-      {
-        printf(" [CRC:%s]", digestStr.c_str());
-      }
-      else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 3)
-      {
-        printf(" [Checksum:%s]", digestStr.c_str());
-      }
-    }
+    printHash(m_pcCfg->getDecodedPictureHashSEIType(), digestStr);
 
     if ( m_pcCfg->getUseRateCtrl() )
     {
@@ -2050,6 +2133,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       {
         m_pcRateCtrl->getRCGOP()->updateAfterPicture( estimatedBits );
       }
+#if U0132_TARGET_BITS_SATURATION
+      if (m_pcRateCtrl->getCpbSaturationEnabled())
+      {
+        m_pcRateCtrl->updateCpbState(actualTotalBits);
+        printf(" [CPB %6d bits]", m_pcRateCtrl->getCpbState());
+      }
+#endif
     }
 
     xCreatePictureTimingSEI(m_pcCfg->getEfficientFieldIRAPEnabled()?effFieldIRAPMap.GetIRAPGOPid():0, leadingSeiMessages, nestedSeiMessages, duInfoSeiMessages, pcSlice, isField, duData);
@@ -2351,7 +2441,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   TComPicYuv cscd;
   if (conversion!=IPCOLOURSPACE_UNCHANGED)
   {
-    cscd.create(pcPicD->getWidth(COMPONENT_Y), pcPicD->getHeight(COMPONENT_Y), pcPicD->getChromaFormat(), pcPicD->getWidth(COMPONENT_Y), pcPicD->getHeight(COMPONENT_Y), 0, false);
+    cscd.createWithoutCUInfo(pcPicD->getWidth(COMPONENT_Y), pcPicD->getHeight(COMPONENT_Y), pcPicD->getChromaFormat() );
     TVideoIOYuv::ColourSpaceConvert(*pcPicD, cscd, conversion, false);
   }
   TComPicYuv &picd=(conversion==IPCOLOURSPACE_UNCHANGED)?*pcPicD : cscd;
@@ -2451,7 +2541,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     m_gcAnalyzeB.addResult (dPSNR, (Double)uibits, MSEyuvframe);
   }
 
-  Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+  TChar c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced())
   {
     c += 32;
@@ -2505,6 +2595,8 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
   printf(" [ET %5.0f ]", dEncTime );
 
+  // printf(" [WP %d]", pcSlice->getUseWeightedPrediction());
+
   for (Int iRefList = 0; iRefList < 2; iRefList++)
   {
     printf(" [L%d ", iRefList);
@@ -2554,7 +2646,7 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
     for(UInt fieldNum=0; fieldNum<2; fieldNum++)
     {
       TComPicYuv &reconField=*(apcPicRecFields[fieldNum]);
-      cscd[fieldNum].create(reconField.getWidth(COMPONENT_Y), reconField.getHeight(COMPONENT_Y), reconField.getChromaFormat(), reconField.getWidth(COMPONENT_Y), reconField.getHeight(COMPONENT_Y), 0, false);
+      cscd[fieldNum].createWithoutCUInfo(reconField.getWidth(COMPONENT_Y), reconField.getHeight(COMPONENT_Y), reconField.getChromaFormat() );
       TVideoIOYuv::ColourSpaceConvert(reconField, cscd[fieldNum], conversion, false);
       apcPicRecFields[fieldNum]=cscd+fieldNum;
     }

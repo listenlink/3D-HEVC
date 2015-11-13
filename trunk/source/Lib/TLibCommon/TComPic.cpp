@@ -59,7 +59,7 @@ TComPic::TComPic()
 , m_layerId                               (0)
 , m_viewId                                (0)
 , m_bPicOutputFlag                        (false)
-#if NH_3D
+#if NH_3D_VSO
 , m_viewIndex                             (0)
 , m_isDepth                               (false)
 , m_aaiCodedScale                         (0)
@@ -448,13 +448,9 @@ Void TComPic::checkTemporalIVRef()
         {
           m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = false;
           Int iColViewIdx    = pcCandColSlice->getViewIndex();
-#if H_3D_FIX_ARP_CHECK_NOT_IN_DPB
           // The picture pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx) might not be in DPB anymore
           // So don't access it directly.
           Int iColRefViewIdx = pcCandColSlice->getVPS()->getViewOrderIdx( pcCandColSlice->getRefLayerId( (RefPicList)iColRefDir, iColRefIdx ) );       
-#else
-          Int iColRefViewIdx = pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx)->getViewIndex();
-#endif
           if(iColViewIdx == iColRefViewIdx)
           {
             continue;
@@ -992,16 +988,16 @@ Void TComPicLists::print()
   }
 }
 
-#if NH_3D
-TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon )
+#if NH_3D_VSO
+TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int auxId, Int poc, Bool recon )
 {  
-  Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag ); 
+  Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag, auxId ); 
   return getPicYuv( layerIdInNuh, poc, recon );
 }
 
-TComPic* TComPicLists::getPic( Int viewIndex, Bool depthFlag, Int poc )
+TComPic* TComPicLists::getPic( Int viewIndex, Bool depthFlag, Int auxId, Int poc )
 {
-  return getPic   ( m_vps->getLayerIdInNuh( viewIndex, depthFlag ), poc );
+  return getPic   ( m_vps->getLayerIdInNuh( viewIndex, depthFlag, auxId ), poc );
 }
 
 #endif

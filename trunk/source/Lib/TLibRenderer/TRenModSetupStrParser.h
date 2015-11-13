@@ -38,7 +38,7 @@
 #include "../TLibCommon/TComPicYuv.h"
 #include "../TLibCommon/TypeDef.h"
 #include "../TAppCommon/TAppComCamPara.h"
-#if NH_3D
+#if NH_3D_VSO
 
 
 
@@ -91,7 +91,7 @@ public:
 
   TRenModSetupStrParser();
 
-  Void setString( Int iNumOfBaseViews, Char* pchSetStr );
+  Void setString( Int iNumOfBaseViews, TChar* pchSetStr );
 
 private:
   IntAry2d                         m_aaaiBaseViewsIdx  [2];
@@ -111,20 +111,20 @@ private:
   Int                              m_iCurrentContent;
   Int                              m_iNumberOfModels;
 
-  Char*                            m_pchSetStr;
+  TChar*                            m_pchSetStr;
   size_t                           m_iPosInStr;
 
 private:
   Void xParseString();
   Void xParseSourceView();
-  Void xReadViews         ( Char cType );
-  Void xReadViewInfo      ( Char cType );
-  Void xAddBaseView       ( Int iViewIdx, Char cVideoType, Char cDepthType );
-  Void xAddSynthView      ( Int iViewNum, Char cType, Char cRefType );
+  Void xReadViews         ( TChar cType );
+  Void xReadViewInfo      ( TChar cType );
+  Void xAddBaseView       ( Int iViewIdx, TChar cVideoType, TChar cDepthType );
+  Void xAddSynthView      ( Int iViewNum, TChar cType, TChar cRefType );
   Void xError             ( Bool bIsError );
   Void xGetViewNumberRange( std::vector<Int>& raiViewNumbers );
-  Void xGetNextCharGoOn   ( Char& rcNextChar );
-  Void xGetNextChar       ( Char& rcNextChar );
+  Void xGetNextCharGoOn   ( TChar& rcNextChar );
+  Void xGetNextChar       ( TChar& rcNextChar );
 };
 
 #endif // NH_3D

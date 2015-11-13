@@ -1,4 +1,10 @@
 #pragma once
+#ifndef _MSC_VER
+#error local C99 type definition should only be used in Visual C++ before 2010
+#endif
+#if _MSC_VER > 1500
+#error local C99 type definition should only be used in Visual C++ before 2010
+#endif
 
 /* a minimal set of C99 types for use with MSVC */
 

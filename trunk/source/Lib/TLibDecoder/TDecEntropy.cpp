@@ -266,7 +266,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #if NH_3D
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
     DTRACE_PU_S("=========== prediction_unit ===========\n")
     // ToDo: 
     //DTRACE_PU("x0", uiLPelX)
@@ -483,7 +483,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #else
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
     DTRACE_PU_S("=========== prediction_unit ===========\n")
     // ToDo: 
     //DTRACE_PU("x0", uiLPelX)
@@ -504,7 +504,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 
-      UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+      const UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 )
       {
         if ( !hasMergedCandList )
@@ -546,7 +546,6 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       }
       else
       {
-        uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
 
 #if NH_3D_MLC
 #if NH_3D_VSP
@@ -741,7 +740,7 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) )
   {
     m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx );
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
     if ( eRefList == REF_PIC_LIST_0 )
     {
@@ -798,7 +797,7 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) )
   {
     m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx );
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
     if ( eRefList == REF_PIC_LIST_0 )
     {
@@ -833,7 +832,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, Bool& isChromaQpAdjC
   const UInt uiDepth=rTu.GetTransformDepthTotal();
   const UInt uiTrDepth = rTu.GetTransformDepthRel();
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
   UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
@@ -940,7 +939,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, Bool& isChromaQpAdjC
     assert( uiDepth >= pcCU->getDepth( uiAbsPartIdx ) );
     pcCU->setTrIdxSubParts( uiTrDepth, uiAbsPartIdx, uiDepth );
 
-#if !H_MV_ENC_DEC_TRAC
+#if !NH_MV_ENC_DEC_TRAC
     {
       DTRACE_CABAC_VL( g_nSymbolCounter++ );
       DTRACE_CABAC_T( "\tTrIdx: abspart=" );

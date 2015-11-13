@@ -127,17 +127,22 @@ private:
   Int                             m_iPOCLastDisplay;              ///< last POC in display order
 #endif
   std::ofstream                   m_seiMessageFileStream;         ///< Used for outputing SEI messages.  
+
+  SEIColourRemappingInfo*         m_pcSeiColourRemappingInfoPrevious;
+
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
 
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
-  Void  decode            (); ///< main decoding function
+  
 #if NH_MV
+  Void  decode            ( Int i ); ///< main decoding function
   UInt  getNumberOfChecksumErrorsDetected( ) const;
   UInt  getNumberOfChecksumErrorsDetected( Int decIdx ) const { return m_tDecTop[decIdx]->getNumberOfChecksumErrorsDetected(); }
 #else
+  Void  decode            ( ); ///< main decoding function
   UInt  getNumberOfChecksumErrorsDetected() const { return m_cTDecTop.getNumberOfChecksumErrorsDetected(); }
 #endif
 
@@ -205,6 +210,10 @@ protected:
   Void  xFlushOutput                       ( );
   Void  xCropAndOutput                     ( TComPic* curPic );  
 #endif
+
+private:
+  Void applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingInfo& pCriSEI, const TComSPS &activeSPS);
+  Void xOutputColourRemapPic(TComPic* pcPic);
 };
 
 //! \}

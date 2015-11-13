@@ -36,7 +36,6 @@
 #include <list>
 #include <map>
 #include  "../TLibCommon/CommonDef.h" 
-
 #if NH_MV
 #include <vector>
 #include <errno.h>
@@ -77,7 +76,7 @@ namespace df
 
     struct ErrorReporter
     {
-#if NH_MV_SEI
+#if NH_MV
       ErrorReporter() : is_errored(0), output_on_unknow_parameter(true)  {}
 #else
       ErrorReporter() : is_errored(0) {}
@@ -86,7 +85,7 @@ namespace df
       virtual std::ostream& error(const std::string& where);
       virtual std::ostream& warn(const std::string& where);
       bool is_errored;
-#if NH_MV_SEI
+#if NH_MV
       bool output_on_unknow_parameter;
 #endif
     };
@@ -104,13 +103,8 @@ namespace df
     struct OptionBase
     {
 #if NH_MV      
-#if NH_MV_SEI      
       OptionBase(const std::string& name, const std::string& desc, bool duplicate = false, std::vector< int > maxdim = std::vector< int >(0) )
         : opt_string(name), opt_desc(desc), opt_duplicate(duplicate), max_dim( maxdim )
-#else
-      OptionBase(const std::string& name, const std::string& desc, bool duplicate = false)
-        : opt_string(name), opt_desc(desc), opt_duplicate(duplicate)
-#endif
 #else
       OptionBase(const std::string& name, const std::string& desc)
       : opt_string(name), opt_desc(desc)
@@ -120,7 +114,7 @@ namespace df
       virtual ~OptionBase() {}
 
       /* parse argument arg, to obtain a value for the option */
-#if NH_MV_SEI
+#if NH_MV
       virtual void parse(const std::string& arg, const std::vector<int>& idcs,  ErrorReporter&) = 0;
       
       bool   checkDim( std::vector< int > dims, ErrorReporter& err )
@@ -220,9 +214,7 @@ namespace df
       std::string opt_desc;
 #if NH_MV
       bool        opt_duplicate; 
-#if NH_MV_SEI
       std::vector<int> max_dim;
-#endif
 #endif
     };
 
@@ -231,20 +223,15 @@ namespace df
     struct Option : public OptionBase
     {
 #if NH_MV
-#if NH_MV_SEI
       Option(const std::string& name, T& storage, T default_val, const std::string& desc, bool duplicate = false, std::vector< int > maxdim = std::vector< int >(0) )
         : OptionBase(name, desc, duplicate, maxdim), opt_storage(storage), opt_default_val(default_val)
-#else
-      Option(const std::string& name, T& storage, T default_val, const std::string& desc, bool duplicate = false)
-        : OptionBase(name, desc, duplicate), opt_storage(storage), opt_default_val(default_val)
-#endif
 #else
       Option(const std::string& name, T& storage, T default_val, const std::string& desc)
       : OptionBase(name, desc), opt_storage(storage), opt_default_val(default_val)
 #endif
       {}
 
-#if NH_MV_SEI
+#if NH_MV
       void parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter&);
 #else
       void parse(const std::string& arg, ErrorReporter&);
@@ -262,13 +249,13 @@ namespace df
     /* Generic parsing */
     template<typename T>
     inline void
-#if NH_MV_SEI
+#if NH_MV
     Option<T>::parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter&)
 #else
     Option<T>::parse(const std::string& arg, ErrorReporter&)
 #endif
     {
-#if NH_MV_SEI
+#if NH_MV
       assert( idcs.size() == 0 ); 
 #endif
       
@@ -288,68 +275,33 @@ namespace df
      * first word */
     template<>
     inline void
-#if NH_MV_SEI
+#if NH_MV
     Option<std::string>::parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter&)
-#else
-    Option<std::string>::parse(const std::string& arg, ErrorReporter&)
-#endif
     {
-#if NH_MV_SEI
       assert( idcs.size() == 0 ); 
-#endif
       opt_storage = arg;
     }
+#else
+    Option<std::string>::parse(const std::string& arg, ErrorReporter&)
+    {
+      opt_storage = arg;
+    }
+#endif
 
 #if NH_MV    
     template<>
     inline void
-#if NH_MV_SEI
       Option<char*>::parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter&)
-#else
-      Option<char*>::parse(const std::string& arg, ErrorReporter&)
-#endif
     {
-#if NH_MV_SEI
       assert( idcs.size() == 0 ); 
-#endif
       opt_storage = arg.empty() ? NULL : strdup(arg.c_str()) ;
     }
 
-#if !NH_MV_SEI
-
-    template<>
-    inline void
-      Option< std::vector<char*> >::parse(const std::string& arg, ErrorReporter&)
-    {
-      opt_storage.clear(); 
-
-      char* pcStart = (char*) arg.data();      
-      char* pcEnd = strtok (pcStart," ");
-
-      while (pcEnd != NULL)
-      {
-        size_t uiStringLength = pcEnd - pcStart;
-        char* pcNewStr = (char*) malloc( uiStringLength + 1 );
-        strncpy( pcNewStr, pcStart, uiStringLength); 
-        pcNewStr[uiStringLength] = '\0'; 
-        pcStart = pcEnd+1; 
-        pcEnd = strtok (NULL, " ,.-");
-        opt_storage.push_back( pcNewStr ); 
-      }      
-    }
-#endif
-
     template<>    
     inline void
-#if NH_MV_SEI
       Option< std::vector<double> >::parse(const std::string& arg, const std::vector< int > & idcs, ErrorReporter&)
-#else
-      Option< std::vector<double> >::parse(const std::string& arg, ErrorReporter&)
-#endif
     {
-#if NH_MV_SEI
       assert( idcs.size() == 0 ); 
-#endif
       char* pcNextStart = (char*) arg.data();
       char* pcEnd = pcNextStart + arg.length();
 
@@ -383,7 +335,6 @@ namespace df
     }
 
 
-#if NH_MV_SEI
     template<>
     inline void
       Option< IntAry1d >::parse(const std::string& arg, const IntAry1d& idcs, ErrorReporter& err)
@@ -404,7 +355,7 @@ namespace df
     {
       xParseVec ( arg, opt_storage[ idcs[0] ][ idcs[1] ] );
     };
-#if SEI_DRI_F0169
+
     template<>
     inline void
     Option< std::vector< std::vector<double> > >::parse(const std::string& arg, const IntAry1d& idcs, ErrorReporter&)
@@ -438,52 +389,9 @@ namespace df
             };   
             while( (pcNextStart < pcEnd) && ( *pcNextStart == ' ' || *pcNextStart == '\t' || *pcNextStart == '\r' ) ) pcNextStart++;  
             pcOldStart = pcNextStart; 
-
-        }       
-
-
-    }
-#endif
-#else
-    template<>
-    inline void
-      Option< std::vector<int> >::parse(const std::string& arg, ErrorReporter&)
-    {
-      opt_storage.clear();
-
-
-      char* pcNextStart = (char*) arg.data();
-      char* pcEnd = pcNextStart + arg.length();
-
-      char* pcOldStart = 0; 
-
-      size_t iIdx = 0; 
-
-
-      while (pcNextStart < pcEnd)
-      {
-
-        if ( iIdx < opt_storage.size() )
-        {
-          opt_storage[iIdx] = (int) strtol(pcNextStart, &pcNextStart,10);
         }
-        else
-        {
-          opt_storage.push_back( (int) strtol(pcNextStart, &pcNextStart,10)) ;
-        }
-        iIdx++; 
-        if ( errno == ERANGE || (pcNextStart == pcOldStart) )
-        {
-          std::cerr << "Error Parsing Integers: `" << arg << "'" << std::endl;
-          exit(EXIT_FAILURE);
-        };   
-        while( (pcNextStart < pcEnd) && ( *pcNextStart == ' ' || *pcNextStart == '\t' || *pcNextStart == '\r' ) ) pcNextStart++;  
-        pcOldStart = pcNextStart;
-      }
     }
-#endif
 
-#if NH_MV_SEI
 
     template<>
     inline void
@@ -530,40 +438,6 @@ namespace df
     {     
       xParseVec( arg, opt_storage[idcs[0]][idcs[1]] );
     };
-#else
-    template<>
-    inline void
-      Option< std::vector<bool> >::parse(const std::string& arg, ErrorReporter&)
-    {
-      char* pcNextStart = (char*) arg.data();
-      char* pcEnd = pcNextStart + arg.length();
-
-      char* pcOldStart = 0; 
-
-      size_t iIdx = 0; 
-
-      while (pcNextStart < pcEnd)
-      {
-        if ( iIdx < opt_storage.size() )
-        {
-          opt_storage[iIdx] = (strtol(pcNextStart, &pcNextStart,10) != 0);
-        }
-        else
-        {
-          opt_storage.push_back(strtol(pcNextStart, &pcNextStart,10) != 0) ;
-        }
-        iIdx++; 
-
-        if ( errno == ERANGE || (pcNextStart == pcOldStart) )
-        {
-          std::cerr << "Error Parsing Bools: `" << arg << "'" << std::endl;
-          exit(EXIT_FAILURE);
-        };   
-        while( (pcNextStart < pcEnd) && ( *pcNextStart == ' ' || *pcNextStart == '\t' || *pcNextStart == '\r' ) ) pcNextStart++;  
-        pcOldStart = pcNextStart;
-      }
-    }
-#endif
 #endif
     /** Option class for argument handling using a user provided function */
     struct OptionFunc : public OptionBase
@@ -574,7 +448,7 @@ namespace df
       : OptionBase(name, desc), parent(parent_), func(func_)
       {}
 
-#if NH_MV_SEI
+#if NH_MV
       void parse(const std::string& arg, const std::vector<int>& idcs, ErrorReporter& error_reporter)
 #else
       void parse(const std::string& arg, ErrorReporter& error_reporter)
@@ -650,7 +524,6 @@ namespace df
       OptionSpecific&
         operator()(const std::string& name, std::vector<T>& storage, T default_val, unsigned uiMaxNum, const std::string& desc = "" )
       {
-#if NH_MV_SEI
         std::vector<T> defVal;
         defVal.resize( uiMaxNum, default_val ); 
         std::vector< int > maxSize; 
@@ -678,35 +551,6 @@ namespace df
         parent.addOption(new Option< std::vector< std::vector<T> > >( name, storage, defVal, desc, false, maxSize ));
         return *this;
       }
-#else
-        std::string cNameBuffer;
-        std::string cDescBuffer;
-
-        storage.resize(uiMaxNum);
-        for ( unsigned int uiK = 0; uiK < uiMaxNum; uiK++ )
-        {
-          cNameBuffer       .resize( name.size() + 10 );
-          cDescBuffer.resize( desc.size() + 10 );
-
-          Bool duplicate = (uiK != 0); 
-          // isn't there are sprintf function for string??
-          sprintf((char*) cNameBuffer.c_str()       ,name.c_str(),uiK,uiK);
-
-          if ( !duplicate )
-          {          
-            sprintf((char*) cDescBuffer.c_str(),desc.c_str(),uiK,uiK);
-          }
-
-          cNameBuffer.resize( std::strlen(cNameBuffer.c_str()) );  
-          cDescBuffer.resize( std::strlen(cDescBuffer.c_str()) ); 
-          
-
-          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescBuffer, duplicate ));
-        }
-
-        return *this;
-      }
-#endif
 #endif
       /**
        * Add option described by name to the parent Options list,

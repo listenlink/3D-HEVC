@@ -46,8 +46,8 @@
 #include <sstream>
 #include <TLibCommon/CommonDef.h>
 #if DEBUG_STRING
-extern const Char *debug_reorder_data_inter_token[MAX_NUM_COMPONENT+1];
-extern const Char *partSizeToString[NUMBER_OF_PART_SIZES];
+extern const TChar *debug_reorder_data_inter_token[MAX_NUM_COMPONENT+1];
+extern const TChar *partSizeToString[NUMBER_OF_PART_SIZES];
 #endif
 
 // ---------------------------------------------------------------------------------------------- //
@@ -148,9 +148,9 @@ Void printCbfArray( class TComDataCU* pcCU  );
 UInt getDecimalWidth(const Double value);
 UInt getZScanIndex(const UInt x, const UInt y);
 
-//template specialisation for Char types to get it to render as a number
+//template specialisation for SChar/UChar types to get it to render as a number
 template <typename ValueType> inline Void writeValueToStream       (const ValueType &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<      value;  }
-template <>                   inline Void writeValueToStream<Char >(const Char      &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<  Int(value); }
+template <>                   inline Void writeValueToStream<SChar>(const SChar     &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<  Int(value); }
 template <>                   inline Void writeValueToStream<UChar>(const UChar     &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) << UInt(value); }
 
 template <typename ValueType>
@@ -230,7 +230,7 @@ Void printBlock(const ValueType    *const source,
 
 
 template <typename T>
-Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, const T * blkSrc, const UInt width, const UInt height, const UInt stride, const UInt subBlockWidth=0, const UInt subBlockHeight=0, const UInt defWidth=3 )
+Void printBlockToStream( std::ostream &ss, const TChar *pLinePrefix, const T * blkSrc, const UInt width, const UInt height, const UInt stride, const UInt subBlockWidth=0, const UInt subBlockHeight=0, const UInt defWidth=3 )
 {
   for (UInt y=0; y<height; y++)
   {
@@ -254,7 +254,7 @@ Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, const T * bl
 }
 
 class TComYuv;
-Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross=1, const UInt numSubBlocksUp=1, const UInt defWidth=3 );
+Void printBlockToStream( std::ostream &ss, const TChar *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross=1, const UInt numSubBlocksUp=1, const UInt defWidth=3 );
 
 // ---------------------------------------------------------------------------------------------- //
 

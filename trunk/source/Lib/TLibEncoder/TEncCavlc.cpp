@@ -48,7 +48,7 @@
 
 #if ENC_DEC_TRACE
 
-#if !H_MV_ENC_DEC_TRAC
+#if !NH_MV_ENC_DEC_TRAC
 Void  xTraceVPSHeader ()
 {
   fprintf( g_hTrace, "=========== Video Parameter Set     ===========\n" );
@@ -68,8 +68,27 @@ Void  xTraceSliceHeader ( )
 {
   fprintf( g_hTrace, "=========== Slice ===========\n");
 }
+
+Void  xTraceAccessUnitDelimiter ()
+{
+  fprintf( g_hTrace, "=========== Access Unit Delimiter ===========\n");
+}
+
 #endif
 #endif
+
+Void AUDWriter::codeAUD(TComBitIf& bs, const Int pictureType)
+{
+#if ENC_DEC_TRACE
+  xTraceAccessUnitDelimiter();
+#endif
+
+  assert (pictureType < 3);
+  setBitstream(&bs);
+  WRITE_CODE(pictureType, 3, "pic_type");
+  xWriteRbspTrailingBits();
+}
+
 // ====================================================================================================================
 // Constructor / destructor / create / destroy
 // ====================================================================================================================
@@ -153,7 +172,7 @@ Void TEncCavlc::codeShortTermRefPicSet( const TComReferencePictureSet* rps, Bool
 Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 {
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "PPS", pcPPS->getLayerId() ); 
 #else
   xTracePPSHeader ();
@@ -166,7 +185,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   WRITE_CODE( pcPPS->getNumExtraSliceHeaderBits(), 3,        "num_extra_slice_header_bits");
   WRITE_FLAG( pcPPS->getSignHideFlag(), "sign_data_hiding_flag" );
   WRITE_FLAG( pcPPS->getCabacInitPresentFlag() ? 1 : 0,   "cabac_init_present_flag" );
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
   {
     WRITE_UVLC( pcPPS->getNumRefIdxL0DefaultActive(),     "num_ref_idx_l0_default_active_minus1");
@@ -177,7 +196,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 #endif
   WRITE_UVLC( pcPPS->getNumRefIdxL0DefaultActive()-1,     "num_ref_idx_l0_default_active_minus1");
   WRITE_UVLC( pcPPS->getNumRefIdxL1DefaultActive()-1,     "num_ref_idx_l1_default_active_minus1");
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   }
 #endif
   WRITE_SVLC( pcPPS->getPicInitQPMinus26(),                  "init_qp_minus26");
@@ -237,7 +256,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   {
     codeScalingList( pcPPS->getScalingList() );
   }
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
   {
     WRITE_FLAG( 1, "lists_modification_present_flag" );
@@ -265,7 +284,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   if (pps_extension_present_flag)
   {
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const char *syntaxStrings[]={ "pps_range_extension_flag",
+    static const TChar *syntaxStrings[]={ "pps_range_extension_flag",
                                          "pps_multilayer_extension_flag",
                                          "pps_extension_6bits[0]",
                                          "pps_extension_6bits[1]",
@@ -329,29 +348,29 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
     WRITE_CODE( pcPPS->getPpsExtension5bits( ), 5, "pps_extension_5bits" );
     if ( pcPPS->getPpsRangeExtensionsFlag() )
     { 
-              const TComPPSRExt &ppsRangeExtension = pcPPS->getPpsRangeExtension();
-              if (pcPPS->getUseTransformSkip())
-              {
-                WRITE_UVLC( ppsRangeExtension.getLog2MaxTransformSkipBlockSize()-2,            "log2_max_transform_skip_block_size_minus2");
-              }
+      const TComPPSRExt &ppsRangeExtension = pcPPS->getPpsRangeExtension();
+      if (pcPPS->getUseTransformSkip())
+      {
+        WRITE_UVLC( ppsRangeExtension.getLog2MaxTransformSkipBlockSize()-2,            "log2_max_transform_skip_block_size_minus2");
+      }
 
-              WRITE_FLAG((ppsRangeExtension.getCrossComponentPredictionEnabledFlag() ? 1 : 0), "cross_component_prediction_enabled_flag" );
+      WRITE_FLAG((ppsRangeExtension.getCrossComponentPredictionEnabledFlag() ? 1 : 0), "cross_component_prediction_enabled_flag" );
 
-              WRITE_FLAG(UInt(ppsRangeExtension.getChromaQpOffsetListEnabledFlag()),           "chroma_qp_offset_list_enabled_flag" );
-              if (ppsRangeExtension.getChromaQpOffsetListEnabledFlag())
-              {
-                WRITE_UVLC(ppsRangeExtension.getDiffCuChromaQpOffsetDepth(),                   "diff_cu_chroma_qp_offset_depth");
-                WRITE_UVLC(ppsRangeExtension.getChromaQpOffsetListLen() - 1,                   "chroma_qp_offset_list_len_minus1");
-                /* skip zero index */
-                for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx < ppsRangeExtension.getChromaQpOffsetListLen(); cuChromaQpOffsetIdx++)
-                {
-                  WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CbOffset,     "cb_qp_offset_list[i]");
-                  WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CrOffset,     "cr_qp_offset_list[i]");
-                }
-              }
+      WRITE_FLAG(UInt(ppsRangeExtension.getChromaQpOffsetListEnabledFlag()),           "chroma_qp_offset_list_enabled_flag" );
+      if (ppsRangeExtension.getChromaQpOffsetListEnabledFlag())
+      {
+        WRITE_UVLC(ppsRangeExtension.getDiffCuChromaQpOffsetDepth(),                   "diff_cu_chroma_qp_offset_depth");
+        WRITE_UVLC(ppsRangeExtension.getChromaQpOffsetListLen() - 1,                   "chroma_qp_offset_list_len_minus1");
+        /* skip zero index */
+        for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx < ppsRangeExtension.getChromaQpOffsetListLen(); cuChromaQpOffsetIdx++)
+        {
+          WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CbOffset,     "cb_qp_offset_list[i]");
+          WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CrOffset,     "cr_qp_offset_list[i]");
+        }
+      }
 
-              WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
-              WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
+      WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
+      WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
     }
 
     if ( pcPPS->getPpsMultilayerExtensionFlag() )
@@ -661,7 +680,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   const Bool         chromaEnabled         = isChromaEnabled(format);
 
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "SPS", pcSPS->getLayerId() ); 
 #else
   xTraceSPSHeader ();
@@ -747,7 +766,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
 #if NH_MV
     WRITE_UVLC( pcSPS->getSpsMaxLatencyIncreasePlus1(i),   "sps_max_latency_increase_plus1[i]" );
 #else
-    WRITE_UVLC( pcSPS->getMaxLatencyIncrease(i),           "sps_max_latency_increase_plus1[i]" );
+    WRITE_UVLC( pcSPS->getMaxLatencyIncreasePlus1(i),      "sps_max_latency_increase_plus1[i]" );
 #endif
     if (!subLayerOrderingInfoPresentFlag)
     {
@@ -857,7 +876,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   if (sps_extension_present_flag)
   {
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const char *syntaxStrings[]={ "sps_range_extension_flag",
+    static const TChar *syntaxStrings[]={ "sps_range_extension_flag",
       "sps_multilayer_extension_flag",
       "sps_extension_6bits[0]",
       "sps_extension_6bits[1]",
@@ -970,25 +989,25 @@ Void TEncCavlc::codeSPS3dExtension( const TComSPS* pcSPS )
   const TComSps3dExtension* sps3dExt = pcSPS->getSps3dExtension();
   for( Int d = 0; d  <=  1; d++ )
   {
-    WRITE_FLAG( sps3dExt->getIvMvPredFlag( d ) ? 1 : 0 , "iv_mv_pred_flag" );
-    WRITE_FLAG( sps3dExt->getIvMvScalingFlag( d ) ? 1 : 0 , "iv_mv_scaling_flag" );
+    WRITE_FLAG( sps3dExt->getIvDiMcEnabledFlag( d ) ? 1 : 0 , "iv_di_mc_enabled_flag" );
+    WRITE_FLAG( sps3dExt->getIvMvScalEnabledFlag( d ) ? 1 : 0 , "iv_mv_scal_enabled_flag" );
     if( d  ==  0 )
     {
-      WRITE_UVLC( sps3dExt->getLog2SubPbSizeMinus3( d ), "log2_sub_pb_size_minus3" );
-      WRITE_FLAG( sps3dExt->getIvResPredFlag( d ) ? 1 : 0 , "iv_res_pred_flag" );
-      WRITE_FLAG( sps3dExt->getDepthRefinementFlag( d ) ? 1 : 0 , "depth_refinement_flag" );
-      WRITE_FLAG( sps3dExt->getViewSynthesisPredFlag( d ) ? 1 : 0 , "view_synthesis_pred_flag" );
-      WRITE_FLAG( sps3dExt->getDepthBasedBlkPartFlag( d ) ? 1 : 0 , "depth_based_blk_part_flag" );
+      WRITE_UVLC( sps3dExt->getLog2IvmcSubPbSizeMinus3( d ), "log2_sub_pb_size_minus3" );
+      WRITE_FLAG( sps3dExt->getIvResPredEnabledFlag( d ) ? 1 : 0 , "iv_res_pred_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getDepthRefEnabledFlag( d ) ? 1 : 0 , "depth_ref_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getVspMcEnabledFlag( d ) ? 1 : 0 , "vsp_mc_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getDbbpEnabledFlag( d ) ? 1 : 0 , "dbbp_enabled_flag" );
     }
     else 
     {
-      WRITE_FLAG( sps3dExt->getMpiFlag( d ) ? 1 : 0 , "mpi_flag" );
-      WRITE_UVLC( sps3dExt->getLog2MpiSubPbSizeMinus3( d ), "log2_mpi_sub_pb_size_minus3" );
-      WRITE_FLAG( sps3dExt->getIntraContourFlag( d ) ? 1 : 0 , "intra_contour_flag" );
-      WRITE_FLAG( sps3dExt->getIntraSdcWedgeFlag( d ) ? 1 : 0 , "intra_sdc_wedge_flag" );
-      WRITE_FLAG( sps3dExt->getQtPredFlag( d ) ? 1 : 0 , "qt_pred_flag" );
-      WRITE_FLAG( sps3dExt->getInterSdcFlag( d ) ? 1 : 0 , "inter_sdc_flag" );
-      WRITE_FLAG( sps3dExt->getDepthIntraSkipFlag( d ) ? 1 : 0 , "intra_skip_flag" );
+      WRITE_FLAG( sps3dExt->getTexMcEnabledFlag( d ) ? 1 : 0 , "tex_mc_enabled_flag" );
+      WRITE_UVLC( sps3dExt->getLog2TexmcSubPbSizeMinus3( d ), "log2_texmc_sub_pb_size_minus3" );
+      WRITE_FLAG( sps3dExt->getIntraContourEnabledFlag( d ) ? 1 : 0 , "intra_contour_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getIntraDcOnlyWedgeEnabledFlag( d ) ? 1 : 0 , "intra_dc_only_wedge_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getCqtCuPartPredEnabledFlag( d ) ? 1 : 0 , "cqt_cu_part_pred_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getInterDcOnlyEnabledFlag( d ) ? 1 : 0 , "inter_dc_only_enabled_flag" );
+      WRITE_FLAG( sps3dExt->getSkipIntraEnabledFlag( d ) ? 1 : 0 , "skip_intra_enabled_flag" );
     }
   }
 }
@@ -998,7 +1017,7 @@ Void TEncCavlc::codeSPS3dExtension( const TComSPS* pcSPS )
 Void TEncCavlc::codeVPS( const TComVPS* pcVPS )
 {
 #if ENC_DEC_TRACE
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   tracePSHeader( "VPS", getEncTop()->getLayerId() ); 
 #else
   xTraceVPSHeader();
@@ -1763,7 +1782,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   {
     WRITE_FLAG( pcSlice->getNoOutputPriorPicsFlag() ? 1 : 0, "no_output_of_prior_pics_flag" );
   }
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
   if( pcSlice->getIsDepth() )
   {
     WRITE_UVLC( 1, "slice_pic_parameter_set_id" );
@@ -2034,7 +2053,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
       Bool overrideFlag = (pcSlice->getNumRefIdx( REF_PIC_LIST_0 )!=pcSlice->getPPS()->getNumRefIdxL0DefaultActive()||(pcSlice->isInterB()&&pcSlice->getNumRefIdx( REF_PIC_LIST_1 )!=pcSlice->getPPS()->getNumRefIdxL1DefaultActive()));
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
       overrideFlag |= (pcSlice->getIsDepth() && !pcSlice->getViewIndex());
 #endif
       WRITE_FLAG( overrideFlag ? 1 : 0,                               "num_ref_idx_active_override_flag");
@@ -2056,7 +2075,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       pcSlice->setNumRefIdx(REF_PIC_LIST_0, 0);
       pcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
     }
-#if PPS_FIX_DEPTH
+#if H_3D_PPS_FIX_DEPTH
     if( (pcSlice->getPPS()->getListsModificationPresentFlag() || (pcSlice->getIsDepth() && !pcSlice->getViewIndex())) && pcSlice->getNumRpsCurrTempList() > 1)
 #else
     if( pcSlice->getPPS()->getListsModificationPresentFlag() && pcSlice->getNumRpsCurrTempList() > 1)

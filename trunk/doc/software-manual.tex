@@ -3,7 +3,11 @@
 \usepackage{geometry}[2010/02/12]
 
 \usepackage{hyperref}
-\hypersetup{colorlinks=true}
+\hypersetup{colorlinks=true,
+            linkcolor=black,      % color of internal links (change box color with linkbordercolor)
+            citecolor=black,      % color of links to bibliography
+            filecolor=black,      % color of file links
+            urlcolor=blue}
 \usepackage{color,soul}
 
 \usepackage[position=bottom]{subfig}
@@ -186,7 +190,7 @@
 \maketitle
 \begin{abstract}
 This document is a user manual describing usage of reference software
-for the HEVC project. It applies to version 16.6
+for the HEVC project. It applies to version 16.7
 of the software.
 \end{abstract}
 
@@ -240,11 +244,13 @@ provided for development environments.
  \thead{Location of project file} \\
 % Environment          & Location of project file \\
 \hline
-MS Visual Studio 8   & build/HM_vc8.sln \\
-MS Visual Studio 9   & build/HM_vc9.sln \\
-MS Visual Studio 10  & build/HM_vc10.sln \\
-Xcode                & HM.xcodeproj \\
-Linux                & build/linux/makefile \\
+MS Visual Studio 2008 (VC9)   & build/HM_vc9.sln \\
+MS Visual Studio 2010 (VC10)  & build/HM_vc2010.sln \\
+MS Visual Studio 2012 (VC11)  & build/HM_vc2012.sln \\
+MS Visual Studio 2013 (VC12)  & build/HM_vc2013.sln \\
+Xcode                         & HM.xcodeproj \\
+Eclipse                       & .project .cproject \\
+make/gcc (e.g. Linux)         & build/linux/makefile \\
 \hline
 \end{tabular}
 \end{table}
@@ -482,7 +488,7 @@ $K$ is the index of the RPS to be inter coded and the $M$ is the
 index of the reference RPS, as follows.
 
 \setlength{\algomargin}{2em}
-\begin{algorithm}[h]
+\begin{algorithm}[ht]
 \SetKwData{deltaRIdx}{deltaRIdx}
 \SetKwData{deltaRPS}{deltaRPS}
 \SetKwData{numrefidcs}{num_ref_idcs}
@@ -792,6 +798,12 @@ Enable to code fields in a specific, potentially more efficient, order.
 Enables harmonization of Gop first field couple.
 \\
 
+\Option{AccessUnitDelimiter} &
+%\ShortOption{\None} &
+\Default{0} &
+Add Access Unit Delimiter NAL units between all Access Units.
+\\
+
 \end{OptionTableNoShorthand}
 
 %%
@@ -1003,8 +1015,9 @@ Enables or disables the use of a fast motion search.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
  0 & Full search method \\
- 1 & Fast search method \\
- 2 & Previous motion vector fast search method \\
+ 1 & Fast search method - TZSearch\\
+ 2 & Predictive motion vector fast search method \\
+ 3 & Extended TZSearch method \\
 \end{tabular}
 \\
 
@@ -1093,8 +1106,31 @@ Flag to disable intra PUs in inter slices.
 Specifies a value that is multiplied with the Lagrange multiplier
 $\lambda$, for use in the rate-distortion optimised cost calculation
 when encoding temporal layer~$N$.
+If LambdaModifierI is specified, then LambdaModifierI will be used for intra pictures.
 \par
 $N$ may be in the range 0 (inclusive) to 7 (exclusive).
+\\
+
+\Option{LambdaModifierI (-LMI)} &
+%\ShortOption{-LMI} &
+\Default{} &
+Specifies one or more of the LambdaModifiers to use intra pictures at each of the temporal layers.
+If not present, then the LambdaModifier$N$ settings are used instead. If the list of values
+(comma or space separated) does not include enough values for each of the temporal layers,
+the last value is repeated as required.
+\\
+
+\Option{IQPFactor (-IQF)} &
+%\ShortOption{-IQF} &
+\Default{-1} &
+Specifies the QP factor to be used for intra pictures during the lambda computation.
+(The values specified in the GOP structure are only used for inter pictures).
+If negative (default), the following equation is used to derive the value:
+\par
+$IQP_{factor}=0.57*(1.0-Max(0.5, Min(0.0, 0.05*s)))$
+\par
+where $s = Int(isField ? (GS-1)/2 : GS-1)$ and
+$GS$ is the gop size.
 \\
 
 \Option{ECU} &
@@ -1117,15 +1153,25 @@ Enables or disables the use of early skip detection.  When enabled, the skip mod
 
 \Option{FEN} &
 %\ShortOption{\None} &
-\Default{false} &
-Enables or disables the use of fast encoder mode.  When enabled,
-the following occurs:
-\begin{itemize}
-\item In the SAD computation for blocks having size larger than 8, only
-      the lines of even rows in the block are considered.
-\item The number of iterations used in the bi-directional motion vector
-      refinement in the motion estimation process is reduced from 4 to 1.
-\end{itemize}
+\Default{0} &
+Controls the use of different fast encoder coding tools.  The following
+tools are supported in different combinations:
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+ a & In the SAD computation for blocks having size larger than 8, only
+     the lines of even rows in the block are considered. \\
+ b & The number of iterations used in the bi-directional motion vector
+     refinement in the motion estimation process is reduced from 4 to 1. \\
+\end{tabular}
+Depending on the value of the parameter, the following combinations are
+supported:
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+ 0 & Disable all modes \\
+ 1 & Use both a \& b tools\\
+ 2 & Use only tool b \\
+ 3 & Use only tool a \\
+\end{tabular}
 \\
 
 \Option{FDM} &
@@ -1595,6 +1641,21 @@ Enables the use of weighted prediction in P slices.
 Enables the use of weighted prediction in B slices.
 \\
 
+\Option{WPMethod (-wpM)} &
+%\ShortOption{\-wpM} &
+\Default{0} &
+Sets the Weighted Prediction method to be used.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Image DC based method with joint color component decision. \\
+  1 & Image DC based method with separate color component decision. \\
+  2 & DC + Histogram refinement method (no clipping). \\
+  3 & DC + Histogram refinement method (with clipping). \\
+  4 & DC + Dual Histogram refinement method (with clipping). \\
+\end{tabular}
+\\
+
+
 \Option{Log2ParallelMergeLevel} &
 %\ShortOption{\None} &
 \Default{2} &
@@ -1702,6 +1763,25 @@ Rate control: initial QP value for the first picture.
 %\ShortOption{\None} &
 \Default{false} &
 Rate control: force intra QP to be equal to initial QP or not.
+\\
+
+\Option{RCCpbSaturation} &
+%\ShortOption{\None} &
+\Default{false} &
+Rate control: enable target bits saturation to avoid CPB overflow and underflow or not.
+\\
+
+\Option{RCCpbSize} &
+%\ShortOption{\None} &
+\Default{0} &
+Rate control: CPB size, in bps.
+\\
+
+\Option{RCInitialCpbFullness} &
+%\ShortOption{\None} &
+\Default{0.9} &
+Rate control: ratio of initial CPB fullness per CPB size. (InitalCpbFullness/CpbSize)
+RCInitialCpbFullness should be smaller than or equal to 1.
 \\
 \end{OptionTableNoShorthand}
 
@@ -1977,7 +2057,7 @@ The table below lists the SEI messages defined for Version 1 and Range-Extension
   139 & Temporal motion-constrained tile sets    & Table \ref{tab:sei-tmcts} \\
   140 & Chroma resampling filter hint            & Table \ref{tab:chroma-resampling-filter-hint} \\
   141 & Knee function information                & Table \ref{tab:sei-knee-function} \\
-  142 & Colour remapping information             & (Not handled)\\
+  142 & Colour remapping information             & Table \ref{tab:sei-colour-remapping}\\
   143 & Deinterlaced field identification        & (Not handled)\\
 \end{SEIListTable}
 %%
@@ -2468,11 +2548,11 @@ When true (non-zero), generates example temporal motion constrained tile sets SE
 
 
 \begin{OptionTableNoShorthand}{Chroma resampling filter hint SEI message encoder parameters}{tab:chroma-resampling-filter-hint}
-\Option{SEIChromaSamplingFilterHint} &
+\Option{SEIChromaResamplingFilterHint} &
 \Default{false} &
 When true (non-zero), generates example chroma sampling filter hint SEI messages.
 \\
-\Option{SEIChromaSamplingHorizontalFilterType} &
+\Option{SEIChromaResamplingHorizontalFilterType} &
 \Default{2} &
 Defines the index of the chroma sampling horizontal filter:
 \par
@@ -2482,7 +2562,7 @@ Defines the index of the chroma sampling horizontal filter:
   2 & Filters as described by SMPTE RP 2050-1:2012\\
 \end{tabular}
 \\
-\Option{SEIChromaSamplingVerticalFilterType} &
+\Option{SEIChromaResamplingVerticalFilterType} &
 \Default{2} &
 Defines the index of the chroma sampling vertical filter:
 \par
@@ -2548,6 +2628,16 @@ Array of output knee point. Default table can be set to the following:
 \begin{tabular}{cp{0.45\textwidth}}
 100 250 450
 \end{tabular}
+\\
+\end{OptionTableNoShorthand}
+
+
+\begin{OptionTableNoShorthand}{Colour remapping SEI message encoder parameters}{tab:sei-colour-remapping}
+\Option{SEIColourRemappingInfoFileRoot (-cri)} &
+\Default{\NotSet} &
+Specifies the prefix of input Colour Remapping Information file. Prefix is completed by ``_x.txt'' where x is the  POC number.
+The contents of the file are a list of the SEI message's syntax element names (in decoding order) immediately followed by a `:' and then the associated value.
+An example file can be found in cfg/misc/example_colour_remapping_sei_encoder_0.txt.
 \\
 \end{OptionTableNoShorthand}
 
@@ -2728,6 +2818,13 @@ has the following behaviour:
 %\ShortOption{\None} &
 \Default{\NotSet} &
 When a non-empty file name is specified, information regarding any decoded SEI messages will be output to the indicated file. If the file name is '-', then stdout is used instead.
+\\
+
+\Option{SEIColourRemappingInfoFilename} &
+%\ShortOption{\None} &
+\Default{\NotSet} &
+Specifies that the colour remapping SEI message should be applied to the output video, with the output written to this file.
+If no value is specified, the SEI message is ignored and no mapping is applied.
 \\
 
 \Option{RespectDefDispWindow (-w)} &

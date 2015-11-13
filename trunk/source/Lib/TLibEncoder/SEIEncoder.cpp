@@ -293,23 +293,28 @@ Void SEIEncoder::initDecodedPictureHashSEI(SEIDecodedPictureHash *decodedPicture
   assert (decodedPictureHashSEI!=NULL);
   assert (pcPic!=NULL);
 
-  if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 1)
+  decodedPictureHashSEI->method = m_pcCfg->getDecodedPictureHashSEIType();
+  switch (m_pcCfg->getDecodedPictureHashSEIType())
   {
-    decodedPictureHashSEI->method = SEIDecodedPictureHash::MD5;
+    case HASHTYPE_MD5:
+  {
     UInt numChar=calcMD5(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
     rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
   }
-  else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 2)
+      break;
+    case HASHTYPE_CRC:
   {
-    decodedPictureHashSEI->method = SEIDecodedPictureHash::CRC;
     UInt numChar=calcCRC(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
     rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
   }
-  else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 3)
+      break;
+    case HASHTYPE_CHECKSUM:
+    default:
   {
-    decodedPictureHashSEI->method = SEIDecodedPictureHash::CHECKSUM;
     UInt numChar=calcChecksum(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
     rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
+  }
+      break;
   }
 }
 
@@ -396,58 +401,241 @@ Void SEIEncoder::initSEIKneeFunctionInfo(SEIKneeFunctionInfo *seiKneeFunctionInf
     }
   }
 }
+template <typename T>
+static Void readTokenValue(T            &returnedValue, /// value returned
+                           Bool         &failed,        /// used and updated
+                           std::istream &is,            /// stream to read token from
+                           const TChar  *pToken)        /// token string
+{
+  returnedValue=T();
+  if (failed)
+  {
+    return;
+  }
 
-Void SEIEncoder::initSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint *seiChromaSamplingFilterHint, Int iHorFilterIndex, Int iVerFilterIndex)
+  Int c;
+  // Ignore any whitespace
+  while ((c=is.get())!=EOF && isspace(c));
+  // test for comment mark
+  while (c=='#')
+  {
+    // Ignore to the end of the line
+    while ((c=is.get())!=EOF && (c!=10 && c!=13));
+    // Ignore any white space at the start of the next line
+    while ((c=is.get())!=EOF && isspace(c));
+  }
+  // test first character of token
+  failed=(c!=pToken[0]);
+  // test remaining characters of token
+  Int pos;
+  for(pos=1;!failed && pToken[pos]!=0 && is.get()==pToken[pos]; pos++);
+  failed|=(pToken[pos]!=0);
+  // Ignore any whitespace before the ':'
+  while (!failed && (c=is.get())!=EOF && isspace(c));
+  failed|=(c!=':');
+  // Now read the value associated with the token:
+  if (!failed)
+  {
+    is >> returnedValue;
+    failed=!is.good();
+    if (!failed)
+    {
+      c=is.get();
+      failed=(c!=EOF && !isspace(c));
+    }
+  }
+  if (failed)
+  {
+    std::cerr << "Unable to read token '" << pToken << "'\n";
+  }
+}
+
+template <typename T>
+static Void readTokenValueAndValidate(T            &returnedValue, /// value returned
+                                      Bool         &failed,        /// used and updated
+                                      std::istream &is,            /// stream to read token from
+                                      const TChar  *pToken,        /// token string
+                                      const T      &minInclusive,  /// minimum value allowed, inclusive
+                                      const T      &maxInclusive)  /// maximum value allowed, inclusive
+{
+  readTokenValue(returnedValue, failed, is, pToken);
+  if (!failed)
+  {
+    if (returnedValue<minInclusive || returnedValue>maxInclusive)
+    {
+      failed=true;
+      std::cerr << "Value for token " << pToken << " must be in the range " << minInclusive << " to " << maxInclusive << " (inclusive); value read: " << returnedValue << std::endl;
+    }
+  }
+}
+
+// Bool version does not have maximum and minimum values.
+static Void readTokenValueAndValidate(Bool         &returnedValue, /// value returned
+                                      Bool         &failed,        /// used and updated
+                                      std::istream &is,            /// stream to read token from
+                                      const TChar  *pToken)        /// token string
+{
+  readTokenValue(returnedValue, failed, is, pToken);
+}
+
+Bool SEIEncoder::initSEIColourRemappingInfo(SEIColourRemappingInfo* seiColourRemappingInfo, Int currPOC) // returns true on success, false on failure.
 {
   assert (m_isInitialized);
-  assert (seiChromaSamplingFilterHint!=NULL);
+  assert (seiColourRemappingInfo!=NULL);
 
-  seiChromaSamplingFilterHint->m_verChromaFilterIdc = iVerFilterIndex;
-  seiChromaSamplingFilterHint->m_horChromaFilterIdc = iHorFilterIndex;
-  seiChromaSamplingFilterHint->m_verFilteringProcessFlag = 1;
-  seiChromaSamplingFilterHint->m_targetFormatIdc = 3;
-  seiChromaSamplingFilterHint->m_perfectReconstructionFlag = false;
-  if(seiChromaSamplingFilterHint->m_verChromaFilterIdc == 1)
+  // reading external Colour Remapping Information SEI message parameters from file
+  if( !m_pcCfg->getColourRemapInfoSEIFileRoot().empty())
   {
-    seiChromaSamplingFilterHint->m_numVerticalFilters = 1;
-    seiChromaSamplingFilterHint->m_verTapLengthMinus1 = (Int*)malloc(seiChromaSamplingFilterHint->m_numVerticalFilters * sizeof(Int));
-    seiChromaSamplingFilterHint->m_verFilterCoeff =    (Int**)malloc(seiChromaSamplingFilterHint->m_numVerticalFilters * sizeof(Int*));
-    for(Int i = 0; i < seiChromaSamplingFilterHint->m_numVerticalFilters; i ++)
+    Bool failed=false;
+
+    // building the CRI file name with poc num in prefix "_poc.txt"
+    std::string colourRemapSEIFileWithPoc(m_pcCfg->getColourRemapInfoSEIFileRoot());
     {
-      seiChromaSamplingFilterHint->m_verTapLengthMinus1[i] = 0;
-      seiChromaSamplingFilterHint->m_verFilterCoeff[i] = (Int*)malloc(seiChromaSamplingFilterHint->m_verTapLengthMinus1[i] * sizeof(Int));
-      for(Int j = 0; j < seiChromaSamplingFilterHint->m_verTapLengthMinus1[i]; j ++)
+      std::stringstream suffix;
+      suffix << "_" << currPOC << ".txt";
+      colourRemapSEIFileWithPoc+=suffix.str();
+    }
+
+    std::ifstream fic(colourRemapSEIFileWithPoc.c_str());
+    if (!fic.good() || !fic.is_open())
+    {
+      std::cerr <<  "No Colour Remapping Information SEI parameters file " << colourRemapSEIFileWithPoc << " for POC " << currPOC << std::endl;
+      return false;
+    }
+
+    // TODO: identify and remove duplication with decoder parsing through abstraction.
+
+    readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapId,         failed, fic, "colour_remap_id",        UInt(0), UInt(0x7fffffff) );
+    readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapCancelFlag, failed, fic, "colour_remap_cancel_flag" );
+    if( !seiColourRemappingInfo->m_colourRemapCancelFlag )
+    {
+      readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapPersistenceFlag,            failed, fic, "colour_remap_persistence_flag" );
+      readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapVideoSignalInfoPresentFlag, failed, fic, "colour_remap_video_signal_info_present_flag");
+      if( seiColourRemappingInfo->m_colourRemapVideoSignalInfoPresentFlag )
       {
-        seiChromaSamplingFilterHint->m_verFilterCoeff[i][j] = 0;
+        readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapFullRangeFlag,      failed, fic, "colour_remap_full_range_flag" );
+        readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapPrimaries,          failed, fic, "colour_remap_primaries",           Int(0), Int(255) );
+        readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapTransferFunction,   failed, fic, "colour_remap_transfer_function",   Int(0), Int(255) );
+        readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapMatrixCoefficients, failed, fic, "colour_remap_matrix_coefficients", Int(0), Int(255) );
+      }
+      readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapInputBitDepth, failed, fic, "colour_remap_input_bit_depth",            Int(8), Int(16) );
+      readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapBitDepth,      failed, fic, "colour_remap_bit_depth",                  Int(8), Int(16) );
+
+      const Int maximumInputValue    = (1 << (((seiColourRemappingInfo->m_colourRemapInputBitDepth + 7) >> 3) << 3)) - 1;
+      const Int maximumRemappedValue = (1 << (((seiColourRemappingInfo->m_colourRemapBitDepth      + 7) >> 3) << 3)) - 1;
+
+      for( Int c=0 ; c<3 ; c++ )
+      {
+        readTokenValueAndValidate(seiColourRemappingInfo->m_preLutNumValMinus1[c],         failed, fic, "pre_lut_num_val_minus1[c]",        Int(0), Int(32) );
+        if( seiColourRemappingInfo->m_preLutNumValMinus1[c]>0 )
+        {
+          seiColourRemappingInfo->m_preLut[c].resize(seiColourRemappingInfo->m_preLutNumValMinus1[c]+1);
+          for( Int i=0 ; i<=seiColourRemappingInfo->m_preLutNumValMinus1[c] ; i++ )
+          {
+            readTokenValueAndValidate(seiColourRemappingInfo->m_preLut[c][i].codedValue,   failed, fic, "pre_lut_coded_value[c][i]",  Int(0), maximumInputValue    );
+            readTokenValueAndValidate(seiColourRemappingInfo->m_preLut[c][i].targetValue,  failed, fic, "pre_lut_target_value[c][i]", Int(0), maximumRemappedValue );
+          }
+        }
+      }
+      readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapMatrixPresentFlag, failed, fic, "colour_remap_matrix_present_flag" );
+      if( seiColourRemappingInfo->m_colourRemapMatrixPresentFlag )
+      {
+        readTokenValueAndValidate(seiColourRemappingInfo->m_log2MatrixDenom, failed, fic, "log2_matrix_denom", Int(0), Int(15) );
+        for( Int c=0 ; c<3 ; c++ )
+        {
+          for( Int i=0 ; i<3 ; i++ )
+          {
+            readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapCoeffs[c][i], failed, fic, "colour_remap_coeffs[c][i]", -32768, 32767 );
+          }
+        }
+      }
+      for( Int c=0 ; c<3 ; c++ )
+      {
+        readTokenValueAndValidate(seiColourRemappingInfo->m_postLutNumValMinus1[c], failed, fic, "post_lut_num_val_minus1[c]", Int(0), Int(32) );
+        if( seiColourRemappingInfo->m_postLutNumValMinus1[c]>0 )
+        {
+          seiColourRemappingInfo->m_postLut[c].resize(seiColourRemappingInfo->m_postLutNumValMinus1[c]+1);
+          for( Int i=0 ; i<=seiColourRemappingInfo->m_postLutNumValMinus1[c] ; i++ )
+          {
+            readTokenValueAndValidate(seiColourRemappingInfo->m_postLut[c][i].codedValue,  failed, fic, "post_lut_coded_value[c][i]",  Int(0), maximumRemappedValue );
+            readTokenValueAndValidate(seiColourRemappingInfo->m_postLut[c][i].targetValue, failed, fic, "post_lut_target_value[c][i]", Int(0), maximumRemappedValue );
+          }
+        }
       }
     }
+
+    if( failed )
+    {
+      std::cerr << "Error while reading Colour Remapping Information SEI parameters file '" << colourRemapSEIFileWithPoc << "'" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+  return true;
+}
+
+
+Void SEIEncoder::initSEIChromaResamplingFilterHint(SEIChromaResamplingFilterHint *seiChromaResamplingFilterHint, Int iHorFilterIndex, Int iVerFilterIndex)
+{
+  assert (m_isInitialized);
+  assert (seiChromaResamplingFilterHint!=NULL);
+
+  seiChromaResamplingFilterHint->m_verChromaFilterIdc = iVerFilterIndex;
+  seiChromaResamplingFilterHint->m_horChromaFilterIdc = iHorFilterIndex;
+  seiChromaResamplingFilterHint->m_verFilteringFieldProcessingFlag = 1;
+  seiChromaResamplingFilterHint->m_targetFormatIdc = 3;
+  seiChromaResamplingFilterHint->m_perfectReconstructionFlag = false;
+
+  // this creates some example filter values, if explicit filter definition is selected
+  if (seiChromaResamplingFilterHint->m_verChromaFilterIdc == 1)
+    {
+    const Int numVerticalFilters = 3;
+    const Int verTapLengthMinus1[] = {5,3,3};
+
+    seiChromaResamplingFilterHint->m_verFilterCoeff.resize(numVerticalFilters);
+    for(Int i = 0; i < numVerticalFilters; i ++)
+      {
+      seiChromaResamplingFilterHint->m_verFilterCoeff[i].resize(verTapLengthMinus1[i]+1);
+    }
+    // Note: C++11 -> seiChromaResamplingFilterHint->m_verFilterCoeff[0] = {-3,13,31,23,3,-3};
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][0] = -3;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][1] = 13;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][2] = 31;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][3] = 23;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][4] = 3;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][5] = -3;
+
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][0] = -1;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][1] = 25;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][2] = 247;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][3] = -15;
+
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][0] = -20;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][1] = 186;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][2] = 100;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][3] = -10;
   }
   else
   {
-    seiChromaSamplingFilterHint->m_numVerticalFilters = 0;
-    seiChromaSamplingFilterHint->m_verTapLengthMinus1 = NULL;
-    seiChromaSamplingFilterHint->m_verFilterCoeff = NULL;
+    seiChromaResamplingFilterHint->m_verFilterCoeff.resize(0);
   }
-  if(seiChromaSamplingFilterHint->m_horChromaFilterIdc == 1)
-  {
-    seiChromaSamplingFilterHint->m_numHorizontalFilters = 1;
-    seiChromaSamplingFilterHint->m_horTapLengthMinus1 = (Int*)malloc(seiChromaSamplingFilterHint->m_numHorizontalFilters * sizeof(Int));
-    seiChromaSamplingFilterHint->m_horFilterCoeff = (Int**)malloc(seiChromaSamplingFilterHint->m_numHorizontalFilters * sizeof(Int*));
-    for(Int i = 0; i < seiChromaSamplingFilterHint->m_numHorizontalFilters; i ++)
+
+  if (seiChromaResamplingFilterHint->m_horChromaFilterIdc == 1)
     {
-      seiChromaSamplingFilterHint->m_horTapLengthMinus1[i] = 0;
-      seiChromaSamplingFilterHint->m_horFilterCoeff[i] = (Int*)malloc(seiChromaSamplingFilterHint->m_horTapLengthMinus1[i] * sizeof(Int));
-      for(Int j = 0; j < seiChromaSamplingFilterHint->m_horTapLengthMinus1[i]; j ++)
+    Int const numHorizontalFilters = 1;
+    const Int horTapLengthMinus1[] = {3};
+
+    seiChromaResamplingFilterHint->m_horFilterCoeff.resize(numHorizontalFilters);
+    for(Int i = 0; i < numHorizontalFilters; i ++)
       {
-        seiChromaSamplingFilterHint->m_horFilterCoeff[i][j] = 0;
-      }
+      seiChromaResamplingFilterHint->m_horFilterCoeff[i].resize(horTapLengthMinus1[i]+1);
     }
+    seiChromaResamplingFilterHint->m_horFilterCoeff[0][0] = 1;
+    seiChromaResamplingFilterHint->m_horFilterCoeff[0][1] = 6;
+    seiChromaResamplingFilterHint->m_horFilterCoeff[0][2] = 1;
   }
   else
   {
-    seiChromaSamplingFilterHint->m_numHorizontalFilters = 0;
-    seiChromaSamplingFilterHint->m_horTapLengthMinus1 = NULL;
-    seiChromaSamplingFilterHint->m_horFilterCoeff = NULL;
+    seiChromaResamplingFilterHint->m_horFilterCoeff.resize(0);
   }
 }
 
@@ -464,19 +652,6 @@ Void SEIEncoder::initSEITimeCode(SEITimeCode *seiTimeCode)
 }
 
 #if NH_MV
-#if !NH_MV_SEI
-Void SEIEncoder::initSEISubBitstreamProperty(SEISubBitstreamProperty *seiSubBitstreamProperty, const TComSPS *sps)
-{
-  seiSubBitstreamProperty->m_activeVpsId = sps->getVPSId();
-  /* These values can be determined by the encoder; for now we will use the input parameter */  
-  seiSubBitstreamProperty->m_numAdditionalSubStreams = m_pcCfg->getNumAdditionalSubStreams();
-  seiSubBitstreamProperty->m_subBitstreamMode        = m_pcCfg->getSubBitstreamMode();
-  seiSubBitstreamProperty->m_outputLayerSetIdxToVps  = m_pcCfg->getOutputLayerSetIdxToVps();
-  seiSubBitstreamProperty->m_highestSublayerId       = m_pcCfg->getHighestSublayerId();
-  seiSubBitstreamProperty->m_avgBitRate              = m_pcCfg->getAvgBitRate();
-  seiSubBitstreamProperty->m_maxBitRate              = m_pcCfg->getMaxBitRate();  
-}
-#else
 Void SEIEncoder::createAnnexFGISeiMessages( SEIMessages& seiMessage, const TComSlice* slice )
 {
   const SEIMessages* seiMessageCfg = m_pcCfg->getSeiMessages(); 
@@ -507,7 +682,6 @@ Void SEIEncoder::createAnnexFGISeiMessages( SEIMessages& seiMessage, const TComS
     }
   }
 }
-#endif
 #endif
 
 //! \}

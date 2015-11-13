@@ -35,7 +35,7 @@
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenInterpFilter.h"
-#if NH_3D
+#if NH_3D_VSO
 
 ///// COMMON /////
 template<UInt bitDepth>
