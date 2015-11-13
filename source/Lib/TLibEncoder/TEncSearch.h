@@ -112,9 +112,6 @@ protected:
   // Misc.
   Pel*            m_pTempPel;
 
-#if NH_3D_VSO // M17
-  TComYuv         m_cYuvRecTemp; 
-#endif
   // AMVP cost computation
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS+1]; //th array bounds
@@ -177,9 +174,6 @@ public:
                                   TComYuv*    pcRecoYuv,
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
                                   DEBUG_STRING_FN_DECLARE(sDebug)
-#if NH_3D_ENC_DEPTH
-                                , Bool        bOnlyIVP
-#endif
                                 );
 
   Void  estIntraPredChromaQT    ( TComDataCU* pcCU,
@@ -189,15 +183,6 @@ public:
                                   TComYuv*    pcRecoYuv,
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
                                   DEBUG_STRING_FN_DECLARE(sDebug));
-#if NH_3D_DIS
-  Void  estIntraPredDIS        ( TComDataCU* pcCU, 
-                                 TComYuv*    pcOrgYuv, 
-                                 TComYuv*    pcPredYuv, 
-                                 TComYuv*    pcResiYuv, 
-                                 TComYuv*    pcRecoYuv,
-                                 UInt&       ruiDistC,
-                                 Bool        bLumaOnly );
-#endif  
 
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
@@ -206,9 +191,6 @@ public:
                                   TComYuv*    pcResiYuv,
                                   TComYuv*    pcRecoYuv
                                   DEBUG_STRING_FN_DECLARE(sDebug),
-#if NH_3D_FAST_TEXTURE_ENCODING
-                                  Bool        bFMD,
-#endif
                                   Bool        bUseRes = false
 #if AMP_MRG
                                  ,Bool        bUseMRG = false
@@ -224,15 +206,6 @@ public:
                                   TComYuv*    pcYuvRec,
                                   Bool        bSkipResidual
                                   DEBUG_STRING_FN_DECLARE(sDebug) );
-#if NH_3D_SDC_INTER
-  Void encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU,
-                                     TComYuv* pcOrg, 
-                                     TComYuv* pcPred, 
-                                     TComYuv* pcResi, 
-                                     TComYuv* pcRec, 
-                                     Int      uiOffset,
-                                     const UInt uiDepth );
-#endif
 
   /// set ME search range
   Void setAdaptiveSearchRange   ( Int iDir, Int iRefIdx, Int iSearchRange) { assert(iDir < MAX_NUM_REF_LIST_ADAPT_SR && iRefIdx<Int(MAX_IDX_ADAPT_SR)); m_aaiAdaptSR[iDir][iRefIdx] = iSearchRange; }
@@ -271,38 +244,24 @@ protected:
                                           TComYuv*      pcResiYuv,
                                           Pel           resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
                                     const Bool          checkCrossCPrediction,
-#if NH_3D_VSO
-                                    Dist&        ruiDist,
-#else
                                     Distortion&   ruiDist,
-#endif
 const ComponentID   compID,
                                           TComTU        &rTu
                                     DEBUG_STRING_FN_DECLARE(sTest)
                                          ,Int           default0Save1Load2 = 0
-#if NH_3D_ENC_DEPTH
-                                  , Bool          zeroResiFlag = false
-#endif
                                    );
 
   Void  xRecurIntraCodingLumaQT   ( TComYuv*    pcOrgYuv,
                                     TComYuv*    pcPredYuv,
                                     TComYuv*    pcResiYuv,
                                     Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
-#if NH_3D_VSO
-                                    Dist&        ruiDistY,
-#else
                                     Distortion& ruiDistY,
-#endif
 #if HHI_RQT_INTRA_SPEEDUP
                                     Bool         bCheckFirst,
 #endif
                                     Double&      dRDCost,
                                     TComTU      &rTu
                                     DEBUG_STRING_FN_DECLARE(sDebug)
-#if NH_3D_ENC_DEPTH
-                                  , Bool        zeroResiFlag = false
-#endif
                                   );
 
   Void  xSetIntraResultLumaQT     ( TComYuv*     pcRecoYuv,
@@ -329,11 +288,7 @@ const ComponentID   compID,
                                     TComYuv*    pcPredYuv,
                                     TComYuv*    pcResiYuv,
                                     Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
-#if NH_3D_VSO
-                                    Dist&       ruiDist,
-#else
                                     Distortion& ruiDist,
-#endif
                                     TComTU      &rTu
                                     DEBUG_STRING_FN_DECLARE(sDebug));
 
@@ -341,23 +296,7 @@ const ComponentID   compID,
 
   Void  xStoreIntraResultQT       ( const ComponentID compID, TComTU &rTu);
   Void  xLoadIntraResultQT        ( const ComponentID compID, TComTU &rTu);
-#if NH_3D_DIS
-  Void xIntraCodingDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, UInt uiPredMode );
-#endif
 
-#if NH_3D_DMM
-  // -------------------------------------------------------------------------------------------------------------------
-  // Depth intra search
-  // -------------------------------------------------------------------------------------------------------------------
-
-  Void xCalcBiSegDCs              ( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2, Pel defaultVal, Bool subSamp = false );
-  Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
-  Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
-#endif
-#if NH_3D_SDC_INTRA
-  Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bZeroResidual, Int iSDCDeltaResi    );
-  Void xCalcConstantSDC           ( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& valDC );
-#endif
 
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -410,12 +349,6 @@ const ComponentID   compID,
                                     TComMvField* cMvFieldNeighbours,
                                     UChar*       uhInterDirNeighbours,
                                     Int&         numValidMergeCand
-#if NH_3D_VSP
-                                  , Int* vspFlag
-#endif
-#if NH_3D_SPIVMP
-                                  , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
-#endif
                                    );
 
   Void xRestrictBipredMergeCand   ( TComDataCU*     pcCU,
@@ -507,11 +440,7 @@ const ComponentID   compID,
   // -------------------------------------------------------------------------------------------------------------------
 
   Void xEncodeInterResidualQT( const ComponentID compID, TComTU &rTu );
-#if NH_3D_VSO // M26
-  Void xEstimateInterResidualQT( TComYuv* pcResi, TComYuv* pcOrg, TComYuv* pcPred,  Double &rdCost, UInt &ruiBits, Dist       &ruiDist, Dist       *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug) );
-#else
   Void xEstimateInterResidualQT( TComYuv* pcResi                                  , Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug) );
-#endif
   Void xSetInterResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
 
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPartOffset, UInt uiDepth, const ChannelType compID );

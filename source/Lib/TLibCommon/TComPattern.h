@@ -84,12 +84,6 @@ private:
   TComPatternParam  m_cPatternY;
 //  TComPatternParam  m_cPatternCb;
   //TComPatternParam  m_cPatternCr;
-#if NH_3D_IC
-  Bool              m_bICFlag;
-#endif
-#if NH_3D_SDC_INTER
-  Bool              m_bSDCMRSADFlag;
-#endif
 
 
 public:
@@ -102,14 +96,6 @@ public:
   Int   getPatternLStride() const { return m_cPatternY.m_iPatternStride;  }
   Int   getBitDepthY() const      { return m_cPatternY.m_bitDepth;        }
 
-#if NH_3D_IC
-  Bool  getICFlag()               const { return m_bICFlag; }
-  Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
-#endif
-#if NH_3D_SDC_INTER
-  Bool  getSDCMRSADFlag()         const { return m_bSDCMRSADFlag; }
-  Void  setSDCMRSADFlag( Bool bSDCMRSADFlag )    { m_bSDCMRSADFlag = bSDCMRSADFlag; }
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // initialization functions

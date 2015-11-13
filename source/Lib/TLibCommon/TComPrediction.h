@@ -44,9 +44,6 @@
 #include "TComInterpolationFilter.h"
 #include "TComWeightPrediction.h"
 
-#if NH_3D_ARP
-#include "TComPic.h"
-#endif
 // forward declaration
 class TComMv;
 class TComTU; 
@@ -79,9 +76,6 @@ protected:
 
   TComYuv   m_acYuvPred[NUM_REF_PIC_LIST_01];
   TComYuv   m_cYuvPredTemp;
-#if NH_3D_ARP
-  TComYuv   m_acYuvPredBase[2];
-#endif
   TComYuv m_filteredBlock[LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS];
   TComYuv m_filteredBlockTmp[LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS];
 
@@ -89,59 +83,22 @@ protected:
 
   Pel*   m_pLumaRecBuffer;       ///< array for downsampled reconstructed luma sample
   Int    m_iLumaRecStride;       ///< stride of #m_pLumaRecBuffer array
-#if NH_3D_IC
-  UInt   m_uiaShift[ 64 ];       // Table for multiplication to substitue of division operation
-#endif
 
-#if NH_3D_VSP
-  Int*    m_pDepthBlock;         ///< Store a depth block, local variable, to prevent memory allocation every time
-  TComYuv m_cYuvDepthOnVsp;
-#endif
   Void xPredIntraAng            ( Int bitDepth, const Pel* pSrc, Int srcStride, Pel* pDst, Int dstStride, UInt width, UInt height, ChannelType channelType, UInt dirMode, const Bool bEnableEdgeFilters );
   Void xPredIntraPlanar         ( const Pel* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height );
 
   // motion compensation functions
-#if NH_3D_ARP
-  Void xPredInterUniARP         ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi );
-  Void xPredInterUniARPviewRef  ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi );
-  Bool xCheckBiInterviewARP     ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eBaseRefPicList, TComPic*& pcPicYuvCurrTRef, TComMv& cBaseTMV, Int& iCurrTRefPoc );
-#endif
 
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv* pcYuvPred, Bool bi=false          );
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv* pcYuvPred          );
-#if NH_3D_VSP
-  Void xPredInterUniVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
-  Void xPredInterBiVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
-#endif
 
-#if NH_3D
-  Void xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi, const Int bitDepth
-#if NH_3D_ARP
-    , Bool filterType = false
-#endif
-#if NH_3D_IC
-    , Bool bICFlag    = false
-#endif
- );
-#else
   Void xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi, const Int bitDepth );
-#endif
-#if NH_3D_VSP
-  Void xPredInterUniSubPU        ( TComDataCU *cu, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, Int widthSubPU=4, Int heightSubPU=4 );
-#endif
 
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv* pcYuvDst, const BitDepths &clipBitDepths  );
 
   Void xGetLLSPrediction ( const Pel* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0, const ChromaFormat chFmt  DEBUG_STRING_FN_DECLARE(sDebug) );
-#if NH_3D_IC
-  Void xGetLLSICPrediction( const ComponentID compID, TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, const Int bitDepth);
-#endif
   Void xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel* pDst, Int iDstStride, Int iWidth, Int iHeight, ChannelType channelType );
   Bool xCheckIdenticalMotion    ( TComDataCU* pcCU, UInt PartAddr);
-#if NH_3D_SPIVMP
-  Bool xCheckTwoSPMotion ( TComDataCU* pcCU, UInt PartAddr0, UInt PartAddr1 );
-  Void xGetSubPUAddrAndMerge(TComDataCU* pcCU, UInt uiPartAddr, Int iSPWidth, Int iSPHeight, Int iNumSPInOneLine, Int iNumSP, UInt* uiMergedSPW, UInt* uiMergedSPH, UInt* uiSPAddr );
-#endif
 
   Void destroy();
 
@@ -163,24 +120,7 @@ public:
   Void predIntraAng               ( const ComponentID compID, UInt uiDirMode, Pel *piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, const Bool bUseFilteredPredSamples, const Bool bUseLosslessDPCM = false );
 
   Pel  predIntraGetPredValDC      ( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight);
-#if NH_3D_DMM
-  Void predIntraLumaDmm           ( TComDataCU* pcCU, UInt uiAbsPartIdx, DmmID dmmType, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight );
-  Void predContourFromTex         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool* segPattern );
-  Void predBiSegDCs               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool* biSegPattern, Int patternStride, Pel& predDC1, Pel& predDC2 );
-  Void assignBiSegDCs             ( Pel* ptrDst, UInt dstStride, Bool* biSegPattern, Int patternStride, Pel valDC1, Pel valDC2 );
-#endif
-#if NH_3D_SDC_INTRA
-  Void predConstantSDC            ( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& predDC );
-#endif
   
-#if NH_3D_DBBP
-  PartSize      getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize, TComDataCU*& pcCU);
-  Bool          getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask, TComDataCU*& pcCU);
-  Void          combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutYuv, Bool* pMask, UInt uiWidth, UInt uiHeight, UInt uiPartAddr, UInt partSize, Int bitDepthY );
-#endif
-#if NH_3D
-  Pel  predIntraGetPredValDC      ( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, Bool bAbove, Bool bLeft );
-#endif
   Pel*  getPredictorPtr           ( const ComponentID compID, const Bool bUseFilteredPredictions )
   {
     return m_piYuvExt[compID][bUseFilteredPredictions?PRED_BUF_FILTERED:PRED_BUF_UNFILTERED];

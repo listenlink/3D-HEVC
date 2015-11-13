@@ -95,9 +95,6 @@ protected:
   Void xWriteSEIMultiviewSceneInfo            ( const SEIMultiviewSceneInfo& sei);
   Void xWriteSEIMultiviewAcquisitionInfo      ( const SEIMultiviewAcquisitionInfo& sei);
   Void xWriteSEIMultiviewViewPosition         ( const SEIMultiviewViewPosition& sei);
-#if NH_3D
-  Void xWriteSEIAlternativeDepthInfo          ( const SEIAlternativeDepthInfo& sei);
-#endif
 #endif
 
   Void xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSPS *sps);

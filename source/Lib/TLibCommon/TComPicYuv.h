@@ -79,17 +79,7 @@ private:
   Int   m_marginY;                                  ///< margin of Luma channel (chroma's may be smaller, depending on ratio)
 
   Bool  m_bIsBorderExtended;
-#if NH_3D_IV_MERGE
-  Int   m_iBaseUnitWidth;       ///< Width of Base Unit (with maximum depth or minimum size, m_iCuWidth >> Max. Depth)
-  Int   m_iBaseUnitHeight;      ///< Height of Base Unit (with maximum depth or minimum size, m_iCuHeight >> Max. Depth)
-  Int   m_iNumCuInWidth;
-  Int   m_iCuWidth;             ///< Width of Coding Unit (CU)
-  Int   m_iCuHeight;            ///< Height of Coding Unit (CU)
-#endif
 
-#if NH_3D_VSO
-  Void  xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Pel iVal );
-#endif
 
 public:
                TComPicYuv         ();
@@ -181,18 +171,6 @@ public:
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
 #if NH_MV
   Bool          getBorderExtension( )     { return m_bIsBorderExtended; }
-#endif
-#if NH_3D_VSO
-  // Set Function 
-  Void  setLumaTo    ( Pel pVal );  
-  Void  setChromaTo  ( Pel pVal );  
-#endif
-#if NH_3D
-#if NH_3D_IV_MERGE
-  // sample to block and block to sample conversion
-  Void  getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY );
-  Void  getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
-#endif
 #endif
 
 };// END CLASS DEFINITION TComPicYuv
