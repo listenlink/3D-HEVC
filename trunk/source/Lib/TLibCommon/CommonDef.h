@@ -70,8 +70,8 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 // Version information
 // ====================================================================================================================
 #if NH_MV
-#define NV_VERSION        "15.2"                ///< Current software version
-#define HM_VERSION        "16.6"                ///< 
+#define NV_VERSION        "16.0"                ///< Current software version
+#define HM_VERSION        "16.7"                ///< 
 #else
 #define NV_VERSION        "16.7"                 ///< Current software version
 #endif
