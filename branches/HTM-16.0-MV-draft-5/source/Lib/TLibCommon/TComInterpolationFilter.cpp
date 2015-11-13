@@ -74,26 +74,6 @@ const TFilterCoeff TComInterpolationFilter::m_chromaFilter[CHROMA_INTERPOLATION_
   { -2, 10, 58, -2 }
 };
 
-#if NH_3D_ARP
-const Short TComInterpolationFilter::m_lumaFilterARP[4][NTAPS_LUMA_ARP] =
-{
-  {64,  0},
-  {48, 16},
-  {32, 32},
-  {16, 48}
-};
-const Short TComInterpolationFilter::m_chromaFilterARP[8][NTAPS_CHROMA_ARP] =
-{
-  {64,  0},
-  {56,  8},
-  {48, 16},
-  {40, 24},
-  {32, 32},
-  {24, 40},
-  {16, 48},
-  {8,  56}
-};
-#endif
 
 // ====================================================================================================================
 // Private member functions
@@ -359,11 +339,7 @@ Void TComInterpolationFilter::filterVer(Int bitDepth, Pel *src, Int srcStride, P
  * \param  fmt        Chroma format
  * \param  bitDepth   Bit depth
  */
-#if NH_3D_ARP
-Void TComInterpolationFilter::filterHor(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast, const ChromaFormat fmt, const Int bitDepth, Bool filterType )
-#else
 Void TComInterpolationFilter::filterHor(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast, const ChromaFormat fmt, const Int bitDepth )
-#endif 
 
 {
   if ( frac == 0 )
@@ -373,36 +349,14 @@ Void TComInterpolationFilter::filterHor(const ComponentID compID, Pel *src, Int 
   else if (isLuma(compID))
   {
     assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-#if NH_3D_ARP
-    if(filterType)
-    {
-      filterHor<NTAPS_LUMA_ARP>(bitDepth, src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilterARP[frac]);
-    }
-    else
-    {
-#endif
     filterHor<NTAPS_LUMA>(bitDepth, src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
-#if NH_3D_ARP
-    }
-#endif
 
   }
   else
   {
     const UInt csx = getComponentScaleX(compID, fmt);
     assert(frac >=0 && csx<2 && (frac<<(1-csx)) < CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-#if NH_3D_ARP
-    if(filterType)
-    {
-      filterHor<NTAPS_CHROMA_ARP>(bitDepth, src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilterARP[frac]);
-    }
-    else
-    {
-#endif
     filterHor<NTAPS_CHROMA>(bitDepth, src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac<<(1-csx)]);
-#if NH_3D_ARP
-    }
-#endif
   }
 }
 
@@ -423,11 +377,7 @@ Void TComInterpolationFilter::filterHor(const ComponentID compID, Pel *src, Int 
  * \param  fmt        Chroma format
  * \param  bitDepth   Bit depth
  */
-#if NH_3D_ARP
-Void TComInterpolationFilter::filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth, Bool filterType )
-#else
 Void TComInterpolationFilter::filterVer(const ComponentID compID, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt, const Int bitDepth )
-#endif
 {
   if ( frac == 0 )
   {
@@ -436,36 +386,14 @@ Void TComInterpolationFilter::filterVer(const ComponentID compID, Pel *src, Int 
   else if (isLuma(compID))
   {
     assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-#if NH_3D_ARP
-    if(filterType)
-    {
-      filterVer<NTAPS_LUMA_ARP>(bitDepth, src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilterARP[frac]);    
-    }
-    else
-    {
-#endif
     filterVer<NTAPS_LUMA>(bitDepth, src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);
-#if NH_3D_ARP
-    }
-#endif
 
   }
   else
   {
     const UInt csy = getComponentScaleY(compID, fmt);
     assert(frac >=0 && csy<2 && (frac<<(1-csy)) < CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-#if NH_3D_ARP
-    if(filterType)
-    {
-      filterVer<NTAPS_CHROMA_ARP>(bitDepth, src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilterARP[frac]);    
-    }
-    else
-    {
-#endif
     filterVer<NTAPS_CHROMA>(bitDepth, src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac<<(1-csy)]);
-#if NH_3D_ARP
-    }
-#endif
     }
     }
 //! \}

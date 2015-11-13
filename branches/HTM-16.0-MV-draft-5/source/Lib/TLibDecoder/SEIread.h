@@ -114,9 +114,6 @@ protected:
   Void xParseSEIMultiviewSceneInfo            (SEIMultiviewSceneInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIMultiviewAcquisitionInfo      (SEIMultiviewAcquisitionInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIMultiviewViewPosition         (SEIMultiviewViewPosition& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
-#if NH_3D
-  Void xParseSEIAlternativeDepthInfo          (SEIAlternativeDepthInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream);
-#endif
 #endif
   Void sei_read_code(std::ostream *pOS, UInt uiLength, UInt& ruiCode, const TChar *pSymbolName);
   Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const TChar *pSymbolName);

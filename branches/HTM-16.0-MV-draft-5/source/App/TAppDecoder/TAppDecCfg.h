@@ -95,10 +95,6 @@ protected:
   Bool          m_printVpsInfo;                       ///< Output VPS information
   Bool          m_printPicOutput;                     ///< Print information on picture output
   Bool          m_printReceivedNalus;                 ///< Print information on received NAL units
-#if NH_3D
-  TChar*        m_pchScaleOffsetFile;                   ///< output coded scale and offset parameters
-  Bool          m_depth420OutputFlag;                   ///< output depth layers in 4:2:0
-#endif
 
   Void xAppendToFileNameEnd( const TChar* pchInputFileName, const TChar* pchStringToAppend, TChar*& rpchOutputFileName); ///< create filenames
 #endif
@@ -131,9 +127,6 @@ public:
     {
       m_outputBitDepth[channelTypeIndex] = 0;
     }
-#if NH_3D
-    m_pchScaleOffsetFile = NULL;
-#endif
   }
 
   virtual ~TAppDecCfg() {}

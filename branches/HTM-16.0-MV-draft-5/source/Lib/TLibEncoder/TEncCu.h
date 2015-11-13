@@ -68,9 +68,6 @@ private:
 
   TComDataCU**            m_ppcBestCU;      ///< Best CUs in each depth
   TComDataCU**            m_ppcTempCU;      ///< Temporary CUs in each depth
-#if NH_3D_ARP
-  TComDataCU**            m_ppcWeightedTempCU;
-#endif
   UChar                   m_uhTotalDepth;
 
   TComYuv**               m_ppcPredYuvBest; ///< Best Prediction Yuv for each depth
@@ -81,9 +78,6 @@ private:
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
 
-#if NH_3D_DBBP
-  TComYuv**               m_ppcOrigYuvDBBP;
-#endif
   
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
@@ -105,12 +99,6 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   TEncRateCtrl*           m_pcRateCtrl;
 
-#if KWU_RC_MADPRED_E0227
-  UInt                    m_LCUPredictionSAD;
-  Int                     m_addSADDepth;
-  Int                     m_temporalSAD;
-  Int                     m_spatialSAD;
-#endif
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -128,9 +116,6 @@ public:
   Void  encodeCtu           ( TComDataCU*  pCtu );
 
   Int   updateCtuDataISlice ( TComDataCU* pCtu, Int width, Int height );
-#if KWU_RC_MADPRED_E0227
-  UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
-#endif
 
   Void setFastDeltaQp       ( Bool b)                 { m_bFastDeltaQP = b;         }
 
@@ -149,29 +134,15 @@ protected:
   Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode );
 
 #if AMP_MRG
-#if  NH_3D_FAST_TEXTURE_ENCODING
-  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug),  Bool bFMD, Bool bUseMRG = false  ) ;
-#else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG = false  );
-#endif
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#endif
-#if NH_3D_DBBP
-  Void  xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTemp, Bool* pMask, UInt uiValidSegment );
-  Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU  DEBUG_STRING_FN_DECLARE(sDebug),  Bool bUseMRG = false );
-#endif
-#if NH_3D_DIS
-  Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug) );
 #endif
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
                               TComDataCU *&rpcTempCU,
                               Double      &cost,
                               PartSize     ePartSize
                               DEBUG_STRING_FN_DECLARE(sDebug)
-#if NH_3D_ENC_DEPTH
-                            , Bool bOnlyIVP
-#endif
                             );
   Void  xCheckDQP           ( TComDataCU*  pcCU );
 

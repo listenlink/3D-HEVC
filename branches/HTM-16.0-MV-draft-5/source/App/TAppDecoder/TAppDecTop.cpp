@@ -93,9 +93,6 @@ TAppDecTop::TAppDecTop()
   m_totalNumofPicsReceived          = 0;
   m_cvsStartFound                   = false;
 #endif
-#if NH_3D
-    m_pScaleOffsetFile              = 0;
-#endif
 }
 
 Void TAppDecTop::create()
@@ -130,13 +127,6 @@ Void TAppDecTop::destroy()
   }
 #endif
   m_reconFileName.clear();
-#if NH_3D
-  if (m_pchScaleOffsetFile)
-  {
-    free (m_pchScaleOffsetFile);
-    m_pchScaleOffsetFile = NULL;
-  }
-#endif
 }
 
 // ====================================================================================================================
@@ -404,9 +394,6 @@ Void TAppDecTop::xCreateDecLib()
 #if NH_MV
   // initialize global variables
   initROM();
-#if NH_3D_DMM
-  initWedgeLists();
-#endif
 #else
   // create decoder class
   m_cTDecTop.create();
@@ -452,21 +439,11 @@ Void TAppDecTop::xDestroyDecLib()
     delete m_pcSeiColourRemappingInfoPrevious;
     m_pcSeiColourRemappingInfoPrevious = NULL;
   }
-#if NH_3D
-  m_cCamParsCollector.uninit();
-  if( m_pScaleOffsetFile )
-  {
-    ::fclose( m_pScaleOffsetFile );
-  }
-#endif
 }
 
 Void TAppDecTop::xInitDecLib()
 {
 
-#if NH_3D
-  m_cCamParsCollector.setCodeScaleOffsetFile( m_pScaleOffsetFile );
-#endif
 #if NH_MV
   m_dpb.setPrintPicOutput(m_printPicOutput);
 #else
@@ -1058,12 +1035,6 @@ Void TAppDecTop::xTerminateDecoding()
     xFinalizePic( true );
     xFinalizeAU ( );
 
-#if NH_3D
-  if( m_cCamParsCollector.isInitialized() )
-  {
-    m_cCamParsCollector.setSlice( 0 );
-  }
-#endif
    xFlushOutput(); 
    m_dpb.emptyAllSubDpbs();
 }
@@ -1091,9 +1062,6 @@ Void TAppDecTop::xDecodeFirstSliceOfPicture( InputNALUnit nalu, Bool sliceIsFirs
     m_initilizedFromVPS = true;
     m_newVpsActivatedbyCurAu  = true; //TBD
     m_newVpsActivatedbyCurPic = true;
-#if NH_3D_VSO
-    m_dpb.setVPS( m_vps ); 
-#endif
   }
 
   // Create new sub-DBP if not existing
@@ -1215,19 +1183,6 @@ Void TAppDecTop::xFinalizePic(Bool curPicIsLastInAu )
 
 Void TAppDecTop::xFinalizeAU()
 {
-#if NH_3D
-  if ( !m_curAu.empty())
-  {
-    for (TComList<TComPic*>::iterator it = m_curAu.begin(); it != m_curAu.end(); it++)
-    {
-      TComPic* pic = (*it);
-      if ( !pic->getHasGeneratedRefPics() )
-      {
-        pic->compressMotion(1);
-      }
-    }
-  }
-#endif
 }
 
 
@@ -2687,9 +2642,6 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
       std::ostream &os=m_seiMessageFileStream.is_open() ? m_seiMessageFileStream : std::cout;
       m_tDecTop[ decIdx ]->setDecodedSEIMessageOutputStream(&os);
     }
-#if NH_3D
-   m_tDecTop[ decIdx ]->setCamParsCollector( &m_cCamParsCollector );
-#endif
 
     // append pic list of new decoder to PicLists
 
@@ -2911,17 +2863,6 @@ Void TAppDecTop::xInitFileIO()
     }
   }
 
-#if NH_3D
-  if( m_pchScaleOffsetFile )
-  {
-    m_pScaleOffsetFile = ::fopen( m_pchScaleOffsetFile, "wt" );
-    if (!m_pScaleOffsetFile)
-    {
-      fprintf(stderr, "\nUnable to open file `%s' for writing decoded Camera Parameters messages\n", m_pchScaleOffsetFile);
-      exit(EXIT_FAILURE);
-    }
-  }
-#endif
 }
 
 Void TAppDecTop::xOpenReconFile( TComPic* curPic )
@@ -3010,11 +2951,7 @@ Void TAppDecTop::xCropAndOutput( TComPic* curPic )
       conf.getWindowRightOffset()  + defDisp.getWindowRightOffset(),
       conf.getWindowTopOffset()    + defDisp.getWindowTopOffset(),
       conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(),
-#if NH_3D
-      m_depth420OutputFlag && curPic->getIsDepth() ? CHROMA_420 : NUM_CHROMA_FORMAT
-#else
       NUM_CHROMA_FORMAT
-#endif
       , m_bClipOutputVideoToRec709Range);
   }
 }
