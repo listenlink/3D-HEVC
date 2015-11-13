@@ -35,7 +35,7 @@
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
 #include <string.h>
-#if NH_3D
+#if NH_3D_VSO
 
 /////// TRenImagePlane ///////
 

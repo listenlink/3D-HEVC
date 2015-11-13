@@ -139,14 +139,20 @@ Void TComPicSym::destroy()
 {
   clearSliceBuffer();
 
+  if (m_pictureCtuArray)
+  {
   for (Int i = 0; i < m_numCtusInFrame; i++)
   {
+      if (m_pictureCtuArray[i])
+      {
     m_pictureCtuArray[i]->destroy();
     delete m_pictureCtuArray[i];
     m_pictureCtuArray[i] = NULL;
   }
+    }
   delete [] m_pictureCtuArray;
   m_pictureCtuArray = NULL;
+  }
 
   delete [] m_ctuTsToRsAddrMap;
   m_ctuTsToRsAddrMap = NULL;

@@ -291,7 +291,7 @@ public:
 
   Void       checkDcOfMatrix();
   Void       processRefMatrix(UInt sizeId, UInt listId , UInt refListId );
-  Bool       xParseScalingList(Char* pchFile);
+  Bool       xParseScalingList(const std::string &fileName);
 #if NH_MV
   Void       inferFrom                      ( const TComScalingList& srcScLi );
 #endif
@@ -1383,10 +1383,11 @@ public:
 
   /// VPS EXTENSION 2 SYNTAX ELEMENTS
   Int     getDepthId                   ( Int layerIdInNuh)             const    { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPTH_ID ); }
-#if NH_3D                                                             
+#if NH_3D_VSO                                                             
   Bool    getVpsDepthFlag              ( Int layerIdInNuh)             const    { return (getDepthId( layerIdInNuh ) > 0);  }
-  Int     getLayerIdInNuh              ( Int viewIndex, Bool depthFlag ) const;   
-          
+  Int     getLayerIdInNuh              ( Int viewIndex, Bool depthFlag, Int auxId ) const;   
+#endif
+#if NH_3D
   Void    createCamPars                ( Int iNumViews );  
   Void    initCamParaVPS               ( Int vOIdxInVps, Int numCp, Bool cpInSliceSegmentHeaderFlag, Int* cpRefVoi, Int** aaiScale, Int** aaiOffset );                                                
                                        
@@ -1425,7 +1426,7 @@ public:
   const IntAry1d& getInvCodedOffset    ( Int viewIndex )               const    { return m_aaaiCodedOffset[viewIndex][1];   }
 #endif
 
-  template <typename T, typename S, typename U> Void xPrintArray( const Char* name, Int numElemDim1, U idx, S numElemDim2, T vec, Bool printNumber, Bool printIdx = true ) const
+  template <typename T, typename S, typename U> Void xPrintArray( const TChar* name, Int numElemDim1, U idx, S numElemDim2, T vec, Bool printNumber, Bool printIdx = true ) const
   {
     std::cout << std::endl; 
     for (Int j = 0; j < numElemDim1; j++ )
@@ -1809,80 +1810,80 @@ public:
   {
     for (Int d = 0; d < 2; d++)
     {
-      m_ivMvPredFlag          [d] = false; 
-      m_ivMvScalingFlag       [d] = false; 
-      m_log2SubPbSizeMinus3   [d] = 3; 
-      m_ivResPredFlag         [d] = false; 
-      m_depthRefinementFlag   [d] = false; 
-      m_viewSynthesisPredFlag [d] = false; 
-      m_depthBasedBlkPartFlag [d] = false; 
-      m_mpiFlag               [d] = false; 
-      m_log2MpiSubPbSizeMinus3[d] = 3; 
-      m_intraContourFlag      [d] = false; 
-      m_intraSdcWedgeFlag     [d] = false; 
-      m_qtPredFlag            [d] = false; 
-      m_interSdcFlag          [d] = false; 
-      m_depthIntraSkipFlag    [d] = false;   
+      m_ivDiMcEnabledFlag          [d] = false; 
+      m_ivMvScalEnabledFlag       [d] = false; 
+      m_log2IvmcSubPbSizeMinus3   [d] = 3; 
+      m_ivResPredEnabledFlag         [d] = false; 
+      m_depthRefEnabledFlag   [d] = false; 
+      m_vspMcEnabledFlag [d] = false; 
+      m_dbbpEnabledFlag [d] = false; 
+      m_texMcEnabledFlag               [d] = false; 
+      m_log2TexmcSubPbSizeMinus3[d] = 3; 
+      m_intraContourEnabledFlag      [d] = false; 
+      m_intraDcOnlyWedgeEnabledFlag     [d] = false; 
+      m_cqtCuPartPredEnabledFlag            [d] = false; 
+      m_interDcOnlyEnabledFlag          [d] = false; 
+      m_skipIntraEnabledFlag    [d] = false;   
     }
   }
 
-  Void          setIvMvPredFlag( Int d, Bool flag )         { m_ivMvPredFlag[d] = flag;             }
-  Bool          getIvMvPredFlag( Int d ) const              { return m_ivMvPredFlag[d];             }
+  Void          setIvDiMcEnabledFlag( Int d, Bool flag )        { m_ivDiMcEnabledFlag[d] = flag;             }
+  Bool          getIvDiMcEnabledFlag( Int d ) const             { return m_ivDiMcEnabledFlag[d];             }
 
-  Void          setIvMvScalingFlag( Int d, Bool flag )      { m_ivMvScalingFlag[d] = flag;          }
-  Bool          getIvMvScalingFlag( Int d ) const           { return m_ivMvScalingFlag[d];          }
+  Void          setIvMvScalEnabledFlag( Int d, Bool flag )      { m_ivMvScalEnabledFlag[d] = flag;          }
+  Bool          getIvMvScalEnabledFlag( Int d ) const           { return m_ivMvScalEnabledFlag[d];          }
 
-  Void          setLog2SubPbSizeMinus3( Int d, Int  val )   { m_log2SubPbSizeMinus3[d] = val;       }
-  Int           getLog2SubPbSizeMinus3( Int d ) const       { return m_log2SubPbSizeMinus3[d];      }
+  Void          setLog2IvmcSubPbSizeMinus3( Int d, Int  val )   { m_log2IvmcSubPbSizeMinus3[d] = val;       }
+  Int           getLog2IvmcSubPbSizeMinus3( Int d ) const       { return m_log2IvmcSubPbSizeMinus3[d];      }
 
-  Void          setIvResPredFlag( Int d, Bool flag )        { m_ivResPredFlag[d] = flag;            }
-  Bool          getIvResPredFlag( Int d ) const             { return m_ivResPredFlag[d];            }
+  Void          setIvResPredEnabledFlag( Int d, Bool flag )     { m_ivResPredEnabledFlag[d] = flag;            }
+  Bool          getIvResPredEnabledFlag( Int d ) const          { return m_ivResPredEnabledFlag[d];            }
 
-  Void          setDepthRefinementFlag( Int d, Bool flag )  { m_depthRefinementFlag[d] = flag;      }
-  Bool          getDepthRefinementFlag( Int d ) const       { return m_depthRefinementFlag[d];      }
+  Void          setDepthRefEnabledFlag( Int d, Bool flag )      { m_depthRefEnabledFlag[d] = flag;      }
+  Bool          getDepthRefEnabledFlag( Int d ) const           { return m_depthRefEnabledFlag[d];      }
 
-  Void          setViewSynthesisPredFlag( Int d, Bool flag ) { m_viewSynthesisPredFlag[d] = flag;   }
-  Bool          getViewSynthesisPredFlag( Int d ) const     { return m_viewSynthesisPredFlag[d];    }
+  Void          setVspMcEnabledFlag( Int d, Bool flag )         { m_vspMcEnabledFlag[d] = flag;   }
+  Bool          getVspMcEnabledFlag( Int d ) const              { return m_vspMcEnabledFlag[d];    }
 
-  Void          setDepthBasedBlkPartFlag( Int d, Bool flag ) { m_depthBasedBlkPartFlag[d] = flag;   }
-  Bool          getDepthBasedBlkPartFlag( Int d ) const     { return m_depthBasedBlkPartFlag[d];    }
+  Void          setDbbpEnabledFlag( Int d, Bool flag )          { m_dbbpEnabledFlag[d] = flag;   }
+  Bool          getDbbpEnabledFlag( Int d ) const               { return m_dbbpEnabledFlag[d];    }
 
-  Void          setMpiFlag( Int d, Bool flag )              { m_mpiFlag[d] = flag;                  }
-  Bool          getMpiFlag( Int d ) const                   { return m_mpiFlag[d];                  }
+  Void          setTexMcEnabledFlag( Int d, Bool flag )         { m_texMcEnabledFlag[d] = flag;                  }
+  Bool          getTexMcEnabledFlag( Int d ) const              { return m_texMcEnabledFlag[d];                  }
 
-  Void          setLog2MpiSubPbSizeMinus3( Int d, Int  val ) { m_log2MpiSubPbSizeMinus3[d] = val;   }
-  Int           getLog2MpiSubPbSizeMinus3( Int d ) const    { return m_log2MpiSubPbSizeMinus3[d];   }
+  Void          setLog2TexmcSubPbSizeMinus3( Int d, Int  val )  { m_log2TexmcSubPbSizeMinus3[d] = val;   }
+  Int           getLog2TexmcSubPbSizeMinus3( Int d ) const      { return m_log2TexmcSubPbSizeMinus3[d];   }
 
-  Void          setIntraContourFlag( Int d, Bool flag )     { m_intraContourFlag[d] = flag;         }
-  Bool          getIntraContourFlag( Int d ) const          { return m_intraContourFlag[d];         }
+  Void          setIntraContourEnabledFlag( Int d, Bool flag )  { m_intraContourEnabledFlag[d] = flag;         }
+  Bool          getIntraContourEnabledFlag( Int d ) const       { return m_intraContourEnabledFlag[d];         }
 
-  Void          setIntraSdcWedgeFlag( Int d, Bool flag )    { m_intraSdcWedgeFlag[d] = flag;        }
-  Bool          getIntraSdcWedgeFlag( Int d ) const         { return m_intraSdcWedgeFlag[d];        }
+  Void          setIntraDcOnlyWedgeEnabledFlag( Int d, Bool flag ) { m_intraDcOnlyWedgeEnabledFlag[d] = flag;        }
+  Bool          getIntraDcOnlyWedgeEnabledFlag( Int d ) const      { return m_intraDcOnlyWedgeEnabledFlag[d];        }
 
-  Void          setQtPredFlag( Int d, Bool flag )           { m_qtPredFlag[d] = flag;               }
-  Bool          getQtPredFlag( Int d ) const                { return m_qtPredFlag[d];               }
+  Void          setCqtCuPartPredEnabledFlag( Int d, Bool flag )    { m_cqtCuPartPredEnabledFlag[d] = flag;               }
+  Bool          getCqtCuPartPredEnabledFlag( Int d ) const         { return m_cqtCuPartPredEnabledFlag[d];               }
 
-  Void          setInterSdcFlag( Int d, Bool flag )         { m_interSdcFlag[d] = flag;             }
-  Bool          getInterSdcFlag( Int d ) const              { return m_interSdcFlag[d];             }
+  Void          setInterDcOnlyEnabledFlag( Int d, Bool flag )      { m_interDcOnlyEnabledFlag[d] = flag;             }
+  Bool          getInterDcOnlyEnabledFlag( Int d ) const           { return m_interDcOnlyEnabledFlag[d];             }
 
-  Void          setDepthIntraSkipFlag( Int d, Bool flag )   { m_depthIntraSkipFlag[d] = flag;       }
-  Bool          getDepthIntraSkipFlag( Int d ) const        { return m_depthIntraSkipFlag[d];       }
+  Void          setSkipIntraEnabledFlag( Int d, Bool flag )        { m_skipIntraEnabledFlag[d] = flag;       }
+  Bool          getSkipIntraEnabledFlag( Int d ) const             { return m_skipIntraEnabledFlag[d];       }
 private:
 
-  Bool        m_ivMvPredFlag          [2];
-  Bool        m_ivMvScalingFlag       [2];
-  Int         m_log2SubPbSizeMinus3   [2];
-  Bool        m_ivResPredFlag         [2];
-  Bool        m_depthRefinementFlag   [2];
-  Bool        m_viewSynthesisPredFlag [2];
-  Bool        m_depthBasedBlkPartFlag [2];
-  Bool        m_mpiFlag               [2];
-  Int         m_log2MpiSubPbSizeMinus3[2];
-  Bool        m_intraContourFlag      [2];
-  Bool        m_intraSdcWedgeFlag     [2];
-  Bool        m_qtPredFlag            [2];
-  Bool        m_interSdcFlag          [2];
-  Bool        m_depthIntraSkipFlag    [2];  
+  Bool        m_ivDiMcEnabledFlag          [2];
+  Bool        m_ivMvScalEnabledFlag        [2];
+  Int         m_log2IvmcSubPbSizeMinus3    [2];
+  Bool        m_ivResPredEnabledFlag       [2];
+  Bool        m_depthRefEnabledFlag        [2];
+  Bool        m_vspMcEnabledFlag           [2];
+  Bool        m_dbbpEnabledFlag            [2];
+  Bool        m_texMcEnabledFlag           [2];
+  Int         m_log2TexmcSubPbSizeMinus3   [2];
+  Bool        m_intraContourEnabledFlag    [2];
+  Bool        m_intraDcOnlyWedgeEnabledFlag[2];
+  Bool        m_cqtCuPartPredEnabledFlag   [2];
+  Bool        m_interDcOnlyEnabledFlag     [2];
+  Bool        m_skipIntraEnabledFlag       [2];  
 };
 
 #endif
@@ -1954,9 +1955,8 @@ private:
   UInt             m_uiMaxDecPicBuffering[MAX_TLAYER];
 #if NH_MV
   UInt             m_uiSpsMaxLatencyIncreasePlus1[MAX_TLAYER];  
-  // Calling a member m_uiMaxLatencyIncrease although it is m_uiMaxLatencyIncreasePlus1 is really bad style.  
 #else
-  UInt             m_uiMaxLatencyIncrease[MAX_TLAYER];  // Really max latency increase plus 1 (value 0 expresses no limit)
+  UInt             m_uiMaxLatencyIncreasePlus1[MAX_TLAYER];
 #endif
 
   Bool             m_useStrongIntraSmoothing;
@@ -2134,7 +2134,6 @@ public:
   Void                   setScalingListFlag( Bool b )                                                    { m_scalingListEnabledFlag  = b;                                       }
   Bool                   getScalingListPresentFlag() const                                               { return m_scalingListPresentFlag;                                     }
   Void                   setScalingListPresentFlag( Bool b )                                             { m_scalingListPresentFlag  = b;                                       }
-  Void                   setScalingList( TComScalingList *scalingList);
   TComScalingList&       getScalingList()                                                                { return m_scalingList;                                                }
   const TComScalingList& getScalingList() const                                                          { return m_scalingList;                                                }
   UInt                   getMaxDecPicBuffering(UInt tlayer) const                                        { return m_uiMaxDecPicBuffering[tlayer];                               }
@@ -2145,8 +2144,8 @@ public:
   Void                   setSpsMaxLatencyIncreasePlus1( UInt ui , UInt tlayer)                           { m_uiSpsMaxLatencyIncreasePlus1[tlayer] = ui;                         }
   Int                    getSpsMaxLatencyPictures( Int i )  const                                       { return ( getSpsMaxNumReorderPics(i) + getSpsMaxLatencyIncreasePlus1(i)-1); }
 #else
-  UInt                   getMaxLatencyIncrease(UInt tlayer) const                                        { return m_uiMaxLatencyIncrease[tlayer];                               }
-  Void                   setMaxLatencyIncrease( UInt ui , UInt tlayer)                                   { m_uiMaxLatencyIncrease[tlayer] = ui;                                 }
+  UInt                   getMaxLatencyIncreasePlus1(UInt tlayer) const                                   { return m_uiMaxLatencyIncreasePlus1[tlayer];                          }
+  Void                   setMaxLatencyIncreasePlus1( UInt ui , UInt tlayer)                              { m_uiMaxLatencyIncreasePlus1[tlayer] = ui;                            }
 #endif
 
 #if NH_MV
@@ -2165,32 +2164,6 @@ public:
 
   const TComSPSRExt&     getSpsRangeExtension() const                                                    { return m_spsRangeExtension;                                          }
   TComSPSRExt&           getSpsRangeExtension()                                                          { return m_spsRangeExtension;                                          }
-
-  // Sequence parameter set range extension syntax
-  // WAS: getUseResidualRotation and setUseResidualRotation
-  // Now getSpsRangeExtension().getTransformSkipRotationEnabledFlag and getSpsRangeExtension().setTransformSkipRotationEnabledFlag
-
-  // WAS: getUseSingleSignificanceMapContext and setUseSingleSignificanceMapContext
-  // Now: getSpsRangeExtension().getTransformSkipContextEnabledFlag and getSpsRangeExtension().setTransformSkipContextEnabledFlag
-
-  // WAS: getUseResidualDPCM and setUseResidualDPCM
-  // Now: getSpsRangeExtension().getRdpcmEnabledFlag and getSpsRangeExtension().setRdpcmEnabledFlag and
-
-  // WAS: getUseExtendedPrecision and setUseExtendedPrecision
-  // Now: getSpsRangeExtension().getExtendedPrecisionProcessingFlag and getSpsRangeExtension().setExtendedPrecisionProcessingFlag
-
-  // WAS: getDisableIntraReferenceSmoothing and setDisableIntraReferenceSmoothing
-  // Now: getSpsRangeExtension().getIntraSmoothingDisabledFlag and getSpsRangeExtension().setIntraSmoothingDisabledFlag
-
-  // WAS: getUseHighPrecisionPredictionWeighting and setUseHighPrecisionPredictionWeighting
-  // Now: getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag and getSpsRangeExtension().setHighPrecisionOffsetsEnabledFlag
-
-  // WAS: getUseGolombRiceParameterAdaptation and setUseGolombRiceParameterAdaptation
-  // Now: getSpsRangeExtension().getPersistentRiceAdaptationEnabledFlag and getSpsRangeExtension().setPersistentRiceAdaptationEnabledFlag
-
-  // WAS: getAlignCABACBeforeBypass and setAlignCABACBeforeBypass
-  // Now: getSpsRangeExtension().getCabacBypassAlignmentEnabledFlag and getSpsRangeExtension().setCabacBypassAlignmentEnabledFlag
-
 
 #if NH_MV
 
@@ -2273,8 +2246,6 @@ public:
           TComRefPicListModification();
   virtual ~TComRefPicListModification();
 
-  Void    create();
-  Void    destroy();
 
   Bool    getRefPicListModificationFlagL0() const        { return m_refPicListModificationFlagL0;                                  }
   Void    setRefPicListModificationFlagL0(Bool flag)     { m_refPicListModificationFlagL0 = flag;                                  }
@@ -2298,10 +2269,9 @@ public:
 
   Void    setListEntryL0( Int i, Int  val )                      { m_RefPicSetIdxL0[i] = val;                                          } 
   Void    setListEntryL1( Int i, Int  val )                      { m_RefPicSetIdxL1[i] = val;                                          } 
-
-
 #endif
 };
+
 
 /// PPS RExt class
 class TComPPSRExt // Names aligned to text specification
@@ -2555,28 +2525,6 @@ public:
 
   const TComPPSRExt&     getPpsRangeExtension() const                                     { return m_ppsRangeExtension;                   }
   TComPPSRExt&           getPpsRangeExtension()                                           { return m_ppsRangeExtension;                   }
-
-  // WAS: getTransformSkipLog2MaxSize and setTransformSkipLog2MaxSize
-  // Now: getPpsRangeExtension().getLog2MaxTransformSkipBlockSize and getPpsRangeExtension().setLog2MaxTransformSkipBlockSize
-
-  // WAS: getUseCrossComponentPrediction and setUseCrossComponentPrediction
-  // Now: getPpsRangeExtension().getCrossComponentPredictionEnabledFlag and getPpsRangeExtension().setCrossComponentPredictionEnabledFlag
-
-  // WAS: clearChromaQpAdjTable
-  // Now: getPpsRangeExtension().clearChromaQpOffsetList
-
-  // WAS: getMaxCuChromaQpAdjDepth and setMaxCuChromaQpAdjDepth
-  // Now: getPpsRangeExtension().getDiffCuChromaQpOffsetDepth and getPpsRangeExtension().setDiffCuChromaQpOffsetDepth
-
-  // WAS: getChromaQpAdjTableSize
-  // Now: getPpsRangeExtension().getChromaQpOffsetListLen
-
-  // WAS: getChromaQpAdjTableAt and setChromaQpAdjTableAt
-  // Now: getPpsRangeExtension().getChromaQpOffsetListEntry and getPpsRangeExtension().setChromaQpOffsetListEntry
-
-  // WAS: getSaoOffsetBitShift and setSaoOffsetBitShift
-  // Now: getPpsRangeExtension().getLog2SaoOffsetScale and getPpsRangeExtension().setLog2SaoOffsetScale
-
 #if NH_MV
   Void    setLayerId( Int  val )                                                     { m_layerId = val;                                           }
   Int     getLayerId(  ) const                                                       { return m_layerId;                                          }
@@ -2752,7 +2700,7 @@ private:
   Int        m_layerId; 
   Int        m_viewId;
   Int        m_viewIndex; 
-#if NH_3D
+#if NH_3D_VSO
   Bool       m_isDepth;
 #endif
 
@@ -2804,7 +2752,11 @@ private:
   Bool       m_inCmpPredFlag; 
   Bool       m_cpAvailableFlag; 
   Int        m_numViews; 
+#endif
+#if NH_3D_QTL
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
+#endif
+#if NH_3D
   Int**      m_depthToDisparityB; 
   Int**      m_depthToDisparityF; 
   Bool       m_bApplyDIS;
@@ -2875,6 +2827,7 @@ public:
   SliceType                   getSliceType() const                                   { return m_eSliceType;                                          }
   Int                         getPOC() const                                         { return m_iPOC;                                                }
   Int                         getSliceQp() const                                     { return m_iSliceQp;                                            }
+  Bool                        getUseWeightedPrediction() const                       { return( (m_eSliceType==P_SLICE && testWeightPred()) || (m_eSliceType==B_SLICE && testWeightBiPred()) ); }
   Bool                        getDependentSliceSegmentFlag() const                   { return m_dependentSliceSegmentFlag;                           }
   Void                        setDependentSliceSegmentFlag(Bool val)                 { m_dependentSliceSegmentFlag = val;                            }
 #if ADAPTIVE_QP_SELECTION
@@ -2891,7 +2844,8 @@ public:
   Int                         getNumRefIdx( RefPicList e ) const                     { return m_aiNumRefIdx[e];                                      }
   TComPic*                    getPic()                                               { return m_pcPic;                                               }
   TComPic*                    getRefPic( RefPicList e, Int iRefIdx)                  { return m_apcRefPicList[e][iRefIdx];                           }
-  Int                         getRefPOC( RefPicList e, Int iRefIdx)                  { return m_aiRefPOCList[e][iRefIdx];                            }
+  const TComPic*              getRefPic( RefPicList e, Int iRefIdx) const            { return m_apcRefPicList[e][iRefIdx];                           }
+  Int                         getRefPOC( RefPicList e, Int iRefIdx) const            { return m_aiRefPOCList[e][iRefIdx];                            }
 #if NH_3D
   Bool                        getInCmpPredAvailFlag( )                 const         { return m_inCmpPredAvailFlag;                                  }
   Bool                        getCpAvailableFlag( )                    const         { return m_cpAvailableFlag;                                     }
@@ -2900,7 +2854,10 @@ public:
   Int                         getInCmpRefViewIdcs( Int i )             const         { return m_inCmpRefViewIdcs  [i];                               }
   Int                         getNumCurCmpLIds( )                      const         { return (Int) m_inCmpRefViewIdcs.size();                       }
   TComPic*                    getIvPic( Bool depthFlag, Int viewIndex) const         { return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ];    }
+#endif
+#if NH_3D_QTL
   TComPic*                    getTexturePic       ()                                 { return  m_ivPicsCurrPoc[0][ m_viewIndex ];                    }
+
 #endif                            
 #if NH_3D_IC                                                                                                                                          
   Void                        setApplyIC( Bool b )                                   { m_bApplyIC = b;                                               }
@@ -3179,7 +3136,7 @@ public:
 #endif
 
   Void                        setEnableTMVPFlag( Bool   b )                          { m_enableTMVPFlag = b;                                         }
-  Bool                        getEnableTMVPFlag()                                    { return m_enableTMVPFlag;                                      }
+  Bool                        getEnableTMVPFlag() const                              { return m_enableTMVPFlag;                                      }
 
   Void                        setEncCABACTableIdx( SliceType idx )                   { m_encCABACTableIdx = idx;                                     }
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }
@@ -3205,11 +3162,16 @@ public:
 #if NH_3D_ARP                                                                                                                                         
   Int                         getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];                                  }
   Void                        setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;                                   }
-  Bool                        getArpRefPicAvailable  ( RefPicList e, Int viewIdx)    { return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }
+
+  Bool                        getArpRefPicAvailable  ( RefPicList e, Int viewIdx)    { return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, false, 0 )]; }
   IntAry1d                    getPocsInCurrRPSs()                                    { return m_pocsInCurrRPSs;                                      } 
-#endif                                                                                                                                               
+#endif                        
+#endif
+#if NH_3D_VSO
   Void                        setIsDepth            ( Bool isDepth )                 { m_isDepth = isDepth;                                          }
   Bool                        getIsDepth            () const                         { return m_isDepth;                                             }
+#endif
+#if NH_3D
   Void                        setCamparaSlice       ( Int** aaiScale = 0, Int** aaiOffset = 0 );      
 
   IntAry1d                    getCodedScale         () const                         { return m_aaiCodedScale [0];                                   }
@@ -3229,7 +3191,11 @@ public:
   Void                        setCpInvOff( Int j, Int  val )                         { m_aaiCodedOffset[1][j] = val;                                 }
   Int                         getCpInvOff( Int j )                                   { return m_aaiCodedOffset[1][j];                                }
                                                                                                                                                         
+#endif
+#if NH_3D_QTL
   Void                        setIvPicLists( TComPicLists* m_ivPicLists );                                                                              
+#endif
+#if NH_3D
   Void                        setDepthToDisparityLUTs();                                                                                                
                                                                                                                                                         
   Int*                        getDepthToDisparityB( Int refViewIdx )                 { return m_depthToDisparityB[ getVPS()->getVoiInVps( refViewIdx) ];}

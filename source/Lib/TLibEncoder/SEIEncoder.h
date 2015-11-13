@@ -78,18 +78,15 @@ public:
   Void initSEISegmentedRectFramePacking(SEISegmentedRectFramePacking *sei);
   Void initSEITempMotionConstrainedTileSets (SEITempMotionConstrainedTileSets *sei, const TComPPS *pps);
   Void initSEIKneeFunctionInfo(SEIKneeFunctionInfo *sei);
-  Void initSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint *sei, Int iHorFilterIndex, Int iVerFilterIndex);
+  Void initSEIChromaResamplingFilterHint(SEIChromaResamplingFilterHint *sei, Int iHorFilterIndex, Int iVerFilterIndex);
   Void initSEITimeCode(SEITimeCode *sei);
+  Bool initSEIColourRemappingInfo(SEIColourRemappingInfo *sei, Int currPOC); // returns true on success, false on failure.
 
   // trailing SEIs
   Void initDecodedPictureHashSEI(SEIDecodedPictureHash *sei, TComPic *pcPic, std::string &rHashString, const BitDepths &bitDepths);
   Void initTemporalLevel0IndexSEI(SEITemporalLevel0Index *sei, TComSlice *slice);
 #if NH_MV
-#if !NH_MV_SEI
-  Void initSEISubBitstreamProperty(SEISubBitstreamProperty *seiSubBitstreamProperty, const TComSPS *sps);
-#else
   Void createAnnexFGISeiMessages( SEIMessages& seiMessage, const TComSlice* slice );;
-#endif
 #endif
 private:
   TEncCfg* m_pcCfg;

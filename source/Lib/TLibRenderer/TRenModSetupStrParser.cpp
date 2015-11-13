@@ -36,7 +36,7 @@
 #include "TRenFilter.h"
 #include "TRenModSetupStrParser.h"
 
-#if NH_3D
+#if NH_3D_VSO
 Int
 TRenModSetupStrParser::getNumOfModels()
 {
@@ -152,7 +152,7 @@ TRenModSetupStrParser::TRenModSetupStrParser()
 }
 
 Void
-TRenModSetupStrParser::setString( Int iNumOfBaseViews, Char* pchSetStr )
+TRenModSetupStrParser::setString( Int iNumOfBaseViews, TChar* pchSetStr )
 {
   for (Int iContent = 0; iContent < 2; iContent++)
   {
@@ -177,7 +177,7 @@ TRenModSetupStrParser::setString( Int iNumOfBaseViews, Char* pchSetStr )
 Void
 TRenModSetupStrParser::xParseString()
 {
-  Char cChar;
+  TChar cChar;
   xGetNextChar(cChar);
   while(  cChar != '\0' )
   {
@@ -219,7 +219,7 @@ TRenModSetupStrParser::xParseSourceView()
 {
   m_bCurrentViewSet = false;
 
-  Char cChar;
+  TChar cChar;
   xGetNextCharGoOn( cChar );
   xError( cChar != '[' );
   xReadViewInfo('B');
@@ -248,9 +248,9 @@ TRenModSetupStrParser::xParseSourceView()
 }
 
 Void
-TRenModSetupStrParser::xReadViews( Char cType )
+TRenModSetupStrParser::xReadViews( TChar cType )
 {
-  Char cChar;
+  TChar cChar;
   xGetNextCharGoOn( cChar );
   xError( cChar != '(' );
 
@@ -271,7 +271,7 @@ TRenModSetupStrParser::xReadViews( Char cType )
 }
 
 Void
-TRenModSetupStrParser::xReadViewInfo( Char cType )
+TRenModSetupStrParser::xReadViewInfo( TChar cType )
 {
   std::vector<Int> aiViewNums;
   aiViewNums.clear();
@@ -279,8 +279,8 @@ TRenModSetupStrParser::xReadViewInfo( Char cType )
   switch ( cType )
   {
   case 'B':
-    Char cVideoType;
-    Char cDepthType;
+    TChar cVideoType;
+    TChar cDepthType;
 
     xGetNextCharGoOn   ( cVideoType );
     xGetNextCharGoOn   ( cDepthType );
@@ -316,7 +316,7 @@ TRenModSetupStrParser::xReadViewInfo( Char cType )
   case 'I':
   case 'L':
   case 'R':
-    Char cRefType;
+    TChar cRefType;
     xGetNextCharGoOn   ( cRefType   );
     xGetViewNumberRange( aiViewNums );
     for ( Int iIdx = 0; iIdx < aiViewNums.size(); iIdx++ )
@@ -327,15 +327,13 @@ TRenModSetupStrParser::xReadViewInfo( Char cType )
 }
 
 Void
-TRenModSetupStrParser::xAddBaseView( Int iViewIdx, Char cVideoType, Char cDepthType )
+TRenModSetupStrParser::xAddBaseView( Int iViewIdx, TChar cVideoType, TChar cDepthType )
 {
   AOF( m_bCurrentViewSet );
 
   if ( cDepthType == 'x' ) cDepthType = 'o';
   if ( cVideoType == 'x' ) cVideoType = 'o';
-
-
-
+  
   xError( cDepthType != 'o' && cDepthType != 'c' && cVideoType != 'r' );
   xError( cVideoType != 'o' && cVideoType != 'c' && cVideoType != 'r' );
   m_aiAllBaseViewIdx.push_back( iViewIdx );
@@ -345,7 +343,7 @@ TRenModSetupStrParser::xAddBaseView( Int iViewIdx, Char cVideoType, Char cDepthT
 }
 
 Void
-TRenModSetupStrParser::xAddSynthView( Int iViewNum, Char cType, Char cRefType )
+TRenModSetupStrParser::xAddSynthView( Int iViewNum, TChar cType, TChar cRefType )
 {
   AOF( m_bCurrentViewSet );
 
@@ -398,7 +396,7 @@ TRenModSetupStrParser::xGetViewNumberRange( std::vector<Int>& raiViewNumbers )
 {
   size_t iStartPos;
   size_t iEndPos;
-  Char cChar;
+  TChar cChar;
   xGetNextCharGoOn(cChar );
   if (cChar == '{')
   {
@@ -423,7 +421,7 @@ TRenModSetupStrParser::xGetViewNumberRange( std::vector<Int>& raiViewNumbers )
   }
 
   size_t iNumElem = iEndPos - iStartPos + 1;
-  Char* pcTempBuffer = new Char[  iNumElem + 1];
+  TChar* pcTempBuffer = new TChar[  iNumElem + 1];
   strncpy( pcTempBuffer, m_pchSetStr + iStartPos, iNumElem );
   pcTempBuffer[iNumElem] = '\0';
 
@@ -432,7 +430,7 @@ TRenModSetupStrParser::xGetViewNumberRange( std::vector<Int>& raiViewNumbers )
 }
 
 Void
-TRenModSetupStrParser::xGetNextCharGoOn( Char& rcNextChar )
+TRenModSetupStrParser::xGetNextCharGoOn( TChar& rcNextChar )
 {
   while ( m_pchSetStr[m_iPosInStr] == ' ' || m_pchSetStr[m_iPosInStr] == ',' )
   {
@@ -444,7 +442,7 @@ TRenModSetupStrParser::xGetNextCharGoOn( Char& rcNextChar )
 }
 
 Void
-TRenModSetupStrParser::xGetNextChar( Char& rcNextChar )
+TRenModSetupStrParser::xGetNextChar( TChar& rcNextChar )
 {
   size_t iPos = m_iPosInStr;
   while ( ( m_pchSetStr[iPos] == ' ' || m_pchSetStr[iPos] == ',' ) && m_pchSetStr[iPos] != '\0' ) iPos++;

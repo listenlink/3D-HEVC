@@ -64,7 +64,7 @@ public:
   TAppExtrCfg()          {}
   virtual ~TAppExtrCfg() {}
   
-  Bool  parseCfg        ( Int argc, Char* argv[] );    ///< initialize option class from configuration
+  Bool  parseCfg        ( Int argc, TChar* argv[] );    ///< initialize option class from configuration
 
 protected:
   Void  xSplitUIntString( const std::string& rString, std::set<UInt>& rList );

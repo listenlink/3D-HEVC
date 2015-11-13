@@ -45,7 +45,7 @@
 #include "TLibVideoIO/TVideoIOYuv.h"
 #include "TLibCommon/AccessUnit.h"
 #include "TAppEncCfg.h"
-#if NH_3D
+#if NH_3D_VSO
 #include "../../Lib/TLibRenderer/TRenTop.h"
 #endif
 

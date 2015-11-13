@@ -48,14 +48,14 @@
 
 #if ENC_DEC_TRACE
 
-Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, const Char *pSymbolName)
+Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, const TChar *pSymbolName)
 {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   xReadCode (length, rValue, pSymbolName);
 #else
   xReadCode (length, rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 
@@ -79,14 +79,14 @@ Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, con
   fflush ( g_hTrace );
 }
 
-Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const Char *pSymbolName)
+Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const TChar *pSymbolName)
 {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   xReadUvlc (rValue, pSymbolName);
 #else
   xReadUvlc (rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 
@@ -103,14 +103,14 @@ Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const Char *pSym
   fflush ( g_hTrace );
 }
 
-Void  SyntaxElementParser::xReadSvlcTr           (Int& rValue, const Char *pSymbolName)
+Void  SyntaxElementParser::xReadSvlcTr           (Int& rValue, const TChar *pSymbolName)
 {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   xReadSvlc (rValue, pSymbolName);
 #else
   xReadSvlc (rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 
@@ -127,14 +127,14 @@ Void  SyntaxElementParser::xReadSvlcTr           (Int& rValue, const Char *pSymb
   fflush ( g_hTrace );
 }
 
-Void  SyntaxElementParser::xReadFlagTr           (UInt& rValue, const Char *pSymbolName)
+Void  SyntaxElementParser::xReadFlagTr           (UInt& rValue, const TChar *pSymbolName)
 {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   xReadFlag (rValue, pSymbolName);
 #else
   xReadFlag (rValue);
 #endif
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   if ( g_disableHLSTrace || !g_HLSTraceEnable )
   {
     return; 
@@ -151,7 +151,8 @@ Void  SyntaxElementParser::xReadFlagTr           (UInt& rValue, const Char *pSym
   fflush ( g_hTrace );
 }
 
-Void  SyntaxElementParser::xReadStringTr        (UInt buSize, UChar *pValue, UInt& rLength, const Char *pSymbolName)
+#if NH_MV
+Void  SyntaxElementParser::xReadStringTr        (UInt buSize, UChar *pValue, UInt& rLength, const TChar *pSymbolName)
 {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   xReadString (buSize, pValue, rLength, pSymbolName);
@@ -162,7 +163,7 @@ Void  SyntaxElementParser::xReadStringTr        (UInt buSize, UChar *pValue, UIn
   fprintf( g_hTrace, "%-50s st(v=%d)  : %s\n", pSymbolName, rLength, pValue ); 
   fflush ( g_hTrace );
 }
-
+#endif
 Void  xTraceAccessUnitDelimiter ()
 {
   fprintf( g_hTrace, "=========== Access Unit Delimiter ===========\n");
@@ -180,7 +181,7 @@ Void xTraceFillerData ()
 // Protected member functions
 // ====================================================================================================================
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-Void SyntaxElementParser::xReadCode (UInt uiLength, UInt& ruiCode, const Char *pSymbolName)
+Void SyntaxElementParser::xReadCode (UInt uiLength, UInt& ruiCode, const TChar *pSymbolName)
 #else
 Void SyntaxElementParser::xReadCode (UInt uiLength, UInt& ruiCode)
 #endif
@@ -193,7 +194,7 @@ Void SyntaxElementParser::xReadCode (UInt uiLength, UInt& ruiCode)
 }
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-Void SyntaxElementParser::xReadUvlc( UInt& ruiVal, const Char *pSymbolName)
+Void SyntaxElementParser::xReadUvlc( UInt& ruiVal, const TChar *pSymbolName)
 #else
 Void SyntaxElementParser::xReadUvlc( UInt& ruiVal)
 #endif
@@ -231,7 +232,7 @@ Void SyntaxElementParser::xReadUvlc( UInt& ruiVal)
 }
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-Void SyntaxElementParser::xReadSvlc( Int& riVal, const Char *pSymbolName)
+Void SyntaxElementParser::xReadSvlc( Int& riVal, const TChar *pSymbolName)
 #else
 Void SyntaxElementParser::xReadSvlc( Int& riVal)
 #endif
@@ -269,7 +270,7 @@ Void SyntaxElementParser::xReadSvlc( Int& riVal)
 }
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-Void SyntaxElementParser::xReadFlag (UInt& ruiCode, const Char *pSymbolName)
+Void SyntaxElementParser::xReadFlag (UInt& ruiCode, const TChar *pSymbolName)
 #else
 Void SyntaxElementParser::xReadFlag (UInt& ruiCode)
 #endif
@@ -280,8 +281,9 @@ Void SyntaxElementParser::xReadFlag (UInt& ruiCode)
 #endif
 }
 
+#if NH_MV
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-Void  SyntaxElementParser::xReadString  (UInt bufSize, UChar *pVal, UInt& rLength, const Char *pSymbolName)
+Void  SyntaxElementParser::xReadString  (UInt bufSize, UChar *pVal, UInt& rLength, const TChar *pSymbolName)
 #else
 Void  SyntaxElementParser::xReadString  (UInt bufSize, UChar *pVal, UInt& rLength)
 #endif
@@ -301,6 +303,7 @@ Void  SyntaxElementParser::xReadString  (UInt bufSize, UChar *pVal, UInt& rLengt
   rLength = i;
   assert( pVal[rLength] == 0 );  
 }
+#endif
 
 Void SyntaxElementParser::xReadRbspTrailingBits()
 {

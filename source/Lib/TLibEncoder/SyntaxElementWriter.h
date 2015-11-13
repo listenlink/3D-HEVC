@@ -55,7 +55,9 @@
 #define WRITE_UVLC( value,         name)    xWriteUvlcTr ( value,         name )
 #define WRITE_SVLC( value,         name)    xWriteSvlcTr ( value,         name )
 #define WRITE_FLAG( value,         name)    xWriteFlagTr ( value,         name )
+#if NH_MV
 #define WRITE_STRING( value, length, name)   xWriteStringTr( value, length, name )
+#endif
 
 #else
 
@@ -63,8 +65,9 @@
 #define WRITE_UVLC( value,         name)     xWriteUvlc ( value )
 #define WRITE_SVLC( value,         name)     xWriteSvlc ( value )
 #define WRITE_FLAG( value,         name)     xWriteFlag ( value )
+#if NH_MV
 #define WRITE_STRING( value, length, name)   xWriteString( value, length )
-
+#endif
 #endif
 
 class SyntaxElementWriter
@@ -83,13 +86,17 @@ protected:
   Void  xWriteUvlc            ( UInt uiCode );
   Void  xWriteSvlc            ( Int  iCode   );
   Void  xWriteFlag            ( UInt uiCode );
+#if NH_MV
   Void  xWriteString          ( UChar* sCode, UInt uiLength);
+#endif
 #if ENC_DEC_TRACE
-  Void  xWriteCodeTr          ( UInt value, UInt  length, const Char *pSymbolName);
-  Void  xWriteUvlcTr          ( UInt value,               const Char *pSymbolName);
-  Void  xWriteSvlcTr          ( Int  value,               const Char *pSymbolName);
-  Void  xWriteFlagTr          ( UInt value,               const Char *pSymbolName);
+  Void  xWriteCodeTr          ( UInt value, UInt  length, const TChar *pSymbolName);
+  Void  xWriteUvlcTr          ( UInt value,               const TChar *pSymbolName);
+  Void  xWriteSvlcTr          ( Int  value,               const TChar *pSymbolName);
+  Void  xWriteFlagTr          ( UInt value,               const TChar *pSymbolName);
+#if NH_MV
   Void  xWriteStringTr        ( UChar* value, UInt length, const Char *pSymbolName);
+#endif
 #endif
   Void xWriteRbspTrailingBits();
 

@@ -46,7 +46,7 @@
 // ====================================================================================================================
 //! \ingroup TLibCommon
 //! \{
-const Char* nalUnitTypeToString(NalUnitType type)
+const TChar* nalUnitTypeToString(NalUnitType type)
 {
   switch (type)
   {
@@ -220,7 +220,7 @@ Void initROM()
     }
   }
 #if NH_MV
-#if H_MV_HLS_PTL_LIMITS 
+#if NH_MV_HLS_PTL_LIMITS 
  g_generalTierAndLevelLimits[ Level::LEVEL1   ] = TComGeneralTierAndLevelLimits(    36864,     350,  MIN_INT,   16,   1,   1 );
  g_generalTierAndLevelLimits[ Level::LEVEL2   ] = TComGeneralTierAndLevelLimits(   122880,    1500,  MIN_INT,   16,   1,   1 );
  g_generalTierAndLevelLimits[ Level::LEVEL2_1 ] = TComGeneralTierAndLevelLimits(   245760,    3000,  MIN_INT,   20,   1,   1 );
@@ -531,7 +531,7 @@ extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
 // ====================================================================================================================
 // Misc.
 // ====================================================================================================================
-Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
+SChar  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 #if ENC_DEC_TRACE
 FILE*  g_hTrace = NULL; // Set to NULL to open up a file. Set to stdout to use the current output
 const Bool g_bEncDecTraceEnable  = true;
@@ -539,7 +539,7 @@ const Bool g_bEncDecTraceDisable = false;
 Bool   g_HLSTraceEnable = false;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 Bool g_traceCU = false; 
 Bool g_tracePU = false; 
 Bool g_traceTU = false; 
@@ -581,7 +581,7 @@ const UInt ctxIndMap4x4[4*4] =
 };
 const UInt g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ] = {0,1,2,3,4,6,8,12,16,24};
 const UInt g_uiGroupIdx[ MAX_TU_SIZE ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
-const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
+const TChar *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
 {
   {
     "INTRA4X4_LUMA",
@@ -616,7 +616,7 @@ const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
    "INTER32X32_CHROMAV_FROM16x16_CHROMAV"
   },
 };
-const Char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
+const TChar *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
 {
   {
   },
@@ -670,9 +670,9 @@ const Int g_quantInterDefault8x8[8*8] =
 };
 const UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
 const UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
-Void tracePSHeader( const Char* psName, Int layerId )
+Void tracePSHeader( const TChar* psName, Int layerId )
 {  
   if ( !g_disableHLSTrace  ) 
   {
@@ -726,7 +726,7 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
     g_traceCopyBack          = false;     
   }  
 }
-Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
+Void writeToTraceFile( const TChar* symbolName, Int val, Bool doIt )
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
@@ -748,7 +748,7 @@ UInt64 incSymbolCounter( )
   }  
   return g_nSymbolCounter; 
 }
-Void writeToTraceFile( const Char* symbolName, Bool doIt )
+Void writeToTraceFile( const TChar* symbolName, Bool doIt )
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {

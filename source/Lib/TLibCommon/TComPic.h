@@ -153,7 +153,7 @@ private:
   Bool                  m_activatesNewVps;
   TComDecodedRps        m_decodedRps;
 #endif
-#if NH_3D
+#if NH_3D_VSO
   Int                   m_viewIndex;
   Bool                  m_isDepth;
   Int**                 m_aaiCodedScale;
@@ -188,6 +188,7 @@ public:
   Bool          getCheckLTMSBPresent     () { return m_bCheckLTMSB;}
 
   TComPicSym*   getPicSym()           { return  &m_picSym;    }
+  const TComPicSym* getPicSym() const { return  &m_picSym;    }
   TComSlice*    getSlice(Int i)       { return  m_picSym.getSlice(i);  }
   Int           getPOC() const        { return  m_picSym.getSlice(m_uiCurrSliceIdx)->getPOC();  }
   TComDataCU*   getCtu( UInt ctuRsAddr )           { return  m_picSym.getCtu( ctuRsAddr ); }
@@ -246,13 +247,13 @@ public:
 
 #if NH_MV
    Void          setLayerId            ( Int layerId )    { m_layerId      = layerId; }
-   Int           getLayerId            ()                 { return m_layerId;    }
+   Int           getLayerId            () const           { return m_layerId;    }
    
    Void          setViewId             ( Int viewId )     { m_viewId = viewId;   }
-   Int           getViewId             ()                 { return m_viewId;     }
+   Int           getViewId             () const           { return m_viewId;     }
 
    Void          setPicOutputFlag(Bool b)                 { m_bPicOutputFlag = b;      }
-   Bool          getPicOutputFlag()                       { return m_bPicOutputFlag ;  }
+   Bool          getPicOutputFlag() const                 { return m_bPicOutputFlag ;  }
 
    Bool          getPocResetPeriodId();
 
@@ -309,9 +310,9 @@ public:
 
    Void          print( Int outputLevel );
 
-#if NH_3D
+#if NH_3D_VSO
    Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
-   Int           getViewIndex          ()                 { return m_viewIndex;     }
+   Int           getViewIndex          () const           { return m_viewIndex;     }
 
    Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
    Bool          getIsDepth            ()                 { return m_isDepth; }
@@ -402,7 +403,7 @@ private:
   TComList<TComAu*    >       m_aus;  
   TComList<TComSubDpb*>       m_subDpbs; 
   Bool                        m_printPicOutput; 
-#if NH_3D                     
+#if NH_3D_VSO
   const TComVPS*              m_vps; 
 #endif
 public: 
@@ -446,10 +447,10 @@ public:
   Void                   setPrintPicOutput ( Bool printPicOutput ) { m_printPicOutput = printPicOutput; };
   Void                   print(); 
 
-#if NH_3D                                   
+#if NH_3D_VSO
   Void                   setVPS                        ( const TComVPS* vps ) { m_vps = vps;  }; 
-  TComPic*               getPic                        ( Int viewIndex, Bool depthFlag, Int poc );
-  TComPicYuv*            getPicYuv                     ( Int viewIndex, Bool depthFlag, Int poc, Bool recon );
+  TComPic*               getPic                        ( Int viewIndex, Bool depthFlag, Int auxId, Int poc );
+  TComPicYuv*            getPicYuv                     ( Int viewIndex, Bool depthFlag, Int auxId, Int poc, Bool recon );
 #endif  
 
 }; 

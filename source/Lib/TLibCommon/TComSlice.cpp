@@ -117,7 +117,7 @@ TComSlice::TComSlice()
 , m_layerId                       (0)
 , m_viewId                        (0)
 , m_viewIndex                     (0)
-#if NH_3D
+#if NH_3D_VSO
 , m_isDepth                       (false)
 #endif
 #if NH_MV
@@ -451,18 +451,15 @@ Void TComSlice::setList1IdxToList0Idx()
 #if !NH_MV
 Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr )
 {
-  if (!checkNumPocTotalCurr)
-  {
     if (m_eSliceType == I_SLICE)
     {
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
 
+    if (!checkNumPocTotalCurr)
+    {
       return;
     }
-
-    m_aiNumRefIdx[REF_PIC_LIST_0] = getNumRefIdx(REF_PIC_LIST_0);
-    m_aiNumRefIdx[REF_PIC_LIST_1] = getNumRefIdx(REF_PIC_LIST_1);
   }
 
   TComPic*  pcRefPic= NULL;
@@ -535,18 +532,12 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
 
     if (m_eSliceType == I_SLICE)
     {
-      ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
-      ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
-
       return;
     }
 
     assert(numPicTotalCurr > 0);
     // general tier and level limit:
     assert(numPicTotalCurr <= 8);
-
-    m_aiNumRefIdx[0] = getNumRefIdx(REF_PIC_LIST_0);
-    m_aiNumRefIdx[1] = getNumRefIdx(REF_PIC_LIST_1);
   }
 
   Int cIdx = 0;
@@ -1931,7 +1922,9 @@ TComVPS::TComVPS()
   
   for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
   {
+#if !NH_3D_FIX_TICKET_107
     m_layerSetIdxForOlsMinus1[i]  = -1; 
+#endif
     for ( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++)
     {
       m_profileTierLevelIdx[i][j] = -1; 
@@ -2190,15 +2183,19 @@ Int TComVPS::getScalabilityId( Int layerIdInVps, ScalabilityType scalType ) cons
   return getScalabilityMaskFlag( scalType ) ? getDimensionId( layerIdInVps, scalTypeToScalIdx( scalType ) ) : 0;
 }
 
-#if NH_3D
-Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag ) const
+#if NH_3D_VSO
+Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag, Int auxId ) const
 {
   Int foundLayerIdinNuh = -1; 
 
   for (Int layerIdInVps = 0 ; layerIdInVps <= getMaxLayersMinus1(); layerIdInVps++ )
   {
     Int layerIdInNuh = getLayerIdInNuh( layerIdInVps ); 
+#if !NH_3D
+    if( ( getViewIndex( layerIdInNuh ) == viewIndex ) && ( getAuxId( layerIdInNuh ) == ( depthFlag ? 2 : 0 ) )  )
+#else
     if( ( getViewIndex( layerIdInNuh ) == viewIndex ) && ( getDepthId( layerIdInNuh ) == ( depthFlag ? 1 : 0 ) )  )
+#endif
     {
       foundLayerIdinNuh = layerIdInNuh; 
       break; 
@@ -2206,7 +2203,8 @@ Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag ) const
   }
   return foundLayerIdinNuh;
 }
-
+#endif
+#if NH_3D
 Void TComVPS::createCamPars(Int iNumViews)
 {
   m_numCp                     .resize( iNumViews );
@@ -2766,7 +2764,7 @@ TComSPS::TComSPS()
 #if NH_MV
     m_uiSpsMaxLatencyIncreasePlus1[i] = 0;
 #else
-    m_uiMaxLatencyIncrease[i] = 0;
+    m_uiMaxLatencyIncreasePlus1[i] = 0;
 #endif
     m_uiMaxDecPicBuffering[i] = 1;
     m_numReorderPics[i]       = 0;
@@ -3675,7 +3673,7 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
       }
     }
     tempRefPicInListsFlag = (getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0) && getDefaultRefViewIdxAvailableFlag();
-    m_nARPStepNum = tempRefPicInListsFlag ?  H_3D_ARP_WFNR : 0;
+    m_nARPStepNum = tempRefPicInListsFlag ? 3 : 0;
   }
 
   if (tempRefPicInListsFlag)
@@ -3865,17 +3863,19 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
   }//if(bUseLowLatencyICEnc)
 }
 #endif
-#if NH_3D
+#if NH_3D_QTL
 Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
 {  
   for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
   { 
     for ( Int depthId = 0; depthId < 2; depthId++ )
     {
-      m_ivPicsCurrPoc[ depthId ][ i ] = ( i <= m_viewIndex ) ? m_ivPicLists->getPic( i, ( depthId == 1) , getPOC() ) : NULL;
+      m_ivPicsCurrPoc[ depthId ][ i ] = ( i <= m_viewIndex ) ? m_ivPicLists->getPic( i, ( depthId == 1) , 0, getPOC() ) : NULL;
     }        
   }  
 }
+#endif
+#if NH_3D
 Void TComSlice::setDepthToDisparityLUTs()
 { 
   Bool setupLUT = false; 
@@ -3936,7 +3936,7 @@ Void TComSlice::setDepthToDisparityLUTs()
   for (Int i = 0; i < voiInVps; i++)
   {
     Int iInVoi = vps->getVoiInVps( i ); 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
     if ( g_traceCameraParameters )
     {
       std::cout << "Cp: " << codScale   [ iInVoi ] << " " <<    codOffset[ iInVoi ] << " "
@@ -4319,24 +4319,24 @@ Void TComSlice::init3dToolParameters()
 
   const TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
 
-  m_ivMvPredFlag           = sps3dExt->getIvMvPredFlag         ( depthFlag ) && nRLLG0                       ;                             
-  m_ivMvScalingFlag        = sps3dExt->getIvMvScalingFlag      ( depthFlag )                                 ;                             
-  m_ivResPredFlag          = sps3dExt->getIvResPredFlag        ( depthFlag ) && nRLLG0                       ;                               
-  m_depthRefinementFlag    = sps3dExt->getDepthRefinementFlag  ( depthFlag )           && getInCompPredFlag() && m_cpAvailableFlag;
-  m_viewSynthesisPredFlag  = sps3dExt->getViewSynthesisPredFlag( depthFlag ) && nRLLG0 && getInCompPredFlag() && m_cpAvailableFlag;
-  m_depthBasedBlkPartFlag  = sps3dExt->getDepthBasedBlkPartFlag( depthFlag )           && getInCompPredFlag();                          
-  m_mpiFlag                = sps3dExt->getMpiFlag              ( depthFlag )           && getInCompPredFlag();
-  m_intraContourFlag       = sps3dExt->getIntraContourFlag     ( depthFlag )           && getInCompPredFlag();
-  m_intraSdcWedgeFlag      = sps3dExt->getIntraSdcWedgeFlag    ( depthFlag )                                 ;                          
-  m_qtPredFlag             = sps3dExt->getQtPredFlag           ( depthFlag )           && getInCompPredFlag();
-  m_interSdcFlag           = sps3dExt->getInterSdcFlag         ( depthFlag )                                 ;  
-  m_depthIntraSkipFlag     = sps3dExt->getDepthIntraSkipFlag   ( depthFlag )                                 ;                          
+  m_ivMvPredFlag           = sps3dExt->getIvDiMcEnabledFlag          ( depthFlag ) && nRLLG0                       ;                             
+  m_ivMvScalingFlag        = sps3dExt->getIvMvScalEnabledFlag        ( depthFlag )                                 ;                             
+  m_ivResPredFlag          = sps3dExt->getIvResPredEnabledFlag       ( depthFlag ) && nRLLG0                       ;                               
+  m_depthRefinementFlag    = sps3dExt->getDepthRefEnabledFlag        ( depthFlag )           && getInCompPredFlag() && m_cpAvailableFlag;
+  m_viewSynthesisPredFlag  = sps3dExt->getVspMcEnabledFlag           ( depthFlag ) && nRLLG0 && getInCompPredFlag() && m_cpAvailableFlag;
+  m_depthBasedBlkPartFlag  = sps3dExt->getDbbpEnabledFlag            ( depthFlag )           && getInCompPredFlag();                          
+  m_mpiFlag                = sps3dExt->getTexMcEnabledFlag           ( depthFlag )           && getInCompPredFlag();
+  m_intraContourFlag       = sps3dExt->getIntraContourEnabledFlag    ( depthFlag )           && getInCompPredFlag();
+  m_intraSdcWedgeFlag      = sps3dExt->getIntraDcOnlyWedgeEnabledFlag( depthFlag )                                 ;                          
+  m_qtPredFlag             = sps3dExt->getCqtCuPartPredEnabledFlag   ( depthFlag )           && getInCompPredFlag();
+  m_interSdcFlag           = sps3dExt->getInterDcOnlyEnabledFlag     ( depthFlag )                                 ;  
+  m_depthIntraSkipFlag     = sps3dExt->getSkipIntraEnabledFlag       ( depthFlag )                                 ;                          
 
-  m_subPbSize              =  1 << ( sps3dExt->getLog2SubPbSizeMinus3   ( depthFlag ) + 3 );  
-  m_mpiSubPbSize           =  1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
+  m_subPbSize              =  1 << ( sps3dExt->getLog2IvmcSubPbSizeMinus3 ( depthFlag ) + 3 );  
+  m_mpiSubPbSize           =  1 << ( sps3dExt->getLog2TexmcSubPbSizeMinus3( depthFlag ) + 3 );
 
 
-#if H_3D_OUTPUT_ACTIVE_TOOLS
+#if NH_3D_OUTPUT_ACTIVE_TOOLS
   std::cout << "Layer:                  :" << getLayerId()             << std::endl;
   std::cout << "DepthFlag:              :" << getIsDepth()             << std::endl;
   std::cout << "ViewOrderIdx:           :" << getViewIndex()           << std::endl;
@@ -4414,15 +4414,15 @@ Void TComSlice::deriveInCmpPredAndCpAvailFlag( )
     const TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
     if( !getIsDepth() )
     {
-      m_inCmpPredAvailFlag = sps3dExt->getViewSynthesisPredFlag( getIsDepth() ) || 
-        sps3dExt->getDepthBasedBlkPartFlag( getIsDepth() ) || 
-        sps3dExt->getDepthRefinementFlag  ( getIsDepth() );                            
+      m_inCmpPredAvailFlag = sps3dExt->getVspMcEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getDbbpEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getDepthRefEnabledFlag  ( getIsDepth() );                            
     }
     else
     {
-      m_inCmpPredAvailFlag = sps3dExt->getIntraContourFlag( getIsDepth() ) || 
-        sps3dExt->getQtPredFlag( getIsDepth() ) || 
-        sps3dExt->getMpiFlag( getIsDepth() );                                  
+      m_inCmpPredAvailFlag = sps3dExt->getIntraContourEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getCqtCuPartPredEnabledFlag( getIsDepth() ) || 
+        sps3dExt->getTexMcEnabledFlag( getIsDepth() );                                  
     }
   }
 }
@@ -4544,13 +4544,13 @@ Void TComScalingList::outputScalingLists(std::ostream &os) const
   }
 }
 
-Bool TComScalingList::xParseScalingList(Char* pchFile)
+Bool TComScalingList::xParseScalingList(const std::string &fileName)
 {
   static const Int LINE_SIZE=1024;
   FILE *fp = NULL;
-  Char line[LINE_SIZE];
+  TChar line[LINE_SIZE];
 
-  if (pchFile == NULL)
+  if (fileName.empty())
   {
     fprintf(stderr, "Error: no scaling list file specified. Help on scaling lists being output\n");
     outputScalingListHelp(std::cout);
@@ -4559,9 +4559,9 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
     exit (1);
     return true;
   }
-  else if ((fp = fopen(pchFile,"r")) == (FILE*)NULL)
+  else if ((fp = fopen(fileName.c_str(),"r")) == (FILE*)NULL)
   {
-    fprintf(stderr, "Error: cannot open scaling list file %s for reading\n",pchFile);
+    fprintf(stderr, "Error: cannot open scaling list file %s for reading\n", fileName.c_str());
     return true;
   }
 
@@ -4589,8 +4589,8 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
           Bool bFound=false;
           while ((!feof(fp)) && (!bFound))
           {
-            Char *ret = fgets(line, LINE_SIZE, fp);
-            Char *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType[sizeIdc][listIdc]);
+            TChar *ret = fgets(line, LINE_SIZE, fp);
+            TChar *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType[sizeIdc][listIdc]);
             // This could be a match against the DC string as well, so verify it isn't
             if (findNamePosition!= NULL && (MatrixType_DC[sizeIdc][listIdc]==NULL || strstr(line, MatrixType_DC[sizeIdc][listIdc])==NULL))
             {
@@ -4599,7 +4599,7 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
           }
           if (!bFound)
           {
-            fprintf(stderr, "Error: cannot find Matrix %s from scaling list file %s\n", MatrixType[sizeIdc][listIdc], pchFile);
+            fprintf(stderr, "Error: cannot find Matrix %s from scaling list file %s\n", MatrixType[sizeIdc][listIdc], fileName.c_str());
             return true;
           }
         }
@@ -4608,12 +4608,12 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
           Int data;
           if (fscanf(fp, "%d,", &data)!=1)
           {
-            fprintf(stderr, "Error: cannot read value #%d for Matrix %s from scaling list file %s at file position %ld\n", i, MatrixType[sizeIdc][listIdc], pchFile, ftell(fp));
+            fprintf(stderr, "Error: cannot read value #%d for Matrix %s from scaling list file %s at file position %ld\n", i, MatrixType[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
             return true;
           }
           if (data<0 || data>255)
           {
-            fprintf(stderr, "Error: QMatrix entry #%d of value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", i, data, MatrixType[sizeIdc][listIdc], pchFile, ftell(fp));
+            fprintf(stderr, "Error: QMatrix entry #%d of value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", i, data, MatrixType[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
             return true;
           }
           src[i] = data;
@@ -4629,8 +4629,8 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
             Bool bFound=false;
             while ((!feof(fp)) && (!bFound))
             {
-              Char *ret = fgets(line, LINE_SIZE, fp);
-              Char *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType_DC[sizeIdc][listIdc]);
+              TChar *ret = fgets(line, LINE_SIZE, fp);
+              TChar *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType_DC[sizeIdc][listIdc]);
               if (findNamePosition!= NULL)
               {
                 // This won't be a match against the non-DC string.
@@ -4639,19 +4639,19 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
             }
             if (!bFound)
             {
-              fprintf(stderr, "Error: cannot find DC Matrix %s from scaling list file %s\n", MatrixType_DC[sizeIdc][listIdc], pchFile);
+              fprintf(stderr, "Error: cannot find DC Matrix %s from scaling list file %s\n", MatrixType_DC[sizeIdc][listIdc], fileName.c_str());
               return true;
             }
           }
           Int data;
           if (fscanf(fp, "%d,", &data)!=1)
           {
-            fprintf(stderr, "Error: cannot read DC %s from scaling list file %s at file position %ld\n", MatrixType_DC[sizeIdc][listIdc], pchFile, ftell(fp));
+            fprintf(stderr, "Error: cannot read DC %s from scaling list file %s at file position %ld\n", MatrixType_DC[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
             return true;
           }
           if (data<0 || data>255)
           {
-            fprintf(stderr, "Error: DC value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", data, MatrixType[sizeIdc][listIdc], pchFile, ftell(fp));
+            fprintf(stderr, "Error: DC value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", data, MatrixType[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
             return true;
           }
           //overwrite DC value when size of matrix is larger than 16x16

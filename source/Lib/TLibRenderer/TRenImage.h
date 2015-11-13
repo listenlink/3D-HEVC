@@ -38,7 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComPicYuv.h"
 #include "TRenImagePlane.h"
-#if NH_3D
+#if NH_3D_VSO
 
 
 #define PelImage    TRenImage<Pel>

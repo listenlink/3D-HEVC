@@ -43,7 +43,7 @@
 #include "TAppRendererCfg.h"
 #include "../../Lib/TAppCommon/program_options_lite.h"
 
-#if NH_3D
+#if NH_3D_VSO
 
 using namespace std;
 namespace po = df::program_options_lite;
@@ -110,7 +110,7 @@ Void TAppRendererCfg::destroy()
 \param  argv        array of arguments
 \retval             true when success
 */
-Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
+Bool TAppRendererCfg::parseCfg( Int argc, TChar* argv[] )
 {
   bool do_help = false;
 
@@ -120,15 +120,15 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     ("c", po::parseConfigFile, "configuration file name")
 
     /* File I/O */
-    ("VideoInputFileBaseName,v",  m_pchVideoInputFileBaseName,  (Char*) 0, "Basename to generate video input file names")
-    ("DepthInputFileBaseName,d",  m_pchDepthInputFileBaseName,  (Char*) 0, "Basename to generate depth input file names")
-    ("SynthOutputFileBaseName,s", m_pchSynthOutputFileBaseName, (Char*) 0, "Basename to generate synthesized output file names")
+    ("VideoInputFileBaseName,v",  m_pchVideoInputFileBaseName,  (TChar*) 0, "Basename to generate video input file names")
+    ("DepthInputFileBaseName,d",  m_pchDepthInputFileBaseName,  (TChar*) 0, "Basename to generate depth input file names")
+    ("SynthOutputFileBaseName,s", m_pchSynthOutputFileBaseName, (TChar*) 0, "Basename to generate synthesized output file names")
     ("ContOutputFileNumbering", m_bContOutputFileNumbering  ,  false   , "Continuous Output File Numbering")
     ("Sweep"                  , m_bSweep                    ,  false   , "Store all views in first Output File")
 
-    ("VideoInputFile_%d,v_%d",  m_pchVideoInputFileList ,    (Char *) 0, MAX_INPUT_VIEW_NUM , "Original Yuv video input file name %d")
-    ("DepthInputFile_%d,d_%d",  m_pchDepthInputFileList ,    (Char *) 0, MAX_INPUT_VIEW_NUM , "Original Yuv depth input file name %d")
-    ("SynthOutputFile_%d,s_%d", m_pchSynthOutputFileList,    (Char *) 0, MAX_OUTPUT_VIEW_NUM, "Synthesized Yuv output file name %d")
+    ("VideoInputFile_%d,v_%d",  m_pchVideoInputFileList ,    (TChar *) 0, MAX_INPUT_VIEW_NUM , "Original Yuv video input file name %d")
+    ("DepthInputFile_%d,d_%d",  m_pchDepthInputFileList ,    (TChar *) 0, MAX_INPUT_VIEW_NUM , "Original Yuv depth input file name %d")
+    ("SynthOutputFile_%d,s_%d", m_pchSynthOutputFileList,    (TChar *) 0, MAX_OUTPUT_VIEW_NUM, "Synthesized Yuv output file name %d")
 
     ("InputBitDepth",           m_inputBitDepth[0],                     8, "Bit-depth of input file")
     ("OutputBitDepth",          m_outputBitDepth[0],                    0, "Bit-depth of output file (default:InternalBitDepth)")
@@ -145,10 +145,10 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     ("FramesToBeRendered,f",    m_iFramesToBeRendered,                0, "Number of frames to be rendered (default=all)")
 
     /* Camera Specification */
-    ("CameraParameterFile,-cpf", m_pchCameraParameterFile,          (Char *) 0, "Camera Parameter File Name")
-    ("BaseViewCameraNumbers"  , m_pchBaseViewCameraNumbers,        (Char *) 0, "Numbers of base views")
-    ("SynthViewCameraNumbers" , m_pchSynthViewCameraNumbers,       (Char *) 0, "Numbers of views to synthesis")
-    ("ViewConfig"             , m_pchViewConfig,                   (Char *) 0, "View Configuration"               )
+    ("CameraParameterFile,-cpf", m_pchCameraParameterFile,         (TChar *) 0, "Camera Parameter File Name")
+    ("BaseViewCameraNumbers"  , m_pchBaseViewCameraNumbers,        (TChar *) 0, "Numbers of base views")
+    ("SynthViewCameraNumbers" , m_pchSynthViewCameraNumbers,       (TChar *) 0, "Numbers of views to synthesis")
+    ("ViewConfig"             , m_pchViewConfig,                   (TChar *) 0, "View Configuration"               )
 
     /* Renderer Modes */
     ("Log2SamplingFactor",      m_iLog2SamplingFactor,                0, "Factor for horizontal up sampling before processing"     )
@@ -457,7 +457,7 @@ Void TAppRendererCfg::xCreateFileNames()
   }
 }
 
-Void TAppRendererCfg::xAddNumberToFileName( Char* pchSourceFileName, Char*& rpchTargetFileName, Int iNumberToAdd, UInt uiPrecBefore, UInt uiPrecAfter )
+Void TAppRendererCfg::xAddNumberToFileName( TChar* pchSourceFileName, TChar*& rpchTargetFileName, Int iNumberToAdd, UInt uiPrecBefore, UInt uiPrecAfter )
 {
 
   if ( pchSourceFileName == NULL )
@@ -467,8 +467,8 @@ Void TAppRendererCfg::xAddNumberToFileName( Char* pchSourceFileName, Char*& rpch
     exit(EXIT_FAILURE);
   }
 
-  Char pchNumberBuffer[2* LOG10_VIEW_NUM_PREC + 2];
-  Char pchPrintBuffer[10];
+  TChar pchNumberBuffer[2* LOG10_VIEW_NUM_PREC + 2];
+  TChar pchPrintBuffer[10];
 
   Double dNumberToAdd = ( (Double) iNumberToAdd ) / VIEW_NUM_PREC;
 
@@ -487,9 +487,9 @@ Void TAppRendererCfg::xAddNumberToFileName( Char* pchSourceFileName, Char*& rpch
   size_t iInLength  = strlen(pchSourceFileName);
   size_t iAddLength = strlen(pchNumberBuffer);
 
-  rpchTargetFileName = (Char*) malloc(iInLength+iAddLength+1);
+  rpchTargetFileName = (TChar*) malloc(iInLength+iAddLength+1);
 
-  Char* pchPlaceHolder = strrchr(pchSourceFileName,'$');
+  TChar* pchPlaceHolder = strrchr(pchSourceFileName,'$');
   assert( pchPlaceHolder );
 
   size_t iCharsToPlaceHolder = pchPlaceHolder - pchSourceFileName;

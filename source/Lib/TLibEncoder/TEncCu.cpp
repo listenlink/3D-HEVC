@@ -419,9 +419,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   // These are only used if getFastDeltaQp() is true
   const UInt fastDeltaQPCuMaxSize    = Clip3(sps.getMaxCUHeight()>>sps.getLog2DiffMaxMinCodingBlockSize(), sps.getMaxCUHeight(), 32u);
 
-
+#if NH_3D_QTL
 #if NH_3D_QTLPC
   Bool  bLimQtPredFalg    = pcPic->getSlice(0)->getQtPredFlag(); 
+#else
+  Bool  bLimQtPredFalg    = false;
+#endif
   TComPic *pcTexture      = rpcBestCU->getSlice()->getTexturePic();
 
   Bool  depthMapDetect    = (pcTexture != NULL);
@@ -436,7 +439,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu() );
 
-#if NH_3D_QTLPC  
+#if NH_3D_QTL  
   Bool    bTrySplit     = true;
   Bool    bTrySplitDQP  = true;
 #endif
@@ -458,7 +461,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   const UInt uiBPelY   = uiTPelY + rpcBestCU->getHeight(0) - 1;
   const UInt uiWidth   = rpcBestCU->getWidth(0);
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
     stopAtPos  ( rpcBestCU->getSlice()->getPOC(), 
                  rpcBestCU->getSlice()->getLayerId(), 
@@ -533,7 +536,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         iQP = lowestQP;
       }
 
-#if NH_3D_QTLPC
+#if NH_3D_QTL
       bTrySplit    = true;
 #endif
 
@@ -551,7 +554,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       }
 
       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if NH_3D_QTLPC
+#if NH_3D_QTL
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
 #if H_3D_FCO
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ) && pcTexture->getReconMark())
@@ -733,7 +736,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         }
 #endif
       }
-#if NH_3D_QTLPC      
+#if NH_3D_QTL
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
       {
         bTrySplitDQP = bTrySplit;
@@ -788,7 +791,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           if(!( (rpcBestCU->getWidth(0)==8) && (rpcBestCU->getHeight(0)==8) ))
           {
             if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() && doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTrySplit
 #endif
 )
@@ -808,7 +811,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           }
 
           if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             && bTryNx2N
 #endif
 )
@@ -829,7 +832,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             }
           }
           if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             && bTry2NxN
 #endif
 )
@@ -870,7 +873,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             if ( bTestAMP_Hor )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -890,7 +893,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -916,7 +919,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             else if ( bTestMergeAMP_Hor )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -938,7 +941,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTry2NxN
 #endif
 )
@@ -965,7 +968,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             if ( bTestAMP_Ver )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -986,7 +989,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -1006,7 +1009,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             else if ( bTestMergeAMP_Ver )
             {
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -1026,7 +1029,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 }
               }
               if(doNotBlockPu
-#if NH_3D_QTLPC
+#if NH_3D_QTL
                 && bTryNx2N
 #endif
 )
@@ -1047,7 +1050,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #endif
 
 #else
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             if (bTry2NxN)
             {
 #endif
@@ -1062,7 +1065,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if NH_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             }
             if (bTryNx2N)
             {
@@ -1077,7 +1080,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #if NH_3D_VSP || NH_3D_DBBP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
-#if NH_3D_QTLPC
+#if NH_3D_QTL
             }
 #endif
 
@@ -1133,7 +1136,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() )
           {
-#if NH_3D_QTLPC //Try IntraNxN
+#if NH_3D_QTL //Try IntraNxN
               if(bTrySplit)
               {
 #endif
@@ -1149,7 +1152,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
               intraCost = std::min(intraCost, tmpIntraCost);
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
-#if NH_3D_QTLPC
+#if NH_3D_QTL
               }
 #endif
           }
@@ -1251,7 +1254,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 #else
   const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
 #endif
-#if NH_3D_QTLPC
+#if NH_3D_QTL
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary) && bTrySplitDQP )
 #else
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
@@ -1515,7 +1518,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   const UInt uiBPelY   = uiTPelY + (maxCUHeight>>uiDepth) - 1;
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_quadtree ===========\n")
   DTRACE_CU("x0", uiLPelX)
   DTRACE_CU("x1", uiTPelY)
@@ -1557,7 +1560,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     return;
   }
 
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_unit ===========\n")
 #endif
 
@@ -1584,7 +1587,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
-#if H_MV_ENC_DEC_TRAC
+#if NH_MV_ENC_DEC_TRAC
     DTRACE_PU_S("=========== prediction_unit ===========\n")
     DTRACE_PU("x0", uiLPelX)
     DTRACE_PU("x1", uiTPelY)
@@ -2215,7 +2218,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
         {
           *earlyDetectionSkipMode = true;
         }
-        else if(m_pcEncCfg->getFastSearch() != SELECTIVE)
+        else if(m_pcEncCfg->getMotionEstimationSearchMethod() != MESEARCH_SELECTIVE)
         {
           Int absoulte_MV=0;
           for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
@@ -2304,7 +2307,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
     for( Int nARPW = 0; nARPW <= nARPWMax; nARPW++ )
     {
-#if DEBUG_STRING && H_MV_ENC_DEC_TRAC
+#if DEBUG_STRING && NH_MV_ENC_DEC_TRAC
       sTest.clear(); 
 #endif
 
@@ -2740,12 +2743,12 @@ Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Pa
   UInt uiPreCalcDistC;
   m_pcPredSearch  ->estIntraPredDIS      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, false );
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   Int oldTraceCopyBack = g_traceCopyBack; 
   g_traceCopyBack = false;  
 #endif
   m_ppcRecoYuvTemp[uiDepth]->copyToPicComponent(COMPONENT_Y, rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC  
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC  
   g_traceCopyBack = oldTraceCopyBack; 
 #endif
 
@@ -3076,13 +3079,13 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
   UInt uiPartIdx = uiPartIdxY * ( uiSrcBlkWidth / uiBlkWidth ) + uiPartIdxX;
   m_ppcRecoYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvRec (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   Bool oldtraceCopyBack = g_traceCopyBack;
   g_traceCopyBack = false; 
 #endif
   m_ppcPredYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvPred (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
 
-#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE && NH_MV_ENC_DEC_TRAC
   g_traceCopyBack = oldtraceCopyBack; 
 #endif
 }
