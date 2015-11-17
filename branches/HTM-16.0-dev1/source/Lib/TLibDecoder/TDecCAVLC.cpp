@@ -2134,7 +2134,11 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
     READ_FLAG( uiCode, "sub_layer_flag_info_present_flag" ); dpbSize.setSubLayerFlagInfoPresentFlag( i, uiCode == 1 );
     for( Int j = 0; j  <=  vps->getMaxSubLayersInLayerSetMinus1( currLsIdx ); j++ )
     {  
+#if NH_3D_FIX_TICKET_114
+      if( j > 0  &&  dpbSize.getSubLayerFlagInfoPresentFlag( i )  )  
+#else
       if( j > 0  &&  dpbSize.getSubLayerDpbInfoPresentFlag( i, j )  )  
+#endif
       {
         READ_FLAG( uiCode, "sub_layer_dpb_info_present_flag" ); dpbSize.setSubLayerDpbInfoPresentFlag( i, j, uiCode == 1 );
       }

@@ -39,9 +39,6 @@
 #include "../TLibCommon/TypeDef.h"
 #include "../TAppCommon/TAppComCamPara.h"
 #if NH_3D_VSO
-
-
-
 #include <list>
 #include <vector>
 #include <math.h>
@@ -53,7 +50,6 @@
 #include <string>
 #include <cstdio>
 #include <cstring>
-
 
 using namespace std;
 

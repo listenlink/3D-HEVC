@@ -1922,9 +1922,6 @@ TComVPS::TComVPS()
   
   for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
   {
-#if !NH_3D_FIX_TICKET_107
-    m_layerSetIdxForOlsMinus1[i]  = -1; 
-#endif
     for ( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++)
     {
       m_profileTierLevelIdx[i][j] = -1; 
