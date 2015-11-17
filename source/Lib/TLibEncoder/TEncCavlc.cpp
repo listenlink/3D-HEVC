@@ -1427,7 +1427,11 @@ Void TEncCavlc::codeDpbSize( const TComVPS* vps )
     WRITE_FLAG( dpbSize->getSubLayerFlagInfoPresentFlag( i ) ? 1 : 0 , "sub_layer_flag_info_present_flag" );
     for( Int j = 0; j  <=  vps->getMaxSubLayersInLayerSetMinus1( currLsIdx ); j++ )
     {  
+#if NH_3D_FIX_TICKET_114
+      if( j > 0  &&  dpbSize->getSubLayerFlagInfoPresentFlag( i )  )  
+#else
       if( j > 0  &&  dpbSize->getSubLayerDpbInfoPresentFlag( i, j )  )  
+#endif
       {
         WRITE_FLAG( dpbSize->getSubLayerDpbInfoPresentFlag( i, j ) ? 1 : 0 , "sub_layer_dpb_info_present_flag" );
       }

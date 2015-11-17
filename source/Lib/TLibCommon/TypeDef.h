@@ -64,8 +64,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 #if NH_MV
 // Recent bug fixes
-#define NH_3D_FIX_TICKET_107                     1 // Clean up. 
-#define NH_3D_FIX_TICKET_91                      1 // NBDV availability in case of tiles.
+#define NH_3D_FIX_TICKET_114                     1  //Mismatch between text and software on DPB size syntax
+#define NH_3D_FIX_LEAK                           1
 // Things that needs to be fixed also in the Specification ...
 #define NH_MV_FIX_NO_REF_PICS_CHECK               1 // !!SPEC!!
 #define NH_MV_FIX_INIT_NUM_ACTIVE_REF_LAYER_PICS  1 // Derivation of NumActiveRefLayerPIcs. !!SPEC!!
