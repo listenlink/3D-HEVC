@@ -61,7 +61,11 @@ Void TAppRendererTop::xCreateLib()
 {
   m_pcRenTop = new TRenTop();
 
+#ifdef ONLY_LEFT_VIEWPOINT
+  for(Int iViewIdx=0; iViewIdx< BASEVIEW_SIZE; iViewIdx++)
+#else
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfInputViews; iViewIdx++)
+#endif
   {
     TVideoIOYuv* pcVideoInput = new TVideoIOYuv;
     TVideoIOYuv* pcDepthInput = new TVideoIOYuv;
@@ -89,8 +93,11 @@ Void TAppRendererTop::xCreateLib()
 Void TAppRendererTop::xDestroyLib()
 {
   delete m_pcRenTop;
-
+#ifdef ONLY_LEFT_VIEWPOINT
+  for ( Int iViewIdx = 0; iViewIdx < BASEVIEW_SIZE; iViewIdx++ )
+#else
   for ( Int iViewIdx = 0; iViewIdx < m_iNumberOfInputViews; iViewIdx++ )
+#endif
   {
     m_apcTVideoIOYuvVideoInput[iViewIdx]->close();
     m_apcTVideoIOYuvDepthInput[iViewIdx]->close();
@@ -191,7 +198,11 @@ Void TAppRendererTop::render()
     if ( iFrame >= m_iFrameSkip ) 
     {
       // read in depth and video
+#ifdef ONLY_LEFT_VIEWPOINT
+      for(Int iBaseViewIdx=0; iBaseViewIdx < BASEVIEW_SIZE; iBaseViewIdx++ )
+#else
       for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
+#endif
       {
         m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx],pcNewOrg, IPCOLOURSPACE_UNCHANGED, aiPad, CHROMA_420  ) ;
 

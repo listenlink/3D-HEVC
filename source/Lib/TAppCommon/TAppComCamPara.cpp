@@ -548,7 +548,6 @@ TAppComCamPara::xGetLeftRightView( Int iView, std::vector<Int> aiSortedViews, In
   riRightView          = iRightView;
   riLeftSortedViewIdx  = iLeftViewIdx;
   riRightSortedViewIdx = iRightViewIdx;
-
   return bFoundLRView;
 }
 

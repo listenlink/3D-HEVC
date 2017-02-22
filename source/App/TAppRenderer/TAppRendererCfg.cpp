@@ -59,7 +59,6 @@ namespace po = df::program_options_lite;
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
 
-
 TAppRendererCfg::TAppRendererCfg()
 {
   
@@ -217,15 +216,15 @@ Bool TAppRendererCfg::parseCfg( Int argc, TChar* argv[] )
     m_iNumberOfInputViews      = (Int) m_cRenModStrParser.getNumOfBaseViews();
     m_bContOutputFileNumbering = true;
 
-  m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, piaTempViews, m_iLog2SamplingFactor+m_iShiftPrecision );
+    m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
+        m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, piaTempViews, m_iLog2SamplingFactor+m_iShiftPrecision );
   }
   else
   {
-  m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, m_pchSynthViewCameraNumbers, NULL, m_iLog2SamplingFactor+m_iShiftPrecision );
-  m_iNumberOfOutputViews = (Int) m_cCameraData.getSynthViewNumbers().size();
-  m_iNumberOfInputViews  = (Int) m_cCameraData.getBaseViewNumbers() .size();
+    m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
+        m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, m_pchSynthViewCameraNumbers, NULL, m_iLog2SamplingFactor+m_iShiftPrecision );
+    m_iNumberOfOutputViews = (Int) m_cCameraData.getSynthViewNumbers().size();
+    m_iNumberOfInputViews  = (Int) m_cCameraData.getBaseViewNumbers() .size();
   }
   }
 
@@ -305,9 +304,10 @@ Void TAppRendererCfg::xCheckParameter()
   xConfirmPara( m_iPostProcMode       < 0 || m_iPostProcMode       >  2, "PostProcMode       must be more than or equal to 0 and less than 3"  );
 
   Int iNumNonNULL;
+#ifndef ONLY_LEFT_VIEWPOINT
   for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchDepthInputFileList[iNumNonNULL]; iNumNonNULL++) {};  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
   for (iNumNonNULL = 0; (iNumNonNULL < m_iNumberOfInputViews)  && m_pchVideoInputFileList[iNumNonNULL]; iNumNonNULL++) {};  xConfirmPara( iNumNonNULL < m_iNumberOfInputViews,  "Number of DepthInputFiles  must be greater than or equal to number of BaseViewNumbers" );
-
+#endif
 
   if ( !m_bSweep )
   {
@@ -331,11 +331,19 @@ Void TAppRendererCfg::xCheckParameter()
 Void TAppRendererCfg::xPrintParameter()
 {
   printf("\n");
+#ifdef ONLY_LEFT_VIEWPOINT
+  for( Int iCounter = 0; iCounter < BASEVIEW_SIZE; iCounter++)
+#else
   for( Int iCounter = 0; iCounter < m_iNumberOfInputViews; iCounter++)
+#endif
   {
     printf("InputVideoFile_%i        : %s\n", iCounter, m_pchVideoInputFileList[iCounter]);
   }
+#ifdef ONLY_LEFT_VIEWPOINT
+  for( Int iCounter = 0; iCounter < BASEVIEW_SIZE; iCounter++)
+#else
   for( Int iCounter = 0; iCounter < m_iNumberOfInputViews; iCounter++)
+#endif
   {
     printf("InputDepthFile_%i        : %s\n", iCounter, m_pchDepthInputFileList[iCounter]);
   }
@@ -348,7 +356,11 @@ Void TAppRendererCfg::xPrintParameter()
   printf("Format                  : %dx%d \n", m_iSourceWidth, m_iSourceHeight );
   printf("Frame index             : %d - %d (%d frames)\n", m_iFrameSkip, m_iFrameSkip+m_iFramesToBeRendered-1, m_iFramesToBeRendered);
   printf("CameraParameterFile     : %s\n", m_pchCameraParameterFile );
+#ifdef ONLY_LEFT_VIEWPOINT
+  printf("BaseViewNumbers         : %c  (%d views) \n", m_pchBaseViewCameraNumbers[0] , BASEVIEW_SIZE  );
+#else
   printf("BaseViewNumbers         : %s  (%d views) \n", m_pchBaseViewCameraNumbers , m_iNumberOfInputViews  );
+#endif
   printf("Sweep                   : %d\n", m_bSweep               );
 
   if ( m_bUseSetupString )
@@ -442,7 +454,11 @@ Void TAppRendererCfg::xCreateFileNames()
   }
 
   xGetMaxPrecision( m_cCameraData.getBaseViewNumbers(), iPrecBefore, iPrecAfter );
+#ifdef ONLY_LEFT_VIEWPOINT
+  for(Int iIdx = 0; iIdx < BASEVIEW_SIZE ; iIdx++)
+#else
   for(Int iIdx = 0; iIdx < m_cCameraData.getBaseViewNumbers().size() ; iIdx++)
+#endif
   {
     //GT; Create ReconFileNames
     if (m_pchVideoInputFileList[iIdx] == NULL )
