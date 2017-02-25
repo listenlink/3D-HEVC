@@ -1,0 +1,4 @@
+add_subdirectory(TLibVideoIO)
+add_subdirectory(TLibCommon)
+add_subdirectory(TLibRenderer)
+add_subdirectory(TAppCommon)
