@@ -67,7 +67,7 @@ endif
 DEBUG_CPPFLAGS    = -g  -D_DEBUG
 #
 # release cpp
-RELEASE_CPPFLAGS  =  -O3 -Wuninitialized
+RELEASE_CPPFLAGS  =  -g -O3 -Wuninitialized
 
 
 #########################################################
